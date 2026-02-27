@@ -1,0 +1,37 @@
+{
+    "common": {
+        "app_name": "Video Summarizer",
+        "loading": "Carregando...",
+        "sign_out": "Sair"
+    },
+    "auth": {
+        "sign_in": "Entrar",
+        "sign_in_subtitle": "Entre na sua conta para continuar",
+        "email": "E-mail",
+        "email_placeholder": "voce@exemplo.com",
+        "password": "Senha",
+        "password_placeholder": "••••••••",
+        "signing_in": "Entrando...",
+        "invalid_credentials": "E-mail ou senha inválidos. Tente novamente.",
+        "session_expired": "Sua sessão expirou. Por favor, entre novamente."
+    },
+    "dashboard": {
+        "welcome": "Bem-vindo, {{name}}",
+        "welcome_subtitle": "Você está autenticado. Os recursos de resumo de vídeos estarão disponíveis em breve.",
+        "coming_soon": "Em breve",
+        "feature_upload_title": "Enviar ou colar URL",
+        "feature_upload_desc": "Suporte para YouTube, Vimeo, MP4 e mais.",
+        "feature_summarize_title": "Resumo com IA",
+        "feature_summarize_desc": "Resumos precisos e concisos gerados pelo Claude.",
+        "feature_export_title": "Exportar para qualquer lugar",
+        "feature_export_desc": "Markdown, PDF, Notion e mais formatos."
+    },
+    "preferences": {
+        "title": "Preferências",
+        "theme": "Tema",
+        "dark": "Escuro",
+        "light": "Claro",
+        "accent_color": "Cor de destaque",
+        "language": "Idioma"
+    }
+}

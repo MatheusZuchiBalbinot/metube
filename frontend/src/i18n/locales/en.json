@@ -1,0 +1,37 @@
+{
+    "common": {
+        "app_name": "Video Summarizer",
+        "loading": "Loading...",
+        "sign_out": "Sign out"
+    },
+    "auth": {
+        "sign_in": "Sign In",
+        "sign_in_subtitle": "Sign in to your account to continue",
+        "email": "Email",
+        "email_placeholder": "you@example.com",
+        "password": "Password",
+        "password_placeholder": "••••••••",
+        "signing_in": "Signing in...",
+        "invalid_credentials": "Invalid email or password. Please try again.",
+        "session_expired": "Your session has expired. Please sign in again."
+    },
+    "dashboard": {
+        "welcome": "Welcome, {{name}}",
+        "welcome_subtitle": "You are authenticated. Video summarization features are coming soon.",
+        "coming_soon": "Coming soon",
+        "feature_upload_title": "Upload or paste URL",
+        "feature_upload_desc": "Support for YouTube, Vimeo, MP4 and more.",
+        "feature_summarize_title": "AI Summarization",
+        "feature_summarize_desc": "Get accurate, concise summaries powered by Claude.",
+        "feature_export_title": "Export anywhere",
+        "feature_export_desc": "Markdown, PDF, Notion and more formats."
+    },
+    "preferences": {
+        "title": "Preferences",
+        "theme": "Theme",
+        "dark": "Dark",
+        "light": "Light",
+        "accent_color": "Accent color",
+        "language": "Language"
+    }
+}
