@@ -1,0 +1,55 @@
+/* ─── Avatar ─────────────────────────────────────────────────────────────── */
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    user-select: none;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.avatar--sm {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.avatar--md {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+.avatar--lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    font-size: 1.375rem;
+    font-weight: 800;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ─── Gradient / ring / glow (accent-reactive) ───────────────────────────── */
+
+.avatar-grad {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+}
+
+.avatar-nav-ring {
+    outline: 2px solid var(--accent-subtle);
+    outline-offset: 1px;
+}
+
+.avatar-glow {
+    box-shadow: 0 8px 24px var(--accent-glow);
+}
