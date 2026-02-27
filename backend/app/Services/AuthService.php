@@ -20,7 +20,7 @@ class AuthService
         $token = auth('api')->attempt($credentials);
 
         if (! $token) {
-            throw new InvalidCredentialsException();
+            throw new InvalidCredentialsException;
         }
 
         /** @var User $user */
@@ -67,8 +67,8 @@ class AuthService
     {
         return [
             'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => auth('api')->factory()->getTTL() * 60,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ];
     }
 }

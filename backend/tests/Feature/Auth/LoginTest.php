@@ -12,7 +12,7 @@ describe('login', function () {
         $user = User::factory()->create();
 
         $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password',
         ])
             ->assertOk()
@@ -25,7 +25,7 @@ describe('login', function () {
         $user = User::factory()->create();
 
         $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'wrong_password',
         ])
             ->assertUnauthorized()
@@ -34,7 +34,7 @@ describe('login', function () {
 
     it('fails with a nonexistent email', function () {
         $this->postJson('/api/auth/login', [
-            'email'    => 'nobody@example.com',
+            'email' => 'nobody@example.com',
             'password' => 'password',
         ])->assertUnauthorized();
     });
@@ -51,7 +51,7 @@ describe('validation', function () {
 
     it('requires a valid email format', function () {
         $this->postJson('/api/auth/login', [
-            'email'    => 'not-an-email',
+            'email' => 'not-an-email',
             'password' => 'password',
         ])
             ->assertUnprocessable()
@@ -71,7 +71,7 @@ describe('validation', function () {
 
 describe('authenticated endpoints', function () {
     it('lets an authenticated user get their own profile', function () {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = auth('api')->login($user);
 
         $this->withToken($token)
@@ -87,7 +87,7 @@ describe('authenticated endpoints', function () {
     });
 
     it('lets a user logout', function () {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = auth('api')->login($user);
 
         $this->withToken($token)
@@ -97,7 +97,7 @@ describe('authenticated endpoints', function () {
     });
 
     it('lets a user refresh their token', function () {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = auth('api')->login($user);
 
         $this->withToken($token)

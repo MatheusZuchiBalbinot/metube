@@ -11,8 +11,8 @@ return [
     'secret' => env('JWT_SECRET'),
 
     'keys' => [
-        'public'     => env('JWT_PUBLIC_KEY'),
-        'private'    => env('JWT_PRIVATE_KEY'),
+        'public' => env('JWT_PUBLIC_KEY'),
+        'private' => env('JWT_PRIVATE_KEY'),
         'passphrase' => env('JWT_PASSPHRASE'),
     ],
 
@@ -59,8 +59,8 @@ return [
     'decrypt_cookies' => false,
 
     'providers' => [
-        'jwt'     => PHPOpenSourceSaver\JWTAuth\Providers\JWT\Lcobucci::class,
-        'auth'    => PHPOpenSourceSaver\JWTAuth\Providers\Auth\Illuminate::class,
+        'jwt' => PHPOpenSourceSaver\JWTAuth\Providers\JWT\Lcobucci::class,
+        'auth' => PHPOpenSourceSaver\JWTAuth\Providers\Auth\Illuminate::class,
         'storage' => PHPOpenSourceSaver\JWTAuth\Providers\Storage\Illuminate::class,
     ],
 
