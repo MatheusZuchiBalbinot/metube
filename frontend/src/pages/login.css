@@ -1,0 +1,92 @@
+/* ─── Login page ─────────────────────────────────────────────────────────── */
+
+.login-bg {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: var(--bg);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-bg::before,
+.login-bg::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(100px);
+}
+
+.login-bg::before {
+    width: 700px; height: 700px;
+    top: -300px; left: -150px;
+    background: radial-gradient(circle, var(--accent-orb-a), transparent 70%);
+}
+
+.login-bg::after {
+    width: 600px; height: 600px;
+    bottom: -250px; right: -100px;
+    background: radial-gradient(circle, var(--accent-orb-b), transparent 70%);
+}
+
+.login-card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 420px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 44px 40px 40px;
+    box-shadow: 0 0 0 1px var(--border), 0 32px 80px var(--shadow-lg);
+}
+
+:root[data-mode='light'] .login-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    box-shadow: 0 2px 8px var(--shadow), 0 16px 48px var(--shadow);
+}
+
+.login-logo-mark {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.login-title {
+    font-size: 1.375rem; font-weight: 700;
+    letter-spacing: -0.03em; color: var(--text);
+    margin-bottom: 6px; line-height: 1.2;
+}
+
+.login-subtitle {
+    font-size: 0.875rem; color: var(--text-2); margin-bottom: 32px;
+}
+
+.login-error {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+    border-radius: var(--radius-sm);
+    padding: 11px 14px; font-size: 0.8125rem;
+    margin-bottom: 20px; line-height: 1.45;
+}
+
+:root[data-mode='light'] .login-error {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
