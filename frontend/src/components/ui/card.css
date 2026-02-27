@@ -1,0 +1,20 @@
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.card--hover:hover {
+    border-color: var(--border-2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px var(--shadow);
+    cursor: pointer;
+}
+
+.card--pad-none {}
+.card--pad-sm  { padding: 16px; }
+.card--pad-md  { padding: 24px; }
+.card--pad-lg  { padding: 32px; }
