@@ -1,16 +1,16 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useState } from 'react'
 
 export type ThemeMode  = 'dark' | 'light'
 export type ThemeColor = 'violet' | 'blue' | 'green' | 'rose' | 'amber'
 
-interface ThemeContextValue {
+export interface ThemeContextValue {
     mode:  ThemeMode
     color: ThemeColor
     setMode:  (mode: ThemeMode) => void
     setColor: (color: ThemeColor) => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
+export const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function applyMode(mode: ThemeMode) {
     document.documentElement.dataset.mode = mode
@@ -53,8 +53,3 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function useTheme(): ThemeContextValue {
-    const ctx = useContext(ThemeContext)
-    if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>')
-    return ctx
-}

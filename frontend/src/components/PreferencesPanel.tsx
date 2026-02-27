@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react'
-import { useTheme, type ThemeColor, type ThemeMode } from '../context/ThemeContext'
+import { useTheme } from '../context/useTheme'
+import type { ThemeColor, ThemeMode } from '../context/ThemeContext'
 import './preferences.css'
 
 const COLORS: { key: ThemeColor; hex: string; label: string }[] = [
