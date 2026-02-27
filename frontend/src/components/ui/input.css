@@ -1,0 +1,90 @@
+/* ─── Input ──────────────────────────────────────────────────────────────── */
+
+.input-field-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.input-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.01em;
+}
+
+.input-inner {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    color: var(--text-3);
+    pointer-events: none;
+    transition: color 0.15s;
+}
+
+.input-inner:focus-within .input-icon {
+    color: var(--accent);
+}
+
+.input-field {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.9375rem;
+    padding: 13px 14px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.input-field::placeholder {
+    color: var(--text-3);
+}
+
+.input-field:hover {
+    border-color: var(--border-2);
+    background: var(--surface-3);
+}
+
+.input-field:focus,
+.input-field:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    background: var(--surface-3);
+}
+
+.input-field--icon {
+    padding-left: 40px;
+}
+
+.input-field--error {
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.input-field--error:focus,
+.input-field--error:focus-visible {
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-error-msg {
+    font-size: 0.8rem;
+    color: #f87171;
+}
+
+.input-helper-msg {
+    font-size: 0.8rem;
+    color: var(--text-3);
+}
+
+/* ─── Light mode overrides ───────────────────────────────────────────────── */
+
+:root[data-mode='light'] .input-error-msg { color: #dc2626; }
