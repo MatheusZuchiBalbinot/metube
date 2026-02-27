@@ -1,0 +1,18 @@
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.badge--default { background: var(--accent-subtle); color: var(--accent); }
+.badge--success { background: rgba(16, 185, 129, 0.10); color: #34d399; }
+.badge--warning { background: rgba(245, 158, 11, 0.10); color: #fbbf24; }
+.badge--danger  { background: rgba(239, 68, 68, 0.10);  color: #f87171; }
+.badge--neutral { background: var(--surface-3); color: var(--text-2); }
