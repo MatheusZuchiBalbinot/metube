@@ -1,0 +1,120 @@
+/* ─── Drag and Drop ──────────────────────────────────────────────────────── */
+
+.dnd-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dnd-zone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    cursor: pointer;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    user-select: none;
+    border: 2px dashed var(--border);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.dnd-zone:hover,
+.dnd-zone--dragging {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+.dnd-zone--has-file {
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+.dnd-zone--dragging {
+    background: var(--accent-subtle);
+}
+
+.dnd-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.dnd-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dnd-icon--accent {
+    background: var(--accent);
+    color: var(--accent-fg);
+}
+
+.dnd-icon--subtle {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+
+.dnd-filename {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dnd-filesize {
+    font-size: 0.8rem;
+    color: var(--text-3);
+}
+
+.dnd-clear {
+    position: relative;
+    z-index: 10;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    color: var(--text-2);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.dnd-clear:hover {
+    color: var(--text);
+}
+
+.dnd-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dnd-sublabel {
+    font-size: 0.8125rem;
+    color: var(--text-2);
+}
+
+.dnd-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #f87171;
+}
+
+:root[data-mode='light'] .dnd-error { color: #dc2626; }
