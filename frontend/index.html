@@ -6,6 +6,15 @@
 	<link rel="icon" type="image/svg+xml" href="/vite.svg" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Video Summarizer</title>
+	<!-- Prevent flash of unstyled content: apply stored theme before React mounts -->
+	<script>
+		(function () {
+			var mode = localStorage.getItem('theme-mode') || 'dark'
+			var color = localStorage.getItem('theme-color') || 'violet'
+			document.documentElement.dataset.mode = mode
+			document.documentElement.dataset.color = color
+		})()
+	</script>
 </head>
 
 <body>
