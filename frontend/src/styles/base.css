@@ -1,0 +1,130 @@
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ─── CSS Custom Properties ─────────────────────────────────────────────── */
+
+:root,
+:root[data-mode='dark'] {
+    --bg:        #09090c;
+    --bg-2:      #0e0e12;
+    --surface:   #111116;
+    --surface-2: #18181f;
+    --surface-3: #202029;
+    --border:    #27272f;
+    --border-2:  #32323d;
+    --text:      #eeeef2;
+    --text-2:    #9898b0;
+    --text-3:    #55556a;
+    --shadow:    rgba(0, 0, 0, 0.55);
+    --shadow-lg: rgba(0, 0, 0, 0.7);
+    --glass-bg:  rgba(17, 17, 22, 0.8);
+    --glass-blur: blur(24px);
+}
+
+:root[data-mode='light'] {
+    --bg:        #f2f2f7;
+    --bg-2:      #e8e8f0;
+    --surface:   #ffffff;
+    --surface-2: #f7f7fc;
+    --surface-3: #ededf5;
+    --border:    #dcdce8;
+    --border-2:  #c8c8d8;
+    --text:      #0e0e18;
+    --text-2:    #5a5a72;
+    --text-3:    #9898b0;
+    --shadow:    rgba(0, 0, 0, 0.07);
+    --shadow-lg: rgba(0, 0, 0, 0.14);
+    --glass-bg:  rgba(255, 255, 255, 0.88);
+    --glass-blur: blur(24px);
+}
+
+:root,
+:root[data-color='violet'] {
+    --accent:        #7c3aed;
+    --accent-2:      #6d28d9;
+    --accent-fg:     #ffffff;
+    --accent-subtle: rgba(124, 58, 237, 0.12);
+    --accent-glow:   rgba(124, 58, 237, 0.3);
+    --accent-orb-a:  rgba(124, 58, 237, 0.07);
+    --accent-orb-b:  rgba(109, 40, 217, 0.05);
+}
+
+:root[data-color='blue'] {
+    --accent:        #2563eb;
+    --accent-2:      #1d4ed8;
+    --accent-fg:     #ffffff;
+    --accent-subtle: rgba(37, 99, 235, 0.12);
+    --accent-glow:   rgba(37, 99, 235, 0.3);
+    --accent-orb-a:  rgba(37, 99, 235, 0.07);
+    --accent-orb-b:  rgba(29, 78, 216, 0.05);
+}
+
+:root[data-color='green'] {
+    --accent:        #059669;
+    --accent-2:      #047857;
+    --accent-fg:     #ffffff;
+    --accent-subtle: rgba(5, 150, 105, 0.12);
+    --accent-glow:   rgba(5, 150, 105, 0.3);
+    --accent-orb-a:  rgba(5, 150, 105, 0.07);
+    --accent-orb-b:  rgba(4, 120, 87, 0.05);
+}
+
+:root[data-color='rose'] {
+    --accent:        #e11d48;
+    --accent-2:      #be123c;
+    --accent-fg:     #ffffff;
+    --accent-subtle: rgba(225, 29, 72, 0.12);
+    --accent-glow:   rgba(225, 29, 72, 0.3);
+    --accent-orb-a:  rgba(225, 29, 72, 0.07);
+    --accent-orb-b:  rgba(190, 18, 60, 0.05);
+}
+
+:root[data-color='amber'] {
+    --accent:        #d97706;
+    --accent-2:      #b45309;
+    --accent-fg:     #ffffff;
+    --accent-subtle: rgba(217, 119, 6, 0.12);
+    --accent-glow:   rgba(217, 119, 6, 0.3);
+    --accent-orb-a:  rgba(217, 119, 6, 0.07);
+    --accent-orb-b:  rgba(180, 83, 9, 0.05);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+:root {
+    font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    --radius-sm: 8px;
+    --radius:    12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+}
+
+/* ─── Theme transitions ──────────────────────────────────────────────────── */
+body,
+.login-card,
+.nav,
+.dashboard,
+.feature-card,
+.feature-card-icon,
+.nav-brand-icon,
+.welcome-banner,
+.prefs-panel,
+.prefs-trigger,
+.prefs-toggle,
+.prefs-toggle-btn,
+.card {
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+        color 0.2s ease, box-shadow 0.2s ease;
+}
