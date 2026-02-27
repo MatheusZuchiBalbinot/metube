@@ -1,0 +1,107 @@
+/* ─── Dashboard layout ───────────────────────────────────────────────────── */
+
+.dashboard { display: flex; flex-direction: column; min-height: 100dvh; }
+
+/* ─── Navigation ─────────────────────────────────────────────────────────── */
+
+.nav {
+    height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
+}
+
+:root[data-mode='light'] .nav { background: var(--surface); backdrop-filter: none; }
+
+.nav-brand {
+    display: flex; align-items: center; gap: 10px; text-decoration: none;
+}
+
+.nav-brand-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.nav-brand-name {
+    font-size: 0.9375rem; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--text);
+}
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.nav-username {
+    font-size: 0.875rem; color: var(--text-2); font-weight: 500;
+    max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.nav-divider { width: 1px; height: 18px; background: var(--border); }
+
+/* ─── Main content ───────────────────────────────────────────────────────── */
+
+.dashboard-main {
+    flex: 1; padding: 40px 24px;
+    max-width: 920px; width: 100%; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 28px;
+}
+
+/* ─── Welcome banner ─────────────────────────────────────────────────────── */
+
+.welcome-banner {
+    display: flex; align-items: center; gap: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 28px 32px;
+    position: relative; overflow: hidden;
+}
+
+.welcome-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--accent-subtle) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.welcome-text { position: relative; }
+
+.welcome-text h1 {
+    font-size: 1.1875rem; font-weight: 700;
+    letter-spacing: -0.025em; color: var(--text); margin-bottom: 5px;
+}
+
+.welcome-text p { font-size: 0.875rem; color: var(--text-2); line-height: 1.55; }
+
+/* ─── Feature grid ───────────────────────────────────────────────────────── */
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.feature-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s, background-color 0.2s;
+}
+
+.feature-card:hover {
+    border-color: var(--border-2); transform: translateY(-2px);
+    box-shadow: 0 8px 32px var(--shadow);
+}
+
+.feature-card-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-subtle); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.feature-card-title {
+    font-size: 0.9375rem; font-weight: 600; color: var(--text);
+    margin-bottom: 5px; letter-spacing: -0.01em;
+}
+
+.feature-card-desc { font-size: 0.8125rem; color: var(--text-2); line-height: 1.55; }
