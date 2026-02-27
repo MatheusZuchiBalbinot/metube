@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios'
 import i18n from '../i18n'
 
 const client = axios.create({
@@ -28,25 +28,34 @@ function drainQueue(error: unknown, token: string | null = null) {
     pendingQueue = []
 }
 
+type RetryableConfig = AxiosRequestConfig & { _retry?: boolean }
+
+function shouldSkipRefresh(error: AxiosError, original: RetryableConfig): boolean {
+    const isUnauthorized = error.response?.status === 401
+    const isRefreshEndpoint = original.url?.includes('/auth/refresh')
+    return !isUnauthorized || Boolean(original._retry) || Boolean(isRefreshEndpoint)
+}
+
+function enqueueRequest(original: RetryableConfig): Promise<unknown> {
+    return new Promise<string>((resolve, reject) => {
+        pendingQueue.push({ resolve, reject })
+    }).then((newToken) => {
+        original.headers = { ...original.headers, Authorization: `Bearer ${newToken}` }
+        return client(original)
+    })
+}
+
 client.interceptors.response.use(
     (response) => response,
     async (error) => {
-        const original: AxiosRequestConfig & { _retry?: boolean } = error.config ?? {}
+        const original: RetryableConfig = error.config ?? {}
 
-        const isUnauthorized = error.response?.status === 401
-        const isRefreshEndpoint = original.url?.includes('/auth/refresh')
-
-        if (!isUnauthorized || original._retry || isRefreshEndpoint) {
+        if (shouldSkipRefresh(error, original)) {
             return Promise.reject(error)
         }
 
         if (isRefreshing) {
-            return new Promise<string>((resolve, reject) => {
-                pendingQueue.push({ resolve, reject })
-            }).then((newToken) => {
-                original.headers = { ...original.headers, Authorization: `Bearer ${newToken}` }
-                return client(original)
-            })
+            return enqueueRequest(original)
         }
 
         original._retry = true

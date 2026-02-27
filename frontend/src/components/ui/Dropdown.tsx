@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 import './dropdown.css'
+import { t } from 'i18next'
 
 export interface DropdownOption {
     label: string
@@ -17,11 +18,37 @@ interface DropdownProps {
     disabled?: boolean
 }
 
+function buildTriggerClass(open: boolean, disabled: boolean) {
+    return ['dropdown-trigger', open ? 'dropdown-trigger--open' : '', disabled ? 'dropdown-trigger--disabled' : '']
+        .filter(Boolean)
+        .join(' ')
+}
+
+interface DropdownOptionItemProps {
+    opt: DropdownOption
+    selected: boolean
+    onSelect: (value: string) => void
+}
+
+function DropdownOptionItem({ opt, selected, onSelect }: DropdownOptionItemProps) {
+    return (
+        <button
+            type="button"
+            onClick={() => onSelect(opt.value)}
+            className={`dropdown-option${selected ? ' dropdown-option--active' : ''}`}
+        >
+            {opt.icon && <span className="dropdown-option-icon">{opt.icon}</span>}
+            <span className="dropdown-option-label">{opt.label}</span>
+            {selected && <Check size={13} className="dropdown-option-check" />}
+        </button>
+    )
+}
+
 export default function Dropdown({
     options,
     value,
     onChange,
-    placeholder = 'Selecionar...',
+    placeholder = t('dropdown.select-placeholder'),
     label,
     disabled = false,
 }: DropdownProps) {
@@ -45,19 +72,11 @@ export default function Dropdown({
         setOpen(false)
     }
 
-    const triggerClass = [
-        'dropdown-trigger',
-        open ? 'dropdown-trigger--open' : '',
-        disabled ? 'dropdown-trigger--disabled' : '',
-    ]
-        .filter(Boolean)
-        .join(' ')
+    const triggerClass = buildTriggerClass(open, disabled)
 
     return (
         <div className="dropdown-wrap">
-            {label && (
-                <span className="dropdown-label">{label}</span>
-            )}
+            {label && <span className="dropdown-label">{label}</span>}
 
             <div className="dropdown-trigger-wrap" ref={wrapRef}>
                 <button
@@ -87,20 +106,12 @@ export default function Dropdown({
                 {open && (
                     <div className="dropdown-menu">
                         {options.map((opt) => (
-                            <button
+                            <DropdownOptionItem
                                 key={opt.value}
-                                type="button"
-                                onClick={() => handleSelect(opt.value)}
-                                className={`dropdown-option${opt.value === value ? ' dropdown-option--active' : ''}`}
-                            >
-                                {opt.icon && (
-                                    <span className="dropdown-option-icon">{opt.icon}</span>
-                                )}
-                                <span className="dropdown-option-label">{opt.label}</span>
-                                {opt.value === value && (
-                                    <Check size={13} className="dropdown-option-check" />
-                                )}
-                            </button>
+                                opt={opt}
+                                selected={opt.value === value}
+                                onSelect={handleSelect}
+                            />
                         ))}
                     </div>
                 )}

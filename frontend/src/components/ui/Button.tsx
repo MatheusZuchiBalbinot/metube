@@ -13,6 +13,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     fullWidth?: boolean
 }
 
+function buildButtonClass(variant: ButtonVariant, size: ButtonSize, fullWidth: boolean, className: string) {
+    return ['btn', `btn--${variant}`, `btn--${size}`, fullWidth ? 'btn--full' : '', className]
+        .filter(Boolean)
+        .join(' ')
+}
+
 export default function Button({
     variant = 'primary',
     size = 'md',
@@ -25,15 +31,7 @@ export default function Button({
     disabled,
     ...props
 }: ButtonProps) {
-    const classes = [
-        'btn',
-        `btn--${variant}`,
-        `btn--${size}`,
-        fullWidth ? 'btn--full' : '',
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ')
+    const classes = buildButtonClass(variant, size, fullWidth, className)
 
     return (
         <button className={classes} disabled={disabled || loading} {...props}>

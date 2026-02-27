@@ -1,9 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as authApi from '../api/auth'
 import type { User } from '../api/auth'
 
-interface AuthContextValue {
+export interface AuthContextValue {
     user: User | null
     loading: boolean
     sessionError: string | null
@@ -11,7 +11,7 @@ interface AuthContextValue {
     signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { t } = useTranslation()
@@ -21,15 +21,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Re-hydrate user from stored token on mount
     useEffect(() => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-            setLoading(false)
-            return
+        async function hydrate() {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                setLoading(false)
+                return
+            }
+            try {
+                const userData = await authApi.me()
+                setUser(userData)
+            } catch {
+                localStorage.removeItem('token')
+            } finally {
+                setLoading(false)
+            }
         }
-        authApi.me()
-            .then(setUser)
-            .catch(() => localStorage.removeItem('token'))
-            .finally(() => setLoading(false))
+        hydrate()
     }, [])
 
     // Listen for expired-session events dispatched by the axios interceptor
@@ -62,8 +69,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function useAuth(): AuthContextValue {
-    const ctx = useContext(AuthContext)
-    if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')
-    return ctx
-}

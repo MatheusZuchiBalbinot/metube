@@ -33,5 +33,8 @@
         "light": "Light",
         "accent_color": "Accent color",
         "language": "Language"
+    },
+    "dropdown": {
+        "select_placeholder": "Select an option"
     }
 }

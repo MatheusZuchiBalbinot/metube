@@ -8,6 +8,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     helper?: string
 }
 
+function buildInputClass(icon: React.ReactNode, error: string | undefined, className: string) {
+    return ['input-field', icon ? 'input-field--icon' : '', error ? 'input-field--error' : '', className]
+        .filter(Boolean)
+        .join(' ')
+}
+
 export default function Input({
     label,
     icon,
@@ -17,14 +23,7 @@ export default function Input({
     className = '',
     ...props
 }: InputProps) {
-    const inputClass = [
-        'input-field',
-        icon ? 'input-field--icon' : '',
-        error ? 'input-field--error' : '',
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ')
+    const inputClass = buildInputClass(icon, error, className)
 
     return (
         <div className="input-field-wrap">

@@ -16,6 +16,12 @@ function formatBytes(bytes: number) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function buildZoneClass(dragging: boolean, file: File | null) {
+    return ['dnd-zone', dragging ? 'dnd-zone--dragging' : '', file ? 'dnd-zone--has-file' : '']
+        .filter(Boolean)
+        .join(' ')
+}
+
 export default function DragAndDrop({
     onFileSelect,
     onClear,
@@ -61,13 +67,7 @@ export default function DragAndDrop({
         onClear?.()
     }
 
-    const zoneClass = [
-        'dnd-zone',
-        dragging ? 'dnd-zone--dragging' : '',
-        file ? 'dnd-zone--has-file' : '',
-    ]
-        .filter(Boolean)
-        .join(' ')
+    const zoneClass = buildZoneClass(dragging, file)
 
     return (
         <div className="dnd-wrap">

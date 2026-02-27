@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Play, Upload, Clock, Download, LogOut } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { Button, Badge, Avatar } from '../components/ui'
 import './dashboard.css'
 
