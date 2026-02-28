@@ -14,7 +14,6 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => 'password',
-                'email_verified_at' => now(),
             ],
         );
     }
