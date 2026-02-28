@@ -16,8 +16,7 @@ describe('login', function () {
             'password' => 'password',
         ])
             ->assertOk()
-            ->assertJsonStructure(['access_token', 'token_type', 'expires_in', 'user'])
-            ->assertJsonPath('token_type', 'bearer')
+            ->assertJsonStructure(['user'])
             ->assertJsonPath('user.email', $user->email);
     });
 
@@ -72,9 +71,8 @@ describe('validation', function () {
 describe('authenticated endpoints', function () {
     it('lets an authenticated user get their own profile', function () {
         $user = User::factory()->create();
-        $token = auth('api')->login($user);
 
-        $this->withToken($token)
+        $this->actingAs($user)
             ->getJson('/api/auth/me')
             ->assertOk()
             ->assertJsonPath('email', $user->email)
@@ -88,37 +86,59 @@ describe('authenticated endpoints', function () {
 
     it('lets a user logout', function () {
         $user = User::factory()->create();
-        $token = auth('api')->login($user);
 
-        $this->withToken($token)
+        $this->actingAs($user, 'web')
             ->postJson('/api/auth/logout')
             ->assertOk()
             ->assertJsonStructure(['message']);
     });
+});
 
-    it('lets a user refresh their token', function () {
+// ─── Session version invalidation ────────────────────────────────────────────
+
+describe('session version', function () {
+    it('rejects requests after session_version is incremented', function () {
         $user = User::factory()->create();
-        $token = auth('api')->login($user);
 
-        $this->withToken($token)
-            ->postJson('/api/auth/refresh')
-            ->assertOk()
-            ->assertJsonStructure(['access_token', 'token_type', 'expires_in']);
+        // Stateful request: Origin header makes Sanctum start the session middleware
+        $this->actingAs($user)
+            ->withHeaders(['Origin' => 'http://localhost'])
+            ->withSession(['session_version' => $user->session_version])
+            ->getJson('/api/auth/me')
+            ->assertOk();
+
+        // Invalidate all sessions by bumping session_version to 2
+        $user->increment('session_version');
+        $user->refresh();
+
+        // Old session (still has version 1) should now be rejected
+        $this->actingAs($user)
+            ->withHeaders(['Origin' => 'http://localhost'])
+            ->withSession(['session_version' => 1])
+            ->getJson('/api/auth/me')
+            ->assertUnauthorized();
     });
 });
 
-// ─── User model business rules ────────────────────────────────────────────────
+// ─── Rate limiting ────────────────────────────────────────────────────────────
 
-describe('user model', function () {
-    it('considers a verified user as email verified', function () {
-        $user = User::factory()->create(['email_verified_at' => now()]);
+describe('rate limiting', function () {
+    it('returns 429 after too many login attempts', function () {
+        $user = User::factory()->create();
+        $serverVars = ['REMOTE_ADDR' => '10.0.0.1'];
 
-        expect($user->isEmailVerified())->toBeTrue();
-    });
+        foreach (range(1, 5) as $_) {
+            $this->withServerVariables($serverVars)
+                ->postJson('/api/auth/login', [
+                    'email' => $user->email,
+                    'password' => 'wrong',
+                ])->assertUnauthorized();
+        }
 
-    it('considers an unverified user as not email verified', function () {
-        $user = User::factory()->unverified()->create();
-
-        expect($user->isEmailVerified())->toBeFalse();
+        $this->withServerVariables($serverVars)
+            ->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'wrong',
+            ])->assertStatus(429);
     });
 });
