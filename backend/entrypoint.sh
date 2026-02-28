@@ -25,12 +25,6 @@ php artisan migrate --force
 echo "Seeding database..."
 php artisan db:seed --force
 
-echo "Checking JWT secret..."
-if [ -f .env ] && ! grep -qE "^JWT_SECRET=.+" .env; then
-  echo "Generating JWT secret..."
-  php artisan jwt:secret --force --no-interaction
-fi
-
 echo "Starting Octane..."
 exec php artisan octane:start \
   --server=frankenphp \
