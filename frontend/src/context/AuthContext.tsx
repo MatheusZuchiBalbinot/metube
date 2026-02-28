@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState } from 'react'
+import { createContext, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as authApi from '../api/auth'
 import type { User } from '../api/auth'
@@ -19,24 +19,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const [sessionError, setSessionError] = useState<string | null>(null)
 
-    // Re-hydrate user from stored token on mount
+    const initialized = useRef(false)
+
+    // Fetch CSRF cookie and re-hydrate user from session cookie on mount
     useEffect(() => {
-        async function hydrate() {
-            const token = localStorage.getItem('token')
-            if (!token) {
-                setLoading(false)
-                return
-            }
-            try {
-                const userData = await authApi.me()
-                setUser(userData)
-            } catch {
-                localStorage.removeItem('token')
-            } finally {
-                setLoading(false)
-            }
-        }
-        hydrate()
+        if (initialized.current) return
+        initialized.current = true
+
+        authApi.getCsrfCookie()
+            .then(() => authApi.me())
+            .then(setUser)
+            .catch(() => null)
+            .finally(() => setLoading(false))
     }, [])
 
     // Listen for expired-session events dispatched by the axios interceptor
@@ -50,15 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [t])
 
     const signIn = useCallback(async (email: string, password: string) => {
-        const { access_token, user: userData } = await authApi.login({ email, password })
-        localStorage.setItem('token', access_token)
+        const { user: userData } = await authApi.login({ email, password })
         setUser(userData)
         setSessionError(null)
     }, [])
 
     const signOut = useCallback(async () => {
         await authApi.logout().catch(() => null)
-        localStorage.removeItem('token')
         setUser(null)
     }, [])
 
@@ -68,4 +60,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         </AuthContext.Provider>
     )
 }
-

@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
-import { Button, Input } from '../components/ui'
+import { Button, Input, Spinner } from '../components/ui'
 import './login.css'
 
 export default function LoginPage() {
     const { t } = useTranslation()
-    const { signIn, user, sessionError } = useAuth()
+    const { signIn, user, loading: authLoading, sessionError } = useAuth()
     const navigate = useNavigate()
 
     const [email, setEmail] = useState('')
@@ -16,10 +16,8 @@ export default function LoginPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    if (user) {
-        navigate('/', { replace: true })
-        return null
-    }
+    if (authLoading) return <Spinner fullPage />
+    if (user) return <Navigate to="/" replace />
 
     async function handleSubmit(e: { preventDefault(): void }) {
         e.preventDefault()

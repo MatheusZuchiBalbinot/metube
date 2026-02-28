@@ -1,10 +1,10 @@
+import axios from 'axios'
 import client from './client'
 
 export interface User {
     id: number
     name: string
     email: string
-    verified: boolean
     created_at: string
 }
 
@@ -13,15 +13,16 @@ export interface LoginPayload {
     password: string
 }
 
-export interface TokenResponse {
-    access_token: string
-    token_type: string
-    expires_in: number
+export interface LoginResponse {
     user: User
 }
 
-export async function login(payload: LoginPayload): Promise<TokenResponse> {
-    const { data } = await client.post<TokenResponse>('/auth/login', payload)
+export async function getCsrfCookie(): Promise<void> {
+    await axios.get('/sanctum/csrf-cookie', { withCredentials: true })
+}
+
+export async function login(payload: LoginPayload): Promise<LoginResponse> {
+    const { data } = await client.post<LoginResponse>('/auth/login', payload)
     return data
 }
 
