@@ -24,7 +24,8 @@ RUN install-php-extensions \
     pcntl \
     bcmath \
     sockets \
-    opcache
+    opcache \
+    redis
 
 COPY --from=vendor /app /app
 

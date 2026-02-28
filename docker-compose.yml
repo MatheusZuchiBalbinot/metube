@@ -19,6 +19,17 @@ services:
       timeout: 3s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build: ./backend
     restart: unless-stopped
@@ -27,8 +38,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
+      - /app/vendor
+      - /app/bootstrap/cache
     working_dir: /app
     networks:
       - app_net
@@ -45,6 +60,8 @@ services:
       - app_net
     stdin_open: true
     tty: true
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:alpine
