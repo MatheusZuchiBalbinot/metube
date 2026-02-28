@@ -4,47 +4,46 @@ namespace App\Services;
 
 use App\Exceptions\InvalidCredentialsException;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthService
 {
     /**
-     * Attempt login and return token data + authenticated user.
+     * Attempt login, regenerate session, and return the authenticated user.
      *
      * @param  array{email: string, password: string}  $credentials
-     * @return array{access_token: string, token_type: string, expires_in: int, user: User}
+     * @return User
      *
      * @throws InvalidCredentialsException
      */
-    public function login(array $credentials): array
+    public function login(array $credentials): User
     {
-        $token = auth('api')->attempt($credentials);
-
-        if (! $token) {
+        if (!Auth::attempt($credentials)) {
             throw new InvalidCredentialsException;
         }
 
         /** @var User $user */
-        $user = auth('api')->user();
+        $user = Auth::user();
 
-        return array_merge($this->tokenPayload($token), ['user' => $user]);
+        if (request()->hasSession()) {
+            request()->session()->regenerate();
+            session(['session_version' => $user->session_version]);
+        }
+
+        return $user;
     }
 
     /**
-     * Invalidate the current token (logout).
+     * Logout the current user and invalidate the session.
      */
     public function logout(): void
     {
-        auth('api')->logout();
-    }
+        Auth::guard('web')->logout();
 
-    /**
-     * Refresh the current token and return new token data.
-     *
-     * @return array{access_token: string, token_type: string, expires_in: int}
-     */
-    public function refresh(): array
-    {
-        return $this->tokenPayload(auth('api')->refresh());
+        if (request()->hasSession()) {
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+        }
     }
 
     /**
@@ -53,22 +52,8 @@ class AuthService
     public function me(): User
     {
         /** @var User $user */
-        $user = auth('api')->user();
+        $user = Auth::user();
 
         return $user;
-    }
-
-    /**
-     * Build the standard token response payload.
-     *
-     * @return array{access_token: string, token_type: string, expires_in: int}
-     */
-    private function tokenPayload(string $token): array
-    {
-        return [
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
-        ];
     }
 }
