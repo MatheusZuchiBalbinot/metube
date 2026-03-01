@@ -1,5 +1,5 @@
-import axios from 'axios'
-import client from './client'
+import axios from 'axios';
+import client from './client';
 
 export interface User {
     id: number
@@ -18,19 +18,19 @@ export interface LoginResponse {
 }
 
 export async function getCsrfCookie(): Promise<void> {
-    await axios.get('/sanctum/csrf-cookie', { withCredentials: true })
+    await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-    const { data } = await client.post<LoginResponse>('/auth/login', payload)
-    return data
+    const { data } = await client.post<LoginResponse>('/auth/login', payload);
+    return data;
 }
 
 export async function logout(): Promise<void> {
-    await client.post('/auth/logout')
+    await client.post('/auth/logout');
 }
 
 export async function me(): Promise<User> {
-    const { data } = await client.get<User>('/auth/me')
-    return data
+    const { data } = await client.get<User>('/auth/me');
+    return data;
 }

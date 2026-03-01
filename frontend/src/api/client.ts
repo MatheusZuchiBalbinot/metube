@@ -1,5 +1,5 @@
-import axios, { type AxiosError } from 'axios'
-import i18n from '../i18n'
+import axios, { type AxiosError } from 'axios';
+import i18n from '../i18n';
 
 const client = axios.create({
     baseURL: '/api',
@@ -8,19 +8,19 @@ const client = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
-})
+});
 
 client.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
-        const url = error.config?.url ?? ''
+        const url = error.config?.url ?? '';
         if (error.response?.status === 401 && !url.includes('/auth/login')) {
             window.dispatchEvent(new CustomEvent('auth:session-expired', {
                 detail: { message: i18n.t('auth.session_expired') },
-            }))
+            }));
         }
-        return Promise.reject(error)
+        return Promise.reject(error);
     },
-)
+);
 
-export default client
+export default client;
