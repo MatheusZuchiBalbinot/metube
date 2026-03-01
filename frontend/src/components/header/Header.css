@@ -1,0 +1,232 @@
+/* ─── App Header ─────────────────────────────────────────────────────────── */
+
+.app-header {
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+:root[data-mode='light'] .app-header {
+    background: var(--surface);
+    backdrop-filter: none;
+}
+
+/* ─── Left ────────────────────────────────────────────────────────────────── */
+
+.app-header__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.app-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.app-header__brand:hover .app-header__brand-icon {
+    transform: scale(1.08) rotate(-6deg);
+    box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.app-header__brand:hover .app-header__brand-name {
+    color: var(--accent);
+}
+
+.app-header__brand-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+
+.app-header__brand-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    transition: color 0.15s;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+/* ─── Right ───────────────────────────────────────────────────────────────── */
+
+.app-header__right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ─── Create button ───────────────────────────────────────────────────────── */
+
+.btn.app-header__create-btn {
+    color: var(--accent);
+    background: var(--accent-subtle);
+    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.btn.app-header__create-btn:hover:not(:disabled) {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    transform: none;
+}
+
+/* ─── Icon button (menu, bell) ────────────────────────────────────────────── */
+
+.app-header__icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.12s, background 0.12s;
+}
+
+.app-header__icon-btn:hover {
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+/* ─── Avatar button & dropdown ────────────────────────────────────────────── */
+
+.app-header__avatar-wrap {
+    position: relative;
+}
+
+.app-header__avatar-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+.app-header__avatar-btn:hover {
+    opacity: 0.82;
+}
+
+.app-header__avatar-btn:active {
+    transform: scale(0.94);
+}
+
+.app-header__avatar-btn.open .avatar {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.app-header__dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 268px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 6px;
+    box-shadow: 0 24px 64px var(--shadow-lg), 0 0 0 1px var(--border);
+    animation: panelIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 50;
+}
+
+:root[data-mode='light'] .app-header__dropdown {
+    background: var(--surface);
+    backdrop-filter: none;
+    box-shadow: 0 12px 48px var(--shadow-lg);
+}
+
+/* ─── Dropdown — user info ────────────────────────────────────────────────── */
+
+.app-header__dropdown-user {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px 12px;
+}
+
+.app-header__dropdown-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+}
+
+.app-header__dropdown-email {
+    font-size: 0.75rem;
+    color: var(--text-3);
+}
+
+/* ─── Dropdown — separator ────────────────────────────────────────────────── */
+
+.app-header__dropdown-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
+
+/* ─── Dropdown — prefs sections override ─────────────────────────────────── */
+/* preferences.css .prefs-section has margin-bottom: 16px; override for dropdown */
+
+.app-header__dropdown .prefs-section {
+    padding: 6px 12px;
+    margin-bottom: 0;
+}
+
+/* ─── Dropdown — logout ───────────────────────────────────────────────────── */
+
+.app-header__dropdown-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    transition: color 0.12s, background 0.12s;
+}
+
+.app-header__dropdown-logout:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+/* ─── Create modal ────────────────────────────────────────────────────────── */
+
+.app-header__modal-placeholder {
+    font-size: 0.875rem;
+    color: var(--text-2);
+}
