@@ -1,14 +1,14 @@
-export { default as Button } from './Button'
-export { default as Input } from './Input'
-export { default as Modal } from './Modal'
-export { default as Dropdown } from './Dropdown'
-export { default as DragAndDrop } from './DragAndDrop'
-export { default as Badge } from './Badge'
-export { default as Avatar } from './Avatar'
-export { default as Card } from './Card'
-export { default as Spinner } from './Spinner'
+export { default as Button } from './button/Button';
+export { default as Input } from './input/Input';
+export { default as Modal } from './modal/Modal';
+export { default as Dropdown } from './dropdown/Dropdown';
+export { default as DragAndDrop } from './dnd/DragAndDrop';
+export { default as Badge } from './badge/Badge';
+export { default as Avatar } from './avatar/Avatar';
+export { default as Card } from './card/Card';
+export { default as Spinner } from './spinner/Spinner';
 
-export type { ButtonVariant, ButtonSize } from './Button'
-export type { DropdownOption } from './Dropdown'
-export type { BadgeVariant } from './Badge'
-export type { AvatarSize } from './Avatar'
+export type { ButtonVariant, ButtonSize } from './button/Button';
+export type { DropdownOption } from './dropdown/Dropdown';
+export type { BadgeVariant } from './badge/Badge';
+export type { AvatarSize } from './avatar/Avatar';

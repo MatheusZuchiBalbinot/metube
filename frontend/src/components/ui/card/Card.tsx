@@ -1,6 +1,6 @@
-import './card.css'
+import './Card.css';
 
-type CardPadding = 'none' | 'sm' | 'md' | 'lg'
+type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 interface CardProps {
     children: React.ReactNode
@@ -24,11 +24,11 @@ export default function Card({
         className,
     ]
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 
     return (
         <div className={classes} onClick={onClick}>
             {children}
         </div>
-    )
+    );
 }

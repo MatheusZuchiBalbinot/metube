@@ -1,6 +1,6 @@
-import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
-import { CloudUpload, FileVideo, X } from 'lucide-react'
-import './dnd.css'
+import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
+import { CloudUpload, FileVideo, X } from 'lucide-react';
+import './DragAndDrop.css';
 
 interface DragAndDropProps {
     onFileSelect: (file: File) => void
@@ -12,14 +12,14 @@ interface DragAndDropProps {
 }
 
 function formatBytes(bytes: number) {
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function buildZoneClass(dragging: boolean, file: File | null) {
     return ['dnd-zone', dragging ? 'dnd-zone--dragging' : '', file ? 'dnd-zone--has-file' : '']
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 }
 
 export default function DragAndDrop({
@@ -30,50 +30,50 @@ export default function DragAndDrop({
     label = 'Arraste um arquivo aqui',
     sublabel,
 }: DragAndDropProps) {
-    const [dragging, setDragging] = useState(false)
-    const [file, setFile] = useState<File | null>(null)
-    const [error, setError] = useState('')
-    const inputRef = useRef<HTMLInputElement>(null)
+    const [dragging, setDragging] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
+    const [error, setError] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const sub = sublabel ?? `ou clique para procurar · max ${maxSizeMB} MB`
+    const sub = sublabel ?? `ou clique para procurar · max ${maxSizeMB} MB`;
 
     function handleFile(f: File) {
-        setError('')
+        setError('');
         if (maxSizeMB && f.size > maxSizeMB * 1024 * 1024) {
-            setError(`Arquivo muito grande. Máximo: ${maxSizeMB} MB.`)
-            return
+            setError(`Arquivo muito grande. Máximo: ${maxSizeMB} MB.`);
+            return;
         }
-        setFile(f)
-        onFileSelect(f)
+        setFile(f);
+        onFileSelect(f);
     }
 
     function handleDrop(e: DragEvent<HTMLDivElement>) {
-        e.preventDefault()
-        setDragging(false)
-        const f = e.dataTransfer.files[0]
-        if (f) handleFile(f)
+        e.preventDefault();
+        setDragging(false);
+        const f = e.dataTransfer.files[0];
+        if (f) {handleFile(f);}
     }
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
-        const f = e.target.files?.[0]
-        if (f) handleFile(f)
+        const f = e.target.files?.[0];
+        if (f) {handleFile(f);}
     }
 
     function clear(e: React.MouseEvent) {
-        e.stopPropagation()
-        setFile(null)
-        setError('')
-        if (inputRef.current) inputRef.current.value = ''
-        onClear?.()
+        e.stopPropagation();
+        setFile(null);
+        setError('');
+        if (inputRef.current) {inputRef.current.value = '';}
+        onClear?.();
     }
 
-    const zoneClass = buildZoneClass(dragging, file)
+    const zoneClass = buildZoneClass(dragging, file);
 
     return (
         <div className="dnd-wrap">
             <div
                 className={zoneClass}
-                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => !file && inputRef.current?.click()}
@@ -114,5 +114,5 @@ export default function DragAndDrop({
                 <p className="dnd-error">{error}</p>
             )}
         </div>
-    )
+    );
 }

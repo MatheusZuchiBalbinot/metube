@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Check } from 'lucide-react'
-import './dropdown.css'
-import { t } from 'i18next'
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
+import './Dropdown.css';
+import { t } from 'i18next';
 
 export interface DropdownOption {
     label: string
@@ -21,7 +21,7 @@ interface DropdownProps {
 function buildTriggerClass(open: boolean, disabled: boolean) {
     return ['dropdown-trigger', open ? 'dropdown-trigger--open' : '', disabled ? 'dropdown-trigger--disabled' : '']
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 }
 
 interface DropdownOptionItemProps {
@@ -41,7 +41,7 @@ function DropdownOptionItem({ opt, selected, onSelect }: DropdownOptionItemProps
             <span className="dropdown-option-label">{opt.label}</span>
             {selected && <Check size={13} className="dropdown-option-check" />}
         </button>
-    )
+    );
 }
 
 export default function Dropdown({
@@ -52,27 +52,27 @@ export default function Dropdown({
     label,
     disabled = false,
 }: DropdownProps) {
-    const [open, setOpen] = useState(false)
-    const wrapRef = useRef<HTMLDivElement>(null)
+    const [open, setOpen] = useState(false);
+    const wrapRef = useRef<HTMLDivElement>(null);
 
-    const selected = options.find((o) => o.value === value)
+    const selected = options.find((o) => o.value === value);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-                setOpen(false)
+                setOpen(false);
             }
-        }
-        document.addEventListener('mousedown', handler)
-        return () => document.removeEventListener('mousedown', handler)
-    }, [])
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     function handleSelect(optValue: string) {
-        onChange(optValue)
-        setOpen(false)
+        onChange(optValue);
+        setOpen(false);
     }
 
-    const triggerClass = buildTriggerClass(open, disabled)
+    const triggerClass = buildTriggerClass(open, disabled);
 
     return (
         <div className="dropdown-wrap">
@@ -117,5 +117,5 @@ export default function Dropdown({
                 )}
             </div>
         </div>
-    )
+    );
 }
