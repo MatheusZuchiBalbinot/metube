@@ -1,8 +1,8 @@
-import { type ButtonHTMLAttributes } from 'react'
-import './button.css'
+import { type ButtonHTMLAttributes } from 'react';
+import './Button.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
-export type ButtonSize = 'sm' | 'md' | 'lg'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant
@@ -16,7 +16,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 function buildButtonClass(variant: ButtonVariant, size: ButtonSize, fullWidth: boolean, className: string) {
     return ['btn', `btn--${variant}`, `btn--${size}`, fullWidth ? 'btn--full' : '', className]
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 }
 
 export default function Button({
@@ -31,7 +31,7 @@ export default function Button({
     disabled,
     ...props
 }: ButtonProps) {
-    const classes = buildButtonClass(variant, size, fullWidth, className)
+    const classes = buildButtonClass(variant, size, fullWidth, className);
 
     return (
         <button className={classes} disabled={disabled || loading} {...props}>
@@ -45,5 +45,5 @@ export default function Button({
                 </>
             )}
         </button>
-    )
+    );
 }

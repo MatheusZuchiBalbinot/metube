@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
-import './modal.css'
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
+import './Modal.css';
 
-type ModalSize = 'sm' | 'md' | 'lg'
+type ModalSize = 'sm' | 'md' | 'lg';
 
 interface ModalProps {
     isOpen: boolean
@@ -23,18 +23,18 @@ export default function Modal({
     size = 'md',
 }: ModalProps) {
     useEffect(() => {
-        if (!isOpen) return
-        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-        document.addEventListener('keydown', onKey)
-        return () => document.removeEventListener('keydown', onKey)
-    }, [isOpen, onClose])
+        if (!isOpen) {return;}
+        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isOpen, onClose]);
 
     useEffect(() => {
-        document.body.style.overflow = isOpen ? 'hidden' : ''
-        return () => { document.body.style.overflow = '' }
-    }, [isOpen])
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
 
-    if (!isOpen) return null
+    if (!isOpen) {return null;}
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
@@ -63,5 +63,5 @@ export default function Modal({
             </div>
         </div>,
         document.body,
-    )
+    );
 }

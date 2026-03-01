@@ -1,5 +1,5 @@
-import { type InputHTMLAttributes } from 'react'
-import './input.css'
+import { type InputHTMLAttributes } from 'react';
+import './Input.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string
@@ -11,7 +11,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 function buildInputClass(icon: React.ReactNode, error: string | undefined, className: string) {
     return ['input-field', icon ? 'input-field--icon' : '', error ? 'input-field--error' : '', className]
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 }
 
 export default function Input({
@@ -23,7 +23,7 @@ export default function Input({
     className = '',
     ...props
 }: InputProps) {
-    const inputClass = buildInputClass(icon, error, className)
+    const inputClass = buildInputClass(icon, error, className);
 
     return (
         <div className="input-field-wrap">
@@ -45,5 +45,5 @@ export default function Input({
             {error && <p className="input-error-msg">{error}</p>}
             {!error && helper && <p className="input-helper-msg">{helper}</p>}
         </div>
-    )
+    );
 }

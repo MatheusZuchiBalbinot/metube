@@ -1,6 +1,6 @@
-import './badge.css'
+import './Badge.css';
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'neutral'
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'neutral';
 
 interface BadgeProps {
     children: React.ReactNode
@@ -12,5 +12,5 @@ export default function Badge({ children, variant = 'default' }: BadgeProps) {
         <span className={`badge badge--${variant}`}>
             {children}
         </span>
-    )
+    );
 }

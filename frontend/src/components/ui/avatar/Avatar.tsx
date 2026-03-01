@@ -1,6 +1,6 @@
-import './avatar.css'
+import './Avatar.css';
 
-export type AvatarSize = 'sm' | 'md' | 'lg'
+export type AvatarSize = 'sm' | 'md' | 'lg';
 
 interface AvatarProps {
     name: string
@@ -10,7 +10,7 @@ interface AvatarProps {
 }
 
 export default function Avatar({ name, size = 'md', src, className = '' }: AvatarProps) {
-    const initial = name.charAt(0).toUpperCase()
+    const initial = name.charAt(0).toUpperCase();
 
     const classes = [
         'avatar',
@@ -21,7 +21,7 @@ export default function Avatar({ name, size = 'md', src, className = '' }: Avata
         className,
     ]
         .filter(Boolean)
-        .join(' ')
+        .join(' ');
 
     return (
         <div className={classes} aria-label={name}>
@@ -31,5 +31,5 @@ export default function Avatar({ name, size = 'md', src, className = '' }: Avata
                 initial
             )}
         </div>
-    )
+    );
 }
