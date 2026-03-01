@@ -1,6 +1,6 @@
 {
     "common": {
-        "app_name": "Video Summarizer",
+        "app_name": "Vidsum",
         "loading": "Loading...",
         "sign_out": "Sign out"
     },
@@ -17,14 +17,14 @@
     },
     "dashboard": {
         "welcome": "Welcome, {{name}}",
-        "welcome_subtitle": "You are authenticated. Video summarization features are coming soon.",
+        "welcome_subtitle": "Your personal video platform. Upload, transcribe, classify and summarize — all in one place.",
         "coming_soon": "Coming soon",
         "feature_upload_title": "Upload or paste URL",
         "feature_upload_desc": "Support for YouTube, Vimeo, MP4 and more.",
-        "feature_summarize_title": "AI Summarization",
-        "feature_summarize_desc": "Get accurate, concise summaries powered by Claude.",
-        "feature_export_title": "Export anywhere",
-        "feature_export_desc": "Markdown, PDF, Notion and more formats."
+        "feature_transcribe_title": "Transcription & Summary",
+        "feature_transcribe_desc": "Automatic transcription and concise AI-powered summaries of any video.",
+        "feature_classify_title": "Classification & Tags",
+        "feature_classify_desc": "Intelligent auto-tagging and content classification powered by Claude."
     },
     "preferences": {
         "title": "Preferences",
@@ -33,6 +33,10 @@
         "light": "Light",
         "accent_color": "Accent color",
         "language": "Language"
+    },
+    "header": {
+        "create": "Create",
+        "notifications": "Notifications"
     },
     "dropdown": {
         "select_placeholder": "Select an option"
