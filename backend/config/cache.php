@@ -111,7 +111,5 @@ return [
     | that reason, you may prefix every cache key to avoid collisions.
     |
     */
-
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
-
+    'prefix' => env('CACHE_PREFIX', 'vidsum'),
 ];
