@@ -1,4 +1,4 @@
-# Video Summarizer — Application Context
+# Vidsum — Application Context
 
 This document describes the architecture, conventions, and decisions made in this project.
 It must be kept up-to-date and consulted before any new implementation.
@@ -12,27 +12,28 @@ It must be kept up-to-date and consulted before any new implementation.
 3. [Backend](#backend)
 4. [Frontend](#frontend)
 5. [Authentication](#authentication)
-6. [Internationalization](#internationalization)
-7. [Testing](#testing)
-8. [Conventions & Rules](#conventions--rules)
+6. [Testing](#testing)
+7. [Conventions & Rules](#conventions--rules)
+8. [Code Preferences](#code-preferences)
 9. [Running the Project](#running-the-project)
 
 ---
 
 ## Overview
 
-**Video Summarizer** is a web application that allows users to summarize videos.
+**Vidsum** is a video platform similar to YouTube, where users can upload or embed videos and get automatic AI-powered processing: transcription, summarization, tag generation, and content classification.
 The frontend is a React SPA; the backend is a Laravel 12 JSON API.
 They are fully decoupled — the frontend communicates with the backend exclusively via REST API.
 
 ```
 Browser → localhost:5173 (Vite dev server)
                │
-               ├─ /api/* ─proxy→ backend:8000 (Octane/FrankenPHP)
-               │                        │
-               │                   postgres:5432
+               ├─ /api/* ─proxy→ nginx:80 → backend:8000 (Octane/FrankenPHP)
+               │                                   │
+               │                             postgres:5432
+               │                             redis:6379
                │
-localhost:80 (Nginx) → backend:8000   [production-proxy only]
+localhost:80 (Nginx) → backend:8000   [also accessible directly]
 ```
 
 ---
@@ -41,20 +42,22 @@ localhost:80 (Nginx) → backend:8000   [production-proxy only]
 
 ### docker-compose.yml
 
-| Service    | Image                   | Port         | Purpose                          |
-|------------|-------------------------|--------------|----------------------------------|
-| `postgres` | postgres:16             | 5432         | Primary database                 |
-| `backend`  | ./backend/Dockerfile    | 8000         | Laravel 12 (Octane/FrankenPHP)   |
-| `frontend` | ./frontend/Dockerfile   | 5173         | React + Vite dev server          |
-| `nginx`    | nginx:alpine            | 80           | Reverse proxy for the backend    |
+| Service    | Image                   | Port         | Purpose                            |
+|------------|-------------------------|--------------|------------------------------------|
+| `postgres` | postgres:16             | 5432         | Primary database                   |
+| `redis`    | redis:7-alpine          | 6379         | Sessions and cache                 |
+| `backend`  | ./backend/Dockerfile    | 8000         | Laravel 12 (Octane/FrankenPHP)     |
+| `frontend` | ./frontend/Dockerfile   | 5173         | React + Vite dev server            |
+| `nginx`    | nginx:alpine            | 80           | Reverse proxy for the backend      |
 
 All services share the `app_net` bridge network.
+`postgres` and `redis` expose health-checks; `backend` waits for both before starting.
 
 ### Backend Dockerfile
 
 Multi-stage build:
 1. **Stage 1** (`composer:latest`) — installs PHP dependencies via `composer install --optimize-autoloader`.
-2. **Stage 2** (`dunglas/frankenphp:latest`) — installs PHP extensions (`pdo_pgsql`, `pgsql`, `mbstring`, `pcntl`, `bcmath`, `sockets`, `opcache`), copies the app and runs `entrypoint.sh`.
+2. **Stage 2** (`dunglas/frankenphp:latest`) — installs PHP extensions (`pdo_pgsql`, `pgsql`, `mbstring`, `pcntl`, `bcmath`, `sockets`, `opcache`, `ext-redis`), copies the app and runs `entrypoint.sh`.
 
 **Important:** The volume `./backend:/app` maps the local backend directory into the container at runtime.
 This means the local `vendor/` directory must exist (produced by `composer install` locally or by rebuilding the image).
@@ -65,30 +68,30 @@ On every container start:
 1. Clears Laravel caches.
 2. Waits for PostgreSQL to be ready (`pg_isready`).
 3. Runs `php artisan migrate --force`.
-4. Generates `JWT_SECRET` in `.env` if not already set.
-5. Starts Octane with FrankenPHP on `0.0.0.0:8000`.
+4. Starts Octane with FrankenPHP on `0.0.0.0:8000`.
 
 ### Environment files
 
-| File                        | Purpose                                      |
-|-----------------------------|----------------------------------------------|
-| `.env` (root)               | `BACKEND_PORT`, `FRONTEND_PORT`, `POSTGRES_PORT` |
-| `.env.postgres`             | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` |
-| `backend/.env`              | Full Laravel config (copy from `.env.example`) |
-| `backend/.env.example`      | Reference template — always keep up-to-date  |
+| File                        | Purpose                                                           |
+|-----------------------------|-------------------------------------------------------------------|
+| `.env` (root)               | Docker host port overrides (`BACKEND_PORT`, `FRONTEND_PORT`, etc.) |
+| `.env.postgres`             | PostgreSQL container credentials (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) |
+| `backend/.env`              | Full Laravel config (copy from `backend/.env.example`)            |
+| `backend/.env.example`      | Reference template — always keep up-to-date                       |
 
 Key backend env variables:
 
 ```dotenv
 DB_CONNECTION=pgsql
-DB_HOST=postgres
-SESSION_DRIVER=database
-CACHE_STORE=database       # used by JWT blacklist
+DB_HOST=postgres          # docker service name
+SESSION_DRIVER=redis      # Sanctum uses session-based auth; Redis is required
+CACHE_STORE=redis
 QUEUE_CONNECTION=database
+REDIS_HOST=redis          # docker service name
+REDIS_CLIENT=phpredis     # requires ext-redis PHP extension
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:3000,127.0.0.1:5173
+FRONTEND_URL=http://localhost:5173
 OCTANE_SERVER=frankenphp
-JWT_SECRET=                # auto-generated by entrypoint if empty
-JWT_TTL=60                 # access token lifetime (minutes)
-JWT_REFRESH_TTL=20160      # refresh window (minutes) = 2 weeks
 ```
 
 ---
@@ -103,9 +106,10 @@ JWT_REFRESH_TTL=20160      # refresh window (minutes) = 2 weeks
 | Framework     | Laravel 12                          |
 | HTTP Server   | Laravel Octane + FrankenPHP         |
 | Database      | PostgreSQL 16 via Eloquent ORM      |
-| Auth          | `php-open-source-saver/jwt-auth ^2.6` |
-| Queue/Cache   | Database driver                     |
-| Build tool    | Vite 7 + Tailwind 4 (Blade assets)  |
+| Auth          | Laravel Sanctum (session/cookie)    |
+| Session       | Redis driver                        |
+| Cache         | Redis                               |
+| Queue         | Database driver                     |
 
 ### Directory Structure
 
@@ -123,7 +127,7 @@ backend/
 │   │   └── Resources/
 │   │       └── UserResource.php             ← shapes the user JSON payload
 │   ├── Models/
-│   │   └── User.php                         ← business rules + JWTSubject
+│   │   └── User.php                         ← business rules; has session_version column
 │   ├── Providers/
 │   │   └── AppServiceProvider.php
 │   └── Services/
@@ -131,23 +135,21 @@ backend/
 ├── bootstrap/
 │   └── app.php                              ← routing, middleware, exception handler
 ├── config/
-│   ├── auth.php                             ← api guard with jwt driver
-│   ├── jwt.php                              ← JWT configuration
 │   └── ...
 ├── database/
 │   ├── factories/
 │   │   └── UserFactory.php                  ← default password: "password"
 │   ├── migrations/
 │   │   ├── 0001_01_01_000000_create_users_table.php
-│   │   ├── 0001_01_01_000001_create_cache_table.php
-│   │   └── 0001_01_01_000002_create_jobs_table.php
+│   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   └── 2026_02_28_171708_add_session_version_to_users_table.php
 │   └── seeders/
 ├── lang/
 │   └── en/
 │       └── messages.php                     ← custom app strings (English base)
 ├── routes/
 │   ├── api.php                              ← all API routes (prefixed /api)
-│   └── web.php                              ← serves welcome blade (dev only)
+│   └── web.php
 └── tests/
     ├── Feature/
     │   └── Auth/
@@ -186,28 +188,26 @@ backend/
 
 Base path: `/api` (auto-prefixed by Laravel when registered via `api:` in `bootstrap/app.php`)
 
-| Method | Path                 | Middleware   | Action                        |
-|--------|----------------------|--------------|-------------------------------|
-| POST   | `/api/auth/login`    | —            | Authenticate → returns JWT    |
-| POST   | `/api/auth/logout`   | `auth:api`   | Invalidate token (blacklist)  |
-| POST   | `/api/auth/refresh`  | `auth:api`   | Issue new JWT                 |
-| GET    | `/api/auth/me`       | `auth:api`   | Return authenticated user     |
+| Method | Path              | Middleware                        | Action                          |
+|--------|-------------------|-----------------------------------|---------------------------------|
+| POST   | `/api/auth/login` | `throttle:login`                  | Authenticate → starts session   |
+| POST   | `/api/auth/logout`| `auth:sanctum`, `session.version` | Destroy session                 |
+| GET    | `/api/auth/me`    | `auth:sanctum`, `session.version` | Return authenticated user       |
 
 ### Exception Handling
 
 Custom exceptions are registered in `bootstrap/app.php → withExceptions()`:
 
-| Exception                     | HTTP Status | Response                        |
-|-------------------------------|-------------|---------------------------------|
-| `InvalidCredentialsException` | 401         | `{ "message": "..." }`         |
-| `AuthenticationException`     | 401         | Default Laravel JSON response   |
-| `ValidationException`         | 422         | `{ "message": "...", "errors": { ... } }` |
+| Exception                     | HTTP Status | Response                                          |
+|-------------------------------|-------------|---------------------------------------------------|
+| `InvalidCredentialsException` | 401         | `{ "message": "..." }`                           |
+| `AuthenticationException`     | 401         | Default Laravel JSON response                     |
+| `ValidationException`         | 422         | `{ "message": "...", "errors": { ... } }`        |
 
 ### Internationalization (Backend)
 
 - Language files live in `lang/en/`.
 - `lang/en/messages.php` — custom application strings.
-- `lang/en/auth.php` — Laravel's built-in auth strings (extended as needed).
 - Always use `trans('messages.auth.logout_success')` — **never hardcode strings** in controllers or services.
 - Base language: **English**.
 
@@ -223,7 +223,7 @@ Custom exceptions are registered in `bootstrap/app.php → withExceptions()`:
 | Framework       | React 19                                |
 | Build tool      | Vite 7 (rolldown-vite)                  |
 | Routing         | react-router-dom 7                      |
-| HTTP Client     | axios 1.7                               |
+| HTTP Client     | axios 1.7 (`withCredentials: true`)     |
 | i18n            | i18next 25 + react-i18next 15           |
 | Linter          | ESLint 9 (flat config)                  |
 
@@ -232,28 +232,33 @@ Custom exceptions are registered in `bootstrap/app.php → withExceptions()`:
 ```
 frontend/src/
 ├── api/
-│   ├── auth.ts          ← typed functions: login, logout, me
-│   └── client.ts        ← axios instance + request/response interceptors
+│   ├── auth.ts              ← typed functions: login, logout, me
+│   └── client.ts            ← axios instance + response interceptor (session-expired)
 ├── components/
-│   └── ProtectedRoute.tsx   ← redirects to /login if not authenticated
+│   ├── PreferencesPanel.tsx ← user preferences UI (theme, etc.)
+│   ├── ProtectedRoute.tsx   ← redirects to /login if not authenticated
+│   └── ui/                  ← reusable UI primitives (Button, Input, Modal, etc.)
 ├── context/
-│   └── AuthContext.tsx  ← global auth state (user, loading, sessionError)
+│   ├── AuthContext.tsx      ← global auth state (user, loading, sessionError)
+│   └── ThemeContext.tsx     ← global theme state (dark/light mode)
 ├── i18n/
-│   ├── index.ts         ← i18next initialization (imported in main.tsx)
+│   ├── index.ts             ← i18next initialization (imported in main.tsx)
 │   └── locales/
-│       └── en.json      ← all user-facing strings
+│       └── en.json          ← all user-facing strings
 ├── pages/
-│   ├── LoginPage.tsx    ← public route
-│   └── DashboardPage.tsx ← protected route
-├── App.tsx              ← BrowserRouter + AuthProvider + Routes
-├── index.css            ← all global styles (CSS custom properties + page styles)
-├── main.tsx             ← entry point (imports i18n before App)
-└── App.css              ← intentionally minimal
+│   ├── LoginPage.tsx        ← public route
+│   └── DashboardPage.tsx    ← protected route
+├── styles/
+│   ├── base.css             ← CSS custom properties and global resets
+│   └── animations.css       ← shared keyframe animations
+├── App.tsx                  ← BrowserRouter + AuthProvider + ThemeProvider + Routes
+├── index.css                ← global stylesheet entry point
+└── main.tsx                 ← entry point (imports i18n before App)
 ```
 
 ### Code Style (enforced by ESLint)
 
-- **4-space indent**, **single quotes**, **no semicolons**, **trailing commas**.
+- **4-space indent**, **single quotes**, **semicolons required**, **trailing commas**.
 - `prefer-const`, `no-var`, strict equality.
 - Max complexity: 8 | Max depth: 3.
 - TypeScript: `noUnusedLocals`, `noUnusedParameters`, `strict: true`.
@@ -261,38 +266,39 @@ frontend/src/
 
 ### Routing
 
-| Path      | Component          | Guard           |
-|-----------|--------------------|-----------------|
-| `/login`  | `LoginPage`        | Public          |
+| Path      | Component          | Guard            |
+|-----------|--------------------|------------------|
+| `/login`  | `LoginPage`        | Public           |
 | `/`       | `DashboardPage`    | `ProtectedRoute` (requires auth) |
 
 ### API Communication
 
-All requests go through `src/api/client.ts` (axios instance with `baseURL: '/api'`).
+All requests go through `src/api/client.ts` (axios instance with `baseURL: '/api'` and `withCredentials: true`).
 In development, Vite proxies `/api/*` to `http://backend:8000`.
 
-**Request interceptor** — attaches `Authorization: Bearer <token>` from `localStorage`.
+**No token management** — auth is handled via session cookies (set by Sanctum on login).
 
-**Response interceptor** — handles silent token refresh:
-1. On `401`, calls `POST /api/auth/refresh` with the current (possibly expired) token.
-2. If successful: stores new token, replays the original request.
-3. If refresh also fails: removes token, dispatches `auth:session-expired` CustomEvent.
-4. Concurrent requests during refresh are queued and resolved together.
+**Response interceptor** — on `401` (outside `/auth/login`), dispatches `auth:session-expired` CustomEvent.
 
 ### Auth State (`AuthContext`)
 
 ```typescript
 interface AuthContextValue {
     user: User | null
-    loading: boolean           // true during initial hydration
+    loading: boolean            // true during initial hydration
     sessionError: string | null // populated when session expires
     signIn(email, password): Promise<void>
     signOut(): Promise<void>
 }
 ```
 
-On mount, `AuthContext` calls `GET /api/auth/me` if a token exists in `localStorage`
-to re-hydrate the user without requiring a new login.
+On mount, `AuthContext` calls `GET /api/auth/me` to re-hydrate the user from the existing session cookie.
+No token is stored in `localStorage`.
+
+### Theme (`ThemeContext`)
+
+Manages dark/light mode preference. Persisted across sessions (localStorage).
+Accessible via `useTheme()` hook. `PreferencesPanel` is the UI for changing it.
 
 ### Internationalization (Frontend)
 
@@ -302,55 +308,40 @@ to re-hydrate the user without requiring a new login.
 - Base language: **English**.
 - `i18n/index.ts` is imported once in `main.tsx` before `App`.
 
-**Key structure of `en.json`:**
-```json
-{
-    "common":    { "app_name", "loading", "sign_out" },
-    "auth":      { "sign_in", "email", "password", "invalid_credentials", "session_expired", ... },
-    "dashboard": { "welcome", "welcome_subtitle" }
-}
-```
-
 ---
 
 ## Authentication
 
-### Flow
+### Flow (Sanctum session-based)
 
 ```
 [Client]                          [Backend]
    │── POST /api/auth/login ──────────│
    │   { email, password }            │ LoginRequest validates
-   │                                  │ AuthService::login() → auth('api')->attempt()
-   │◄─ { access_token, token_type,   │ JWT generated (HS256, TTL: 60 min)
-   │     expires_in, user }          │
+   │                                  │ AuthService::login() → Auth::attempt()
+   │◄─ { user } + Set-Cookie          │ Session started, cookie returned
+   │   (session cookie)               │
    │                                  │
-   │── GET /api/auth/me ─────────────→│ auth:api middleware validates JWT
-   │   Authorization: Bearer <jwt>    │ AuthService::me()
-   │◄─ { id, name, email, verified } │
+   │── GET /api/auth/me ─────────────→│ auth:sanctum validates session cookie
+   │   Cookie: laravel_session=...    │ AuthService::me()
+   │◄─ { id, name, email, ... }      │
    │                                  │
-   │── POST /api/auth/refresh ───────→│ Issues new JWT (old one blacklisted)
-   │◄─ { access_token, ... }         │
-   │                                  │
-   │── POST /api/auth/logout ────────→│ JWT added to blacklist (cache/db)
+   │── POST /api/auth/logout ────────→│ Session destroyed
    │◄─ { message: "..." }            │
 ```
 
-### JWT Configuration
+### Session Versioning
 
-| Setting           | Value     | Notes                                  |
-|-------------------|-----------|----------------------------------------|
-| Algorithm         | HS256     | Symmetric, key in `JWT_SECRET`         |
-| Access TTL        | 60 min    | Configurable via `JWT_TTL`             |
-| Refresh window    | 2 weeks   | Configurable via `JWT_REFRESH_TTL`     |
-| Blacklist         | Enabled   | Stored in cache (database driver)      |
-| Guard             | `api`     | Configured in `config/auth.php`        |
+The `users` table has a `session_version` integer column.
+The `session.version` middleware invalidates sessions when this value changes,
+allowing forced logout of all active sessions for a user.
 
-### Token Storage
+### Key Points
 
-- Frontend stores the JWT in `localStorage` under the key `token`.
-- The backend **never** stores tokens in the `users` table.
-- Revocation is handled via the JWT blacklist in the cache.
+- Auth is **stateful** (session cookie), not JWT.
+- Sanctum is configured with `SANCTUM_STATEFUL_DOMAINS` — the frontend origin must be listed.
+- The frontend sends `withCredentials: true` on every request so the browser includes the cookie.
+- No tokens are stored in `localStorage`.
 
 ---
 
@@ -358,10 +349,10 @@ to re-hydrate the user without requiring a new login.
 
 ### Setup
 
-- PHPUnit 11, configured in `phpunit.xml`.
+- Pest (PHPUnit 11 under the hood), configured in `phpunit.xml`.
 - Tests use **SQLite in-memory** (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`).
-- `CACHE_STORE=array` (JWT blacklist uses in-memory cache during tests).
-- `JWT_SECRET` is set directly in `phpunit.xml` — no `.env` needed for tests.
+- `CACHE_STORE=array` (in-memory cache during tests).
+- `SESSION_DRIVER=array` (in-memory sessions during tests).
 - `BCRYPT_ROUNDS=4` for faster password hashing in tests.
 
 ### Running Tests
@@ -376,20 +367,15 @@ cd backend && php artisan test
 
 ### Test Coverage (`tests/Feature/Auth/LoginTest.php`)
 
-| Test                                           | Asserts                                  |
-|------------------------------------------------|------------------------------------------|
-| `test_user_can_login_with_valid_credentials`   | 200, token structure, correct email      |
-| `test_login_fails_with_wrong_password`         | 401, message present                     |
-| `test_login_fails_with_nonexistent_email`      | 401                                      |
-| `test_login_requires_email`                    | 422, validation error on `email`         |
-| `test_login_requires_valid_email_format`       | 422, validation error on `email`         |
-| `test_login_requires_password`                 | 422, validation error on `password`      |
-| `test_authenticated_user_can_get_own_profile`  | 200, correct fields, no sensitive data   |
-| `test_unauthenticated_request_is_rejected`     | 401                                      |
-| `test_user_can_logout`                         | 200, message present                     |
-| `test_token_can_be_refreshed`                  | 200, new token structure                 |
-| `test_verified_user_is_email_verified`         | Model rule: `isEmailVerified() === true` |
-| `test_unverified_user_is_not_email_verified`   | Model rule: `isEmailVerified() === false`|
+Tests are grouped with Pest `describe()` blocks:
+
+| Group        | What is tested                                                    |
+|--------------|-------------------------------------------------------------------|
+| `login`      | Valid credentials (200 + user), wrong password (401), bad email (401) |
+| `validation` | Missing email (422), invalid email format (422), missing password (422) |
+| `me`         | Authenticated user gets own profile (200), unauthenticated (401)  |
+| `logout`     | Authenticated user can logout (200)                               |
+| `User model` | `isEmailVerified()` returns correct boolean                       |
 
 ### Factory
 
@@ -433,9 +419,92 @@ cd backend && php artisan test
 
 ### Database Migrations
 
-- Never add auth-related columns (tokens, secrets) to the `users` table.
-- JWT is stateless; use the cache blacklist for revocation.
+- Never add auth token columns to the `users` table (auth is session-based).
 - Migration filenames follow the format: `YYYY_MM_DD_HHMMSS_description.php`.
+
+---
+
+## Code Preferences
+
+These preferences apply to all code written in this project, both backend (PHP) and frontend (TypeScript/React).
+
+### Early Return
+
+Always prefer early return over nested conditionals. Return or throw as soon as a condition is not met, keeping the happy path at the lowest indentation level.
+
+```php
+// Bad
+function process(User $user): string
+{
+    if ($user->isActive()) {
+        if ($user->hasPermission()) {
+            return doWork($user);
+        }
+    }
+    return 'denied';
+}
+
+// Good
+function process(User $user): string
+{
+    if (!$user->isActive()) {
+        return 'denied';
+    }
+
+    if (!$user->hasPermission()) {
+        return 'denied';
+    }
+
+    return doWork($user);
+}
+```
+
+```typescript
+// Bad
+function getLabel(user: User): string {
+    if (user.isActive) {
+        if (user.isVerified) {
+            return 'verified user'
+        }
+    }
+    return 'inactive'
+}
+
+// Good
+function getLabel(user: User): string {
+    if (!user.isActive) return 'inactive'
+    if (!user.isVerified) return 'unverified'
+    return 'verified user'
+}
+```
+
+### Named Boolean Conditions
+
+Never pass raw expressions directly into `if` statements. Extract conditions into well-named variables first.
+Boolean variables must use descriptive prefixes: `is`, `has`, `should`, `can`, `was`, `did`.
+
+```php
+// Bad
+if ($user->email_verified_at !== null && $user->status === 'active') { ... }
+
+// Good
+$isEmailVerified = $user->email_verified_at !== null;
+$isAccountActive = $user->status === 'active';
+
+if ($isEmailVerified && $isAccountActive) { ... }
+```
+
+```typescript
+// Bad
+if (user.role === 'admin' && !user.suspended && permissions.includes('edit')) { ... }
+
+// Good
+const isAdmin = user.role === 'admin'
+const isSuspended = user.suspended
+const canEdit = permissions.includes('edit')
+
+if (isAdmin && !isSuspended && canEdit) { ... }
+```
 
 ---
 
@@ -449,15 +518,15 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 cp .env.postgres.example .env.postgres
 
-# 2. Start everything (builds images, runs migrations, generates JWT_SECRET)
-npm run dev
+# 2. Start everything (builds images, runs migrations)
+npm run start
 ```
 
 ### Daily workflow
 
 ```bash
-npm run dev      # Start: docker compose up --build
-npm run down     # Stop:  docker compose down
+npm run start    # Start: docker compose up --build
+npm run stop     # Stop:  docker compose down
 ```
 
 ### Creating a test user (Tinker)
