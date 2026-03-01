@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::firstOrCreate(
-            ['email' => 'admin@videosummarizer.com'],
+            ['email' => 'admin@vidsum.com'],
             [
                 'name' => 'Admin',
                 'password' => 'password',
