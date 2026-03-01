@@ -2,45 +2,6 @@
 
 .dashboard { display: flex; flex-direction: column; min-height: 100dvh; }
 
-/* ─── Navigation ─────────────────────────────────────────────────────────── */
-
-.nav {
-    height: 58px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 20;
-}
-
-:root[data-mode='light'] .nav { background: var(--surface); backdrop-filter: none; }
-
-.nav-brand {
-    display: flex; align-items: center; gap: 10px; text-decoration: none;
-}
-
-.nav-brand-icon {
-    width: 30px; height: 30px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-
-.nav-brand-name {
-    font-size: 0.9375rem; font-weight: 700;
-    letter-spacing: -0.02em; color: var(--text);
-}
-
-.nav-right { display: flex; align-items: center; gap: 12px; }
-
-.nav-username {
-    font-size: 0.875rem; color: var(--text-2); font-weight: 500;
-    max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-.nav-divider { width: 1px; height: 18px; background: var(--border); }
-
 /* ─── Main content ───────────────────────────────────────────────────────── */
 
 .dashboard-main {
@@ -85,6 +46,7 @@
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 24px;
     display: flex; flex-direction: column; gap: 14px;
+    cursor: pointer;
     transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s, background-color 0.2s;
 }
 
