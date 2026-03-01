@@ -1,38 +1,38 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react'
-import { useTheme } from '../context/useTheme'
-import type { ThemeColor, ThemeMode } from '../context/ThemeContext'
-import './preferences.css'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@context/useTheme';
+import type { ThemeColor, ThemeMode } from '@context/ThemeContext';
+import './Preferences.css';
 
 const COLORS: { key: ThemeColor; hex: string; label: string }[] = [
     { key: 'violet', hex: '#7c3aed', label: 'Violet' },
-    { key: 'blue',   hex: '#2563eb', label: 'Blue'   },
-    { key: 'green',  hex: '#059669', label: 'Green'  },
-    { key: 'rose',   hex: '#e11d48', label: 'Rose'   },
-    { key: 'amber',  hex: '#d97706', label: 'Amber'  },
-]
+    { key: 'blue', hex: '#2563eb', label: 'Blue' },
+    { key: 'green', hex: '#059669', label: 'Green' },
+    { key: 'rose', hex: '#e11d48', label: 'Rose' },
+    { key: 'amber', hex: '#d97706', label: 'Amber' },
+];
 
 const MODES: { key: ThemeMode; icon: React.ReactNode; labelKey: string }[] = [
-    { key: 'dark',  icon: <Moon  size={13} />, labelKey: 'preferences.dark'  },
-    { key: 'light', icon: <Sun   size={13} />, labelKey: 'preferences.light' },
-]
+    { key: 'dark', icon: <Moon size={13} />, labelKey: 'preferences.dark' },
+    { key: 'light', icon: <Sun size={13} />, labelKey: 'preferences.light' },
+];
 
 const LANGUAGES = [
-    { code: 'en', label: 'EN', name: 'English'    },
-    { code: 'pt', label: 'PT', name: 'Português'  },
-]
+    { code: 'en', label: 'EN', name: 'English' },
+    { code: 'pt', label: 'PT', name: 'Português' },
+];
 
 export default function PreferencesPanel() {
-    const { t, i18n } = useTranslation()
-    const { mode, color, setMode, setColor } = useTheme()
-    const [open, setOpen] = useState(false)
+    const { t, i18n } = useTranslation();
+    const { mode, color, setMode, setColor } = useTheme();
+    const [open, setOpen] = useState(false);
 
-    const currentLang = i18n.language.split('-')[0]
+    const currentLang = i18n.language.split('-')[0];
 
     function changeLanguage(code: string) {
-        i18n.changeLanguage(code)
-        localStorage.setItem('lang', code)
+        i18n.changeLanguage(code);
+        localStorage.setItem('lang', code);
     }
 
     return (
@@ -110,5 +110,5 @@ export default function PreferencesPanel() {
                 <SlidersHorizontal size={17} strokeWidth={1.8} />
             </button>
         </div>
-    )
+    );
 }
