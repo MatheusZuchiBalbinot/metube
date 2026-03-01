@@ -1,8 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
+    resolve: {
+        alias: {
+            '@context': resolve(__dirname, 'src/context'),
+            '@components': resolve(__dirname, 'src/components'),
+            '@ui': resolve(__dirname, 'src/components/ui'),
+            '@pages': resolve(__dirname, 'src/pages'),
+            '@styles': resolve(__dirname, 'src/styles'),
+        },
+    },
     plugins: [
         react({
             babel: {
@@ -25,4 +35,4 @@ export default defineConfig({
             },
         },
     },
-})
+});
