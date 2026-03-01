@@ -1,10 +1,9 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider } from './context/AuthContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import PreferencesPanel from './components/PreferencesPanel'
-import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from '@context/ThemeContext';
+import { AuthProvider } from '@context/AuthContext';
+import Guard from '@components/guard/Guard';
+import LoginPage from '@pages/login/LoginPage';
+import DashboardPage from '@pages/dashboard/DashboardPage';
 
 export default function App() {
     return (
@@ -16,15 +15,14 @@ export default function App() {
                         <Route
                             path="/"
                             element={
-                                <ProtectedRoute>
+                                <Guard>
                                     <DashboardPage />
-                                </ProtectedRoute>
+                                </Guard>
                             }
                         />
                     </Routes>
-                    <PreferencesPanel />
                 </AuthProvider>
             </ThemeProvider>
         </BrowserRouter>
-    )
+    );
 }
