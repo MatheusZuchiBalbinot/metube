@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@context/useTheme';
-import type { ThemeColor, ThemeMode } from '@context/ThemeContext';
-import './Preferences.css';
+import type { ThemeColor, ThemeMode } from '@utils/themes';
+import { STORAGE_KEYS } from '@utils/storageKeys';
+import { Button, Tooltip } from '@ui';
+import './preferences.css';
 
 const COLORS: { key: ThemeColor; hex: string; label: string }[] = [
     { key: 'violet', hex: '#7c3aed', label: 'Violet' },
@@ -32,7 +34,7 @@ export default function PreferencesPanel() {
 
     function changeLanguage(code: string) {
         i18n.changeLanguage(code);
-        localStorage.setItem('lang', code);
+        localStorage.setItem(STORAGE_KEYS.LANGUAGE, code);
     }
 
     return (
@@ -43,9 +45,11 @@ export default function PreferencesPanel() {
                     <div className="prefs-panel">
                         <div className="prefs-header">
                             <span className="prefs-title">{t('preferences.title')}</span>
-                            <button className="prefs-close" onClick={() => setOpen(false)} aria-label="Fechar">
-                                <X size={12} strokeWidth={2.5} />
-                            </button>
+                            <Tooltip content={t('common.close')} side="bottom">
+                                <Button variant="ghost" size="icon" className="prefs-close" onClick={() => setOpen(false)} aria-label={t('common.close')}>
+                                    <X size={12} strokeWidth={2.5} />
+                                </Button>
+                            </Tooltip>
                         </div>
 
                         {/* Theme */}
@@ -53,14 +57,17 @@ export default function PreferencesPanel() {
                             <p className="prefs-label">{t('preferences.theme')}</p>
                             <div className="prefs-toggle">
                                 {MODES.map(({ key, icon, labelKey }) => (
-                                    <button
+                                    <Button
                                         key={key}
+                                        variant="ghost"
                                         className={`prefs-toggle-btn${mode === key ? ' active' : ''}`}
                                         onClick={() => setMode(key)}
+                                        aria-label={t(labelKey)}
+                                        aria-pressed={mode === key}
                                     >
                                         {icon}
                                         {t(labelKey)}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                         </div>
@@ -70,14 +77,17 @@ export default function PreferencesPanel() {
                             <p className="prefs-label">{t('preferences.accent_color')}</p>
                             <div className="prefs-colors">
                                 {COLORS.map(({ key, hex, label }) => (
-                                    <button
-                                        key={key}
-                                        className={`prefs-swatch${color === key ? ' selected' : ''}`}
-                                        style={{ background: hex }}
-                                        onClick={() => setColor(key)}
-                                        aria-label={label}
-                                        title={label}
-                                    />
+                                    <Tooltip key={key} content={label} side="bottom">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className={`prefs-swatch${color === key ? ' selected' : ''}`}
+                                            style={{ background: hex }}
+                                            onClick={() => setColor(key)}
+                                            aria-label={label}
+                                            aria-pressed={color === key}
+                                        />
+                                    </Tooltip>
                                 ))}
                             </div>
                         </div>
@@ -87,14 +97,17 @@ export default function PreferencesPanel() {
                             <p className="prefs-label">{t('preferences.language')}</p>
                             <div className="prefs-toggle">
                                 {LANGUAGES.map(({ code, label, name }) => (
-                                    <button
+                                    <Button
                                         key={code}
+                                        variant="ghost"
                                         className={`prefs-toggle-btn${currentLang === code ? ' active' : ''}`}
                                         onClick={() => changeLanguage(code)}
+                                        aria-label={name}
+                                        aria-pressed={currentLang === code}
                                         title={name}
                                     >
                                         {label}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                         </div>
@@ -102,13 +115,17 @@ export default function PreferencesPanel() {
                 </>
             )}
 
-            <button
-                className={`prefs-trigger${open ? ' open' : ''}`}
-                onClick={() => setOpen(!open)}
-                aria-label={t('preferences.title')}
-            >
-                <SlidersHorizontal size={17} strokeWidth={1.8} />
-            </button>
+            <Tooltip content={t('preferences.title')} side="bottom">
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className={`prefs-trigger${open ? ' open' : ''}`}
+                    onClick={() => setOpen(!open)}
+                    aria-label={t('preferences.title')}
+                >
+                    <SlidersHorizontal size={17} strokeWidth={1.8} />
+                </Button>
+            </Tooltip>
         </div>
     );
 }
