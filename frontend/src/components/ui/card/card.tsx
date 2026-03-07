@@ -1,4 +1,4 @@
-import './Card.css';
+import './card.css';
 
 type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 

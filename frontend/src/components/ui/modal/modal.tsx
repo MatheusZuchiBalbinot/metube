@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import './Modal.css';
+import Button from '../button/button';
+import './modal.css';
 
 type ModalSize = 'sm' | 'md' | 'lg';
 
@@ -22,6 +24,7 @@ export default function Modal({
     footer,
     size = 'md',
 }: ModalProps) {
+    const { t } = useTranslation();
     useEffect(() => {
         if (!isOpen) {return;}
         const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -37,21 +40,26 @@ export default function Modal({
     if (!isOpen) {return null;}
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" role="presentation" onClick={onClose}>
             <div
                 className={`modal-box modal-box--${size}`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={title ? 'modal-title' : undefined}
                 onClick={(e) => e.stopPropagation()}
             >
                 {title && (
                     <div className="modal-header">
-                        <h2>{title}</h2>
-                        <button
+                        <h2 id="modal-title">{title}</h2>
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             className="modal-close"
                             onClick={onClose}
-                            aria-label="Fechar"
+                            aria-label={t('common.close')}
                         >
                             <X size={13} strokeWidth={2.5} />
-                        </button>
+                        </Button>
                     </div>
                 )}
 
