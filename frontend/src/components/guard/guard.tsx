@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@context/useAuth';
 import { Spinner } from '@ui';
+import { ROUTES } from '@utils/routes';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
@@ -10,7 +11,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to={ROUTES.LOGIN} replace />;
     }
 
     return <>{children}</>;
