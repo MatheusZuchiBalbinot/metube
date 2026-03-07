@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 
 // https://vite.dev/config/
@@ -11,9 +12,13 @@ export default defineConfig({
             '@ui': resolve(__dirname, 'src/components/ui'),
             '@pages': resolve(__dirname, 'src/pages'),
             '@styles': resolve(__dirname, 'src/styles'),
+            '@data': resolve(__dirname, 'src/data'),
+            '@utils': resolve(__dirname, 'src/utils'),
+            '@lib': resolve(__dirname, 'src/lib'),
         },
     },
     plugins: [
+        tailwindcss(),
         react({
             babel: {
                 plugins: [['babel-plugin-react-compiler']],
