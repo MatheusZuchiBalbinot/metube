@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
-import './Dropdown.css';
+import Button from '../button/button';
+import './dropdown.css';
 import { t } from 'i18next';
 
 export interface DropdownOption {
@@ -32,15 +33,19 @@ interface DropdownOptionItemProps {
 
 function DropdownOptionItem({ opt, selected, onSelect }: DropdownOptionItemProps) {
     return (
-        <button
+        <Button
             type="button"
+            role="option"
+            variant="ghost"
             onClick={() => onSelect(opt.value)}
             className={`dropdown-option${selected ? ' dropdown-option--active' : ''}`}
+            aria-selected={selected}
+            aria-label={opt.label}
         >
             {opt.icon && <span className="dropdown-option-icon">{opt.icon}</span>}
             <span className="dropdown-option-label">{opt.label}</span>
             {selected && <Check size={13} className="dropdown-option-check" />}
-        </button>
+        </Button>
     );
 }
 
@@ -79,8 +84,9 @@ export default function Dropdown({
             {label && <span className="dropdown-label">{label}</span>}
 
             <div className="dropdown-trigger-wrap" ref={wrapRef}>
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     className={triggerClass}
                     onClick={() => !disabled && setOpen((v) => !v)}
                     aria-expanded={open}
@@ -101,10 +107,10 @@ export default function Dropdown({
                         size={15}
                         className={`dropdown-chevron${open ? ' dropdown-chevron--open' : ''}`}
                     />
-                </button>
+                </Button>
 
                 {open && (
-                    <div className="dropdown-menu">
+                    <div className="dropdown-menu" role="listbox">
                         {options.map((opt) => (
                             <DropdownOptionItem
                                 key={opt.value}

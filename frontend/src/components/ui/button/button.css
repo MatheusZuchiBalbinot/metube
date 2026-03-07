@@ -14,9 +14,19 @@
     text-decoration: none;
 }
 
-.btn:focus-visible { outline: none; }
-.btn:active:not(:disabled) { transform: scale(0.99); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.btn:focus-visible {
+    outline: none;
+}
+
+.btn:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
 /* ─── Variants ───────────────────────────────────────────────────────────── */
 
@@ -25,6 +35,7 @@
     color: var(--accent-fg);
     box-shadow: 0 4px 20px var(--accent-glow);
 }
+
 .btn--primary:hover:not(:disabled) {
     opacity: 0.9;
     transform: translateY(-1px);
@@ -36,6 +47,7 @@
     color: var(--text);
     border: 1px solid var(--border);
 }
+
 .btn--secondary:hover:not(:disabled) {
     background: var(--surface-3);
     border-color: var(--border-2);
@@ -46,6 +58,7 @@
     color: var(--text-2);
     border: 1px solid var(--border);
 }
+
 .btn--ghost:hover:not(:disabled) {
     color: var(--text);
     border-color: var(--border-2);
@@ -57,6 +70,7 @@
     color: #f87171;
     border: 1px solid rgba(239, 68, 68, 0.20);
 }
+
 .btn--danger:hover:not(:disabled) {
     background: rgba(239, 68, 68, 0.18);
     border-color: rgba(239, 68, 68, 0.40);
@@ -64,11 +78,38 @@
 
 /* ─── Sizes ──────────────────────────────────────────────────────────────── */
 
-.btn--sm { height: 32px; padding: 0 12px; font-size: 0.8125rem; border-radius: var(--radius-sm); }
-.btn--md { height: 38px; padding: 0 16px; font-size: 0.875rem;  border-radius: var(--radius); }
-.btn--lg { height: 48px; padding: 0 22px; font-size: 1rem;      border-radius: var(--radius); }
+.btn--sm {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 0.8125rem;
+    border-radius: var(--radius-sm);
+}
 
-.btn--full { width: 100%; }
+.btn--md {
+    height: 38px;
+    padding: 0 16px;
+    font-size: 0.875rem;
+    border-radius: var(--radius);
+}
+
+.btn--lg {
+    height: 48px;
+    padding: 0 22px;
+    font-size: 1rem;
+    border-radius: var(--radius);
+}
+
+.btn--icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+}
+
+.btn--full {
+    width: 100%;
+}
 
 /* ─── Loading spinner ────────────────────────────────────────────────────── */
 
@@ -84,4 +125,6 @@
 
 /* ─── Light mode overrides ───────────────────────────────────────────────── */
 
-:root[data-mode='light'] .btn--danger { color: #dc2626; }
+:root[data-mode='light'] .btn--danger {
+    color: #dc2626;
+}
