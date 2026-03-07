@@ -1,0 +1,80 @@
+/* ─── TagInput ────────────────────────────────────────────────────────────── */
+
+.tag-input {
+    cursor: text;
+}
+
+.tag-input__field-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    min-height: 44px;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.tag-input__field-wrap:hover {
+    border-color: var(--border-2);
+    background: var(--surface-3);
+}
+
+.tag-input:focus-within .tag-input__field-wrap {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    background: var(--surface-3);
+}
+
+/* ─── Chips ───────────────────────────────────────────────────────────────── */
+
+.tag-input__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-subtle);
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 3px 10px 3px 10px;
+    white-space: nowrap;
+}
+
+.tag-input__chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.12s;
+    line-height: 1;
+}
+
+.tag-input__chip-remove:hover {
+    opacity: 1;
+}
+
+/* ─── Text input ──────────────────────────────────────────────────────────── */
+
+.tag-input__field {
+    flex: 1;
+    min-width: 80px;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    padding: 2px 0;
+}
+
+.tag-input__field::placeholder {
+    color: var(--text-3);
+}
