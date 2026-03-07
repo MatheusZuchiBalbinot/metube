@@ -46,6 +46,15 @@
       ],
       "@styles/*": [
         "src/styles/*"
+      ],
+      "@data/*": [
+        "src/data/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
       ]
     }
   },
