@@ -1,5 +1,6 @@
 import axios, { type AxiosError } from 'axios';
 import i18n from '../i18n';
+import { APP_EVENTS } from '../utils/events';
 
 const client = axios.create({
     baseURL: '/api',
@@ -15,7 +16,7 @@ client.interceptors.response.use(
     (error: AxiosError) => {
         const url = error.config?.url ?? '';
         if (error.response?.status === 401 && !url.includes('/auth/login')) {
-            window.dispatchEvent(new CustomEvent('auth:session-expired', {
+            window.dispatchEvent(new CustomEvent(APP_EVENTS.SESSION_EXPIRED, {
                 detail: { message: i18n.t('auth.session_expired') },
             }));
         }
