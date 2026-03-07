@@ -15,6 +15,15 @@
 }
 
 .card--pad-none {}
-.card--pad-sm  { padding: 16px; }
-.card--pad-md  { padding: 24px; }
-.card--pad-lg  { padding: 32px; }
+
+.card--pad-sm {
+    padding: 16px;
+}
+
+.card--pad-md {
+    padding: 24px;
+}
+
+.card--pad-lg {
+    padding: 32px;
+}

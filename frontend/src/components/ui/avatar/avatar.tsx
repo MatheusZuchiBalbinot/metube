@@ -1,4 +1,4 @@
-import './Avatar.css';
+import './avatar.css';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -24,7 +24,7 @@ export default function Avatar({ name, size = 'md', src, className = '' }: Avata
         .join(' ');
 
     return (
-        <div className={classes} aria-label={name}>
+        <div className={classes} role="img" aria-label={name}>
             {src ? (
                 <img src={src} alt={name} />
             ) : (

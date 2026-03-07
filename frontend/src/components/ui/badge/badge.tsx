@@ -1,4 +1,4 @@
-import './Badge.css';
+import './badge.css';
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'neutral';
 
