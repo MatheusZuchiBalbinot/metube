@@ -1,0 +1,53 @@
+:root {
+    --sidebar-width: 220px;
+    --sidebar-width-collapsed: 60px;
+}
+
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+
+.app-layout__body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.app-layout__content {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg);
+    position: relative;
+    isolation: isolate;
+}
+
+/* ─── Ambient orbs (global, all pages) ────────────────────────────────────── */
+
+.app-layout__content::before,
+.app-layout__content::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.app-layout__content::before {
+    width: 700px;
+    height: 700px;
+    top: -280px;
+    right: -180px;
+    background: var(--accent-orb-a);
+    filter: blur(130px);
+}
+
+.app-layout__content::after {
+    width: 500px;
+    height: 500px;
+    bottom: 0;
+    left: -160px;
+    background: var(--accent-orb-b);
+    filter: blur(110px);
+}
