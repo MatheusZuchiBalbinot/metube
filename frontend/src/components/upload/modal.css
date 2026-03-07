@@ -1,0 +1,97 @@
+/* ─── UploadModal ─────────────────────────────────────────────────────────── */
+
+.upload-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ─── Field wrapper ───────────────────────────────────────────────────────── */
+
+.upload-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.upload-modal__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.01em;
+}
+
+/* ─── Two-column layout ───────────────────────────────────────────────────── */
+
+.upload-modal__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* ─── Textarea ────────────────────────────────────────────────────────────── */
+
+.upload-modal__textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    line-height: 1.5;
+    padding: 12px 14px;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.upload-modal__textarea::placeholder {
+    color: var(--text-3);
+}
+
+.upload-modal__textarea:hover {
+    border-color: var(--border-2);
+    background: var(--surface-3);
+}
+
+.upload-modal__textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    background: var(--surface-3);
+}
+
+/* ─── Status preview ──────────────────────────────────────────────────────── */
+
+.upload-modal__status-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.upload-modal__status-label {
+    font-size: 0.8125rem;
+    color: var(--text-3);
+}
+
+/* ─── Thumbnail preview ───────────────────────────────────────────────────── */
+
+.upload-modal__thumb-preview {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-top: 4px;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────────────── */
+
+.upload-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+

@@ -1,0 +1,284 @@
+/* ─── FilterPanel (compact horizontal bar) ─────────────────────────────────── */
+
+.filter-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 14px 0 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ─── Tag chips ────────────────────────────────────────────────────────────── */
+
+.filter-panel__tag-chip {
+    height: auto;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-2);
+    padding: 2px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.filter-panel__tag-chip:hover {
+    border-color: var(--border-2);
+    color: var(--text);
+    background: var(--surface-3);
+}
+
+.filter-panel__tag-chip--active {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-panel__tag-chip--active:hover {
+    opacity: 0.88;
+}
+
+/* ─── More / Filters button ────────────────────────────────────────────────── */
+
+.filter-panel__more-wrap {
+    position: relative;
+}
+
+.filter-panel__more-btn {
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-2);
+    padding: 2px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.filter-panel__more-btn:hover,
+.filter-panel__more-btn--open {
+    border-color: var(--border-2);
+    color: var(--text);
+    background: var(--surface-3);
+}
+
+.filter-panel__more-btn--active {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-panel__chevron {
+    transition: transform 0.15s;
+    flex-shrink: 0;
+}
+
+.filter-panel__more-btn--open .filter-panel__chevron {
+    transform: rotate(180deg);
+}
+
+/* ─── Dropdown ─────────────────────────────────────────────────────────────── */
+
+.filter-panel__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 320px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: 0 16px 48px var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 100;
+    animation: panelIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-panel__dropdown-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-panel__dropdown-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.filter-panel__dropdown-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* ─── Year select ──────────────────────────────────────────────────────────── */
+
+.filter-panel__year-select {
+    width: 100%;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.875rem;
+    font-family: inherit;
+    padding: 8px 32px 8px 10px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.filter-panel__year-select:hover {
+    border-color: var(--border-2);
+}
+
+.filter-panel__year-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+/* ─── Date inputs ──────────────────────────────────────────────────────────── */
+
+.filter-panel__date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.filter-panel__date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-panel__date-label {
+    font-size: 0.6875rem;
+    color: var(--text-3);
+    font-weight: 500;
+}
+
+
+/* ─── Dropdown footer ──────────────────────────────────────────────────────── */
+
+.filter-panel__dropdown-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.filter-panel__dropdown-clear {
+    background: none;
+    border: none;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    transition: opacity 0.15s;
+}
+
+.filter-panel__dropdown-clear:hover {
+    opacity: 0.75;
+}
+
+/* ─── Sort group (inline segmented control) ────────────────────────────────── */
+
+.filter-panel__sort-group {
+    display: flex;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.filter-panel__sort-btn {
+    height: auto;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-size: 0.75rem;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-2);
+    padding: 3px 12px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.filter-panel__sort-btn + .filter-panel__sort-btn {
+    border-left: 1px solid var(--border);
+}
+
+.filter-panel__sort-btn:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.filter-panel__sort-btn--active {
+    background: var(--accent-subtle);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ─── Clear all button ─────────────────────────────────────────────────────── */
+
+.filter-panel__clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.12s;
+    flex-shrink: 0;
+}
+
+.filter-panel__clear-btn:hover {
+    background: var(--surface-3);
+    color: var(--text-2);
+    border-color: var(--border-2);
+}
+
+/* ─── Light mode ───────────────────────────────────────────────────────────── */
+
+
+:root[data-mode='light'] .filter-panel__year-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a5a72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:root[data-mode='light'] .filter-panel__dropdown {
+    background: var(--surface);
+    box-shadow: 0 8px 32px var(--shadow-lg);
+}

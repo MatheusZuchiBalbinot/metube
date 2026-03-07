@@ -1,0 +1,82 @@
+/* ─── TagView ──────────────────────────────────────────────────────────────── */
+
+.tag-view {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px 32px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+/* ─── Header ───────────────────────────────────────────────────────────────── */
+
+.tag-view__header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tag-view__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+    width: fit-content;
+}
+
+.tag-view__back:hover {
+    color: var(--text);
+}
+
+.tag-view__back svg {
+    width: 16px;
+    height: 16px;
+}
+
+.tag-view__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tag-view__tag-chip {
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 999px;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+}
+
+/* ─── List ─────────────────────────────────────────────────────────────────── */
+
+.tag-view__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ─── Section labels ───────────────────────────────────────────────────────── */
+
+.tag-view__section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 4px;
+}
+
+.tag-view__section-label--others {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
