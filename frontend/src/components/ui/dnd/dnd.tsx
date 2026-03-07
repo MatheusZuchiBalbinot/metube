@@ -1,6 +1,8 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CloudUpload, FileVideo, X } from 'lucide-react';
-import './DragAndDrop.css';
+import Button from '../button/button';
+import './dnd.css';
 
 interface DragAndDropProps {
     onFileSelect: (file: File) => void
@@ -27,20 +29,22 @@ export default function DragAndDrop({
     onClear,
     accept = 'video/*',
     maxSizeMB = 500,
-    label = 'Arraste um arquivo aqui',
+    label,
     sublabel,
 }: DragAndDropProps) {
+    const { t } = useTranslation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [error, setError] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const sub = sublabel ?? `ou clique para procurar · max ${maxSizeMB} MB`;
+    const resolvedLabel = label ?? t('dnd.drop_file');
+    const sub = sublabel ?? t('dnd.drop_file_sub', { maxSizeMB });
 
     function handleFile(f: File) {
         setError('');
         if (maxSizeMB && f.size > maxSizeMB * 1024 * 1024) {
-            setError(`Arquivo muito grande. Máximo: ${maxSizeMB} MB.`);
+            setError(t('dnd.file_too_large', { maxSizeMB }));
             return;
         }
         setFile(f);
@@ -94,17 +98,17 @@ export default function DragAndDrop({
                         </div>
                         <p className="dnd-filename">{file.name}</p>
                         <p className="dnd-filesize">{formatBytes(file.size)}</p>
-                        <button type="button" onClick={clear} className="dnd-clear">
+                        <Button type="button" variant="ghost" size="sm" onClick={clear} className="dnd-clear">
                             <X size={13} />
-                            Remover
-                        </button>
+                            {t('common.remove')}
+                        </Button>
                     </>
                 ) : (
                     <>
                         <div className={`dnd-icon ${dragging ? 'dnd-icon--accent' : 'dnd-icon--subtle'}`}>
                             <CloudUpload size={22} />
                         </div>
-                        <p className="dnd-label">{label}</p>
+                        <p className="dnd-label">{resolvedLabel}</p>
                         <p className="dnd-sublabel">{sub}</p>
                     </>
                 )}

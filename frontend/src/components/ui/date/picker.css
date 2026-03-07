@@ -1,0 +1,339 @@
+/* ─── Trigger button ──────────────────────────────────────────────────────── */
+
+.dp-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    font-weight: 400;
+    padding: 7px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+}
+
+.dp-trigger:hover {
+    border-color: var(--border-2);
+}
+
+.dp-trigger:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.dp-trigger--empty {
+    color: var(--text-3);
+}
+
+.dp-trigger__icon {
+    flex-shrink: 0;
+    color: var(--text-3);
+}
+
+.dp-trigger__text {
+    flex: 1;
+}
+
+.dp-trigger__clear {
+    flex-shrink: 0;
+    color: var(--text-3);
+    border-radius: 2px;
+    transition: color 0.12s;
+}
+
+.dp-trigger__clear:hover {
+    color: var(--text);
+}
+
+/* ─── Popover content ─────────────────────────────────────────────────────── */
+
+/*
+ * The Radix popper wrapper uses position:fixed but no z-index by default.
+ * Without an explicit z-index on the wrapper, the stacking context it creates
+ * competes at z-index:auto in the root context, which lets positioned elements
+ * (video cards, other overlays) win the hit-test even when visually below.
+ * Note: [data-radix-portal] does not exist in this Radix version; the correct
+ * selector is [data-radix-popper-content-wrapper] (added by react-popper).
+ */
+[data-radix-popper-content-wrapper]:has(.dp-content) {
+    z-index: 200;
+}
+
+.dp-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 30px var(--shadow-lg), 0 2px 8px var(--shadow);
+    padding: 12px;
+    z-index: 200;
+    transform: translateZ(0);
+    animation: dp-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dp-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ─── Calendar root ───────────────────────────────────────────────────────── */
+
+.dp-cal {
+    width: 252px;
+}
+
+/* ─── Months / Month ──────────────────────────────────────────────────────── */
+/*
+ * DayPicker v9 structure:
+ *   .dp-cal__months           ← position:relative, contains nav + month as siblings
+ *     .dp-cal__nav            ← absolute, spans full width at top
+ *     .dp-cal__month
+ *       .dp-cal__caption      ← centered, padded to avoid overlapping nav buttons
+ *       .dp-cal__grid (table)
+ */
+
+.dp-cal__months {
+    display: flex;
+    position: relative;
+}
+
+.dp-cal__month {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+/* ─── Caption / header ────────────────────────────────────────────────────── */
+
+.dp-cal__caption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Side padding makes room for the absolutely-positioned nav buttons (28px + 4px gap) */
+    padding: 0 32px;
+    height: 32px;
+}
+
+.dp-cal__caption-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ─── Dropdowns (month/year selects) ─────────────────────────────────────── */
+
+.dp-cal__dropdowns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/*
+ * dropdown_root: visible pill that the user sees and clicks.
+ * The actual <select> (dp-cal__dropdown) is absolutely positioned on top,
+ * transparent, so the native OS dropdown triggers on click.
+ * dp-cal__caption-label inside shows the current value as readable text.
+ */
+.dp-cal__dropdown-root {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    border-radius: var(--radius-sm);
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.dp-cal__dropdown-root:hover {
+    background: var(--surface-2);
+}
+
+.dp-cal__dropdown-root:has(.dp-cal__dropdown:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+/* DayPicker injects an rdp-chevron SVG inside the caption label — inherit text color */
+.dp-cal__caption-label .rdp-chevron {
+    fill: currentColor;
+    width: 15px;
+    height: 15px;
+    margin-left: 0.25rem;
+    vertical-align: middle;
+}
+
+/* The <select> element: invisible overlay so clicking shows the native dropdown */
+.dp-cal__dropdown {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    appearance: none;
+    border: none;
+    width: 100%;
+}
+
+/* ─── Nav buttons ─────────────────────────────────────────────────────────── */
+
+/*
+ * Nav is a direct child of .dp-cal__months, not inside the caption.
+ * It is absolutely positioned to span the top, with the two buttons at each edge.
+ */
+.dp-cal__nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 1;
+    /* children re-enable */
+}
+
+.dp-cal__nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    cursor: pointer;
+    padding: 0;
+    pointer-events: auto;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.dp-cal__nav-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--border-2);
+}
+
+.dp-cal__nav-btn svg {
+    width: 14px;
+    height: 14px;
+    color: inherit;
+    fill: currentColor;
+}
+
+/* ─── Weekday headers ─────────────────────────────────────────────────────── */
+
+.dp-cal__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 2px;
+}
+
+.dp-cal__weekday {
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-3);
+    padding: 4px 0;
+}
+
+/* ─── Grid / weeks ────────────────────────────────────────────────────────── */
+
+.dp-cal__grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dp-cal__week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+/* ─── Day cell ────────────────────────────────────────────────────────────── */
+
+.dp-cal__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+
+.dp-cal__day-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.dp-cal__day-btn:hover {
+    background: var(--surface-2);
+}
+
+/* ─── Selected day ────────────────────────────────────────────────────────── */
+
+.dp-cal__day--selected .dp-cal__day-btn {
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+}
+
+.dp-cal__day--selected .dp-cal__day-btn:hover {
+    background: var(--accent-2);
+}
+
+/* ─── Today ───────────────────────────────────────────────────────────────── */
+
+.dp-cal__day--today:not(.dp-cal__day--selected) .dp-cal__day-btn {
+    background: var(--surface-2);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ─── Outside month ───────────────────────────────────────────────────────── */
+
+.dp-cal__day--outside .dp-cal__day-btn {
+    color: var(--text-3);
+    opacity: 0.4;
+}
+
+/* ─── Disabled ────────────────────────────────────────────────────────────── */
+
+.dp-cal__day--disabled .dp-cal__day-btn {
+    color: var(--text-3);
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ─── Hidden ──────────────────────────────────────────────────────────────── */
+
+.dp-cal__day--hidden {
+    visibility: hidden;
+}

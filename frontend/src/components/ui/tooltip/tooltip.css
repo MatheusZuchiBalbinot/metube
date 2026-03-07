@@ -1,0 +1,28 @@
+/* ─── Tooltip ─────────────────────────────────────────────────────────────── */
+
+.tooltip-content {
+    background: var(--surface-3, #1a1a2e);
+    color: var(--text, #e2e8f0);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    user-select: none;
+    max-width: 220px;
+    line-height: 1.4;
+    z-index: 9999;
+
+    transform-origin: var(--radix-tooltip-content-transform-origin);
+    animation: tooltip-in 0.12s ease;
+}
+
+@keyframes tooltip-in {
+    from { opacity: 0; scale: 0.92; }
+    to   { opacity: 1; scale: 1; }
+}
+
+.tooltip-arrow {
+    fill: var(--surface-3, #1a1a2e);
+}
