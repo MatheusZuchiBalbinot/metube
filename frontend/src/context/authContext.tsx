@@ -2,6 +2,7 @@ import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as authApi from '../api/auth';
 import type { User } from '../api/auth';
+import { APP_EVENTS } from '@utils/events';
 
 export interface AuthContextValue {
     user: User | null
@@ -41,8 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSessionError((e as CustomEvent<{ message: string }>).detail.message);
         }
 
-        window.addEventListener('auth:session-expired', onSessionExpired);
-        return () => window.removeEventListener('auth:session-expired', onSessionExpired);
+        window.addEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
+        return () => window.removeEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
     }, [t]);
 
     const signIn = useCallback(async (email: string, password: string) => {
