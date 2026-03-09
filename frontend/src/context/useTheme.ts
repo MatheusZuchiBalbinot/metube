@@ -1,9 +1,17 @@
-import { useContext } from 'react';
-import { ThemeContext } from './themeContext';
-import type { ThemeContextValue } from './themeContext';
+import { useAppDispatch, useAppSelector } from '@store';
+import { themeActions } from '@store/themeSlice';
+import type { ThemeMode, ThemeColor } from '@utils/themes';
 
-export function useTheme(): ThemeContextValue {
-    const ctx = useContext(ThemeContext);
-    if (!ctx) {throw new Error('useTheme must be used inside <ThemeProvider>');}
-    return ctx;
+export type { ThemeMode, ThemeColor };
+
+export function useTheme() {
+    const dispatch = useAppDispatch();
+    const { mode, color } = useAppSelector(s => s.theme);
+
+    return {
+        mode,
+        color,
+        setMode: (next: ThemeMode) => dispatch(themeActions.setMode(next)),
+        setColor: (next: ThemeColor) => dispatch(themeActions.setColor(next)),
+    };
 }
