@@ -55,6 +55,12 @@
       ],
       "@lib/*": [
         "src/lib/*"
+      ],
+      "@store": [
+        "src/store/index.ts"
+      ],
+      "@store/*": [
+        "src/store/*"
       ]
     }
   },
