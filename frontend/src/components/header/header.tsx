@@ -31,16 +31,17 @@ const LANGUAGES = [
 ];
 
 interface AppHeaderProps {
-    onToggleSidebar: () => void;
+    onToggleSidebar: () => void
 }
 
+// eslint-disable-next-line complexity
 export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { t, i18n } = useTranslation();
     const { user, signOut } = useAuth();
     const { mode, color, setMode, setColor } = useTheme();
     const navigate = useNavigate();
 
-    const { openUploadModal } = useVideo();
+    const { openUploadModal, autoplay, setAutoplay } = useVideo();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,7 +51,6 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     useEffect(() => {
         function handleOutsideClick(e: MouseEvent) {
             const isOutside = dropdownRef.current && !dropdownRef.current.contains(e.target as Node);
-
             if (isOutside) {
                 setDropdownOpen(false);
             }
@@ -214,6 +214,20 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                                             {label}
                                         </Button>
                                     ))}
+                                </div>
+                            </div>
+
+                            <div className="prefs-section">
+                                <div className="prefs-autoplay-row">
+                                    <p className="prefs-label">{t('preferences.autoplay')}</p>
+                                    <button
+                                        className={['prefs-autoplay-toggle', autoplay ? 'prefs-autoplay-toggle--on' : ''].filter(Boolean).join(' ')}
+                                        onClick={() => setAutoplay(!autoplay)}
+                                        aria-pressed={autoplay}
+                                        aria-label={t('preferences.autoplay')}
+                                    >
+                                        <span className="prefs-autoplay-thumb" />
+                                    </button>
                                 </div>
                             </div>
 
