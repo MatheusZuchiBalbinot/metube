@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/max-len */
 export const VideoStatus = {
     PUBLISHED: 'published',
     SCHEDULED: 'scheduled',
@@ -63,13 +64,29 @@ function v(
     };
 }
 
-export const MOCK_VIDEOS: Video[] = [
+// Publicly available sample videos (open-source, CC-licensed) cycled across all entries
+const SAMPLE_VIDEO_LIST = [
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4',
+];
+
+const RAW_VIDEOS: Video[] = [
     // --- CodeWithPedro (ch_1) — React & Frontend ---
-    v('v001', 'React 19 Concurrent Features Deep Dive', 'Exploramos as novidades do React 19: use(), transitions, e o novo compilador. Cobertura completa com exemplos práticos e comparações de performance.', ['react', 'frontend', 'javascript', 'performance'], 'ch_1', 184200, '2025-09-15T10:00:00Z'),
-    v('v002', 'Construindo um Design System com React e CSS Variables', 'Como criar um design system escalável utilizando tokens CSS e componentes React reutilizáveis. Do zero ao deploy.', ['react', 'css', 'design', 'frontend'], 'ch_1', 97400, '2025-07-22T14:00:00Z'),
-    v('v003', 'React Context vs Zustand vs Redux — Qual usar em 2025?', 'Comparação detalhada entre as três abordagens de gerenciamento de estado mais populares no ecossistema React. Casos de uso, trade-offs e performance.', ['react', 'javascript', 'frontend'], 'ch_1', 312800, '2025-05-10T09:00:00Z'),
-    v('v004', 'Formulários com React Hook Form e Zod', 'Validação de formulários com TypeScript estrito. Aprenda a combinar react-hook-form com zod para ter tipagem completa e UX polida.', ['react', 'typescript', 'frontend'], 'ch_1', 54100, '2025-03-18T11:00:00Z'),
-    v('v005', 'Server Components na Prática — Next.js 15', 'Entendendo o modelo mental dos React Server Components com exemplos reais de aplicações Next.js 15. Streaming, Suspense e cache.', ['react', 'frontend', 'javascript'], 'ch_1', 229600, '2025-01-08T13:00:00Z'),
+    v('v001', 'React 19 Concurrent Features Deep Dive', 'Exploramos as novidades do React 19: use(), transitions, e o novo compilador. Cobertura completa com exemplos práticos e comparações de performance.', ['react', 'frontend', 'javascript', 'performance'], 'ch_1', 184200, '2026-03-07T10:00:00Z'),
+    v('v002', 'Construindo um Design System com React e CSS Variables', 'Como criar um design system escalável utilizando tokens CSS e componentes React reutilizáveis. Do zero ao deploy.', ['react', 'css', 'design', 'frontend'], 'ch_1', 97400, '2026-03-06T14:00:00Z'),
+    v('v003', 'React Context vs Zustand vs Redux — Qual usar em 2025?', 'Comparação detalhada entre as três abordagens de gerenciamento de estado mais populares no ecossistema React. Casos de uso, trade-offs e performance.', ['react', 'javascript', 'frontend'], 'ch_1', 312800, '2026-03-05T09:00:00Z'),
+    v('v004', 'Formulários com React Hook Form e Zod', 'Validação de formulários com TypeScript estrito. Aprenda a combinar react-hook-form com zod para ter tipagem completa e UX polida.', ['react', 'typescript', 'frontend'], 'ch_1', 54100, '2026-03-04T16:00:00Z'),
+    v('v005', 'Server Components na Prática — Next.js 15', 'Entendendo o modelo mental dos React Server Components com exemplos reais de aplicações Next.js 15. Streaming, Suspense e cache.', ['react', 'frontend', 'javascript'], 'ch_1', 229600, '2026-03-03T11:00:00Z'),
     v('v006', 'Animações Performáticas com Framer Motion', 'Técnicas avançadas de animação no React usando Framer Motion. Layout animations, gestures e spring physics.', ['react', 'animation', 'frontend', 'css'], 'ch_1', 73800, '2024-11-03T16:00:00Z'),
     v('v007', 'TanStack Query — Gerenciamento de Estado Assíncrono', 'Guia completo do TanStack Query (ex-React Query): caching, background refetch, mutations e prefetch para SSR.', ['react', 'javascript', 'api', 'frontend'], 'ch_1', 145600, '2024-08-20T12:00:00Z'),
 
@@ -218,3 +235,8 @@ export const MOCK_VIDEOS: Video[] = [
     v('v119', 'WebAssembly em 2026 — Estado da Arte', 'WASM threads, SIMD, garbage collection e component model. O que WebAssembly pode fazer hoje que era impossível antes.', ['frontend', 'javascript', 'performance'], 'ch_12', 0, '2026-03-03T12:00:00Z', 'scheduled', '2026-04-15T10:00:00Z'),
     v('v120', 'CSS Quantum — O Próximo Passo do CSS', 'Especulação fundamentada sobre para onde o CSS está indo: native CSS mixins, typed custom properties e logical properties.', ['css', 'frontend', 'animation'], 'ch_14', 0, '2026-03-03T12:00:00Z', 'scheduled', '2026-04-20T11:00:00Z'),
 ];
+
+export const MOCK_VIDEOS: Video[] = RAW_VIDEOS.map((video, index) => ({
+    ...video,
+    videoUrl: SAMPLE_VIDEO_LIST[index % SAMPLE_VIDEO_LIST.length],
+}));
