@@ -161,8 +161,8 @@
 /* ─── Date inputs ──────────────────────────────────────────────────────────── */
 
 .filter-panel__date-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
@@ -170,6 +170,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-width: 0;
 }
 
 .filter-panel__date-label {
