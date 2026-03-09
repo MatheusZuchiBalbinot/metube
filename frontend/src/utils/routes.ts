@@ -9,4 +9,5 @@ export const ROUTES = {
     USER:        '/user/:id',
     VIDEO:       '/video/:id',
     SEARCH:      '/search',
+    CHANNEL:     '/channel/:id',
 } as const;
