@@ -28,6 +28,7 @@ const YEAR_OPTIONS = Array.from(
 
 const VISIBLE_TAG_COUNT = 8;
 
+// eslint-disable-next-line complexity
 export default function FilterPanel({ allTags, value, onChange }: FilterPanelProps) {
     const { t } = useTranslation();
     const [showMore, setShowMore] = useState(false);
@@ -84,7 +85,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
         return {
             background: palette.bg,
             color: palette.color,
-            borderColor: `${palette.color}55`
+            borderColor: `${palette.color}55`,
         };
     }
 
