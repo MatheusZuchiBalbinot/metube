@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@context/useAuth';
 import { useVideo } from '@context/useVideo';
+import { useAppDispatch } from '@store';
+import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
 import { VideoStatus } from '@data/mockVideos';
 import TagInput from '@components/tag/input';
@@ -42,6 +44,7 @@ function computeStatus(publishAt: string | null): VideoStatus {
 export default function UploadModal() {
     const { t } = useTranslation();
     const { user } = useAuth();
+    const dispatch = useAppDispatch();
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
     const [form, setForm] = useState<FormState>(INITIAL_FORM);
     const videoUrlRef = useRef<string | null>(null);
@@ -100,6 +103,7 @@ export default function UploadModal() {
         resetForm();
     }
 
+    // eslint-disable-next-line complexity
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
@@ -140,6 +144,7 @@ export default function UploadModal() {
             videoUrl: form.videoObjectUrl ?? undefined,
         });
 
+        dispatch(toastActions.addToast({ message: t('toast.video_uploaded'), type: 'success' }));
         handleClose();
     }
 
