@@ -9,6 +9,7 @@ export { default as Badge } from './badge/badge';
 export { default as Avatar } from './avatar/avatar';
 export { default as Card } from './card/card';
 export { default as Spinner } from './spinner/spinner';
+export { default as ToastContainer } from './toast/toast';
 
 export type { ButtonVariant, ButtonSize } from './button/button';
 export type { DropdownOption } from './dropdown/dropdown';
