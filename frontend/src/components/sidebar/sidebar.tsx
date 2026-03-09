@@ -44,9 +44,10 @@ const YOU_NAV = [
 
 interface AppSidebarProps {
     collapsed: boolean;
+    hidden?: boolean;
 }
 
-export default function AppSidebar({ collapsed }: AppSidebarProps) {
+export default function AppSidebar({ collapsed, hidden }: AppSidebarProps) {
     const { t } = useTranslation();
 
     const renderItem = (item: { to: string; icon: React.ElementType; labelKey: string; end: boolean }) => {
@@ -67,7 +68,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
 
     return (
         <nav
-            className={`app-sidebar${collapsed ? ' app-sidebar--collapsed' : ''}`}
+            className={['app-sidebar', collapsed ? 'app-sidebar--collapsed' : '', hidden ? 'app-sidebar--hidden' : ''].filter(Boolean).join(' ')}
             aria-label={t('nav.aria_label')}
         >
             <ul className="app-sidebar__list">
