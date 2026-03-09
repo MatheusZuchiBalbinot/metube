@@ -1,44 +1,391 @@
-import { useEffect, useRef, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart, ThumbsDown, Bookmark, Link2, VideoOff } from 'lucide-react';
+import { Heart, ThumbsDown, Bookmark, Link2, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X } from 'lucide-react';
+import VideoPlayer from '@components/video/player';
 import VideoCard from '@components/video/card';
 import { useVideo } from '@context/useVideo';
+import { useAppDispatch, useAppSelector } from '@store';
+import { videoActions } from '@store/videoSlice';
+import { toastActions } from '@store/toastSlice';
 import { Format } from '@utils/format';
-import { Button, Tooltip } from '@ui';
+import { ROUTES } from '@utils/routes';
+import { getVideoSummary } from '@data/mockSummaries';
+import { TagColors } from '@utils/tagColors';
+import { useKeyboardShortcuts } from '@utils/useKeyboardShortcuts';
+import { Button, Tooltip, Badge } from '@ui';
 import './video.css';
 
+const AUTOPLAY_COUNTDOWN = 5;
+const PROGRESS_THROTTLE_MS = 3000;
+
+// For videos without a real file: simulate progress over time
+const SIMULATE_DURATION_S = 60;   // treat as a 60-second "video"
+const SIMULATE_TICK_MS = 2000; // tick every 2s
+
+
+type SidebarTab = 'related' | 'summary';
+
+function parseTimestamp(ts: string): number {
+    const parts = ts.split(':').map(Number);
+    const isHMS = parts.length === 3;
+    if (isHMS) { return parts[0] * 3600 + parts[1] * 60 + parts[2]; }
+    return parts[0] * 60 + (parts[1] ?? 0);
+}
+
+// eslint-disable-next-line complexity
 export default function VideoPage() {
     const { t, i18n } = useTranslation();
     const { id } = useParams<{ id: string }>();
-    const { videos, likedVideos, dislikedVideos, savedVideos, likeVideo, dislikeVideo, saveVideo, watchVideo } = useVideo();
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const {
+        videos, likedVideos, dislikedVideos, savedVideos,
+        likeVideo, dislikeVideo, saveVideo, watchVideo,
+        updateProgress, videoProgress, autoplay, closeMiniPlayer,
+        consumePendingVideoSeek,
+    } = useVideo();
+
+    const theaterMode = useAppSelector(state => state.video.theaterMode);
 
     const video = videos.find(v => v.id === id);
     const hasVideo = video !== undefined;
 
     const registeredRef = useRef(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const progressThrottleRef = useRef<number>(0);
+    const pendingSeekRef = useRef<number | null>(null);
+    const simulatedSecondsRef = useRef<number>(0);
+    const simulateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const currentTimeRef = useRef<number>(0);
+    const durationRef = useRef<number>(0);
+    const hasCompletedRef = useRef(false);
+    const readingContentRef = useRef<HTMLDivElement>(null);
 
     const [likeAnimating, setLikeAnimating] = useState(false);
     const [dislikeAnimating, setDislikeAnimating] = useState(false);
     const [saveAnimating, setSaveAnimating] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [sidebarTab, setSidebarTab] = useState<SidebarTab>('related');
+    const [readingMode, setReadingMode] = useState(false);
+    const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
+    const [showCompletion, setShowCompletion] = useState(false);
+    const [readingProgress, setReadingProgress] = useState(0);
+    const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Reset per-video state when id changes
+    useEffect(() => {
+        hasCompletedRef.current = false;
+        setReadingProgress(0);
+    }, [id]);
+
+    useEffect(() => {
+        closeMiniPlayer();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
+    // Cleanup theater mode on unmount
+    useEffect(() => {
+        return () => {
+            dispatch(videoActions.setTheaterMode(false));
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         const shouldRegister = hasVideo && !registeredRef.current;
-        if (!shouldRegister) { return; }
+        if (!shouldRegister) {
+            return;
+        }
+
         registeredRef.current = true;
         watchVideo(id!);
     }, [id, hasVideo, watchVideo]);
 
+    useEffect(() => {
+        if (!id) {
+            return;
+        }
+
+        const resumeTime = consumePendingVideoSeek(id);
+
+        if (resumeTime !== null) {
+            pendingSeekRef.current = resumeTime;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
     const relatedVideos = useMemo(() => {
         const isVideoMissing = !hasVideo;
-        if (isVideoMissing) { return []; }
+        if (isVideoMissing) {
+            return [];
+        }
+
         const videoTagSet = new Set(video!.tags);
         return videos
             .filter(v => v.id !== video!.id && v.tags.some(t => videoTagSet.has(t)))
             .sort((a, b) => b.views - a.views)
             .slice(0, 10);
     }, [hasVideo, video, videos]);
+
+    const summary = useMemo(() => {
+        const isVideoMissing = !hasVideo;
+        if (isVideoMissing) {
+            return null;
+        }
+
+        return getVideoSummary(video!.id);
+    }, [hasVideo, video]);
+
+    const hasSummary = summary !== null;
+
+    const readingTime = useMemo(() => {
+        const hasSummaryContent = summary !== null;
+        if (!hasSummaryContent) { return 0; }
+        const words = summary.readingMode.split(/\s+/).length;
+        return Math.max(1, Math.ceil(words / 200));
+    }, [summary]);
+
+    function triggerCompletion() {
+        const isAlreadyCompleted = hasCompletedRef.current;
+        if (isAlreadyCompleted) { return; }
+        hasCompletedRef.current = true;
+        setShowCompletion(true);
+        setTimeout(() => setShowCompletion(false), 1800);
+    }
+
+    function startAutoplayCountdown() {
+        const hasRelated = relatedVideos.length > 0;
+        if (!autoplay || !hasRelated) {
+            return;
+        }
+
+        setAutoplayCountdown(AUTOPLAY_COUNTDOWN);
+    }
+
+    function cancelAutoplay() {
+        setAutoplayCountdown(null);
+        if (autoplayTimerRef.current) {
+            clearInterval(autoplayTimerRef.current);
+            autoplayTimerRef.current = null;
+        }
+    }
+
+    useEffect(() => {
+        const isCountingDown = autoplayCountdown !== null;
+        if (!isCountingDown) { return; }
+
+        autoplayTimerRef.current = setInterval(() => {
+            setAutoplayCountdown(prev => {
+                const isAtZero = prev !== null && prev <= 1;
+                if (isAtZero) {
+                    clearInterval(autoplayTimerRef.current!);
+                    autoplayTimerRef.current = null;
+                    const nextVideo = relatedVideos[0];
+                    if (nextVideo) {
+                        navigate(ROUTES.VIDEO.replace(':id', nextVideo.id));
+                    }
+
+                    return null;
+                }
+                return prev !== null ? prev - 1 : null;
+            });
+        }, 1000);
+
+        return () => {
+            if (autoplayTimerRef.current) {
+                clearInterval(autoplayTimerRef.current);
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoplayCountdown]);
+
+    // ─── Simulate progress for no-file videos ─────────────────────────────────
+    useEffect(() => {
+        const isVideoMissing = !hasVideo || !id;
+        if (isVideoMissing) {
+            return;
+        }
+
+        const hasFile = video!.videoUrl !== undefined && video!.videoUrl !== '';
+        if (hasFile) {
+            return;
+        }
+
+        // Restore existing progress so we continue from where we left off
+        const existing = videoProgress[id] ?? 0;
+        const isFinished = existing >= 95;
+        if (isFinished) {
+            return;
+        }
+
+        // Start at least 4s into simulation (~7%) so mini-player always triggers on navigate-away
+        simulatedSecondsRef.current = Math.max(4, (existing / 100) * SIMULATE_DURATION_S);
+
+        simulateTimerRef.current = setInterval(() => {
+            simulatedSecondsRef.current += SIMULATE_TICK_MS / 1000;
+            const pct = Math.min((simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100, 100);
+            updateProgress(id, pct);
+
+            const isVideoFinished = pct >= 100;
+            if (isVideoFinished) {
+                clearInterval(simulateTimerRef.current!);
+                simulateTimerRef.current = null;
+                triggerCompletion();
+                startAutoplayCountdown();
+            }
+        }, SIMULATE_TICK_MS);
+
+        return () => {
+            if (simulateTimerRef.current) {
+                clearInterval(simulateTimerRef.current);
+                simulateTimerRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, hasVideo]);
+
+    const handleLoadedMetadata = useCallback(() => {
+        const el = videoRef.current;
+        if (!el) { return; }
+
+        durationRef.current = el.duration;
+
+        const hasPendingSeek = pendingSeekRef.current !== null;
+        if (hasPendingSeek) {
+            el.currentTime = pendingSeekRef.current!;
+            pendingSeekRef.current = null;
+            el.play().catch(() => { });
+        }
+
+        currentTimeRef.current = el.currentTime;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleTimeUpdate = useCallback(() => {
+        const el = videoRef.current;
+        if (!el || !id) {
+            return;
+        }
+
+        currentTimeRef.current = el.currentTime;
+
+        const now = Date.now();
+        const shouldThrottle = now - progressThrottleRef.current < PROGRESS_THROTTLE_MS;
+        if (shouldThrottle) {
+            return;
+        }
+
+        progressThrottleRef.current = now;
+        const percent = el.duration > 0 ? (el.currentTime / el.duration) * 100 : 0;
+
+        updateProgress(id, percent);
+    }, [id, updateProgress]);
+
+    const handleVideoEnded = useCallback(() => {
+        if (id) {
+            updateProgress(id, 100);
+        }
+
+        triggerCompletion();
+        startAutoplayCountdown();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, updateProgress, autoplay, relatedVideos]);
+
+    useEffect(() => {
+        return () => {
+            if (simulateTimerRef.current) {
+                clearInterval(simulateTimerRef.current);
+            }
+
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            if (!id) {
+                return;
+            }
+
+            const hasCurrentTime = currentTimeRef.current > 0;
+            const currentTime = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
+            const hasDuration = durationRef.current > 0;
+            const hasVideoEnded = hasDuration && currentTime >= durationRef.current;
+
+            if (!hasVideoEnded) {
+                dispatch(videoActions.setPendingVideoSeek({ videoId: id, time: currentTime }));
+                dispatch(videoActions.openMiniPlayer({ videoId: id, currentTime }));
+
+                const hasRealProgress = hasCurrentTime && hasDuration;
+                if (hasRealProgress) {
+                    const percent = (currentTimeRef.current / durationRef.current) * 100;
+                    dispatch(videoActions.updateProgress({ videoId: id, percent }));
+                } else if (!hasCurrentTime && simulatedSecondsRef.current > 0) {
+                    const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
+                    const isSimFinished = simPct >= 100;
+
+                    if (!isSimFinished) {
+                        dispatch(videoActions.updateProgress({ videoId: id, percent: simPct }));
+                    }
+                }
+            }
+
+            cancelAutoplay();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
+    function handleReadingScroll() {
+        const el = readingContentRef.current;
+        if (!el) { return; }
+        const pct = el.scrollTop / (el.scrollHeight - el.clientHeight) * 100;
+        setReadingProgress(Math.min(100, pct));
+    }
+
+    function handleSeekToChapter(timestamp: string) {
+        const seconds = parseTimestamp(timestamp);
+        const el = videoRef.current;
+        if (el) {
+            el.currentTime = seconds;
+        } else {
+            simulatedSecondsRef.current = seconds;
+        }
+    }
+
+    // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
+    const handleLikeShortcut = useCallback(() => {
+        const isCurrentlyLiked = likedVideos.has(video?.id ?? '');
+        dispatch(toastActions.addToast({
+            message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
+            type: 'success',
+        }));
+        if (video?.id) { likeVideo(video.id); }
+        setLikeAnimating(true);
+        setTimeout(() => setLikeAnimating(false), 400);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [video?.id, likedVideos, likeVideo, dispatch, t]);
+
+    const handleSaveShortcut = useCallback(() => {
+        const isCurrentlySaved = savedVideos.has(video?.id ?? '');
+        dispatch(toastActions.addToast({
+            message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
+            type: 'success',
+        }));
+        if (video?.id) { saveVideo(video.id); }
+        setSaveAnimating(true);
+        setTimeout(() => setSaveAnimating(false), 400);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [video?.id, savedVideos, saveVideo, dispatch, t]);
+
+    const handleToggleTheaterShortcut = useCallback(() => {
+        dispatch(videoActions.setTheaterMode(!theaterMode));
+    }, [dispatch, theaterMode]);
+
+    useKeyboardShortcuts({
+        onOpenUpload: () => { },
+        onOpenShortcuts: () => { },
+        onFocusSearch: () => { },
+        videoPageId: id,
+        onLike: handleLikeShortcut,
+        onSave: handleSaveShortcut,
+        onToggleTheater: handleToggleTheaterShortcut,
+    });
 
     if (!hasVideo) {
         return (
@@ -51,32 +398,52 @@ export default function VideoPage() {
     }
 
     const isLiked = likedVideos.has(video.id);
-    const isDisliked = dislikedVideos.has(video.id);
     const isSaved = savedVideos.has(video.id);
+    const isDisliked = dislikedVideos.has(video.id);
+
     const hasVideoFile = video.videoUrl !== undefined && video.videoUrl !== '';
+    const isAutoplayActive = autoplayCountdown !== null;
+    const nextVideo = relatedVideos[0];
+
+    const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
+
+    const videoId = video.id;
 
     function handleLike() {
-        likeVideo(video.id);
+        dispatch(toastActions.addToast({
+            message: t(isLiked ? 'toast.unliked' : 'toast.liked'),
+            type: 'success',
+        }));
+        likeVideo(videoId);
         setLikeAnimating(true);
         setTimeout(() => setLikeAnimating(false), 400);
     }
 
     function handleDislike() {
-        dislikeVideo(video.id);
+        dislikeVideo(videoId);
         setDislikeAnimating(true);
         setTimeout(() => setDislikeAnimating(false), 400);
     }
 
     function handleSave() {
-        saveVideo(video.id);
+        dispatch(toastActions.addToast({
+            message: t(isSaved ? 'toast.unsaved' : 'toast.saved'),
+            type: 'success',
+        }));
+        saveVideo(videoId);
         setSaveAnimating(true);
         setTimeout(() => setSaveAnimating(false), 400);
     }
 
     function handleShare() {
         navigator.clipboard.writeText(window.location.href);
+        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: 'info' }));
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
+    }
+
+    function handleToggleTheater() {
+        handleToggleTheaterShortcut();
     }
 
     const likeBtnClass = [
@@ -102,31 +469,107 @@ export default function VideoPage() {
         isCopied ? 'video-page__action-btn--copied' : '',
     ].filter(Boolean).join(' ');
 
+    const pageClass = ['video-page', theaterMode ? 'video-page--theater' : ''].filter(Boolean).join(' ');
+
     return (
-        <div className="video-page">
+        <div className={pageClass}>
+            <div className="video-page__back-header">
+                <Button variant="ghost" size="sm" className="video-page__back-btn" onClick={() => navigate(-1)}>
+                    <ArrowLeft size={14} strokeWidth={2} />
+                    {t('common.back')}
+                </Button>
+                {hasSummary && (
+                    <Tooltip content={readingMode ? t('video.exit_reading_mode') : t('video.reading_mode')} side="bottom">
+                        <Button
+                            variant={readingMode ? 'primary' : 'ghost'}
+                            size="sm"
+                            className="video-page__reading-mode-btn"
+                            onClick={() => setReadingMode(v => !v)}
+                            aria-pressed={readingMode}
+                            aria-label={t('video.reading_mode')}
+                        >
+                            <BookOpen size={14} strokeWidth={2} />
+                            {t('video.reading_mode')}
+                        </Button>
+                    </Tooltip>
+                )}
+            </div>
             <div className="video-page__layout">
                 <main className="video-page__main">
-                    <div className="video-page__player">
-                        {hasVideoFile ? (
-                            <video
-                                className="video-page__player-video"
-                                src={video.videoUrl}
-                                controls
+                    {readingMode && summary ? (
+                        <div
+                            className="video-page__reading-mode"
+                            ref={readingContentRef}
+                            onScroll={handleReadingScroll}
+                        >
+                            <div
+                                className="video-page__reading-progress"
+                                style={{ width: `${readingProgress}%` }}
                             />
-                        ) : (
-                            <div className="video-page__player-fallback">
-                                <img
-                                    src={video.thumbnail}
-                                    alt={video.title}
-                                    className="video-page__player-fallback-img"
+                            <div
+                                className="video-page__reading-content"
+                                // eslint-disable-next-line @stylistic/max-len
+                                dangerouslySetInnerHTML={{ __html: summary.readingMode.replace(/^## (.+)$/gm, '<h2>$1</h2>').replace(/^### (.+)$/gm, '<h3>$1</h3>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n\n/g, '</p><p>').replace(/^/, '<p>').replace(/$/, '</p>') }}
+                            />
+                        </div>
+                    ) : (
+                        <div className="video-page__player-wrap">
+                            {hasVideoFile ? (
+                                <VideoPlayer
+                                    videoRef={videoRef}
+                                    src={video.videoUrl!}
+                                    chapters={summary?.chapters}
+                                    theaterMode={theaterMode}
+                                    onToggleTheater={handleToggleTheater}
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onEnded={handleVideoEnded}
+                                    onLoadedMetadata={handleLoadedMetadata}
+                                    showCompletion={showCompletion}
+                                    ambientColor={tagPalette?.color}
                                 />
-                                <div className="video-page__player-fallback-msg">
-                                    <VideoOff size={32} strokeWidth={1.5} />
-                                    <p>{t('video.no_video_file')}</p>
+                            ) : (
+                                <div className="video-page__player">
+                                    <div className="video-page__player-fallback">
+                                        <img
+                                            src={video.thumbnail}
+                                            alt={video.title}
+                                            className="video-page__player-fallback-img"
+                                        />
+                                        <div className="video-page__player-fallback-msg">
+                                            <VideoOff size={32} strokeWidth={1.5} />
+                                            <p>{t('video.no_video_file')}</p>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+                        </div>
+                    )}
+
+                    {isAutoplayActive && nextVideo && (
+                        <div className="video-page__autoplay-banner">
+                            <div className="video-page__autoplay-info">
+                                <span className="video-page__autoplay-label">{t('video.autoplay_next')}</span>
+                                <span className="video-page__autoplay-title">{nextVideo.title}</span>
                             </div>
-                        )}
-                    </div>
+                            <div className="video-page__autoplay-countdown">
+                                <div
+                                    className="video-page__autoplay-progress"
+                                    style={{ animationDuration: `${AUTOPLAY_COUNTDOWN}s` }}
+                                />
+                                <span className="video-page__autoplay-seconds">{autoplayCountdown}</span>
+                            </div>
+                            <Tooltip content={t('video.autoplay_cancel')} side="top">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={cancelAutoplay}
+                                    aria-label={t('video.autoplay_cancel')}
+                                >
+                                    <X size={14} />
+                                </Button>
+                            </Tooltip>
+                        </div>
+                    )}
 
                     <div className="video-page__meta">
                         <h1 className="video-page__title">{video.title}</h1>
@@ -141,41 +584,43 @@ export default function VideoPage() {
                             </div>
 
                             <div className="video-page__actions">
-                                <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
-                                    <Button
-                                        variant="ghost"
-                                        className={likeBtnClass}
-                                        onClick={handleLike}
-                                        aria-pressed={isLiked}
-                                        aria-label={isLiked ? t('video.liked') : t('video.like')}
-                                    >
-                                        <Heart
-                                            className="video-page__action-icon"
-                                            size={15}
-                                            strokeWidth={2}
-                                            fill={isLiked ? 'currentColor' : 'none'}
-                                        />
-                                        {isLiked ? t('video.liked') : t('video.like')}
-                                    </Button>
-                                </Tooltip>
+                                <div className="video-page__action-group">
+                                    <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
+                                        <Button
+                                            variant="ghost"
+                                            className={likeBtnClass}
+                                            onClick={handleLike}
+                                            aria-pressed={isLiked}
+                                            aria-label={isLiked ? t('video.liked') : t('video.like')}
+                                        >
+                                            <Heart
+                                                className="video-page__action-icon"
+                                                size={18}
+                                                strokeWidth={2}
+                                                fill={isLiked ? 'currentColor' : 'none'}
+                                            />
+                                        </Button>
+                                    </Tooltip>
 
-                                <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
-                                    <Button
-                                        variant="ghost"
-                                        className={dislikeBtnClass}
-                                        onClick={handleDislike}
-                                        aria-pressed={isDisliked}
-                                        aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
-                                    >
-                                        <ThumbsDown
-                                            className="video-page__action-icon"
-                                            size={15}
-                                            strokeWidth={2}
-                                            fill={isDisliked ? 'currentColor' : 'none'}
-                                        />
-                                        {isDisliked ? t('video.disliked') : t('video.dislike')}
-                                    </Button>
-                                </Tooltip>
+                                    <span className="video-page__action-divider" />
+
+                                    <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
+                                        <Button
+                                            variant="ghost"
+                                            className={dislikeBtnClass}
+                                            onClick={handleDislike}
+                                            aria-pressed={isDisliked}
+                                            aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
+                                        >
+                                            <ThumbsDown
+                                                className="video-page__action-icon"
+                                                size={18}
+                                                strokeWidth={2}
+                                                fill={isDisliked ? 'currentColor' : 'none'}
+                                            />
+                                        </Button>
+                                    </Tooltip>
+                                </div>
 
                                 <Tooltip content={isSaved ? t('video.saved') : t('video.save')} side="top">
                                     <Button
@@ -187,11 +632,10 @@ export default function VideoPage() {
                                     >
                                         <Bookmark
                                             className="video-page__action-icon"
-                                            size={15}
+                                            size={18}
                                             strokeWidth={2}
                                             fill={isSaved ? 'currentColor' : 'none'}
                                         />
-                                        {isSaved ? t('video.saved') : t('video.save')}
                                     </Button>
                                 </Tooltip>
 
@@ -204,12 +648,9 @@ export default function VideoPage() {
                                     >
                                         <Link2
                                             className="video-page__action-icon"
-                                            size={15}
+                                            size={18}
                                             strokeWidth={2}
                                         />
-                                        <span className="video-page__share-label">
-                                            {isCopied ? t('video.copied') : t('video.share')}
-                                        </span>
                                     </Button>
                                 </Tooltip>
                             </div>
@@ -229,16 +670,70 @@ export default function VideoPage() {
                     </div>
                 </main>
 
-                {relatedVideos.length > 0 && (
-                    <aside className="video-page__sidebar">
-                        <h2 className="video-page__sidebar-title">{t('video.related')}</h2>
+                <aside className="video-page__sidebar">
+                    <div className="video-page__sidebar-tabs" role="tablist">
+                        <button
+                            role="tab"
+                            aria-selected={sidebarTab === 'related'}
+                            className={['video-page__sidebar-tab', sidebarTab === 'related' ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
+                            onClick={() => setSidebarTab('related')}
+                        >
+                            <List size={14} />
+                            {t('video.related')}
+                        </button>
+                        {hasSummary && (
+                            <button
+                                role="tab"
+                                aria-selected={sidebarTab === 'summary'}
+                                className={['video-page__sidebar-tab', sidebarTab === 'summary' ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
+                                onClick={() => setSidebarTab('summary')}
+                            >
+                                <Lightbulb size={14} />
+                                {t('video.summary')}
+                                {readingTime > 0 && (
+                                    <Badge variant="neutral">{t('video.reading_time', { min: readingTime })}</Badge>
+                                )}
+                            </button>
+                        )}
+                    </div>
+
+                    {sidebarTab === 'related' && relatedVideos.length > 0 && (
                         <div className="video-page__sidebar-list">
                             {relatedVideos.map(v => (
                                 <VideoCard key={v.id} video={v} />
                             ))}
                         </div>
-                    </aside>
-                )}
+                    )}
+
+                    {sidebarTab === 'summary' && hasSummary && (
+                        <div className="video-page__summary">
+                            <div className="video-page__summary-section">
+                                <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>
+                                <ul className="video-page__key-points">
+                                    {summary!.keyPoints.map((point, i) => (
+                                        <li key={i} className="video-page__key-point">{point}</li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div className="video-page__summary-section">
+                                <h3 className="video-page__summary-heading">{t('video.chapters')}</h3>
+                                <div className="video-page__chapters">
+                                    {summary!.chapters.map((ch, i) => (
+                                        <div
+                                            key={i}
+                                            className="video-page__chapter"
+                                            onClick={() => handleSeekToChapter(ch.timestamp)}
+                                        >
+                                            <span className="video-page__chapter-time">{ch.timestamp}</span>
+                                            <span className="video-page__chapter-title">{ch.title}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </aside>
             </div>
         </div>
     );
