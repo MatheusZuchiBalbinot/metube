@@ -1,12 +1,20 @@
-import { useContext } from 'react';
-import { AuthContext } from './authContext';
-import type { AuthContextValue } from './authContext';
+import { useAppDispatch, useAppSelector } from '@store';
+import { signInThunk, signOutThunk } from '@store/authSlice';
+import type { User } from '../api/auth';
 
-export function useAuth(): AuthContextValue {
-    const ctx = useContext(AuthContext);
-    if (!ctx) {
-        throw new Error('useAuth must be used inside <AuthProvider>');
+export type { User };
+
+export function useAuth() {
+    const dispatch = useAppDispatch();
+    const { user, loading, sessionError } = useAppSelector(s => s.auth);
+
+    async function signIn(email: string, password: string): Promise<void> {
+        await dispatch(signInThunk({ email, password })).unwrap();
     }
 
-    return ctx;
+    async function signOut(): Promise<void> {
+        await dispatch(signOutThunk()).unwrap();
+    }
+
+    return { user, loading, sessionError, signIn, signOut };
 }
