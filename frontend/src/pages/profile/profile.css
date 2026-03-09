@@ -39,6 +39,65 @@
     margin: 0;
 }
 
+/* ─── Stats grid ────────────────────────────────────────────────────────────── */
+
+.profile-page__stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.profile-page__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+    padding: 8px 16px;
+    border-right: 1px solid var(--border);
+}
+
+.profile-page__stat:last-child {
+    border-right: none;
+}
+
+.profile-page__stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.2;
+}
+
+.profile-page__stat-label {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.profile-page__stat--tags {
+    border-right: none;
+}
+
+.profile-page__top-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.profile-page__top-tag {
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 2px 10px;
+}
+
 /* ─── Tabs ─────────────────────────────────────────────────────────────────── */
 
 .profile-page__tabs {

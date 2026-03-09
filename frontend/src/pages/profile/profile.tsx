@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { VideoFilter } from '@utils/applyFilters';
+import { TagColors } from '@utils/tagColors';
 import type { FilterState } from '@utils/applyFilters';
 import type { Video } from '@data/mockVideos';
 import { useAuth } from '@context/useAuth';
@@ -19,11 +20,12 @@ const TAB = {
 } as const;
 type Tab = typeof TAB[keyof typeof TAB];
 
+// eslint-disable-next-line complexity
 export default function ProfilePage() {
     const { t } = useTranslation();
     const { id: idParam } = useParams<{ id?: string }>();
     const { user } = useAuth();
-    const { videos, watchHistory, likedVideos, editVideo, deleteVideo } = useVideo();
+    const { videos, watchHistory, likedVideos, savedVideos, videoProgress, editVideo, deleteVideo } = useVideo();
 
     const isOwnProfile = !idParam || String(user!.id) === idParam;
     const channelId = isOwnProfile ? String(user!.id) : idParam!;
@@ -73,6 +75,41 @@ export default function ProfilePage() {
     const channelName = isOwnProfile
         ? (user?.name ?? '')
         : (ownVideos[0]?.channel ?? idParam ?? '');
+
+    // ─── Personal stats (own profile only) ────────────────────────────────────
+    const stats = useMemo(() => {
+        const isNotOwn = !isOwnProfile;
+        if (isNotOwn) { return null; }
+
+        const videosWatched = watchHistory.length;
+
+        let totalMinutes = 0;
+        for (const id of watchHistory) {
+            const pct = videoProgress[id] ?? 0;
+            totalMinutes += Math.round((pct / 100) * 10);
+        }
+
+        const watchTimeStr = totalMinutes >= 60
+            ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+            : `${totalMinutes}m`;
+
+        const tagFreq = new Map<string, number>();
+        for (const id of watchHistory) {
+            const video = videos.find(v => v.id === id);
+            if (!video) { continue; }
+            for (const tag of video.tags) {
+                tagFreq.set(tag, (tagFreq.get(tag) ?? 0) + 1);
+            }
+        }
+        const topTags = [...tagFreq.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([tag]) => tag);
+
+        const likedCount = likedVideos.size;
+
+        return { videosWatched, watchTimeStr, topTags, likedCount };
+    }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos]);
 
     function handleTabChange(tab: Tab) {
         setActiveTab(tab);
@@ -125,6 +162,41 @@ export default function ProfilePage() {
                     <p className="profile-page__stats">
                         {ownVideos.length} {t('video.your_videos').toLowerCase()}
                     </p>
+                    {stats && (
+                        <div className="profile-page__stats-grid">
+                            <div className="profile-page__stat">
+                                <span className="profile-page__stat-value">{stats.videosWatched}</span>
+                                <span className="profile-page__stat-label">{t('profile.videos_watched')}</span>
+                            </div>
+                            <div className="profile-page__stat">
+                                <span className="profile-page__stat-value">{stats.watchTimeStr}</span>
+                                <span className="profile-page__stat-label">{t('profile.watch_time')}</span>
+                            </div>
+                            <div className="profile-page__stat">
+                                <span className="profile-page__stat-value">{stats.likedCount}</span>
+                                <span className="profile-page__stat-label">{t('profile.liked_count')}</span>
+                            </div>
+                            {stats.topTags.length > 0 && (
+                                <div className="profile-page__stat profile-page__stat--tags">
+                                    <span className="profile-page__stat-label">{t('profile.top_tags')}</span>
+                                    <div className="profile-page__top-tags">
+                                        {stats.topTags.map(tag => {
+                                            const p = TagColors.palette(tag);
+                                            return (
+                                                <span
+                                                    key={tag}
+                                                    className="profile-page__top-tag"
+                                                    style={{ background: p.bg, color: p.color }}
+                                                >
+                                                    {tag}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
