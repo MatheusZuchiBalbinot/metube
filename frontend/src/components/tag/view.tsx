@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
 import { useVideo } from '@context/useVideo';
 import { TagColors } from '@utils/tagColors';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
-import { Badge, Button, Tooltip } from '@ui';
+import { Badge, Button } from '@ui';
 import './view.css';
 
 export default function TagView() {
@@ -48,14 +49,10 @@ export default function TagView() {
     return (
         <div className="tag-view">
             <div className="tag-view__header">
-                <Tooltip content={t('common.back')} side="right">
-                    <Button variant="ghost" className="tag-view__back" onClick={closeTagView} aria-label={t('common.back')}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                        {t('common.back')}
-                    </Button>
-                </Tooltip>
+                <Button variant="ghost" size="sm" className="tag-view__back" onClick={closeTagView}>
+                    <ArrowLeft size={14} strokeWidth={2} />
+                    {t('common.back')}
+                </Button>
                 <div className="tag-view__title">
                     <span
                         className="tag-view__tag-chip"
