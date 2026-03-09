@@ -1,0 +1,550 @@
+/* ─── Custom Video Player (.vp) ─────────────────────────────────────────────── */
+
+.vp {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 0 80px 20px color-mix(in srgb, var(--vp-ambient, transparent) 15%, transparent);
+    transition: box-shadow 0.5s ease;
+}
+
+:root[data-mode='light'] .vp {
+    box-shadow: none;
+}
+
+/* Hide cursor when controls are not visible (playing, mouse idle) */
+.vp:not(.vp--controls-visible) {
+    cursor: none;
+}
+
+/* Cursor override while dragging seek bar */
+.vp--seeking,
+.vp--seeking * {
+    cursor: col-resize !important;
+}
+
+/* ─── Video element ─────────────────────────────────────────────────────────── */
+
+.vp__video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+/* ─── Hidden preview video ──────────────────────────────────────────────────── */
+
+.vp__preview-video {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 160px;
+    height: 90px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ─── Buffering spinner ─────────────────────────────────────────────────────── */
+
+.vp__buffering {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 7;
+}
+
+@keyframes vp-spin {
+    to { transform: rotate(360deg); }
+}
+
+.vp__buffering-spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.18);
+    border-top-color: rgba(255, 255, 255, 0.9);
+    animation: vp-spin 0.8s linear infinite;
+}
+
+/* ─── Play/Pause pop icon ───────────────────────────────────────────────────── */
+
+@keyframes vp-pop {
+    0%   { opacity: 0.9;  transform: scale(0.7); }
+    40%  { opacity: 1;    transform: scale(1.1); }
+    100% { opacity: 0;    transform: scale(1);   }
+}
+
+.vp__pop-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+    animation: vp-pop 0.5s ease forwards;
+}
+
+/* ─── Completion overlay ────────────────────────────────────────────────────── */
+
+@keyframes vp-complete {
+    0%   { opacity: 0; transform: scale(0.3); }
+    40%  { opacity: 1; transform: scale(1.1); }
+    65%  { opacity: 1; transform: scale(1);   }
+    100% { opacity: 0; transform: scale(1);   }
+}
+
+.vp__completion {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    z-index: 6;
+    animation: vp-complete 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.vp__completion-icon {
+    width: 72px;
+    height: 72px;
+}
+
+/* ─── Controls overlay ──────────────────────────────────────────────────────── */
+
+.vp__controls {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.22) 30%,
+        transparent 55%
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: 4;
+}
+
+.vp--controls-visible .vp__controls {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ─── Seek bar ──────────────────────────────────────────────────────────────── */
+
+/* Outer div — provides the expanded click/hover hit area via padding */
+.vp__seek {
+    position: relative;
+    padding: 8px 14px 4px;
+    cursor: pointer;
+}
+
+/* Inner div — aligns exactly with the track for accurate percentage calculation.
+   All positioned elements (thumb, dots, preview) live here. */
+.vp__seek-inner {
+    position: relative;
+}
+
+.vp__seek-track {
+    position: relative;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 2px;
+    transition: height 0.15s ease;
+    overflow: hidden;
+}
+
+.vp__seek:hover .vp__seek-track,
+.vp--seeking .vp__seek-track {
+    height: 5px;
+}
+
+/* Buffered (loaded) portion — gray layer beneath the played fill */
+.vp__seek-buffered {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.38);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 0;
+    transition: width 0.4s ease;
+}
+
+/* Played portion — accent color */
+.vp__seek-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--accent, #a78bfa);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ─── Chapter dots ──────────────────────────────────────────────────────────── */
+
+.vp__chapter-dot {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.9);
+    border-left: 1.5px solid rgba(0, 0, 0, 0.5);
+    pointer-events: all;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.12s, height 0.15s ease;
+}
+
+.vp__seek:hover .vp__chapter-dot,
+.vp--seeking .vp__chapter-dot {
+    height: 5px;
+}
+
+/* ─── Seek thumb ────────────────────────────────────────────────────────────── */
+
+.vp__seek-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--accent, #a78bfa);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 3;
+    /* offset by half the track height expansion so it stays vertically centered */
+    margin-top: 0;
+}
+
+/* Static thumb at current playback position — only visible when hovering */
+.vp__seek-thumb--current {
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.vp__seek:hover .vp__seek-thumb--current,
+.vp--seeking .vp__seek-thumb--current {
+    opacity: 1;
+}
+
+/* ─── Seek preview popup ────────────────────────────────────────────────────── */
+
+.vp__seek-preview {
+    position: absolute;
+    /* CSS clamp keeps the popup inside the track area (80px = half of 160px width) */
+    left: clamp(80px, var(--preview-left, 50%), calc(100% - 80px));
+    transform: translateX(-50%);
+    bottom: calc(100% + 14px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+    z-index: 10;
+    animation: vp-preview-in 0.12s ease forwards;
+}
+
+@keyframes vp-preview-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Small triangle arrow pointing down to the seek position */
+.vp__seek-preview::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(10, 10, 14, 0.96);
+    margin-top: 5px;
+}
+
+.vp__seek-preview-canvas {
+    width: 160px;
+    height: 90px;
+    display: block;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vp__seek-preview-time {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(10, 10, 14, 0.96);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+/* ─── Bottom bar ────────────────────────────────────────────────────────────── */
+
+.vp__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 10px 10px;
+    gap: 6px;
+}
+
+.vp__bar-left,
+.vp__bar-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ─── Control button ────────────────────────────────────────────────────────── */
+
+.vp__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    cursor: pointer;
+    transition: background 0.12s, transform 0.12s, color 0.12s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.vp__btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.vp__btn:active {
+    transform: scale(0.94);
+}
+
+/* ─── Time display ──────────────────────────────────────────────────────────── */
+
+.vp__time {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    padding: 0 6px;
+    letter-spacing: 0.02em;
+    /* Fixed width prevents layout shifts when time string changes length.
+       Sized for the longest expected format: "0:00:00 / 0:00:00" */
+    min-width: 8em;
+}
+
+/* ─── Inline volume control ─────────────────────────────────────────────────── */
+
+.vp__volume {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.vp__volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0;
+    max-width: 72px;
+    height: 3px;
+    background: linear-gradient(
+        to right,
+        #fff var(--vol, 100%),
+        rgba(255, 255, 255, 0.25) var(--vol, 100%)
+    );
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.2s ease;
+    pointer-events: none;
+    margin-left: 0;
+}
+
+.vp__volume:hover .vp__volume-slider {
+    width: 72px;
+    opacity: 1;
+    pointer-events: all;
+    margin-left: 4px;
+}
+
+.vp__volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.vp__volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Settings ──────────────────────────────────────────────────────────────── */
+
+.vp__settings {
+    position: relative;
+}
+
+.vp__settings-panel {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 160px;
+    background: rgba(18, 18, 20, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 20;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.vp__settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vp__settings-section-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ─── Speed in settings ─────────────────────────────────────────────────────── */
+
+.vp__settings-speeds {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.vp__settings-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, color 0.1s;
+}
+
+.vp__settings-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.vp__settings-option--active {
+    color: #fff;
+    font-weight: 600;
+}
+
+.vp__settings-option--active:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Skip indicator (← / → keyboard shortcuts) ─────────────────────────────── */
+
+@keyframes vp-skip {
+    0%   { opacity: 0; transform: scale(0.8); }
+    15%  { opacity: 1; transform: scale(1);   }
+    70%  { opacity: 1; transform: scale(1);   }
+    100% { opacity: 0; transform: scale(1);   }
+}
+
+.vp__skip-indicator {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+    z-index: 8;
+    animation: vp-skip 0.8s ease forwards;
+}
+
+.vp__skip-indicator--fwd {
+    right: 14%;
+}
+
+.vp__skip-indicator--bwd {
+    left: 14%;
+}
+
+.vp__skip-indicator-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(4px);
+    color: #fff;
+}
+
+.vp__skip-indicator-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
