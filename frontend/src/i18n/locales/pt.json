@@ -37,7 +37,8 @@
         "dark": "Escuro",
         "light": "Claro",
         "accent_color": "Cor de destaque",
-        "language": "Idioma"
+        "language": "Idioma",
+        "autoplay": "Reprodução automática"
     },
     "header": {
         "create": "Criar",
@@ -83,7 +84,7 @@
         "watch_history": "Histórico",
         "liked_videos": "Curtidos",
         "your_videos": "Seus Vídeos",
-        "related": "Vídeos relacionados",
+        "related": "Relacionados",
         "no_video_file": "Nenhum arquivo de vídeo disponível",
         "not_found": "Vídeo não encontrado",
         "results_for_query": "{{count}} resultados para",
@@ -105,7 +106,20 @@
         "drag_image": "Arraste uma imagem aqui",
         "drag_image_sub": "ou clique para procurar · max 10 MB",
         "drag_video": "Arraste um vídeo aqui",
-        "drag_video_sub": "ou clique para procurar · max 2 GB"
+        "drag_video_sub": "ou clique para procurar · max 2 GB",
+        "summary": "Resumo",
+        "key_points": "Pontos-chave",
+        "chapters": "Capítulos",
+        "reading_mode": "Modo leitura",
+        "exit_reading_mode": "Sair do modo leitura",
+        "autoplay_next": "A seguir",
+        "autoplay_cancel": "Cancelar reprodução automática",
+        "theater_mode": "Modo teatro",
+        "exit_theater_mode": "Sair do modo teatro",
+        "speed": "Velocidade",
+        "new": "Novo",
+        "reading_time": "~{{min}} min de leitura",
+        "watched": "Assistido"
     },
     "nav": {
         "aria_label": "Navegação principal",
@@ -130,5 +144,87 @@
         "drop_file": "Arraste um arquivo aqui",
         "drop_file_sub": "ou clique para procurar · max {{maxSizeMB}} MB",
         "file_too_large": "Arquivo muito grande. Máximo: {{maxSizeMB}} MB."
+    },
+    "home": {
+        "trending": "Em alta",
+        "continue_watching": "Continuar assistindo",
+        "next": "Próximo",
+        "surprise_me": "Surpreenda-me"
+    },
+    "history": {
+        "group_today": "Hoje",
+        "group_yesterday": "Ontem",
+        "group_this_week": "Esta semana",
+        "group_older": "Mais antigo",
+        "clear_all": "Limpar tudo",
+        "remove": "Remover do histórico"
+    },
+    "liked": {
+        "empty_text": "Vídeos que você curtiu aparecerão aqui"
+    },
+    "watch_later": {
+        "remove": "Remover de assistir mais tarde",
+        "empty_text": "Salve vídeos para assistir depois"
+    },
+    "search": {
+        "try_different": "Tente um termo de busca diferente"
+    },
+    "channel": {
+        "not_found": "Canal não encontrado",
+        "since": "Desde {{year}}"
+    },
+    "shortcuts": {
+        "title": "Atalhos de teclado",
+        "global": "Global",
+        "video_page": "Página de vídeo",
+        "focus_search": "Focar na busca",
+        "open_upload": "Enviar vídeo",
+        "go_history": "Ir para Histórico",
+        "go_profile": "Ir para Perfil",
+        "go_search": "Ir para Busca",
+        "show_shortcuts": "Mostrar atalhos",
+        "play_pause": "Play / Pause",
+        "like": "Curtir vídeo",
+        "save": "Salvar vídeo",
+        "theater_mode": "Modo teatro",
+        "tip": "Atalhos de sequência: pressione G primeiro, depois a segunda tecla"
+    },
+    "toast": {
+        "liked": "Vídeo curtido",
+        "unliked": "Curtida removida",
+        "saved": "Adicionado ao Watch Later",
+        "unsaved": "Removido do Watch Later",
+        "history_removed": "Removido do histórico",
+        "history_cleared": "Histórico limpo",
+        "video_uploaded": "Vídeo enviado com sucesso",
+        "link_copied": "Link copiado!"
+    },
+    "profile": {
+        "videos_watched": "Assistidos",
+        "watch_time": "Tempo assistido",
+        "liked_count": "Curtidos",
+        "saved_count": "Salvos",
+        "top_tags": "Tags favoritas"
+    },
+    "mini_player": {
+        "label": "Mini player",
+        "play": "Reproduzir",
+        "pause": "Pausar",
+        "expand": "Abrir vídeo",
+        "drag": "Arrastar para reposicionar"
+    },
+    "player": {
+        "play": "Reproduzir",
+        "pause": "Pausar",
+        "skip": "Avançar 10 segundos",
+        "mute": "Silenciar",
+        "unmute": "Ativar som",
+        "volume": "Volume",
+        "speed": "Velocidade",
+        "settings": "Configurações",
+        "theater": "Modo cinema",
+        "exit_theater": "Sair do modo cinema",
+        "fullscreen": "Tela cheia",
+        "exit_fullscreen": "Sair da tela cheia"
     }
 }

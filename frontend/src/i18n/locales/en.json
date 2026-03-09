@@ -37,7 +37,8 @@
         "dark": "Dark",
         "light": "Light",
         "accent_color": "Accent color",
-        "language": "Language"
+        "language": "Language",
+        "autoplay": "Autoplay"
     },
     "header": {
         "create": "Create",
@@ -83,7 +84,7 @@
         "watch_history": "Watch history",
         "liked_videos": "Liked videos",
         "your_videos": "Your videos",
-        "related": "Related videos",
+        "related": "Related",
         "no_video_file": "No video file available",
         "not_found": "Video not found",
         "results_for_query": "{{count}} results for",
@@ -105,7 +106,20 @@
         "drag_image": "Drop an image here",
         "drag_image_sub": "or click to browse · max 10 MB",
         "drag_video": "Drop a video here",
-        "drag_video_sub": "or click to browse · max 2 GB"
+        "drag_video_sub": "or click to browse · max 2 GB",
+        "summary": "Summary",
+        "key_points": "Key Points",
+        "chapters": "Chapters",
+        "reading_mode": "Reading mode",
+        "exit_reading_mode": "Exit reading mode",
+        "autoplay_next": "Up next",
+        "autoplay_cancel": "Cancel autoplay",
+        "theater_mode": "Theater mode",
+        "exit_theater_mode": "Exit theater mode",
+        "speed": "Speed",
+        "new": "New",
+        "reading_time": "~{{min}} min read",
+        "watched": "Watched"
     },
     "nav": {
         "aria_label": "Main navigation",
@@ -130,5 +144,87 @@
         "drop_file": "Drop a file here",
         "drop_file_sub": "or click to browse · max {{maxSizeMB}} MB",
         "file_too_large": "File too large. Maximum: {{maxSizeMB}} MB."
+    },
+    "home": {
+        "trending": "Trending",
+        "continue_watching": "Continue watching",
+        "next": "Next",
+        "surprise_me": "Surprise me"
+    },
+    "history": {
+        "group_today": "Today",
+        "group_yesterday": "Yesterday",
+        "group_this_week": "This week",
+        "group_older": "Older",
+        "clear_all": "Clear all",
+        "remove": "Remove from history"
+    },
+    "liked": {
+        "empty_text": "Videos you like will appear here"
+    },
+    "watch_later": {
+        "remove": "Remove from watch later",
+        "empty_text": "Save videos to watch them later"
+    },
+    "search": {
+        "try_different": "Try a different search term"
+    },
+    "channel": {
+        "not_found": "Channel not found",
+        "since": "Since {{year}}"
+    },
+    "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "global": "Global",
+        "video_page": "Video page",
+        "focus_search": "Focus search",
+        "open_upload": "Upload video",
+        "go_history": "Go to History",
+        "go_profile": "Go to Profile",
+        "go_search": "Go to Search",
+        "show_shortcuts": "Show shortcuts",
+        "play_pause": "Play / Pause",
+        "like": "Like video",
+        "save": "Save video",
+        "theater_mode": "Theater mode",
+        "tip": "Chord shortcuts: press G first, then the second key"
+    },
+    "toast": {
+        "liked": "Video liked",
+        "unliked": "Like removed",
+        "saved": "Added to Watch Later",
+        "unsaved": "Removed from Watch Later",
+        "history_removed": "Removed from history",
+        "history_cleared": "History cleared",
+        "video_uploaded": "Video uploaded successfully",
+        "link_copied": "Link copied!"
+    },
+    "profile": {
+        "videos_watched": "Watched",
+        "watch_time": "Watch time",
+        "liked_count": "Liked",
+        "saved_count": "Saved",
+        "top_tags": "Top tags"
+    },
+    "mini_player": {
+        "label": "Mini player",
+        "play": "Play",
+        "pause": "Pause",
+        "expand": "Open video",
+        "drag": "Drag to reposition"
+    },
+    "player": {
+        "play": "Play",
+        "pause": "Pause",
+        "skip": "Skip 10 seconds",
+        "mute": "Mute",
+        "unmute": "Unmute",
+        "volume": "Volume",
+        "speed": "Speed",
+        "settings": "Settings",
+        "theater": "Theater mode",
+        "exit_theater": "Exit theater mode",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit fullscreen"
     }
 }
