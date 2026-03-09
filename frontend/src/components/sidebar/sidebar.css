@@ -194,3 +194,12 @@
         display: none;
     }
 }
+
+/* ─── Hidden state (theater mode) ────────────────────────────────────────── */
+
+.app-sidebar--hidden {
+    width: 0;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+}
