@@ -15,6 +15,7 @@ export default defineConfig({
             '@data': resolve(__dirname, 'src/data'),
             '@utils': resolve(__dirname, 'src/utils'),
             '@lib': resolve(__dirname, 'src/lib'),
+            '@store': resolve(__dirname, 'src/store'),
         },
     },
     plugins: [
