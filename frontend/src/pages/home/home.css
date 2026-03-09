@@ -5,16 +5,74 @@
     flex-direction: column;
 }
 
+/* ─── Section (trending / continue watching) ─────────────────────────────── */
+
+.home-page__section {
+    padding: 20px 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.home-page__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.home-page__section-title-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.home-page__section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.home-page__trending-icon {
+    color: #f97316;
+}
+
+.home-page__carousel-nav {
+    display: flex;
+    gap: 2px;
+}
+
+/* ─── Carousel ────────────────────────────────────────────────────────────── */
+
+.home-page__carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+}
+
+.home-page__carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.home-page__carousel-item {
+    flex-shrink: 0;
+    width: 240px;
+    scroll-snap-align: start;
+}
+
 /* ─── Filters bar ─────────────────────────────────────────────────────────── */
 
 .home-page__filters {
-    padding: 0 24px;
+    padding: 20px 24px 0;
 }
 
 /* ─── Main content ────────────────────────────────────────────────────────── */
 
 .home-page__main {
-    flex: 1;
     padding: 24px;
 }
 
@@ -28,10 +86,12 @@
 
 @media (max-width: 1024px) {
     .home-page__grid { grid-template-columns: repeat(2, 1fr); }
+    .home-page__carousel-item { width: 200px; }
 }
 
 @media (max-width: 480px) {
     .home-page__grid { grid-template-columns: 1fr; }
+    .home-page__carousel-item { width: 180px; }
 }
 
 /* ─── Empty state ─────────────────────────────────────────────────────────── */
@@ -49,4 +109,18 @@
     font-size: 0.9375rem;
     color: var(--text-3);
     text-align: center;
+}
+
+/* ─── Surprise me ─────────────────────────────────────────────────────────── */
+
+.home-page__surprise {
+    padding: 8px 24px 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ─── Hidden channel link (accessible) ──────────────────────────────────── */
+
+.home-page__channel-link-hidden {
+    display: none;
 }
