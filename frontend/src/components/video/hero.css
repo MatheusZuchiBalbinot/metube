@@ -4,13 +4,10 @@
     display: flex;
     gap: 24px;
     padding: 20px;
-    border-radius: var(--radius-lg);
     border-left: 4px solid var(--vh-color, var(--accent));
-    background: linear-gradient(
-        120deg,
-        color-mix(in srgb, var(--vh-bg, var(--surface-2)) 35%, transparent),
-        var(--surface-2) 65%
-    );
+    background: linear-gradient(120deg,
+            color-mix(in srgb, var(--vh-bg, var(--surface-2)) 35%, transparent),
+            var(--surface-2) 65%);
     cursor: pointer;
     transition: box-shadow 0.25s, transform 0.2s;
 }
