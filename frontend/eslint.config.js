@@ -71,6 +71,9 @@ export default defineConfig([
             // Require newline at end of file
             '@stylistic/eol-last': ['error', 'always'],
 
+            // Disallow multiple consecutive spaces (no manual alignment)
+            '@stylistic/no-multi-spaces': ['error'],
+
             // Soft line length limit
             '@stylistic/max-len': [
                 'warn',
@@ -120,6 +123,15 @@ export default defineConfig([
 
             // Always require curly braces — no single-line ifs
             'curly': ['error', 'all'],
+
+            // Force if/else bodies onto their own lines — no { return x; } on one line
+            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+
+            // Require blank line before `if` when preceded by a block (e.g. another if)
+            '@stylistic/padding-line-between-statements': [
+                'error',
+                { blankLine: 'always', prev: 'block-like', next: 'if' },
+            ],
 
             // Disallow else after return — enforce early return
             'no-else-return': ['error', { allowElseIf: false }],
