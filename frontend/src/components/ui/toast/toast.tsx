@@ -39,6 +39,10 @@ function ToastItem({ toast }: ToastItemProps) {
             <button className="toast__close" onClick={handleClose} aria-label="Close">
                 <X size={14} />
             </button>
+            <div
+                className="toast__progress"
+                style={{ animationDuration: `${AUTO_DISMISS_MS}ms` }}
+            />
         </div>
     );
 }
