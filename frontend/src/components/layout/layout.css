@@ -7,6 +7,9 @@
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
+    background: var(--bg);
+    position: relative;
+    isolation: isolate;
 }
 
 .app-layout__body {
@@ -18,36 +21,66 @@
 .app-layout__content {
     flex: 1;
     min-width: 0;
-    background: var(--bg);
-    position: relative;
-    isolation: isolate;
 }
 
-/* ─── Ambient orbs (global, all pages) ────────────────────────────────────── */
+/* ─── Ambient orb animations ─────────────────────────────────────────────── */
 
-.app-layout__content::before,
-.app-layout__content::after {
+@keyframes orb-float-a {
+    0%,  100% { transform: translate(0,    0)    scale(1);    }
+    33%        { transform: translate(2%,  -3%)   scale(1.04); }
+    66%        { transform: translate(-2%,  2%)   scale(0.97); }
+}
+
+@keyframes orb-float-b {
+    0%,  100% { transform: translate(0,    0)    scale(1);    }
+    33%        { transform: translate(-3%,  2%)   scale(1.05); }
+    66%        { transform: translate(2%,  -2%)   scale(0.96); }
+}
+
+@keyframes orb-float-c {
+    0%,  100% { transform: translate(0,    0)    scale(1);    opacity: 0.7; }
+    50%        { transform: translate(1%,  -2%)   scale(1.06); opacity: 1;   }
+}
+
+/* ─── Ambient radial gradient (global, covers full viewport incl. header + sidebar) */
+
+.app-layout::before,
+.app-layout::after {
     content: '';
     position: fixed;
-    border-radius: 50%;
+    inset: 0;
     pointer-events: none;
     z-index: -1;
 }
 
-.app-layout__content::before {
-    width: 700px;
-    height: 700px;
-    top: -280px;
-    right: -180px;
-    background: var(--accent-orb-a);
-    filter: blur(130px);
+.app-layout::before {
+    background: radial-gradient(ellipse 65% 55% at 5% 95%, color-mix(in srgb, var(--accent) 22%, transparent), transparent);
+    animation: orb-float-a 18s ease-in-out infinite;
+    will-change: transform;
 }
 
-.app-layout__content::after {
-    width: 500px;
-    height: 500px;
-    bottom: 0;
-    left: -160px;
-    background: var(--accent-orb-b);
-    filter: blur(110px);
+.app-layout::after {
+    background: radial-gradient(ellipse 55% 45% at 95% 5%, color-mix(in srgb, var(--accent) 14%, transparent), transparent);
+    animation: orb-float-b 22s ease-in-out infinite;
+    will-change: transform;
+}
+
+/* Third ambient orb — centered-right, subtle */
+
+.app-layout__orb {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(ellipse 40% 35% at 65% 50%, color-mix(in srgb, var(--accent) 8%, transparent), transparent);
+    animation: orb-float-c 28s ease-in-out infinite;
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-layout::before,
+    .app-layout::after,
+    .app-layout__orb {
+        animation: none;
+    }
 }
