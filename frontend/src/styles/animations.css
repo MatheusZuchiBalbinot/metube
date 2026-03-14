@@ -29,8 +29,19 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    15%       { transform: translateX(-5px); }
+    30%       { transform: translateX(5px); }
+    45%       { transform: translateX(-4px); }
+    60%       { transform: translateX(4px); }
+    75%       { transform: translateX(-2px); }
+    90%       { transform: translateX(2px); }
+}
+
 /* ─── Animation helpers ──────────────────────────────────────────────────── */
 .animate-modal-in   { animation: modal-in   0.18s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-overlay-in { animation: overlay-in 0.15s ease both; }
 .animate-drop-in    { animation: drop-in    0.14s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-page-in    { animation: page-fade-in 0.18s ease both; }
+.animate-shake      { animation: shake 0.4s ease both; }
