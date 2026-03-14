@@ -22,9 +22,13 @@ export default function TagInput({
     function addTag(raw: string) {
         const trimmed = raw.trim().toLowerCase();
         const isEmpty = trimmed === '';
-        if (isEmpty) { return; }
+        if (isEmpty) {
+            return;
+        }
         const isDuplicate = value.includes(trimmed);
-        if (isDuplicate) { return; }
+        if (isDuplicate) {
+            return;
+        }
         onChange([...value, trimmed]);
     }
 
@@ -70,7 +74,9 @@ export default function TagInput({
                                 size="icon"
                                 variant="ghost"
                                 className="tag-input__chip-remove"
-                                onClick={e => { e.stopPropagation(); removeTag(tag); }}
+                                onClick={e => {
+                                    e.stopPropagation(); removeTag(tag);
+                                }}
                                 aria-label={t('tag.remove_tag', { tag })}
                             >
                                 <X size={12} />
@@ -86,7 +92,9 @@ export default function TagInput({
                     onKeyDown={handleKeyDown}
                     onBlur={e => {
                         const hasValue = e.target.value.trim() !== '';
-                        if (!hasValue) { return; }
+                        if (!hasValue) {
+                            return;
+                        }
                         addTag(e.target.value);
                         e.target.value = '';
                     }}

@@ -223,6 +223,14 @@ const RAW_VIDEOS: Video[] = [
     v('v109', 'Monorepo com Python e Poetry', 'Gerenciando múltiplos projetos Python em um monorepo com Poetry, workspaces e compartilhamento de dependências.', ['python', 'devops', 'backend'], 'ch_15', 145800, '2024-04-25T11:00:00Z'),
     v('v110', 'Introdução à Física dos Buracos Negros', 'Relatividade geral, singularidades e o paradoxo da informação. Hawking radiation e o que acontece além do horizonte.', ['science'], 'ch_7', 1567400, '2024-02-14T12:00:00Z'),
 
+    // --- Shorts (#shorts) ---
+    v('s001', 'CSS Grid em 60 Segundos', 'Tudo que você precisa saber sobre CSS Grid em menos de um minuto.', ['shorts', 'css', 'frontend'], 'ch_14', 1_820_400, '2026-03-10T10:00:00Z'),
+    v('s002', 'O que é um Closure em JavaScript?', 'Closures explicados de forma simples e visual. Vai mudar como você pensa em funções.', ['shorts', 'javascript', 'frontend'], 'ch_3', 2_341_700, '2026-03-09T14:00:00Z'),
+    v('s003', 'Docker em 45 Segundos', 'Container, imagem, volume e network — o essencial do Docker no menor tempo possível.', ['shorts', 'docker', 'devops'], 'ch_10', 987_300, '2026-03-08T09:00:00Z'),
+    v('s004', 'Segredo de Risoto Perfeito', 'A técnica que chefs escondem para deixar o risoto cremoso. Simples e infalível.', ['shorts', 'cooking'], 'ch_8', 3_102_500, '2026-03-07T18:00:00Z'),
+    v('s005', 'Git Rebase vs Merge — Diferença Real', 'Entenda de vez a diferença entre rebase e merge com uma analogia visual rápida.', ['shorts', 'git'], 'ch_1', 1_456_200, '2026-03-06T11:00:00Z'),
+    v('s006', 'Por que o Céu é Azul? (Física Rápida)', 'Espalhamento de Rayleigh explicado em 30 segundos. Física bonita, simples assim.', ['shorts', 'science'], 'ch_7', 4_280_900, '2026-03-05T16:00:00Z'),
+
     // --- Vídeos agendados (~10) ---
     v('v111', 'React 20 — O Que Esperar', 'Preview das features planejadas para o React 20: compilador estável, novos hooks e melhorias de concorrência.', ['react', 'frontend', 'javascript'], 'ch_1', 0, '2026-03-03T12:00:00Z', 'scheduled', '2026-03-20T18:00:00Z'),
     v('v112', 'AI-Assisted Design — Figma AI na Prática', 'Como usar as novas ferramentas de IA do Figma para acelerar o workflow de design sem perder qualidade.', ['design', 'figma'], 'ch_2', 0, '2026-03-03T12:00:00Z', 'scheduled', '2026-03-22T14:00:00Z'),

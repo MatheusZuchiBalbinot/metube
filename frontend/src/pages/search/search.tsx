@@ -8,7 +8,9 @@ import './search.css';
 
 function highlight(text: string, query: string): string {
     const isQueryEmpty = query.trim() === '';
-    if (isQueryEmpty) { return text; }
+    if (isQueryEmpty) {
+        return text;
+    }
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
 }
@@ -21,7 +23,9 @@ export default function SearchPage() {
 
     const results = useMemo(() => {
         const isQueryEmpty = query.trim() === '';
-        if (isQueryEmpty) { return publishedVideos; }
+        if (isQueryEmpty) {
+            return publishedVideos;
+        }
 
         const q = query.toLowerCase();
         return publishedVideos.filter(v => {

@@ -17,7 +17,9 @@ export default function ChannelPage() {
 
     const channelVideos = useMemo(() => {
         const isIdMissing = !id;
-        if (isIdMissing) { return []; }
+        if (isIdMissing) {
+            return [];
+        }
         return publishedVideos.filter(v => v.channelId === id);
     }, [publishedVideos, id]);
 
@@ -78,8 +80,8 @@ export default function ChannelPage() {
 
             <main className="channel-page__main">
                 <div className="channel-page__grid">
-                    {channelVideos.map(video => (
-                        <VideoCard key={video.id} video={video} />
+                    {channelVideos.map((video, i) => (
+                        <VideoCard key={video.id} video={video} index={i} />
                     ))}
                 </div>
             </main>

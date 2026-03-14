@@ -119,11 +119,15 @@
         "speed": "Speed",
         "new": "New",
         "reading_time": "~{{min}} min read",
-        "watched": "Watched"
+        "watched": "Watched",
+        "pin": "Pin video",
+        "unpin": "Unpin video",
+        "pinned": "Pinned"
     },
     "nav": {
         "aria_label": "Main navigation",
         "home": "Home",
+        "shorts": "Shorts",
         "you": "You",
         "history": "History",
         "playlists": "Playlists",
@@ -132,6 +136,17 @@
         "your_videos": "Your videos",
         "dashboard": "Dashboard",
         "toggle_sidebar": "Toggle sidebar"
+    },
+    "shorts": {
+        "empty_title": "No Shorts yet",
+        "empty_desc": "Videos tagged with #shorts will appear here.",
+        "mute": "Mute",
+        "unmute": "Unmute",
+        "counter": "{{current}} / {{total}}",
+        "prev": "Previous short",
+        "next": "Next short",
+        "volume": "Volume",
+        "description": "Description"
     },
     "tag": {
         "title": "Videos tagged \"{{tag}}\"",
@@ -204,7 +219,15 @@
         "watch_time": "Watch time",
         "liked_count": "Liked",
         "saved_count": "Saved",
-        "top_tags": "Top tags"
+        "top_tags": "Top tags",
+        "streak": "Streak",
+        "day_streak": "day streak",
+        "activity": "Activity",
+        "edit_profile": "Edit profile",
+        "bio_placeholder": "A short bio about yourself...",
+        "name_label": "Name",
+        "bio_label": "Bio",
+        "pinned_video": "Pinned"
     },
     "mini_player": {
         "label": "Mini player",

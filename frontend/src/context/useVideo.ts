@@ -10,9 +10,9 @@ import {
     makeSelectRecommendations,
 } from '@store/videoSlice';
 import type { Video } from '@data/mockVideos';
-import type { TagView, MiniPlayerState } from '@store/videoSlice';
+import type { TagView, MiniPlayerState, WatchEvent } from '@store/videoSlice';
 
-export type { TagView, MiniPlayerState };
+export type { TagView, MiniPlayerState, WatchEvent };
 
 export function useVideo() {
     const dispatch = useAppDispatch();
@@ -29,7 +29,9 @@ export function useVideo() {
     function consumePendingVideoSeek(videoId: string): number | null {
         const pending = state.pendingVideoSeek;
         const isMatchingVideo = pending?.videoId === videoId;
-        if (!isMatchingVideo) { return null; }
+        if (!isMatchingVideo) {
+            return null;
+        }
         dispatch(videoActions.clearPendingVideoSeek());
         return pending!.time;
     }
@@ -37,6 +39,8 @@ export function useVideo() {
     return {
         videos: state.videos,
         watchHistory: state.watchHistory,
+        watchEvents: state.watchEvents,
+        pinnedVideoId: state.pinnedVideoId,
         likedVideos,
         dislikedVideos,
         savedVideos,
@@ -69,5 +73,11 @@ export function useVideo() {
         closeMiniPlayer: () => dispatch(videoActions.closeMiniPlayer()),
         setPendingVideoSeek: (videoId: string, time: number) => dispatch(videoActions.setPendingVideoSeek({ videoId, time })),
         consumePendingVideoSeek,
+        pinVideo: (id: string) => dispatch(videoActions.pinVideo(id)),
+        unpinVideo: () => dispatch(videoActions.unpinVideo()),
+        shortsMuted: state.shortsMuted,
+        shortsVolume: state.shortsVolume,
+        setShortsMuted: (muted: boolean) => dispatch(videoActions.setShortsMuted(muted)),
+        setShortsVolume: (volume: number) => dispatch(videoActions.setShortsVolume(volume)),
     };
 }

@@ -23,7 +23,9 @@ export default function TagView() {
         );
 
         const isFromVideoFirst = fromVideoId !== null && matched[0]?.id === fromVideoId;
-        if (isFromVideoFirst) { return matched; }
+        if (isFromVideoFirst) {
+            return matched;
+        }
 
         const fromIndex = matched.findIndex(v => v.id === fromVideoId);
         const hasFromVideo = fromIndex > 0;
