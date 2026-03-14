@@ -17,8 +17,8 @@
     box-shadow: none;
 }
 
-/* Hide cursor when controls are not visible (playing, mouse idle) */
-.vp:not(.vp--controls-visible) {
+/* Hide cursor when controls are not visible (playing, mouse idle) — not in mini mode */
+.vp:not(.vp--controls-visible):not(.vp--mini):not(.vp--short) {
     cursor: none;
 }
 
@@ -135,7 +135,7 @@
     );
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.22s ease;
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 4;
 }
 
@@ -163,7 +163,6 @@
     position: relative;
     height: 3px;
     background: rgba(255, 255, 255, 0.28);
-    border-radius: 2px;
     transition: height 0.15s ease;
     overflow: hidden;
 }
@@ -547,4 +546,144 @@
     padding: 2px 8px;
     border-radius: 4px;
     white-space: nowrap;
+}
+
+/* ─── Short mode (.vp--short) ────────────────────────────────────────────────── */
+
+.vp--short {
+    aspect-ratio: unset;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    background: #111;
+    cursor: default;
+}
+
+.vp--short .vp__video {
+    object-fit: cover;
+}
+
+/* Interactive seek bar at top */
+.vp__short-seek-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 20;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.vp__short-seek-fill {
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+}
+
+.vp__short-seek-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 21;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+}
+
+/* Tap-to-play overlay */
+.vp__short-tap {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* ─── Mini mode (.vp--mini) ─────────────────────────────────────────────────── */
+
+.vp--mini {
+    aspect-ratio: unset;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.vp--mini .vp__video {
+    object-fit: cover;
+}
+
+.vp__mini-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.vp--mini:hover .vp__mini-overlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.vp__mini-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    cursor: pointer;
+    color: white;
+    transition: background 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.vp__mini-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+}
+
+.vp__mini-btn:active {
+    transform: scale(0.92);
+}
+
+/* ─── Mini progress bar ─────────────────────────────────────────────────────── */
+
+.vp__mini-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 5;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.vp__mini-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s linear;
 }

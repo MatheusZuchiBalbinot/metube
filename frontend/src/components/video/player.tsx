@@ -1,6 +1,6 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause, Volume1, Volume2, VolumeX, SkipForward, SkipBack, Maximize2, Minimize2, Maximize, Minimize, Settings, Check } from 'lucide-react';
+import { Play, Pause, Volume1, Volume2, VolumeX, SkipForward, SkipBack, Maximize, Minimize, Settings, Check } from 'lucide-react';
 import type { VideoChapter } from '@data/mockSummaries';
 import './player.css';
 
@@ -15,40 +15,63 @@ type SkipIndicator = { dir: 'fwd' | 'bwd'; count: number; key: number };
 
 function formatTime(s: number): string {
     const isInvalid = !Number.isFinite(s) || s < 0;
-    if (isInvalid) { return '0:00'; }
+    if (isInvalid) {
+        return '0:00';
+    }
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     const ss = String(sec).padStart(2, '0');
     const hasHours = h > 0;
-    if (hasHours) { return `${h}:${String(m).padStart(2, '0')}:${ss}`; }
+    if (hasHours) {
+        return `${h}:${String(m).padStart(2, '0')}:${ss}`;
+    }
     return `${m}:${ss}`;
 }
 
 function parseChapterTimestamp(ts: string): number {
     const parts = ts.split(':').map(Number);
     const isHMS = parts.length === 3;
-    if (isHMS) { return parts[0] * 3600 + parts[1] * 60 + parts[2]; }
+    if (isHMS) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
     return parts[0] * 60 + (parts[1] ?? 0);
 }
 
 export interface VideoPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
     src: string
+    mode?: 'default' | 'short' | 'mini'
+    // Default mode
     chapters?: VideoChapter[]
-    theaterMode: boolean
-    onToggleTheater: () => void
+    theaterMode?: boolean
+    onToggleTheater?: () => void
+    showCompletion?: boolean
+    ambientColor?: string
+    // Short mode — controlled from parent so volume/mute persists across items
+    controlledMuted?: boolean
+    controlledVolume?: number
+    onMuteChange?: (muted: boolean) => void
+    onVolumeChange?: (volume: number) => void
+    // Called when the tap overlay is clicked in short mode (before play/pause toggle)
+    onTap?: () => void
+    // Called when the video element mounts/unmounts (short mode registration)
+    onVideoMounted?: (el: HTMLVideoElement | null) => void
+    // Whether this player instance should capture document keyboard events
+    captureKeyboard?: boolean
+    // All modes
     onTimeUpdate?: () => void
     onEnded?: () => void
     onLoadedMetadata?: () => void
-    showCompletion?: boolean
-    ambientColor?: string
+    // Short mode: overlay content (channel, title, description panel, counter)
+    children?: React.ReactNode
 }
 
 // eslint-disable-next-line complexity
 export default function VideoPlayer({
     videoRef,
     src,
+    mode = 'default',
     chapters,
     theaterMode,
     onToggleTheater,
@@ -57,6 +80,14 @@ export default function VideoPlayer({
     onLoadedMetadata,
     showCompletion,
     ambientColor,
+    controlledMuted,
+    controlledVolume,
+    onMuteChange,
+    onVolumeChange,
+    onTap,
+    onVideoMounted,
+    captureKeyboard,
+    children,
 }: VideoPlayerProps) {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -71,11 +102,15 @@ export default function VideoPlayer({
     const skipAnimKeyRef = useRef(0);
     const wasDraggingRef = useRef(false);
 
+    const isShort = mode === 'short';
+    const isMini = mode === 'mini';
+    const isDefault = !isShort && !isMini;
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(isShort ? (controlledVolume ?? 0.8) : 1);
+    const [isMuted, setIsMuted] = useState(isShort ? (controlledMuted ?? true) : false);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [showControls, setShowControls] = useState(true);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -89,9 +124,43 @@ export default function VideoPlayer({
     const [isBuffering, setIsBuffering] = useState(false);
     const [skipIndicator, setSkipIndicator] = useState<SkipIndicator | null>(null);
     const [seekInnerWidth, setSeekInnerWidth] = useState(0);
+    const [shortDragPct, setShortDragPct] = useState<number | null>(null);
+
+    // ─── Short mode: register video element with parent ────────────────────────
+    useLayoutEffect(() => {
+        const isShortMode = mode === 'short';
+        if (!isShortMode || !onVideoMounted) { return; }
+        onVideoMounted(videoRef.current);
+        return () => onVideoMounted(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode]);
+
+    // ─── Short mode: sync controlled muted from parent ─────────────────────────
+    useEffect(() => {
+        const isShortMode = mode === 'short';
+        const hasValue = controlledMuted !== undefined;
+        if (!isShortMode || !hasValue) { return; }
+        setIsMuted(controlledMuted!);
+        const el = videoRef.current;
+        if (el) { el.muted = controlledMuted!; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, controlledMuted]);
+
+    // ─── Short mode: sync controlled volume from parent ────────────────────────
+    useEffect(() => {
+        const isShortMode = mode === 'short';
+        const hasValue = controlledVolume !== undefined;
+        if (!isShortMode || !hasValue) { return; }
+        setVolume(controlledVolume!);
+        const el = videoRef.current;
+        if (el) { el.volume = controlledVolume!; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, controlledVolume]);
 
     function showPopIcon(type: 'play' | 'pause') {
-        if (popTimerRef.current) { clearTimeout(popTimerRef.current); }
+        if (popTimerRef.current) {
+            clearTimeout(popTimerRef.current);
+        }
         popAnimKeyRef.current += 1;
         setPopIcon({ type, key: popAnimKeyRef.current });
         popTimerRef.current = setTimeout(() => setPopIcon(null), 500);
@@ -100,7 +169,9 @@ export default function VideoPlayer({
     function showSkipIndicator(dir: 'fwd' | 'bwd') {
         skipAnimKeyRef.current += 1;
         const key = skipAnimKeyRef.current;
-        if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); }
+        if (skipTimerRef.current) {
+            clearTimeout(skipTimerRef.current);
+        }
         setSkipIndicator(prev => ({
             dir,
             count: prev?.dir === dir ? prev.count + 1 : 1,
@@ -110,10 +181,14 @@ export default function VideoPlayer({
     }
 
     function scheduleHideControls() {
-        if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); }
+        if (hideTimerRef.current) {
+            clearTimeout(hideTimerRef.current);
+        }
         hideTimerRef.current = setTimeout(() => {
             const isVideoPaused = videoRef.current?.paused ?? true;
-            if (!isVideoPaused) { setShowControls(false); }
+            if (!isVideoPaused) {
+                setShowControls(false);
+            }
         }, HIDE_CONTROLS_DELAY_MS);
     }
 
@@ -154,8 +229,10 @@ export default function VideoPlayer({
         }
     }, [src]);
 
-    // Track seek inner width for precise preview arrow alignment
+    // Track seek inner width for precise preview arrow alignment (default mode only)
     useEffect(() => {
+        const isDefaultMode = isDefault;
+        if (!isDefaultMode) { return; }
         const el = seekInnerRef.current;
         if (!el) { return; }
         const ro = new ResizeObserver(entries => {
@@ -164,9 +241,10 @@ export default function VideoPlayer({
         });
         ro.observe(el);
         return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Seek preview video to hover time so canvas can capture the frame
+    // Seek preview video to hover time (default mode only)
     useEffect(() => {
         const pv = previewVideoRef.current;
         const hasHover = hoverSeekPct !== null && duration > 0;
@@ -174,21 +252,23 @@ export default function VideoPlayer({
         pv.currentTime = hoverSeekPct! * duration;
     }, [hoverSeekPct, duration]);
 
-    // Close settings panel when clicking outside
+    // Close settings panel when clicking outside (default mode only)
     useEffect(() => {
+        if (!isDefault) { return; }
         function handleOutsideClick(e: MouseEvent) {
             const isOutside = settingsRef.current && !settingsRef.current.contains(e.target as Node);
             if (isOutside) { setShowSettings(false); }
         }
         document.addEventListener('mousedown', handleOutsideClick);
         return () => document.removeEventListener('mousedown', handleOutsideClick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Mouse wheel to control volume — native (non-passive) listener to allow preventDefault
+    // Mouse wheel to control volume (default mode only)
     useEffect(() => {
+        if (!isDefault) { return; }
         const container = containerRef.current;
         if (!container) { return; }
-
         function onWheel(e: WheelEvent) {
             const el = videoRef.current;
             if (!el) { return; }
@@ -198,7 +278,6 @@ export default function VideoPlayer({
             setVolume(newVol);
             const shouldUnmute = newVol > 0 && el.muted;
             if (shouldUnmute) { el.muted = false; setIsMuted(false); }
-            // Reveal controls so user sees volume change
             setShowControls(true);
             if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); }
             hideTimerRef.current = setTimeout(() => {
@@ -206,66 +285,55 @@ export default function VideoPlayer({
                 if (!isPaused) { setShowControls(false); }
             }, HIDE_CONTROLS_DELAY_MS);
         }
-
         container.addEventListener('wheel', onWheel, { passive: false });
         return () => container.removeEventListener('wheel', onWheel);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDefault]);
 
-    // Drag-to-seek — register document listeners while dragging
+    // Drag-to-seek (default mode only)
     useEffect(() => {
-        if (!isDragging) { return; }
-
+        if (!isDefault || !isDragging) { return; }
         if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); }
         setShowControls(true);
-
         function getPctFromEvent(e: MouseEvent): number {
             const inner = seekInnerRef.current;
             if (!inner) { return 0; }
             const rect = inner.getBoundingClientRect();
             return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         }
-
         function onMouseMove(e: MouseEvent) {
             const pct = getPctFromEvent(e);
             setDragPct(pct);
             setHoverSeekPct(pct);
         }
-
         function onMouseUp(e: MouseEvent) {
             const el = videoRef.current;
-            if (el && el.duration > 0) {
-                el.currentTime = getPctFromEvent(e) * el.duration;
-            }
+            if (el && el.duration > 0) { el.currentTime = getPctFromEvent(e) * el.duration; }
             wasDraggingRef.current = true;
             setIsDragging(false);
             setDragPct(null);
             setHoverSeekPct(null);
             scheduleHideControls();
         }
-
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
         return () => {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDragging, videoRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDragging, isDefault]);
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts — enabled when captureKeyboard is true (default: true for default mode)
+    const shouldCaptureKeyboard = captureKeyboard ?? isDefault;
     useEffect(() => {
+        if (!shouldCaptureKeyboard) { return; }
         function onKeyDown(e: KeyboardEvent) {
             const el = videoRef.current;
             if (!el) { return; }
             const target = e.target as HTMLElement;
-            // Never intercept while typing
-            const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
-                || target.isContentEditable;
+            const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
             if (isTyping) { return; }
-
-            // Space: always toggle play/pause; e.preventDefault() suppresses both
-            // page scroll and the browser's native Space handler on <video>/<button>
             if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 const isVideoPaused = el.paused;
@@ -273,11 +341,8 @@ export default function VideoPlayer({
                 else { el.pause(); showPopIcon('pause'); }
                 return;
             }
-
-            // For all other shortcuts, skip when a button/link has focus
             const isInteractive = ['BUTTON', 'A'].includes(target.tagName);
             if (isInteractive) { return; }
-
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
@@ -290,48 +355,57 @@ export default function VideoPlayer({
                 showSkipIndicator('bwd');
                 return;
             }
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const newVol = Math.min(el.volume + 0.1, 1);
-                el.volume = newVol;
-                setVolume(newVol);
-                const shouldUnmute = newVol > 0 && el.muted;
-                if (shouldUnmute) { el.muted = false; setIsMuted(false); }
-                return;
-            }
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                const newVol = Math.max(el.volume - 0.1, 0);
-                el.volume = newVol;
-                setVolume(newVol);
-                return;
+            if (isDefault) {
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const newVol = Math.min(el.volume + 0.1, 1);
+                    el.volume = newVol;
+                    setVolume(newVol);
+                    const shouldUnmute = newVol > 0 && el.muted;
+                    if (shouldUnmute) { el.muted = false; setIsMuted(false); }
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const newVol = Math.max(el.volume - 0.1, 0);
+                    el.volume = newVol;
+                    setVolume(newVol);
+                    return;
+                }
             }
             if (e.key === 'm' || e.key === 'M') {
-                el.muted = !el.muted;
-                setIsMuted(el.muted);
+                const newMuted = !el.muted;
+                el.muted = newMuted;
+                setIsMuted(newMuted);
+                if (isShort) { onMuteChange?.(newMuted); }
                 return;
             }
-            if (e.key === 'f' || e.key === 'F') {
-                const container = containerRef.current;
-                if (!container) { return; }
-                if (document.fullscreenElement) { document.exitFullscreen().catch(() => { }); }
-                else { container.requestFullscreen().catch(() => { }); }
-                return;
-            }
-            if (e.key === 't' || e.key === 'T') {
-                onToggleTheater();
+            if (isDefault) {
+                if (e.key === 'f' || e.key === 'F') {
+                    const container = containerRef.current;
+                    if (!container) { return; }
+                    if (document.fullscreenElement) { document.exitFullscreen().catch(() => { }); }
+                    else { container.requestFullscreen().catch(() => { }); }
+                    return;
+                }
+                if (e.key === 't' || e.key === 'T') {
+                    const container = containerRef.current;
+                    if (!container) { return; }
+                    if (document.fullscreenElement) { document.exitFullscreen().catch(() => { }); }
+                    else { container.requestFullscreen().catch(() => { }); }
+                }
             }
         }
-        // Capture phase so our handler fires before the video element's native Space handler
         document.addEventListener('keydown', onKeyDown, true);
         return () => document.removeEventListener('keydown', onKeyDown, true);
-    }, [videoRef, containerRef, onToggleTheater]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shouldCaptureKeyboard, isDefault, isShort, onToggleTheater, onMuteChange]);
 
     const handleVideoPlay = useCallback(() => {
         setIsPlaying(true);
         setIsBuffering(false);
         scheduleHideControls();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleVideoPause = useCallback(() => {
@@ -344,6 +418,7 @@ export default function VideoPlayer({
         const el = videoRef.current;
         if (!el) { return; }
         setCurrentTime(el.currentTime);
+        setShortDragPct(null);
         onTimeUpdate?.();
     }, [videoRef, onTimeUpdate]);
 
@@ -374,17 +449,12 @@ export default function VideoPlayer({
         if (!pv || !canvas) { return; }
         const ctx = canvas.getContext('2d');
         if (!ctx) { return; }
-        try {
-            ctx.drawImage(pv, 0, 0, canvas.width, canvas.height);
-        } catch {
-            // CORS or decode error — canvas stays black, time label still shows
-        }
+        try { ctx.drawImage(pv, 0, 0, canvas.width, canvas.height); }
+        catch { /* CORS/decode error — canvas stays black */ }
     }
 
     useEffect(() => {
-        function onFsChange() {
-            setIsFullscreen(document.fullscreenElement !== null);
-        }
+        function onFsChange() { setIsFullscreen(document.fullscreenElement !== null); }
         document.addEventListener('fullscreenchange', onFsChange);
         return () => document.removeEventListener('fullscreenchange', onFsChange);
     }, []);
@@ -397,11 +467,36 @@ export default function VideoPlayer({
         else { el.pause(); showPopIcon('pause'); }
     }
 
+    // ─── Short mode tap handler ────────────────────────────────────────────────
+    function handleShortTap() {
+        onTap?.();
+        handleTogglePlayImmediate();
+    }
+
+    // ─── Short mode seek via range input ──────────────────────────────────────
+    function handleShortSeek(e: React.ChangeEvent<HTMLInputElement>) {
+        e.stopPropagation();
+        const el = videoRef.current;
+        const val = parseFloat(e.target.value);
+        const hasDuration = el !== null && el.duration > 0;
+        if (!hasDuration) { return; }
+        setShortDragPct(val);
+        el!.currentTime = (val / 100) * el!.duration;
+    }
+
+    function handleMiniProgressClick(e: React.MouseEvent<HTMLDivElement>) {
+        e.stopPropagation();
+        const el = videoRef.current;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const hasDuration = el !== null && el.duration > 0;
+        if (!hasDuration) { return; }
+        el!.currentTime = pct * el!.duration;
+    }
+
     function handleContainerClick() {
         if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); }
-        clickTimerRef.current = setTimeout(() => {
-            handleTogglePlayImmediate();
-        }, DOUBLE_CLICK_DELAY_MS);
+        clickTimerRef.current = setTimeout(() => { handleTogglePlayImmediate(); }, DOUBLE_CLICK_DELAY_MS);
     }
 
     function handleContainerDoubleClick() {
@@ -424,10 +519,7 @@ export default function VideoPlayer({
         setVolume(v);
         const shouldMute = v === 0;
         setIsMuted(shouldMute);
-        if (el) {
-            el.volume = v;
-            el.muted = shouldMute;
-        }
+        if (el) { el.volume = v; el.muted = shouldMute; }
     }
 
     function handleToggleMute(e: React.MouseEvent) {
@@ -446,21 +538,13 @@ export default function VideoPlayer({
         if (el) { el.playbackRate = rate; }
     }
 
-    function handleToggleFullscreen(e: React.MouseEvent) {
+    function handleTheaterToggle(e: React.MouseEvent) {
         e.stopPropagation();
         const container = containerRef.current;
         if (!container) { return; }
         const isCurrentlyFull = document.fullscreenElement !== null;
-        if (isCurrentlyFull) {
-            document.exitFullscreen().catch(() => { });
-        } else {
-            container.requestFullscreen().catch(() => { });
-        }
-    }
-
-    function handleTheaterToggle(e: React.MouseEvent) {
-        e.stopPropagation();
-        onToggleTheater();
+        if (isCurrentlyFull) { document.exitFullscreen().catch(() => { }); }
+        else { container.requestFullscreen().catch(() => { }); }
     }
 
     function handleToggleSettings(e: React.MouseEvent) {
@@ -515,19 +599,127 @@ export default function VideoPlayer({
     const hasChapters = !!chapters && chapters.length > 0 && duration > 0;
     const showHoverElements = hoverSeekPct !== null || isDragging;
 
-    // Preview arrow alignment — compensates for CSS clamp on the popup position
     const activePixel = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
     const maxClamp = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
     const clampedPixel = Math.min(Math.max(activePixel, PREVIEW_HALF_W), maxClamp);
     const arrowOffset = activePixel - clampedPixel;
     const arrowLeftPct = Math.min(Math.max(50 + (arrowOffset / PREVIEW_W) * 100, 8), 92);
-
     const hoverTime = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
 
+    // ─── Short mode render ─────────────────────────────────────────────────────
+    if (isShort) {
+        return (
+            <div className="vp vp--short" ref={containerRef}>
+                {/* Interactive seek bar at top */}
+                <div className="vp__short-seek-track" aria-hidden>
+                    <div className="vp__short-seek-fill" style={{ width: `${shortDragPct !== null ? shortDragPct : progressPct}%` }} />
+                </div>
+                <input
+                    type="range"
+                    className="vp__short-seek-input"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={shortDragPct !== null ? shortDragPct : progressPct}
+                    onChange={handleShortSeek}
+                    onClick={e => e.stopPropagation()}
+                    aria-label={t('player.skip')}
+                />
+
+                {/* Video */}
+                <video
+                    ref={videoRef}
+                    className="vp__video"
+                    src={src}
+                    playsInline
+                    preload="metadata"
+                    onPlay={handleVideoPlay}
+                    onPause={handleVideoPause}
+                    onTimeUpdate={handleVideoTimeUpdate}
+                    onLoadedMetadata={handleVideoLoadedMetadata}
+                    onEnded={handleVideoEnded}
+                    onProgress={handleVideoProgress}
+                    onWaiting={() => setIsBuffering(true)}
+                    onCanPlay={() => setIsBuffering(false)}
+                    onPlaying={() => setIsBuffering(false)}
+                />
+
+                {/* Tap to play/pause */}
+                <button
+                    className="vp__short-tap"
+                    aria-label={isPlaying ? t('player.pause') : t('player.play')}
+                    onClick={handleShortTap}
+                />
+
+                {/* Play/pause pop icon */}
+                {popIcon && (
+                    <div className="vp__pop-icon" key={popIcon.key}>
+                        {popIcon.type === 'play'
+                            ? <Play size={32} fill="white" color="white" />
+                            : <Pause size={32} fill="white" color="white" />
+                        }
+                    </div>
+                )}
+
+                {/* Buffering */}
+                {isBuffering && (
+                    <div className="vp__buffering">
+                        <div className="vp__buffering-spinner" />
+                    </div>
+                )}
+
+                {/* Overlay content (channel, title, tags, description panel, counter) */}
+                {children}
+            </div>
+        );
+    }
+
+    // ─── Mini mode render ──────────────────────────────────────────────────────
+    if (isMini) {
+        return (
+            <div className="vp vp--mini" ref={containerRef} onClick={handleTogglePlayImmediate}>
+                <video
+                    ref={videoRef}
+                    className="vp__video"
+                    src={src}
+                    onPlay={handleVideoPlay}
+                    onPause={handleVideoPause}
+                    onTimeUpdate={handleVideoTimeUpdate}
+                    onLoadedMetadata={handleVideoLoadedMetadata}
+                    onProgress={handleVideoProgress}
+                    onEnded={handleVideoEnded}
+                    onWaiting={() => setIsBuffering(true)}
+                    onCanPlay={() => setIsBuffering(false)}
+                    onPlaying={() => setIsBuffering(false)}
+                />
+
+                {/* Play/pause overlay — shown on hover */}
+                <div className="vp__mini-overlay">
+                    <button
+                        className="vp__mini-btn"
+                        onClick={handleTogglePlay}
+                        aria-label={isPlaying ? t('player.pause') : t('player.play')}
+                    >
+                        {isPlaying
+                            ? <Pause size={22} fill="white" strokeWidth={0} />
+                            : <Play size={22} fill="white" strokeWidth={0} />
+                        }
+                    </button>
+                </div>
+
+                {/* Progress bar at bottom — click to seek */}
+                <div className="vp__mini-progress" aria-hidden onClick={handleMiniProgressClick}>
+                    <div className="vp__mini-progress-fill" style={{ width: `${progressPct}%` }} />
+                </div>
+            </div>
+        );
+    }
+
+    // ─── Default mode render ───────────────────────────────────────────────────
     const wrapClass = [
         'vp',
         showControls ? 'vp--controls-visible' : '',
-        theaterMode ? 'vp--theater' : '',
+        (theaterMode ?? false) ? 'vp--theater' : '',
         isDragging ? 'vp--seeking' : '',
     ].filter(Boolean).join(' ');
 
@@ -618,7 +810,6 @@ export default function VideoPlayer({
 
             {/* Controls overlay */}
             <div className="vp__controls">
-
                 {/* Seek bar */}
                 <div
                     className="vp__seek"
@@ -633,7 +824,6 @@ export default function VideoPlayer({
                             <div className="vp__seek-fill" style={{ width: `${displayPct}%` }} />
                         </div>
 
-                        {/* Chapter dots — click navigates to the exact chapter timestamp */}
                         {hasChapters && chapters!.map((ch, i) => {
                             const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
                             const isVisible = chPct > 0.5 && chPct < 99.5;
@@ -654,10 +844,8 @@ export default function VideoPlayer({
                             );
                         })}
 
-                        {/* Thumb at current playback / drag position */}
                         <div className="vp__seek-thumb vp__seek-thumb--current" style={{ left: `${displayPct}%` }} />
 
-                        {/* Preview popup — video frame + timestamp */}
                         {showHoverElements && duration > 0 && (
                             <div
                                 className="vp__seek-preview"
@@ -695,7 +883,6 @@ export default function VideoPlayer({
                             }
                         </button>
 
-                        {/* Inline volume control */}
                         <div className="vp__volume" onClick={e => e.stopPropagation()}>
                             <button
                                 className="vp__btn"
@@ -722,18 +909,12 @@ export default function VideoPlayer({
                     </div>
 
                     <div className="vp__bar-right">
-
-                        {/* Settings button + panel (speed only) */}
                         <div className="vp__settings" ref={settingsRef}>
                             {showSettings && (
                                 <div className="vp__settings-panel" onClick={e => e.stopPropagation()}>
                                     <div className="vp__settings-section">
                                         <span className="vp__settings-section-label">{t('player.speed')}</span>
-                                        <div
-                                            className="vp__settings-speeds"
-                                            role="listbox"
-                                            aria-label={t('player.speed')}
-                                        >
+                                        <div className="vp__settings-speeds" role="listbox" aria-label={t('player.speed')}>
                                             {SPEED_OPTIONS.map(rate => {
                                                 const isActive = playbackRate === rate;
                                                 const optClass = [
@@ -757,7 +938,6 @@ export default function VideoPlayer({
                                     </div>
                                 </div>
                             )}
-
                             <button
                                 className="vp__btn"
                                 onClick={handleToggleSettings}
@@ -773,18 +953,9 @@ export default function VideoPlayer({
                         <button
                             className="vp__btn"
                             onClick={handleTheaterToggle}
-                            title={theaterMode ? t('player.exit_theater') : t('player.theater')}
-                            aria-label={theaterMode ? t('player.exit_theater') : t('player.theater')}
-                            aria-pressed={theaterMode}
-                        >
-                            {theaterMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                        </button>
-
-                        <button
-                            className="vp__btn"
-                            onClick={handleToggleFullscreen}
                             title={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
                             aria-label={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
+                            aria-pressed={isFullscreen}
                         >
                             {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
                         </button>
