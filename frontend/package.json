@@ -20,6 +20,7 @@
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.36.0",
     "i18next": "^25.1.0",
     "inquirer": "^13.3.0",
     "lucide-react": "^0.575.0",
