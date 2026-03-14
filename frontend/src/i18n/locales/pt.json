@@ -119,11 +119,15 @@
         "speed": "Velocidade",
         "new": "Novo",
         "reading_time": "~{{min}} min de leitura",
-        "watched": "Assistido"
+        "watched": "Assistido",
+        "pin": "Fixar vídeo",
+        "unpin": "Desfixar vídeo",
+        "pinned": "Fixado"
     },
     "nav": {
         "aria_label": "Navegação principal",
         "home": "Início",
+        "shorts": "Shorts",
         "you": "Você",
         "history": "Histórico",
         "playlists": "Playlists",
@@ -132,6 +136,17 @@
         "your_videos": "Seus vídeos",
         "dashboard": "Dashboard",
         "toggle_sidebar": "Alternar barra lateral"
+    },
+    "shorts": {
+        "empty_title": "Nenhum Short ainda",
+        "empty_desc": "Vídeos com a tag #shorts aparecerão aqui.",
+        "mute": "Silenciar",
+        "unmute": "Ativar som",
+        "counter": "{{current}} / {{total}}",
+        "prev": "Short anterior",
+        "next": "Próximo short",
+        "volume": "Volume",
+        "description": "Descrição"
     },
     "tag": {
         "title": "Vídeos com a tag \"{{tag}}\"",
@@ -204,7 +219,15 @@
         "watch_time": "Tempo assistido",
         "liked_count": "Curtidos",
         "saved_count": "Salvos",
-        "top_tags": "Tags favoritas"
+        "top_tags": "Tags favoritas",
+        "streak": "Sequência",
+        "day_streak": "dias seguidos",
+        "activity": "Atividade",
+        "edit_profile": "Editar perfil",
+        "bio_placeholder": "Uma breve descrição sobre você...",
+        "name_label": "Nome",
+        "bio_label": "Bio",
+        "pinned_video": "Fixado"
     },
     "mini_player": {
         "label": "Mini player",

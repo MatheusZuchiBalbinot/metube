@@ -27,9 +27,17 @@ function getGroupLabel(dateStr: string, t: (k: string) => string): string {
     const isYesterday = date >= yesterdayStart && date < todayStart;
     const isThisWeek = date >= weekStart && date < yesterdayStart;
 
-    if (isToday) { return t('history.group_today'); }
-    if (isYesterday) { return t('history.group_yesterday'); }
-    if (isThisWeek) { return t('history.group_this_week'); }
+    if (isToday) {
+        return t('history.group_today');
+    }
+
+    if (isYesterday) {
+        return t('history.group_yesterday');
+    }
+
+    if (isThisWeek) {
+        return t('history.group_this_week');
+    }
     return t('history.group_older');
 }
 
@@ -49,7 +57,9 @@ export default function HistoryPage() {
 
         for (const id of watchHistory) {
             const video = videoMap.get(id);
-            if (!video) { continue; }
+            if (!video) {
+                continue;
+            }
             const label = getGroupLabel(video.publishedAt, t);
             const existing = seenLabels.get(label);
             if (existing) {
@@ -104,7 +114,9 @@ export default function HistoryPage() {
                             <div className="history-page__group-list">
                                 {group.ids.map(id => {
                                     const video = videoMap.get(id);
-                                    if (!video) { return null; }
+                                    if (!video) {
+                                        return null;
+                                    }
                                     return (
                                         <div key={id} className="history-page__item">
                                             <VideoRow video={video} />

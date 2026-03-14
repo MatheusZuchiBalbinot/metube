@@ -17,6 +17,7 @@ import ProfilePage from '@pages/profile/profile';
 import VideoPage from '@pages/video/video';
 import SearchPage from '@pages/search/search';
 import ChannelPage from '@pages/channel/channel';
+import ShortsPage from '@pages/shorts/shorts';
 import { ROUTES } from '@utils/routes';
 import { TooltipProvider } from '@ui';
 
@@ -48,7 +49,8 @@ export default function App() {
                         <Routes>
                             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
                             <Route element={<Guard><AppLayout /></Guard>}>
-                                <Route path={ROUTES.HOME} element={<HomePage />} />
+                                <Route path={ROUTES.HOME}   element={<HomePage />} />
+                                <Route path={ROUTES.SHORTS} element={<ShortsPage />} />
                                 <Route path={ROUTES.HISTORY} element={<HistoryPage />} />
                                 <Route path={ROUTES.PLAYLISTS} element={<PlaylistsPage />} />
                                 <Route path={ROUTES.WATCH_LATER} element={<WatchLaterPage />} />

@@ -28,8 +28,8 @@ export default function LikedPage() {
 
             {hasLiked ? (
                 <div className="liked-page__grid">
-                    {likedVideoList.map(video => (
-                        <VideoCard key={video.id} video={video} />
+                    {likedVideoList.map((video, i) => (
+                        <VideoCard key={video.id} video={video} index={i} />
                     ))}
                 </div>
             ) : (

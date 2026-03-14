@@ -47,6 +47,7 @@ export default function UploadModal() {
     const dispatch = useAppDispatch();
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
     const [form, setForm] = useState<FormState>(INITIAL_FORM);
+    const [titleShakeKey, setTitleShakeKey] = useState(0);
     const videoUrlRef = useRef<string | null>(null);
 
     const previewStatus = computeStatus(form.publishAt);
@@ -110,6 +111,7 @@ export default function UploadModal() {
         const isTitleEmpty = form.title.trim() === '';
         if (isTitleEmpty) {
             setForm(prev => ({ ...prev, titleError: t('video.title_required') }));
+            setTitleShakeKey(k => k + 1);
             return;
         }
 
@@ -117,8 +119,13 @@ export default function UploadModal() {
         const isScheduledStatus = status === VideoStatus.SCHEDULED;
 
         const getPublishedAt = (): string => {
-            if (isScheduledStatus) { return new Date().toISOString(); }
-            if (form.publishAt !== null) { return new Date(`${form.publishAt}T00:00:00`).toISOString(); }
+            if (isScheduledStatus) {
+                return new Date().toISOString();
+            }
+
+            if (form.publishAt !== null) {
+                return new Date(`${form.publishAt}T00:00:00`).toISOString();
+            }
             return new Date().toISOString();
         };
         const publishedAt = getPublishedAt();
@@ -166,14 +173,16 @@ export default function UploadModal() {
             }
         >
             <form className="upload-modal__form" onSubmit={handleSubmit}>
-                <Input
-                    id="um-title"
-                    label={t('video.upload_title')}
-                    placeholder={t('video.upload_title')}
-                    value={form.title}
-                    error={form.titleError ?? undefined}
-                    onChange={e => setForm(prev => ({ ...prev, title: e.target.value, titleError: null }))}
-                />
+                <div key={titleShakeKey} className={titleShakeKey > 0 && form.titleError ? 'animate-shake' : ''}>
+                    <Input
+                        id="um-title"
+                        label={t('video.upload_title')}
+                        placeholder={t('video.upload_title')}
+                        value={form.title}
+                        error={form.titleError ?? undefined}
+                        onChange={e => setForm(prev => ({ ...prev, title: e.target.value, titleError: null }))}
+                    />
+                </div>
 
                 <div className="upload-modal__field">
                     <label className="upload-modal__label" htmlFor="um-desc">{t('video.upload_description')}</label>

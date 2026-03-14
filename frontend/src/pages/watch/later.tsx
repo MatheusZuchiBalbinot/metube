@@ -42,9 +42,9 @@ export default function WatchLaterPage() {
 
             {hasVideos ? (
                 <div className="watch-later-page__grid">
-                    {watchLaterList.map(video => (
+                    {watchLaterList.map((video, i) => (
                         <div key={video.id} className="watch-later-page__item">
-                            <VideoCard video={video} />
+                            <VideoCard video={video} index={i} />
                             <Tooltip content={t('watch_later.remove')} side="top">
                                 <Button
                                     variant="ghost"

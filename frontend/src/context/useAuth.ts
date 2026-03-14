@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from '@store';
-import { signInThunk, signOutThunk } from '@store/authSlice';
+import { signInThunk, signOutThunk, authActions } from '@store/authSlice';
 import type { User } from '../api/auth';
 
 export type { User };
@@ -16,5 +16,9 @@ export function useAuth() {
         await dispatch(signOutThunk()).unwrap();
     }
 
-    return { user, loading, sessionError, signIn, signOut };
+    function updateProfile(name?: string, bio?: string): void {
+        dispatch(authActions.updateProfile({ name, bio }));
+    }
+
+    return { user, loading, sessionError, signIn, signOut, updateProfile };
 }
