@@ -1,13 +1,16 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart, ThumbsDown, Bookmark, Link2, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, Link2, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X } from 'lucide-react';
 import VideoPlayer from '@components/video/player';
 import VideoCard from '@components/video/card';
+import FilterPanel from '@components/filter/panel';
+import type { FilterState } from '@components/filter/panel';
 import { useVideo } from '@context/useVideo';
-import { useAppDispatch, useAppSelector } from '@store';
+import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
+import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
 import { ROUTES } from '@utils/routes';
 import { getVideoSummary } from '@data/mockSummaries';
@@ -20,7 +23,7 @@ const AUTOPLAY_COUNTDOWN = 5;
 const PROGRESS_THROTTLE_MS = 3000;
 
 // For videos without a real file: simulate progress over time
-const SIMULATE_DURATION_S = 60;   // treat as a 60-second "video"
+const SIMULATE_DURATION_S = 60; // treat as a 60-second "video"
 const SIMULATE_TICK_MS = 2000; // tick every 2s
 
 
@@ -29,7 +32,9 @@ type SidebarTab = 'related' | 'summary';
 function parseTimestamp(ts: string): number {
     const parts = ts.split(':').map(Number);
     const isHMS = parts.length === 3;
-    if (isHMS) { return parts[0] * 3600 + parts[1] * 60 + parts[2]; }
+    if (isHMS) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
     return parts[0] * 60 + (parts[1] ?? 0);
 }
 
@@ -46,7 +51,7 @@ export default function VideoPage() {
         consumePendingVideoSeek,
     } = useVideo();
 
-    const theaterMode = useAppSelector(state => state.video.theaterMode);
+    const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
 
     const video = videos.find(v => v.id === id);
     const hasVideo = video !== undefined;
@@ -84,14 +89,6 @@ export default function VideoPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    // Cleanup theater mode on unmount
-    useEffect(() => {
-        return () => {
-            dispatch(videoActions.setTheaterMode(false));
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     useEffect(() => {
         const shouldRegister = hasVideo && !registeredRef.current;
         if (!shouldRegister) {
@@ -128,6 +125,19 @@ export default function VideoPage() {
             .slice(0, 10);
     }, [hasVideo, video, videos]);
 
+    const allRelatedTags = useMemo(() => {
+        const tagSet = new Set<string>();
+        for (const v of relatedVideos) {
+            for (const tag of v.tags) { tagSet.add(tag); }
+        }
+        return Array.from(tagSet).sort();
+    }, [relatedVideos]);
+
+    const filteredRelated = useMemo(
+        () => VideoFilter.apply(relatedVideos, filterState),
+        [relatedVideos, filterState],
+    );
+
     const summary = useMemo(() => {
         const isVideoMissing = !hasVideo;
         if (isVideoMissing) {
@@ -141,14 +151,18 @@ export default function VideoPage() {
 
     const readingTime = useMemo(() => {
         const hasSummaryContent = summary !== null;
-        if (!hasSummaryContent) { return 0; }
+        if (!hasSummaryContent) {
+            return 0;
+        }
         const words = summary.readingMode.split(/\s+/).length;
         return Math.max(1, Math.ceil(words / 200));
     }, [summary]);
 
     function triggerCompletion() {
         const isAlreadyCompleted = hasCompletedRef.current;
-        if (isAlreadyCompleted) { return; }
+        if (isAlreadyCompleted) {
+            return;
+        }
         hasCompletedRef.current = true;
         setShowCompletion(true);
         setTimeout(() => setShowCompletion(false), 1800);
@@ -173,7 +187,9 @@ export default function VideoPage() {
 
     useEffect(() => {
         const isCountingDown = autoplayCountdown !== null;
-        if (!isCountingDown) { return; }
+        if (!isCountingDown) {
+            return;
+        }
 
         autoplayTimerRef.current = setInterval(() => {
             setAutoplayCountdown(prev => {
@@ -247,7 +263,9 @@ export default function VideoPage() {
 
     const handleLoadedMetadata = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
 
         durationRef.current = el.duration;
 
@@ -259,7 +277,7 @@ export default function VideoPage() {
         }
 
         currentTimeRef.current = el.currentTime;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     const handleTimeUpdate = useCallback(() => {
@@ -298,7 +316,7 @@ export default function VideoPage() {
                 clearInterval(simulateTimerRef.current);
             }
 
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+
             if (!id) {
                 return;
             }
@@ -333,7 +351,9 @@ export default function VideoPage() {
 
     function handleReadingScroll() {
         const el = readingContentRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const pct = el.scrollTop / (el.scrollHeight - el.clientHeight) * 100;
         setReadingProgress(Math.min(100, pct));
     }
@@ -355,10 +375,12 @@ export default function VideoPage() {
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
             type: 'success',
         }));
-        if (video?.id) { likeVideo(video.id); }
+        if (video?.id) {
+            likeVideo(video.id);
+        }
         setLikeAnimating(true);
         setTimeout(() => setLikeAnimating(false), 400);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [video?.id, likedVideos, likeVideo, dispatch, t]);
 
     const handleSaveShortcut = useCallback(() => {
@@ -367,15 +389,13 @@ export default function VideoPage() {
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
-        if (video?.id) { saveVideo(video.id); }
+        if (video?.id) {
+            saveVideo(video.id);
+        }
         setSaveAnimating(true);
         setTimeout(() => setSaveAnimating(false), 400);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [video?.id, savedVideos, saveVideo, dispatch, t]);
 
-    const handleToggleTheaterShortcut = useCallback(() => {
-        dispatch(videoActions.setTheaterMode(!theaterMode));
-    }, [dispatch, theaterMode]);
+    }, [video?.id, savedVideos, saveVideo, dispatch, t]);
 
     useKeyboardShortcuts({
         onOpenUpload: () => { },
@@ -384,7 +404,6 @@ export default function VideoPage() {
         videoPageId: id,
         onLike: handleLikeShortcut,
         onSave: handleSaveShortcut,
-        onToggleTheater: handleToggleTheaterShortcut,
     });
 
     if (!hasVideo) {
@@ -442,37 +461,19 @@ export default function VideoPage() {
         setTimeout(() => setIsCopied(false), 2000);
     }
 
-    function handleToggleTheater() {
-        handleToggleTheaterShortcut();
-    }
-
-    const likeBtnClass = [
-        'video-page__action-btn',
-        isLiked ? 'video-page__action-btn--like-active' : '',
-        likeAnimating ? 'video-page__action-btn--animating' : '',
-    ].filter(Boolean).join(' ');
-
-    const dislikeBtnClass = [
-        'video-page__action-btn',
-        isDisliked ? 'video-page__action-btn--dislike-active' : '',
-        dislikeAnimating ? 'video-page__action-btn--animating' : '',
-    ].filter(Boolean).join(' ');
-
     const saveBtnClass = [
-        'video-page__action-btn',
-        isSaved ? 'video-page__action-btn--save-active' : '',
-        saveAnimating ? 'video-page__action-btn--animating' : '',
+        'video-page__reaction-btn',
+        isSaved ? 'video-page__reaction-btn--saved' : '',
+        saveAnimating ? 'video-page__reaction-btn--burst' : '',
     ].filter(Boolean).join(' ');
 
     const shareBtnClass = [
-        'video-page__action-btn',
-        isCopied ? 'video-page__action-btn--copied' : '',
+        'video-page__reaction-btn',
+        isCopied ? 'video-page__reaction-btn--copied' : '',
     ].filter(Boolean).join(' ');
 
-    const pageClass = ['video-page', theaterMode ? 'video-page--theater' : ''].filter(Boolean).join(' ');
-
     return (
-        <div className={pageClass}>
+        <div className="video-page">
             <div className="video-page__back-header">
                 <Button variant="ghost" size="sm" className="video-page__back-btn" onClick={() => navigate(-1)}>
                     <ArrowLeft size={14} strokeWidth={2} />
@@ -519,8 +520,6 @@ export default function VideoPage() {
                                     videoRef={videoRef}
                                     src={video.videoUrl!}
                                     chapters={summary?.chapters}
-                                    theaterMode={theaterMode}
-                                    onToggleTheater={handleToggleTheater}
                                     onTimeUpdate={handleTimeUpdate}
                                     onEnded={handleVideoEnded}
                                     onLoadedMetadata={handleLoadedMetadata}
@@ -584,74 +583,59 @@ export default function VideoPage() {
                             </div>
 
                             <div className="video-page__actions">
-                                <div className="video-page__action-group">
-                                    <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
-                                        <Button
-                                            variant="ghost"
-                                            className={likeBtnClass}
-                                            onClick={handleLike}
-                                            aria-pressed={isLiked}
-                                            aria-label={isLiked ? t('video.liked') : t('video.like')}
-                                        >
-                                            <Heart
-                                                className="video-page__action-icon"
-                                                size={18}
-                                                strokeWidth={2}
-                                                fill={isLiked ? 'currentColor' : 'none'}
-                                            />
-                                        </Button>
-                                    </Tooltip>
+                                <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
+                                    <button
+                                        className={['video-page__reaction-btn', isLiked ? 'video-page__reaction-btn--liked' : '', likeAnimating ? 'video-page__reaction-btn--burst' : ''].filter(Boolean).join(' ')}
+                                        onClick={handleLike}
+                                        aria-pressed={isLiked}
+                                        aria-label={isLiked ? t('video.liked') : t('video.like')}
+                                    >
+                                        <span className="video-page__reaction-icon">
+                                            <ThumbsUp size={20} strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
+                                        </span>
+                                        <span className="video-page__reaction-label">{t('video.like')}</span>
+                                    </button>
+                                </Tooltip>
 
-                                    <span className="video-page__action-divider" />
-
-                                    <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
-                                        <Button
-                                            variant="ghost"
-                                            className={dislikeBtnClass}
-                                            onClick={handleDislike}
-                                            aria-pressed={isDisliked}
-                                            aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
-                                        >
-                                            <ThumbsDown
-                                                className="video-page__action-icon"
-                                                size={18}
-                                                strokeWidth={2}
-                                                fill={isDisliked ? 'currentColor' : 'none'}
-                                            />
-                                        </Button>
-                                    </Tooltip>
-                                </div>
+                                <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
+                                    <button
+                                        className={['video-page__reaction-btn', isDisliked ? 'video-page__reaction-btn--disliked' : '', dislikeAnimating ? 'video-page__reaction-btn--burst' : ''].filter(Boolean).join(' ')}
+                                        onClick={handleDislike}
+                                        aria-pressed={isDisliked}
+                                        aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
+                                    >
+                                        <span className="video-page__reaction-icon">
+                                            <ThumbsDown size={20} strokeWidth={1.75} fill={isDisliked ? 'currentColor' : 'none'} />
+                                        </span>
+                                        <span className="video-page__reaction-label">{t('video.dislike')}</span>
+                                    </button>
+                                </Tooltip>
 
                                 <Tooltip content={isSaved ? t('video.saved') : t('video.save')} side="top">
-                                    <Button
-                                        variant="ghost"
+                                    <button
                                         className={saveBtnClass}
                                         onClick={handleSave}
                                         aria-pressed={isSaved}
                                         aria-label={isSaved ? t('video.saved') : t('video.save')}
                                     >
-                                        <Bookmark
-                                            className="video-page__action-icon"
-                                            size={18}
-                                            strokeWidth={2}
-                                            fill={isSaved ? 'currentColor' : 'none'}
-                                        />
-                                    </Button>
+                                        <span className="video-page__reaction-icon">
+                                            <Bookmark size={20} strokeWidth={1.75} fill={isSaved ? 'currentColor' : 'none'} />
+                                        </span>
+                                        <span className="video-page__reaction-label">{isSaved ? t('video.saved') : t('video.save')}</span>
+                                    </button>
                                 </Tooltip>
 
                                 <Tooltip content={isCopied ? t('video.copied') : t('video.share')} side="top">
-                                    <Button
-                                        variant="ghost"
+                                    <button
                                         className={shareBtnClass}
                                         onClick={handleShare}
                                         aria-label={t('video.share')}
                                     >
-                                        <Link2
-                                            className="video-page__action-icon"
-                                            size={18}
-                                            strokeWidth={2}
-                                        />
-                                    </Button>
+                                        <span className="video-page__reaction-icon">
+                                            <Link2 size={20} strokeWidth={1.75} />
+                                        </span>
+                                        <span className="video-page__reaction-label">{isCopied ? t('video.copied') : t('video.share')}</span>
+                                    </button>
                                 </Tooltip>
                             </div>
                         </div>
@@ -671,6 +655,13 @@ export default function VideoPage() {
                 </main>
 
                 <aside className="video-page__sidebar">
+                    {sidebarTab === 'related' && (
+                        <FilterPanel
+                            allTags={allRelatedTags}
+                            value={filterState}
+                            onChange={setFilterState}
+                        />
+                    )}
                     <div className="video-page__sidebar-tabs" role="tablist">
                         <button
                             role="tab"
@@ -697,10 +688,10 @@ export default function VideoPage() {
                         )}
                     </div>
 
-                    {sidebarTab === 'related' && relatedVideos.length > 0 && (
+                    {sidebarTab === 'related' && filteredRelated.length > 0 && (
                         <div className="video-page__sidebar-list">
-                            {relatedVideos.map(v => (
-                                <VideoCard key={v.id} video={v} />
+                            {filteredRelated.map((v, i) => (
+                                <VideoCard key={v.id} video={v} index={i} />
                             ))}
                         </div>
                     )}

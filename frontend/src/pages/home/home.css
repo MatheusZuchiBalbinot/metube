@@ -8,7 +8,7 @@
 /* ─── Section (trending / continue watching) ─────────────────────────────── */
 
 .home-page__section {
-    padding: 20px 24px 0;
+    padding: 24px 24px 0;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -67,7 +67,7 @@
 /* ─── Filters bar ─────────────────────────────────────────────────────────── */
 
 .home-page__filters {
-    padding: 20px 24px 0;
+    padding: 24px 24px 0;
 }
 
 /* ─── Main content ────────────────────────────────────────────────────────── */
@@ -80,12 +80,16 @@
 
 .home-page__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 1200px) {
+    .home-page__grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 1024px) {
-    .home-page__grid { grid-template-columns: repeat(2, 1fr); }
+    .home-page__grid { grid-template-columns: repeat(3, 1fr); }
     .home-page__carousel-item { width: 200px; }
 }
 
@@ -114,7 +118,7 @@
 /* ─── Surprise me ─────────────────────────────────────────────────────────── */
 
 .home-page__surprise {
-    padding: 8px 24px 0;
+    padding: 12px 24px 0;
     display: flex;
     justify-content: flex-end;
 }

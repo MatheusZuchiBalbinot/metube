@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { useInView } from '@utils/useInView';
 import { ChevronLeft, ChevronRight, Flame, Shuffle } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
@@ -25,11 +27,15 @@ export default function HomePage() {
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const trendingRef = useRef<HTMLDivElement>(null);
     const continueRef = useRef<HTMLDivElement>(null);
+    const { ref: trendingSectionRef, inView: trendingVisible } = useInView({ rootMargin: '-40px' });
+    const { ref: continueSectionRef, inView: continueVisible } = useInView({ rootMargin: '-40px' });
 
     const allTags = useMemo(() => {
         const tagSet = new Set<string>();
         for (const v of recommendations) {
-            for (const tag of v.tags) { tagSet.add(tag); }
+            for (const tag of v.tags) {
+                tagSet.add(tag);
+            }
         }
         return Array.from(tagSet).sort();
     }, [recommendations]);
@@ -53,7 +59,9 @@ export default function HomePage() {
         return watchHistory
             .map(id => videoMap.get(id))
             .filter((v): v is NonNullable<typeof v> => {
-                if (!v) { return false; }
+                if (!v) {
+                    return false;
+                }
                 const p = videoProgress[v.id] ?? 0;
                 const isInProgress = p > CONTINUE_WATCHING_MIN_PROGRESS && p < CONTINUE_WATCHING_MAX_PROGRESS;
                 return isInProgress;
@@ -70,14 +78,18 @@ export default function HomePage() {
 
     function scrollCarousel(ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') {
         const el = ref.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const scrollAmount = el.clientWidth * 0.7;
         el.scrollBy({ left: direction === 'right' ? scrollAmount : -scrollAmount, behavior: 'smooth' });
     }
 
     function handleSurpriseMe() {
         const hasVideos = publishedVideos.length > 0;
-        if (!hasVideos) { return; }
+        if (!hasVideos) {
+            return;
+        }
         const idx = Math.floor(Math.random() * publishedVideos.length);
         const video = publishedVideos[idx];
         if (video) {
@@ -88,7 +100,13 @@ export default function HomePage() {
     return (
         <div className="home-page">
             {hasTrending && (
-                <section className="home-page__section">
+                <motion.section
+                    ref={trendingSectionRef as React.RefObject<HTMLElement>}
+                    className="home-page__section"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={trendingVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                >
                     <div className="home-page__section-header">
                         <div className="home-page__section-title-group">
                             <Flame size={16} className="home-page__trending-icon" />
@@ -124,7 +142,7 @@ export default function HomePage() {
                             </div>
                         ))}
                     </div>
-                </section>
+                </motion.section>
             )}
 
             <div className="home-page__filters">
@@ -140,14 +158,26 @@ export default function HomePage() {
 
             {hasResults ? (
                 <>
-                    <div className="home-page__main">
+                    <motion.div
+                        className="home-page__main"
+                        key={JSON.stringify(filterState)}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                    >
                         <div className="home-page__grid">
-                            {firstBatchVideos.map(video => (<VideoCard key={video.id} video={video} />))}
+                            {firstBatchVideos.map((video, i) => (<VideoCard key={video.id} video={video} index={i} />))}
                         </div>
-                    </div>
+                    </motion.div>
 
                     {hasContinueWatching && (
-                        <section className="home-page__section">
+                        <motion.section
+                            ref={continueSectionRef as React.RefObject<HTMLElement>}
+                            className="home-page__section"
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={continueVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                        >
                             <div className="home-page__section-header">
                                 <h2 className="home-page__section-title">{t('home.continue_watching')}</h2>
                                 <div className="home-page__carousel-nav">
@@ -180,13 +210,13 @@ export default function HomePage() {
                                     </div>
                                 ))}
                             </div>
-                        </section>
+                        </motion.section>
                     )}
 
                     {remainingVideos.length > 0 && (
                         <div className="home-page__main">
                             <div className="home-page__grid">
-                                {remainingVideos.map(video => (<VideoCard key={video.id} video={video} />))}
+                                {remainingVideos.map((video, i) => (<VideoCard key={video.id} video={video} index={firstBatchVideos.length + i} />))}
                             </div>
                         </div>
                     )}
