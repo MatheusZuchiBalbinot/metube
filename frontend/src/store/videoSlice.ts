@@ -2,6 +2,11 @@ import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolki
 import { MOCK_VIDEOS, VideoStatus, type Video } from '@data/mockVideos';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 
+export interface WatchEvent {
+    videoId: string
+    date: string
+}
+
 export interface TagView {
     tag: string
     fromVideoId: string | null
@@ -25,11 +30,23 @@ interface VideoState {
     activeTagView: TagView | null
     miniPlayer: MiniPlayerState | null
     pendingVideoSeek: { videoId: string; time: number } | null
+    watchEvents: WatchEvent[]
+    pinnedVideoId: string | null
     theaterMode: boolean
+    shortsMuted: boolean
+    shortsVolume: number
 }
 
 const SEED_HISTORY = ['v003', 'v001', 'v008', 'v005', 'v007'];
 const SEED_PROGRESS: Record<string, number> = { v001: 67, v005: 38, v008: 82 };
+
+function buildSeedEvents(): WatchEvent[] {
+    const now = Date.now();
+    return ['v003', 'v001', 'v008', 'v005', 'v007'].map((videoId, i) => ({
+        videoId,
+        date: new Date(now - i * 24 * 60 * 60 * 1000).toISOString(),
+    }));
+}
 
 function loadOrSeed<T>(key: string, seed: T): T {
     const stored = localStorage.getItem(key);
@@ -56,7 +73,11 @@ const initialState: VideoState = {
     activeTagView: null,
     miniPlayer: null,
     pendingVideoSeek: null,
+    watchEvents: loadOrSeed<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, buildSeedEvents()),
+    pinnedVideoId: localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null,
     theaterMode: false,
+    shortsMuted: localStorage.getItem(STORAGE_KEYS.SHORTS_MUTED) !== 'false',
+    shortsVolume: parseFloat(localStorage.getItem(STORAGE_KEYS.SHORTS_VOLUME) ?? '0.8'),
 };
 
 const videoSlice = createSlice({
@@ -79,9 +100,14 @@ const videoSlice = createSlice({
             const id = action.payload;
             state.videos = state.videos.filter(v => v.id !== id);
             state.watchHistory = state.watchHistory.filter(vid => vid !== id);
+            state.watchEvents = state.watchEvents.filter(e => e.videoId !== id);
             state.likedVideos = state.likedVideos.filter(vid => vid !== id);
             state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
             state.savedVideos = state.savedVideos.filter(vid => vid !== id);
+            const isPinned = state.pinnedVideoId === id;
+            if (isPinned) {
+                state.pinnedVideoId = null;
+            }
         },
 
         likeVideo(state, action: PayloadAction<string>) {
@@ -129,6 +155,7 @@ const videoSlice = createSlice({
             if (!hasProgress) {
                 state.videoProgress[videoId] = 10;
             }
+            state.watchEvents.push({ videoId, date: new Date().toISOString() });
         },
 
         removeFromHistory(state, action: PayloadAction<string>) {
@@ -180,8 +207,25 @@ const videoSlice = createSlice({
             state.pendingVideoSeek = null;
         },
 
+        pinVideo(state, action: PayloadAction<string>) {
+            const isAlreadyPinned = state.pinnedVideoId === action.payload;
+            state.pinnedVideoId = isAlreadyPinned ? null : action.payload;
+        },
+
+        unpinVideo(state) {
+            state.pinnedVideoId = null;
+        },
+
         setTheaterMode(state, action: PayloadAction<boolean>) {
             state.theaterMode = action.payload;
+        },
+
+        setShortsMuted(state, action: PayloadAction<boolean>) {
+            state.shortsMuted = action.payload;
+        },
+
+        setShortsVolume(state, action: PayloadAction<number>) {
+            state.shortsVolume = action.payload;
         },
     },
 });
@@ -200,7 +244,9 @@ export const selectHistoryTags = createSelector(
         const tagSet = new Set<string>();
         for (const video of videos) {
             const isWatched = watchedIds.has(video.id);
-            if (!isWatched) { continue; }
+            if (!isWatched) {
+                continue;
+            }
             for (const tag of video.tags) {
                 tagSet.add(tag);
             }

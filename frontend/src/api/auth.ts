@@ -5,11 +5,13 @@ export interface User {
     id: number
     name: string
     email: string
+    bio?: string
     created_at: string
 }
 
 export interface LoginPayload {
     email: string
+    bio?: string
     password: string
 }
 

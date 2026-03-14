@@ -39,6 +39,23 @@ const authSlice = createSlice({
             state.user = null;
             state.sessionError = action.payload;
         },
+
+        updateProfile(state, action: PayloadAction<{ name?: string; bio?: string }>) {
+            const hasNoUser = state.user === null;
+            if (hasNoUser) {
+                return;
+            }
+
+            const hasName = action.payload.name !== undefined;
+            const hasBio = action.payload.bio !== undefined;
+            if (hasName) {
+                state.user!.name = action.payload.name!;
+            }
+
+            if (hasBio) {
+                state.user!.bio = action.payload.bio;
+            }
+        },
     },
     extraReducers: builder => {
         builder
