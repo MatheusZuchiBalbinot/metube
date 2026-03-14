@@ -56,24 +56,6 @@
     transition: color 0.15s, background 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Active indicator — left pill */
-.app-sidebar__item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%) scaleY(0);
-    width: 3px;
-    height: 60%;
-    background: var(--accent);
-    border-radius: 0 3px 3px 0;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.app-sidebar__item--active::before {
-    transform: translateY(-50%) scaleY(1);
-}
-
 /* Hover */
 .app-sidebar__item:not(.app-sidebar__item--active):hover {
     color: var(--text);
@@ -84,12 +66,41 @@
 /* Active */
 .app-sidebar__item--active {
     color: var(--accent);
-    background: var(--accent-subtle);
 }
 
 .app-sidebar__item--active:hover {
     color: var(--accent);
+}
+
+/* ─── Magic active background (framer-motion layoutId) ──────────────────── */
+
+.app-sidebar__active-bg {
+    position: absolute;
+    inset: 0;
     background: var(--accent-subtle);
+    border-radius: var(--radius-sm);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.app-sidebar__active-pill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    width: 3px;
+    height: 60%;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.app-sidebar__icon-chip,
+.app-sidebar__label {
+    position: relative;
+    z-index: 1;
 }
 
 /* ─── Icon chip ───────────────────────────────────────────────────────────── */

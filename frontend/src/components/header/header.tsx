@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Plus, Bell, Menu, LogOut, Moon, Sun, Search } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useTheme } from '@context/useTheme';
 import { useVideo } from '@context/useVideo';
 import type { ThemeColor, ThemeMode } from '@utils/themes';
 import { STORAGE_KEYS } from '@utils/storageKeys';
+import { triggerThemeRipple } from '@utils/themeRipple';
 import { ROUTES } from '@utils/routes';
 import { Avatar, Button, Input, Tooltip } from '@ui';
 import './header.css';
@@ -44,9 +45,19 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { openUploadModal, autoplay, setAutoplay } = useVideo();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [scrolled, setScrolled] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const currentLang = i18n.language.split('-')[0];
+
+    const handleScroll = useCallback(() => {
+        setScrolled(window.scrollY > 24);
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [handleScroll]);
 
     useEffect(() => {
         function handleOutsideClick(e: MouseEvent) {
@@ -74,12 +85,14 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         e.preventDefault();
         const trimmed = searchQuery.trim();
         const hasQuery = trimmed.length > 0;
-        if (!hasQuery) { return; }
+        if (!hasQuery) {
+            return;
+        }
         navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
     }
 
     return (
-        <header className="app-header">
+        <header className={['app-header', scrolled ? 'app-header--scrolled' : ''].filter(Boolean).join(' ')}>
             <div className="app-header__left">
                 <Tooltip content={t('nav.toggle_sidebar')} side="bottom">
                     <Button
@@ -168,7 +181,12 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                                             key={key}
                                             variant="ghost"
                                             className={`prefs-toggle-btn${mode === key ? ' active' : ''}`}
-                                            onClick={() => setMode(key)}
+                                            onClick={async (e) => {
+                                                const isAlreadyActive = mode === key;
+                                                if (isAlreadyActive) { return; }
+                                                await triggerThemeRipple(e.currentTarget, key);
+                                                setMode(key);
+                                            }}
                                             aria-label={t(labelKey)}
                                             aria-pressed={mode === key}
                                         >
