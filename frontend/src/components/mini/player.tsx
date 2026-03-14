@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { X, Maximize2, Play, Pause } from 'lucide-react';
+import { X, Maximize2 } from 'lucide-react';
 import { useVideo } from '@context/useVideo';
 import { ROUTES } from '@utils/routes';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
+import VideoPlayer from '@components/video/player';
 import './player.css';
 
 function defaultPos() {
@@ -23,7 +24,6 @@ export default function MiniPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const playerRef = useRef<HTMLDivElement>(null);
     const pendingMiniSeekRef = useRef<number | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
     const [pos, setPos] = useState(defaultPos);
     const [isDragging, setIsDragging] = useState(false);
     const isDraggingRef = useRef(false);
@@ -55,7 +55,7 @@ export default function MiniPlayer() {
             pendingMiniSeekRef.current = null;
         }
 
-        el?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        el?.play().catch(() => { });
     }
 
     useEffect(() => {
@@ -107,20 +107,6 @@ export default function MiniPlayer() {
         e.preventDefault();
     }
 
-    function handlePlayPause() {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-
-        if (el.paused) {
-            el.play().then(() => setIsPlaying(true)).catch(() => { });
-        } else {
-            el.pause();
-            setIsPlaying(false);
-        }
-    }
-
     function handleExpand() {
         const el = videoRef.current;
         if (el && miniPlayer) {
@@ -165,13 +151,12 @@ export default function MiniPlayer() {
         >
             <div className="mini-player__video-wrapper">
                 {hasVideoFile ? (
-                    <video
-                        ref={videoRef}
-                        className="mini-player__video"
-                        src={video!.videoUrl}
+                    <VideoPlayer
+                        mode="mini"
+                        videoRef={videoRef}
+                        src={video!.videoUrl!}
+                        captureKeyboard
                         onLoadedMetadata={handleLoadedMetadata}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
                     />
                 ) : (
                     <img
@@ -180,15 +165,6 @@ export default function MiniPlayer() {
                         className="mini-player__thumbnail"
                     />
                 )}
-                <div className="mini-player__overlay">
-                    <button
-                        className="mini-player__play-pause"
-                        onClick={handlePlayPause}
-                        aria-label={isPlaying ? t('mini_player.pause') : t('mini_player.play')}
-                    >
-                        {isPlaying ? <Pause size={22} fill="white" strokeWidth={0} /> : <Play size={22} fill="white" strokeWidth={0} />}
-                    </button>
-                </div>
             </div>
 
             <div

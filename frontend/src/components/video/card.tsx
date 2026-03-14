@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Pin, PinOff } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import { ROUTES } from '@utils/routes';
 import { Format } from '@utils/format';
@@ -8,11 +9,13 @@ import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@context/useVideo';
 import Badge from '@ui/badge/badge';
 import Button from '@ui/button/button';
+import Tooltip from '@ui/tooltip/tooltip';
 import './card.css';
 
 interface VideoCardProps {
     video: Video
     showActions?: boolean
+    index?: number
     onEdit?: (video: Video) => void
     onDelete?: (id: string) => void
 }
@@ -27,12 +30,13 @@ function buildVideoCardClass(showActions: boolean) {
 export default function VideoCard({
     video,
     showActions = false,
+    index,
     onEdit,
     onDelete,
 }: VideoCardProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-    const { openTagView, videoProgress } = useVideo();
+    const { openTagView, videoProgress, pinnedVideoId, pinVideo } = useVideo();
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
     const visibleTags = video.tags.slice(0, 3);
@@ -51,6 +55,14 @@ export default function VideoCard({
 
     const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
     const isNew = !isScheduledAndFuture && Date.now() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
+
+    const isPinned = pinnedVideoId === video.id;
+    const [thumbLoaded, setThumbLoaded] = useState(false);
+
+    function handlePin(e: React.MouseEvent) {
+        e.stopPropagation();
+        pinVideo(video.id);
+    }
 
     function handleCardClick() {
         navigate(ROUTES.VIDEO.replace(':id', video.id));
@@ -80,7 +92,7 @@ export default function VideoCard({
         <div
             className={buildVideoCardClass(showActions)}
             onClick={handleCardClick}
-            style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}
+            style={{ '--vc-color': palette.color, '--vc-bg': palette.bg, '--vc-index': index ?? 0 } as React.CSSProperties}
         >
             <div className="video-card__thumb">
                 <img
@@ -88,6 +100,8 @@ export default function VideoCard({
                     src={video.thumbnail}
                     alt={video.title}
                     loading="lazy"
+                    onLoad={() => setThumbLoaded(true)}
+                    style={{ opacity: thumbLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
                 />
                 <div className="video-card__play-overlay" aria-hidden="true">
                     <svg className="video-card__play-icon" viewBox="0 0 24 24" fill="white">
@@ -160,6 +174,18 @@ export default function VideoCard({
 
                 {showActions && (
                     <div className="video-card__actions">
+                        <Tooltip content={isPinned ? t('video.unpin') : t('video.pin')} side="top">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label={isPinned ? t('video.unpin') : t('video.pin')}
+                                aria-pressed={isPinned}
+                                className={isPinned ? 'video-card__pin-btn--active' : ''}
+                                onClick={handlePin}
+                            >
+                                {isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+                            </Button>
+                        </Tooltip>
                         <Button variant="ghost" size="sm" onClick={handleEdit}>
                             {t('video.edit')}
                         </Button>
