@@ -1,4 +1,4 @@
-/* eslint-disable complexity, max-depth */
+/* eslint-disable complexity */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@utils/routes';
@@ -33,13 +33,17 @@ export function useKeyboardShortcuts({
                 e.target instanceof HTMLTextAreaElement ||
                 (e.target instanceof HTMLElement && e.target.isContentEditable);
 
-            if (isTyping) { return; }
+            if (isTyping) {
+                return;
+            }
 
             const key = e.key.toLowerCase();
 
             // Chord sequences: G + H, G + P, G + S
             if (pendingKeyRef.current === 'g') {
-                if (pendingTimerRef.current) { clearTimeout(pendingTimerRef.current); }
+                if (pendingTimerRef.current) {
+                    clearTimeout(pendingTimerRef.current);
+                }
                 pendingKeyRef.current = null;
 
                 if (key === 'h') {
@@ -64,7 +68,9 @@ export function useKeyboardShortcuts({
             }
 
             // Single key shortcuts (no modifiers other than Shift for '?')
-            if (e.ctrlKey || e.altKey || e.metaKey) { return; }
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                return;
+            }
 
             if (key === '/' || key === 'f') {
                 e.preventDefault();
@@ -88,10 +94,12 @@ export function useKeyboardShortcuts({
                     onLike();
                     return;
                 }
+
                 if (key === 's' && onSave) {
                     onSave();
                     return;
                 }
+
                 if (key === 't' && onToggleTheater) {
                     onToggleTheater();
                     return;
@@ -102,7 +110,9 @@ export function useKeyboardShortcuts({
         window.addEventListener('keydown', handleKeyDown);
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
-            if (pendingTimerRef.current) { clearTimeout(pendingTimerRef.current); }
+            if (pendingTimerRef.current) {
+                clearTimeout(pendingTimerRef.current);
+            }
         };
     }, [navigate, onOpenUpload, onOpenShortcuts, onFocusSearch, videoPageId, onLike, onSave, onToggleTheater]);
 }

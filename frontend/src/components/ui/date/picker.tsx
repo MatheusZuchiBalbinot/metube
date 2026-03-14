@@ -14,7 +14,9 @@ interface DatePickerProps {
 
 function toDate(iso: string | null): Date | undefined {
     const isValid = iso !== null && iso !== '';
-    if (!isValid) { return undefined; }
+    if (!isValid) {
+        return undefined;
+    }
     return new Date(`${iso}T00:00:00`);
 }
 
@@ -38,7 +40,9 @@ export default function DatePicker({ value, onChange, placeholder = 'Pick a date
     const hasValue = value !== null && value !== '';
 
     function handleSelect(day: Date | undefined) {
-        if (!day) { return; }
+        if (!day) {
+            return;
+        }
         onChange(toIso(day));
         setOpen(false);
     }

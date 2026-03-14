@@ -26,7 +26,9 @@ export default function Modal({
 }: ModalProps) {
     const { t } = useTranslation();
     useEffect(() => {
-        if (!isOpen) {return;}
+        if (!isOpen) {
+            return;
+        }
         const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
@@ -34,10 +36,14 @@ export default function Modal({
 
     useEffect(() => {
         document.body.style.overflow = isOpen ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
+        return () => {
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
-    if (!isOpen) {return null;}
+    if (!isOpen) {
+        return null;
+    }
 
     return createPortal(
         <div className="modal-overlay" role="presentation" onClick={onClose}>

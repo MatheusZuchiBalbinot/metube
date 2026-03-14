@@ -20,7 +20,9 @@ const toastSlice = createSlice({
         addToast(state, action: PayloadAction<Omit<Toast, 'id'>>) {
             const id = `t${Date.now()}`;
             state.toasts.push({ ...action.payload, id });
-            if (state.toasts.length > MAX_TOASTS) { state.toasts.shift(); }
+            if (state.toasts.length > MAX_TOASTS) {
+                state.toasts.shift();
+            }
         },
         removeToast(state, action: PayloadAction<string>) {
             state.toasts = state.toasts.filter(t => t.id !== action.payload);

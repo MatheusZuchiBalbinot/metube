@@ -14,7 +14,9 @@ interface DragAndDropProps {
 }
 
 function formatBytes(bytes: number) {
-    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
@@ -55,19 +57,25 @@ export default function DragAndDrop({
         e.preventDefault();
         setDragging(false);
         const f = e.dataTransfer.files[0];
-        if (f) {handleFile(f);}
+        if (f) {
+            handleFile(f);
+        }
     }
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const f = e.target.files?.[0];
-        if (f) {handleFile(f);}
+        if (f) {
+            handleFile(f);
+        }
     }
 
     function clear(e: React.MouseEvent) {
         e.stopPropagation();
         setFile(null);
         setError('');
-        if (inputRef.current) {inputRef.current.value = '';}
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
         onClear?.();
     }
 
@@ -77,7 +85,9 @@ export default function DragAndDrop({
         <div className="dnd-wrap">
             <div
                 className={zoneClass}
-                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragOver={(e) => {
+                    e.preventDefault(); setDragging(true);
+                }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => !file && inputRef.current?.click()}
