@@ -1,3 +1,10 @@
+/* ─── Ripple ─────────────────────────────────────────────────────────────── */
+
+@keyframes btn-ripple {
+    from { transform: scale(0); opacity: 0.35; }
+    to   { transform: scale(1); opacity: 0; }
+}
+
 /* ─── Button ─────────────────────────────────────────────────────────────── */
 
 .btn {
@@ -12,6 +19,16 @@
     user-select: none;
     border: none;
     text-decoration: none;
+    overflow: hidden;
+    position: relative;
+}
+
+.btn__ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+    pointer-events: none;
+    animation: btn-ripple 0.5s ease-out forwards;
 }
 
 .btn:focus-visible {
@@ -19,7 +36,7 @@
 }
 
 .btn:active:not(:disabled) {
-    transform: scale(0.99);
+    transform: scale(0.97);
 }
 
 .btn:disabled {

@@ -10,6 +10,8 @@ export { default as Avatar } from './avatar/avatar';
 export { default as Card } from './card/card';
 export { default as Spinner } from './spinner/spinner';
 export { default as ToastContainer } from './toast/toast';
+export { default as Skeleton } from './skeleton/skeleton';
+export { default as NavProgress } from './navProgress/navProgress';
 
 export type { ButtonVariant, ButtonSize } from './button/button';
 export type { DropdownOption } from './dropdown/dropdown';

@@ -1,4 +1,4 @@
-import { type ButtonHTMLAttributes } from 'react';
+import { useRef, type ButtonHTMLAttributes } from 'react';
 import './button.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -29,12 +29,31 @@ export default function Button({
     children,
     className = '',
     disabled,
+    onClick,
     ...props
 }: ButtonProps) {
     const classes = buildButtonClass(variant, size, fullWidth, className);
+    const btnRef = useRef<HTMLButtonElement>(null);
+
+    function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+        const btn = btnRef.current;
+        if (btn) {
+            const rect = btn.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const size = Math.max(rect.width, rect.height) * 2;
+            ripple.className = 'btn__ripple';
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
+        onClick?.(e);
+    }
 
     return (
-        <button className={classes} disabled={disabled || loading} {...props}>
+        <button ref={btnRef} className={classes} disabled={disabled || loading} onClick={handleClick} {...props}>
             {loading ? (
                 <span className="btn__spinner" />
             ) : (
