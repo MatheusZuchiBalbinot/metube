@@ -7,7 +7,10 @@
         "save": "Salvar",
         "back": "Voltar",
         "close": "Fechar",
-        "remove": "Remover"
+        "remove": "Remover",
+        "not_found_title": "404",
+        "not_found_message": "Esta página não existe.",
+        "go_home": "Voltar ao início"
     },
     "auth": {
         "sign_in": "Entrar",
@@ -42,7 +45,10 @@
     },
     "header": {
         "create": "Criar",
-        "notifications": "Notificações"
+        "notifications": "Notificações",
+        "searchPlaceholder": "Buscar vídeos, canais, tags...",
+        "recentSearches": "Buscas recentes",
+        "removeRecent": "Remover"
     },
     "dropdown": {
         "select_placeholder": "Selecione uma opção"
@@ -80,6 +86,8 @@
         "save": "Salvar",
         "saved": "Salvo",
         "share": "Compartilhar",
+        "share_copy_link": "Copiar link",
+        "share_copy_at_time": "Copiar link no tempo atual",
         "copied": "Copiado!",
         "watch_history": "Histórico",
         "liked_videos": "Curtidos",
@@ -135,7 +143,8 @@
         "liked_videos": "Vídeos curtidos",
         "your_videos": "Seus vídeos",
         "dashboard": "Dashboard",
-        "toggle_sidebar": "Alternar barra lateral"
+        "toggle_sidebar": "Alternar barra lateral",
+        "subscriptions": "Inscrições"
     },
     "shorts": {
         "empty_title": "Nenhum Short ainda",
@@ -164,7 +173,12 @@
         "trending": "Em alta",
         "continue_watching": "Continuar assistindo",
         "next": "Próximo",
-        "surprise_me": "Surpreenda-me"
+        "surprise_me": "Surpreenda-me",
+        "empty_title": "Nenhum vídeo ainda",
+        "empty_desc": "Volte mais tarde para ver novos conteúdos",
+        "filtered_title": "Nenhum vídeo encontrado",
+        "filtered_desc": "Tente ajustar os filtros",
+        "filtered_action": "Limpar filtros"
     },
     "history": {
         "group_today": "Hoje",
@@ -172,25 +186,44 @@
         "group_this_week": "Esta semana",
         "group_older": "Mais antigo",
         "clear_all": "Limpar tudo",
-        "remove": "Remover do histórico"
+        "remove": "Remover do histórico",
+        "search_placeholder": "Buscar no histórico...",
+        "period_label": "Filtrar por período",
+        "period_all": "Tudo",
+        "period_today": "Hoje",
+        "period_week": "Esta semana",
+        "period_month": "Este mês",
+        "clear_confirm_title": "Limpar histórico de vídeos?",
+        "clear_confirm_text": "Esta ação não pode ser desfeita.",
+        "clear_confirm_action": "Limpar tudo",
+        "no_results_title": "Nenhum resultado encontrado",
+        "no_results_text": "Tente ajustar a busca ou o filtro de período"
     },
     "liked": {
-        "empty_text": "Vídeos que você curtiu aparecerão aqui"
+        "empty_text": "Vídeos que você curtiu aparecerão aqui",
+        "unlike": "Remover dos curtidos"
     },
     "watch_later": {
         "remove": "Remover de assistir mais tarde",
         "empty_text": "Salve vídeos para assistir depois"
     },
     "search": {
-        "try_different": "Tente um termo de busca diferente"
+        "try_different": "Tente um termo de busca diferente",
+        "placeholder": "Buscar vídeos, canais, tags...",
+        "go": "Buscar",
+        "label": "Pesquisar",
+        "submit": "Pesquisar"
     },
     "channel": {
         "not_found": "Canal não encontrado",
-        "since": "Desde {{year}}"
+        "since": "Desde {{year}}",
+        "subscribe": "Inscrever-se",
+        "subscribed": "Inscrito",
+        "most_watched": "Mais assistidos"
     },
     "shortcuts": {
         "title": "Atalhos de teclado",
-        "global": "Global",
+        "global": "Navegação",
         "video_page": "Página de vídeo",
         "focus_search": "Focar na busca",
         "open_upload": "Enviar vídeo",
@@ -198,10 +231,10 @@
         "go_profile": "Ir para Perfil",
         "go_search": "Ir para Busca",
         "show_shortcuts": "Mostrar atalhos",
-        "play_pause": "Play / Pause",
         "like": "Curtir vídeo",
         "save": "Salvar vídeo",
         "theater_mode": "Modo teatro",
+        "video_note": "Disponível apenas na página de vídeo",
         "tip": "Atalhos de sequência: pressione G primeiro, depois a segunda tecla"
     },
     "toast": {
@@ -212,7 +245,13 @@
         "history_removed": "Removido do histórico",
         "history_cleared": "Histórico limpo",
         "video_uploaded": "Vídeo enviado com sucesso",
-        "link_copied": "Link copiado!"
+        "link_copied": "Link copiado!",
+        "subscribed": "Inscrito",
+        "unsubscribed": "Inscrição cancelada",
+        "playlist_created": "Playlist criada",
+        "playlist_deleted": "Playlist excluída",
+        "added_to_playlist": "Adicionado à \"{{name}}\"",
+        "removed_from_playlist": "Removido da playlist"
     },
     "profile": {
         "videos_watched": "Assistidos",
@@ -227,7 +266,13 @@
         "bio_placeholder": "Uma breve descrição sobre você...",
         "name_label": "Nome",
         "bio_label": "Bio",
-        "pinned_video": "Fixado"
+        "pinned_video": "Fixado",
+        "delete_confirm": "Excluir '{{title}}'? Esta ação não pode ser desfeita.",
+        "heatmap_14d": "14d",
+        "heatmap_30d": "30d",
+        "heatmap_videos": "vídeos",
+        "heatmap_less": "Menos",
+        "heatmap_more": "Mais"
     },
     "mini_player": {
         "label": "Mini player",
@@ -235,6 +280,23 @@
         "pause": "Pausar",
         "expand": "Abrir vídeo",
         "drag": "Arrastar para reposicionar"
+    },
+    "playlist": {
+        "empty_title": "Nenhuma playlist ainda",
+        "empty_desc": "Crie uma playlist para organizar seus vídeos",
+        "new": "Nova playlist",
+        "name_placeholder": "Minha playlist...",
+        "create": "Criar",
+        "rename": "Renomear",
+        "delete": "Excluir playlist",
+        "delete_confirm": "Excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
+        "save_to": "Salvar em...",
+        "watch_later_row": "Assistir mais tarde",
+        "videos_count_one": "{{count}} vídeo",
+        "videos_count_other": "{{count}} vídeos",
+        "empty_playlist": "Nenhum vídeo nesta playlist",
+        "remove_video": "Remover da playlist",
+        "new_playlist_inline": "Nova playlist"
     },
     "player": {
         "play": "Reproduzir",
