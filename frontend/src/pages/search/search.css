@@ -7,6 +7,89 @@
     gap: 24px;
 }
 
+/* ─── Hero search input ───────────────────────────────────────────────────── */
+
+.search-page__hero {
+    width: 100%;
+}
+
+.search-page__form {
+    width: 100%;
+}
+
+.search-page__input-wrap {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    padding: 0 12px 0 16px;
+    gap: 10px;
+    transition: border-color var(--duration-default), box-shadow var(--duration-default);
+}
+
+.search-page__input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.search-page__input-icon-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-3);
+    transition: color var(--duration-default);
+    border-radius: var(--radius-sm);
+}
+
+.search-page__input-wrap:focus-within .search-page__input-icon-btn {
+    color: var(--accent);
+}
+
+.search-page__input-icon {
+    flex-shrink: 0;
+    color: inherit;
+    transition: color var(--duration-default);
+}
+
+.search-page__input {
+    flex: 1;
+    height: 52px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1.0625rem;
+    color: var(--text);
+    font-family: inherit;
+}
+
+.search-page__input::placeholder {
+    color: var(--text-3);
+}
+
+.search-page__submit-btn {
+    flex-shrink: 0;
+}
+
+/* ─── mark highlight ─────────────────────────────────────────────────────── */
+
+.search-page mark {
+    background: var(--accent-subtle, color-mix(in srgb, var(--accent) 15%, transparent));
+    color: var(--text);
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+/* ─── Page header (results label) ────────────────────────────────────────── */
+
 .search-page__header {
     display: flex;
     align-items: baseline;
@@ -33,6 +116,8 @@
     color: var(--text);
 }
 
+/* ─── Results list ────────────────────────────────────────────────────────── */
+
 .search-page__list {
     display: flex;
     flex-direction: column;
@@ -45,6 +130,8 @@
     border-radius: 2px;
     padding: 0 2px;
 }
+
+/* ─── Empty state ─────────────────────────────────────────────────────────── */
 
 .search-page__empty {
     flex: 1;
