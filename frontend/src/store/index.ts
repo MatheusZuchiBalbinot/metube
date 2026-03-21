@@ -4,7 +4,10 @@ import videoSlice from './videoSlice';
 import themeSlice from './themeSlice';
 import authSlice from './authSlice';
 import toastSlice from './toastSlice';
-import { localStorageMiddleware } from './localStorageMiddleware';
+import subscriptionSlice from './subscriptionSlice';
+import playlistSlice from './playlistSlice';
+import searchSlice from './searchSlice';
+import { persistMiddleware } from './persistMiddleware';
 
 export const store = configureStore({
     reducer: {
@@ -12,8 +15,11 @@ export const store = configureStore({
         theme: themeSlice.reducer,
         auth: authSlice.reducer,
         toast: toastSlice.reducer,
+        subscription: subscriptionSlice.reducer,
+        playlist: playlistSlice.reducer,
+        search: searchSlice.reducer,
     },
-    middleware: getDefault => getDefault().concat(localStorageMiddleware),
+    middleware: getDefault => getDefault().concat(persistMiddleware.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

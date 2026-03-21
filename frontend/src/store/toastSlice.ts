@@ -18,7 +18,7 @@ const toastSlice = createSlice({
     initialState,
     reducers: {
         addToast(state, action: PayloadAction<Omit<Toast, 'id'>>) {
-            const id = `t${Date.now()}`;
+            const id = crypto.randomUUID();
             state.toasts.push({ ...action.payload, id });
             if (state.toasts.length > MAX_TOASTS) {
                 state.toasts.shift();
