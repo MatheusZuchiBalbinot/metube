@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
@@ -7,6 +7,8 @@ import './modal.css';
 
 type ModalSize = 'sm' | 'md' | 'lg';
 
+const FOCUSABLE_SELECTORS = 'button, input, select, textarea, a[href]';
+
 interface ModalProps {
     isOpen: boolean
     onClose: () => void
@@ -14,6 +16,7 @@ interface ModalProps {
     children: React.ReactNode
     footer?: React.ReactNode
     size?: ModalSize
+    triggerRef?: React.RefObject<HTMLElement>
 }
 
 export default function Modal({
@@ -23,8 +26,11 @@ export default function Modal({
     children,
     footer,
     size = 'md',
+    triggerRef,
 }: ModalProps) {
     const { t } = useTranslation();
+    const boxRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!isOpen) {
             return;
@@ -41,6 +47,29 @@ export default function Modal({
         };
     }, [isOpen]);
 
+    useEffect(() => {
+        const shouldFocusOnOpen = isOpen;
+        if (!shouldFocusOnOpen) {
+            return;
+        }
+
+        const frameId = requestAnimationFrame(() => {
+            const firstFocusable = boxRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTORS);
+            firstFocusable?.focus();
+        });
+
+        return () => cancelAnimationFrame(frameId);
+    }, [isOpen]);
+
+    useEffect(() => {
+        const hasTrigger = triggerRef !== undefined;
+        if (isOpen || !hasTrigger) {
+            return;
+        }
+
+        triggerRef.current?.focus();
+    }, [isOpen, triggerRef]);
+
     if (!isOpen) {
         return null;
     }
@@ -48,6 +77,7 @@ export default function Modal({
     return createPortal(
         <div className="modal-overlay" role="presentation" onClick={onClose}>
             <div
+                ref={boxRef}
                 className={`modal-box modal-box--${size}`}
                 role="dialog"
                 aria-modal="true"

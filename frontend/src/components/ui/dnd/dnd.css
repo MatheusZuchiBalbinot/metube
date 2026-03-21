@@ -20,7 +20,7 @@
     background: var(--surface-2);
     user-select: none;
     border: 2px dashed var(--border);
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-default), background var(--duration-default), box-shadow var(--duration-default);
 }
 
 .dnd-zone:hover,
@@ -54,7 +54,7 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 4px;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--duration-default), color var(--duration-default);
 }
 
 .dnd-icon--accent {
@@ -91,7 +91,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: color 0.15s;
+    transition: color var(--duration-default);
 }
 
 .dnd-clear:hover {

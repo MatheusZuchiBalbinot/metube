@@ -31,7 +31,7 @@
     padding: 11px 14px;
     cursor: pointer;
     text-align: left;
-    transition: all 0.15s;
+    transition: all var(--duration-default);
 }
 
 .dropdown-trigger:hover {
@@ -42,11 +42,11 @@
 .dropdown-trigger--open {
     border-color: var(--accent);
     background: var(--surface-3);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    box-shadow: var(--focus-ring);
 }
 
 .dropdown-trigger--disabled {
-    opacity: 0.45;
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
     pointer-events: none;
 }
@@ -72,7 +72,7 @@
 .dropdown-chevron {
     color: var(--text-3);
     flex-shrink: 0;
-    transition: transform 0.15s;
+    transition: transform var(--duration-default);
 }
 
 .dropdown-chevron--open {
@@ -91,7 +91,7 @@
     overflow: hidden;
     overflow-y: auto;
     max-height: 220px;
-    animation: drop-in 0.14s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: drop-in 0.14s var(--ease-out) both;
     /* glass effect from base */
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);

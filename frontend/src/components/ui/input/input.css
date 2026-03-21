@@ -25,7 +25,7 @@
     z-index: 1;
     color: var(--text-3);
     pointer-events: none;
-    transition: color 0.15s;
+    transition: color var(--duration-default);
 }
 
 .input-inner:focus-within .input-icon {
@@ -42,7 +42,7 @@
     padding: 13px 14px;
     outline: none;
     font-family: inherit;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-default), background var(--duration-default), box-shadow var(--duration-default);
 }
 
 .input-field::placeholder {
@@ -57,7 +57,7 @@
 .input-field:focus,
 .input-field:focus-visible {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    box-shadow: var(--focus-ring);
     background: var(--surface-3);
 }
 

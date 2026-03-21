@@ -23,15 +23,15 @@ export default function NavProgress() {
 
         setState('loading');
 
-        // Complete the bar shortly after the transition finishes (exit 0.18s + enter 0.18s ≈ 360ms)
+        // Complete the bar shortly after the sync cross-fade finishes (≈150ms)
         doneTimer.current = setTimeout(() => {
             setState('done');
-        }, 340);
+        }, 200);
 
         // Reset to idle after the bar has faded out
         idleTimer.current = setTimeout(() => {
             setState('idle');
-        }, 700);
+        }, 550);
 
         return () => {
             if (doneTimer.current) { clearTimeout(doneTimer.current); }

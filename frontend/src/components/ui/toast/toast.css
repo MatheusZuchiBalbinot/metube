@@ -42,7 +42,7 @@
     min-width: 220px;
     max-width: 320px;
     pointer-events: all;
-    animation: toast-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: toast-slide-in var(--duration-slow) var(--ease-out) both;
     position: relative;
     overflow: hidden;
 }
@@ -79,7 +79,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--duration-default), color var(--duration-default);
     flex-shrink: 0;
 }
 

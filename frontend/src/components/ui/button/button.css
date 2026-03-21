@@ -12,10 +12,10 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    font-weight: 600;
+    font-weight: var(--font-semibold);
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--duration-default);
     user-select: none;
     border: none;
     text-decoration: none;
@@ -40,7 +40,7 @@
 }
 
 .btn:disabled {
-    opacity: 0.45;
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
     pointer-events: none;
 }
@@ -48,15 +48,15 @@
 /* ─── Variants ───────────────────────────────────────────────────────────── */
 
 .btn--primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    background: var(--gradient-accent);
     color: var(--accent-fg);
-    box-shadow: 0 4px 20px var(--accent-glow);
+    box-shadow: var(--glow-accent);
 }
 
 .btn--primary:hover:not(:disabled) {
     opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 8px 30px var(--accent-glow);
+    box-shadow: var(--glow-accent);
 }
 
 .btn--secondary {
@@ -98,30 +98,30 @@
 .btn--sm {
     height: 32px;
     padding: 0 12px;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     border-radius: var(--radius-sm);
 }
 
 .btn--md {
     height: 38px;
     padding: 0 16px;
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     border-radius: var(--radius);
 }
 
 .btn--lg {
     height: 48px;
     padding: 0 22px;
-    font-size: 1rem;
+    font-size: var(--text-md);
     border-radius: var(--radius);
 }
 
 .btn--icon {
-    width: 36px;
-    height: 36px;
+    width: var(--icon-md);
+    height: var(--icon-md);
     padding: 0;
     border-radius: var(--radius-sm);
-    font-size: 0.875rem;
+    font-size: var(--text-base);
 }
 
 .btn--full {
