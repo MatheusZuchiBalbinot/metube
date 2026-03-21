@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -26,6 +27,26 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                    'vendor-ui': ['framer-motion', '@radix-ui/react-tooltip', '@radix-ui/react-popover', '@radix-ui/react-slot'],
+                    'vendor-state': ['@reduxjs/toolkit', 'react-redux'],
+                    'vendor-i18n': ['i18next', 'react-i18next'],
+                },
+            },
+        },
+    },
+    test: {
+        environment: 'node',
+        alias: {
+            '@data': resolve(__dirname, 'src/data'),
+            '@utils': resolve(__dirname, 'src/utils'),
+            '@store': resolve(__dirname, 'src/store'),
+        },
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,
