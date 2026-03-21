@@ -7,27 +7,53 @@
 
 .channel-page__back-header {
     padding: 24px 24px 0;
+    position: relative;
+    z-index: 1;
 }
 
 .channel-page__back-btn {
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
     width: fit-content;
+}
+
+/* ─── Banner ──────────────────────────────────────────────────────────────── */
+
+.channel-page__banner {
+    height: 120px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    margin-top: -56px; /* pull up to sit behind the back-header area */
+    position: relative;
+    z-index: 0;
+    opacity: 0.75;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
 
 .channel-page__header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
-    padding: 24px;
+    padding: 16px 24px 24px;
     border-bottom: 1px solid var(--border);
+    margin-top: -28px; /* avatar overlaps the banner bottom edge */
+    position: relative;
+    z-index: 1;
 }
 
 .channel-page__header-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-page__name-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
 .channel-page__name {
@@ -38,9 +64,42 @@
     letter-spacing: -0.02em;
 }
 
+/* ─── Subscribe button ────────────────────────────────────────────────────── */
+
+.channel-page__subscribe-btn {
+    padding: 7px 18px;
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--duration-slow), color var(--duration-slow), border-color var(--duration-slow), opacity var(--duration-default);
+    border: 2px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.channel-page__subscribe-btn:hover {
+    opacity: 0.88;
+}
+
+.channel-page__subscribe-btn--subscribed {
+    background: transparent;
+    color: var(--accent);
+}
+
+.channel-page__subscribe-btn--subscribed:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    opacity: 1;
+}
+
+/* ─── Stats ───────────────────────────────────────────────────────────────── */
+
 .channel-page__stats {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     font-size: 0.875rem;
     color: var(--text-2);
@@ -54,6 +113,44 @@
 
 .channel-page__stat-sep {
     color: var(--text-3);
+}
+
+/* ─── Most watched stat ───────────────────────────────────────────────────── */
+
+.channel-page__stat--most-watched {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 320px;
+}
+
+.channel-page__stat-label {
+    color: var(--text-3);
+    white-space: nowrap;
+}
+
+.channel-page__stat-video-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-2);
+    font-weight: 500;
+}
+
+/* ─── Top tag pills ───────────────────────────────────────────────────────── */
+
+.channel-page__top-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.channel-page__tag-pill {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.01em;
 }
 
 /* ─── Main ────────────────────────────────────────────────────────────────── */

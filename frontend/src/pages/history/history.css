@@ -26,11 +26,126 @@
 .history-page__clear-btn {
     color: var(--text-2) !important;
     gap: 6px;
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
 }
 
 .history-page__clear-btn:hover {
     color: #f87171 !important;
+}
+
+/* ─── Controls (search + period filter) ───────────────────────────────────── */
+
+.history-page__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.history-page__search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 180px;
+    max-width: 320px;
+}
+
+.history-page__search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-3);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.history-page__search {
+    width: 100%;
+    padding: 6px 32px 6px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color var(--duration-default);
+}
+
+.history-page__search::placeholder {
+    color: var(--text-3);
+}
+
+.history-page__search:focus {
+    border-color: var(--accent);
+}
+
+.history-page__search-clear {
+    position: absolute;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: color var(--duration-default);
+}
+
+.history-page__search-clear:hover {
+    color: var(--text);
+}
+
+.history-page__periods {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.history-page__period-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background var(--duration-default), color var(--duration-default), border-color var(--duration-default);
+}
+
+.history-page__period-btn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.history-page__period-btn--active {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+}
+
+.history-page__period-btn--active:hover {
+    background: var(--accent-2);
+    color: var(--accent-fg);
+    border-color: var(--accent-2);
+}
+
+/* ─── Modal footer ─────────────────────────────────────────────────────────── */
+
+.history-page__modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.history-page__modal-body {
+    font-size: 0.9375rem;
+    color: var(--text-2);
+    margin: 0;
+    line-height: 1.5;
 }
 
 /* ─── Content ─────────────────────────────────────────────────────────────── */
@@ -80,11 +195,13 @@
 .history-page__remove-btn {
     flex-shrink: 0;
     color: var(--text-3) !important;
-    opacity: 0;
-    transition: opacity 0.15s, color 0.15s;
+    opacity: var(--opacity-ghost);
+    transition: opacity var(--duration-default), color var(--duration-default);
 }
 
-.history-page__item:hover .history-page__remove-btn {
+.history-page__item:hover .history-page__remove-btn,
+.history-page__remove-btn:focus-visible,
+.history-page__remove-btn--touch {
     opacity: 1;
 }
 
