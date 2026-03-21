@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Home, Clapperboard, History, ListVideo, Clock, ThumbsUp, User } from 'lucide-react';
+import { Home, Clapperboard, History, Clock, ThumbsUp, User, ListVideo } from 'lucide-react';
 import { ROUTES } from '@utils/routes';
-import { Tooltip } from '@ui';
+import { useAppSelector } from '@store';
+import { useSubscription } from '@context/useSubscription';
+import { Tooltip, Avatar } from '@ui';
 import './sidebar.css';
 
 /**
@@ -37,11 +39,11 @@ const MAIN_NAV = [
 ] as const;
 
 const YOU_NAV = [
-    { to: ROUTES.HISTORY, icon: History, labelKey: 'nav.history', end: false },
-    { to: ROUTES.PLAYLISTS, icon: ListVideo, labelKey: 'nav.playlists', end: false },
-    { to: ROUTES.WATCH_LATER, icon: Clock, labelKey: 'nav.watch_later', end: false },
-    { to: ROUTES.LIKED, icon: ThumbsUp, labelKey: 'nav.liked_videos', end: false },
-    { to: ROUTES.PROFILE, icon: User, labelKey: 'nav.your_videos', end: false },
+    { to: ROUTES.HISTORY,     icon: History,   labelKey: 'nav.history',     end: false },
+    { to: ROUTES.PLAYLISTS,   icon: ListVideo, labelKey: 'nav.playlists',   end: false },
+    { to: ROUTES.WATCH_LATER, icon: Clock,     labelKey: 'nav.watch_later', end: false },
+    { to: ROUTES.LIKED,       icon: ThumbsUp,  labelKey: 'nav.liked_videos', end: false },
+    { to: ROUTES.PROFILE,     icon: User,      labelKey: 'nav.your_videos', end: false },
 ] as const;
 
 interface SidebarItemProps {
@@ -82,6 +84,51 @@ function SidebarItem({ item }: SidebarItemProps) {
     );
 }
 
+function SubscriptionsSection() {
+    const { t } = useTranslation();
+    const { subscribedSet } = useSubscription();
+    const videos = useAppSelector(s => s.video.videos);
+
+    const channels = useMemo(() => {
+        const seen = new Set<string>();
+        const result: { id: string; name: string }[] = [];
+        for (const video of videos) {
+            const isChannelSubscribed = subscribedSet.has(video.channelId);
+            const isAlreadySeen = seen.has(video.channelId);
+            if (!isChannelSubscribed || isAlreadySeen) { continue; }
+            seen.add(video.channelId);
+            result.push({ id: video.channelId, name: video.channel });
+        }
+        return result;
+    }, [videos, subscribedSet]);
+
+    const hasSubscriptions = channels.length > 0;
+    if (!hasSubscriptions) { return null; }
+
+    return (
+        <div className="app-sidebar__section">
+            <span className="app-sidebar__section-label">{t('nav.subscriptions')}</span>
+            <ul className="app-sidebar__list">
+                {channels.map(ch => {
+                    const channelPath = ROUTES.CHANNEL.replace(':id', ch.id);
+                    return (
+                        <li key={ch.id}>
+                            <Tooltip content={ch.name} side="right">
+                                <SidebarLink to={channelPath} end={false} aria-label={ch.name}>
+                                    <span className="app-sidebar__icon-chip">
+                                        <Avatar name={ch.name} size="sm" />
+                                    </span>
+                                    <span className="app-sidebar__label">{ch.name}</span>
+                                </SidebarLink>
+                            </Tooltip>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
+
 interface AppSidebarProps {
     collapsed: boolean;
     hidden?: boolean;
@@ -105,6 +152,8 @@ export default function AppSidebar({ collapsed, hidden }: AppSidebarProps) {
                     {YOU_NAV.map(item => <SidebarItem key={item.to} item={item} />)}
                 </ul>
             </div>
+
+            <SubscriptionsSection />
         </nav>
     );
 }

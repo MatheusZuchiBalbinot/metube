@@ -23,64 +23,40 @@
     min-width: 0;
 }
 
-/* ─── Ambient orb animations ─────────────────────────────────────────────── */
-
-@keyframes orb-float-a {
-    0%,  100% { transform: translate(0,    0)    scale(1);    }
-    33%        { transform: translate(2%,  -3%)   scale(1.04); }
-    66%        { transform: translate(-2%,  2%)   scale(0.97); }
+.app-layout__content--full {
+    display: flex;
+    flex-direction: column;
 }
 
-@keyframes orb-float-b {
-    0%,  100% { transform: translate(0,    0)    scale(1);    }
-    33%        { transform: translate(-3%,  2%)   scale(1.05); }
-    66%        { transform: translate(2%,  -2%)   scale(0.96); }
-}
+/* ─── Unified parallax background ───────────────────────────────────────── */
 
-@keyframes orb-float-c {
-    0%,  100% { transform: translate(0,    0)    scale(1);    opacity: 0.7; }
-    50%        { transform: translate(1%,  -2%)   scale(1.06); opacity: 1;   }
-}
-
-/* ─── Ambient radial gradient (global, covers full viewport incl. header + sidebar) */
-
-.app-layout::before,
-.app-layout::after {
-    content: '';
+.app-layout__bg {
     position: fixed;
     inset: 0;
-    pointer-events: none;
     z-index: -1;
-}
-
-.app-layout::before {
-    background: radial-gradient(ellipse 65% 55% at 5% 95%, color-mix(in srgb, var(--accent) 22%, transparent), transparent);
-    animation: orb-float-a 18s ease-in-out infinite;
-    will-change: transform;
-}
-
-.app-layout::after {
-    background: radial-gradient(ellipse 55% 45% at 95% 5%, color-mix(in srgb, var(--accent) 14%, transparent), transparent);
-    animation: orb-float-b 22s ease-in-out infinite;
-    will-change: transform;
-}
-
-/* Third ambient orb — centered-right, subtle */
-
-.app-layout__orb {
-    position: fixed;
-    inset: 0;
     pointer-events: none;
-    z-index: -1;
-    background: radial-gradient(ellipse 40% 35% at 65% 50%, color-mix(in srgb, var(--accent) 8%, transparent), transparent);
-    animation: orb-float-c 28s ease-in-out infinite;
-    will-change: transform, opacity;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .app-layout::before,
-    .app-layout::after,
-    .app-layout__orb {
-        animation: none;
-    }
+/*
+ * Single gradient orb anchored at bottom-left (sidebar origin).
+ * Extends ~55 vw horizontally (to the horizontal center of most viewports)
+ * and ~65 vh vertically upward.
+ * Parallax transform is applied inline via JS on mousemove.
+ */
+.app-layout__bg-orb {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 55vw;
+    height: 65vh;
+    background: radial-gradient(
+        ellipse 100% 100% at 0% 100%,
+        color-mix(in srgb, var(--accent) 22%, transparent)  0%,
+        color-mix(in srgb, var(--accent) 10%, transparent) 38%,
+        transparent                                         68%
+    );
+}
+
+:root[data-mode='light'] .app-layout__bg-orb {
+    opacity: 0.4;
 }

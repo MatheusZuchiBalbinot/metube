@@ -1,35 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Plus, Bell, Menu, LogOut, Moon, Sun, Search } from 'lucide-react';
+import { Play, Plus, Bell, Menu, LogOut, Search, Clock, X } from 'lucide-react';
 import { useAuth } from '@context/useAuth';
-import { useTheme } from '@context/useTheme';
 import { useVideo } from '@context/useVideo';
-import type { ThemeColor, ThemeMode } from '@utils/themes';
-import { STORAGE_KEYS } from '@utils/storageKeys';
-import { triggerThemeRipple } from '@utils/themeRipple';
 import { ROUTES } from '@utils/routes';
+import { useClickOutside } from '@utils/useClickOutside';
+import { useSearch } from '@context/searchContext';
+import { useAppDispatch, useAppSelector } from '@store';
+import { searchActions } from '@store/searchSlice';
 import { Avatar, Button, Input, Tooltip } from '@ui';
+import PreferencesPanel from '@components/preferences/preferences';
 import './header.css';
-import '../preferences/preferences.css';
-
-const COLORS: { key: ThemeColor; hex: string; label: string }[] = [
-    { key: 'violet', hex: '#7c3aed', label: 'Violet' },
-    { key: 'blue', hex: '#2563eb', label: 'Blue' },
-    { key: 'green', hex: '#059669', label: 'Green' },
-    { key: 'rose', hex: '#e11d48', label: 'Rose' },
-    { key: 'amber', hex: '#d97706', label: 'Amber' },
-];
-
-const MODES: { key: ThemeMode; icon: React.ReactNode; labelKey: string }[] = [
-    { key: 'dark', icon: <Moon size={13} />, labelKey: 'preferences.dark' },
-    { key: 'light', icon: <Sun size={13} />, labelKey: 'preferences.light' },
-];
-
-const LANGUAGES = [
-    { code: 'en', label: 'EN', name: 'English' },
-    { code: 'pt', label: 'PT', name: 'Português' },
-];
 
 interface AppHeaderProps {
     onToggleSidebar: () => void
@@ -37,18 +19,23 @@ interface AppHeaderProps {
 
 // eslint-disable-next-line complexity
 export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { user, signOut } = useAuth();
-    const { mode, color, setMode, setColor } = useTheme();
     const navigate = useNavigate();
 
-    const { openUploadModal, autoplay, setAutoplay } = useVideo();
+    const dispatch = useAppDispatch();
+    const recentSearches = useAppSelector(s => s.search.recentSearches);
+    const { openUploadModal } = useVideo();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [scrolled, setScrolled] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [recentDropdownOpen, setRecentDropdownOpen] = useState(false);
 
-    const currentLang = i18n.language.split('-')[0];
+    const { registerSearchInput } = useSearch();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const searchWrapRef = useRef<HTMLDivElement>(null);
+
+    const isRecentDropdownVisible = recentDropdownOpen && recentSearches.length > 0 && searchQuery.trim() === '';
 
     const handleScroll = useCallback(() => {
         setScrolled(window.scrollY > 24);
@@ -71,28 +58,57 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, []);
 
-    function changeLanguage(code: string) {
-        i18n.changeLanguage(code);
-        localStorage.setItem(STORAGE_KEYS.LANGUAGE, code);
-    }
+    useClickOutside(searchWrapRef, () => setRecentDropdownOpen(false), recentDropdownOpen);
 
     async function handleLogout() {
         await signOut();
         navigate(ROUTES.LOGIN, { replace: true });
     }
 
-    function handleSearchSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-        e.preventDefault();
-        const trimmed = searchQuery.trim();
+    function submitSearch(query: string) {
+        const trimmed = query.trim();
         const hasQuery = trimmed.length > 0;
         if (!hasQuery) {
             return;
         }
+        dispatch(searchActions.addRecentSearch(trimmed));
+        setRecentDropdownOpen(false);
         navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
     }
 
+    function handleSearchSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+        e.preventDefault();
+        submitSearch(searchQuery);
+    }
+
+    function handleSearchIconClick() {
+        submitSearch(searchQuery);
+    }
+
+    function handleRecentItemClick(term: string) {
+        setSearchQuery(term);
+        submitSearch(term);
+    }
+
+    function handleRemoveRecent(e: React.MouseEvent, term: string) {
+        e.stopPropagation();
+        dispatch(searchActions.removeRecentSearch(term));
+    }
+
+    function handleSearchFocus() {
+        setRecentDropdownOpen(true);
+    }
+
+    function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setSearchQuery(e.target.value);
+        const isTyping = e.target.value.length > 0;
+        if (isTyping) {
+            setRecentDropdownOpen(false);
+        }
+    }
+
     return (
-        <header className={['app-header', scrolled ? 'app-header--scrolled' : ''].filter(Boolean).join(' ')}>
+        <header className="app-header">
             <div className="app-header__left">
                 <Tooltip content={t('nav.toggle_sidebar')} side="bottom">
                     <Button
@@ -114,16 +130,53 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 </div>
             </div>
 
-            <div className="app-header__search">
+            <div className="app-header__search" ref={searchWrapRef}>
                 <form className="app-header__search-form" onSubmit={handleSearchSubmit}>
                     <Input
-                        icon={<Search size={15} />}
-                        placeholder={t('video.search_placeholder')}
+                        ref={registerSearchInput}
+                        icon={
+                            <Search
+                                size={15}
+                                style={{ cursor: 'pointer' }}
+                                onClick={handleSearchIconClick}
+                            />
+                        }
+                        placeholder={t('header.searchPlaceholder', 'Search videos, channels, tags...')}
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={handleSearchChange}
+                        onFocus={handleSearchFocus}
                         className="app-header__search-input"
                     />
                 </form>
+
+                {isRecentDropdownVisible && (
+                    <div className="app-header__recent-dropdown" role="listbox" aria-label={t('header.recentSearches', 'Recent searches')}>
+                        <p className="app-header__recent-label">{t('header.recentSearches', 'Recent searches')}</p>
+                        {recentSearches.map(term => (
+                            <div
+                                key={term}
+                                className="app-header__recent-item"
+                                role="option"
+                                aria-selected={false}
+                                onClick={() => handleRecentItemClick(term)}
+                            >
+                                <Clock size={13} className="app-header__recent-icon" />
+                                <span className="app-header__recent-text">{term}</span>
+                                <Tooltip content={t('header.removeRecent', 'Remove')} side="right">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="app-header__recent-remove"
+                                        aria-label={t('header.removeRecent', 'Remove')}
+                                        onClick={e => handleRemoveRecent(e, term)}
+                                    >
+                                        <X size={12} />
+                                    </Button>
+                                </Tooltip>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="app-header__right">
@@ -173,81 +226,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
                             <div className="app-header__dropdown-sep" />
 
-                            <div className="prefs-section">
-                                <p className="prefs-label">{t('preferences.theme')}</p>
-                                <div className="prefs-toggle">
-                                    {MODES.map(({ key, icon, labelKey }) => (
-                                        <Button
-                                            key={key}
-                                            variant="ghost"
-                                            className={`prefs-toggle-btn${mode === key ? ' active' : ''}`}
-                                            onClick={async (e) => {
-                                                const isAlreadyActive = mode === key;
-                                                if (isAlreadyActive) { return; }
-                                                await triggerThemeRipple(e.currentTarget, key);
-                                                setMode(key);
-                                            }}
-                                            aria-label={t(labelKey)}
-                                            aria-pressed={mode === key}
-                                        >
-                                            {icon}
-                                            {t(labelKey)}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="prefs-section">
-                                <p className="prefs-label">{t('preferences.accent_color')}</p>
-                                <div className="prefs-colors">
-                                    {COLORS.map(({ key, hex, label }) => (
-                                        <Tooltip key={key} content={label} side="bottom">
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className={`prefs-swatch${color === key ? ' selected' : ''}`}
-                                                style={{ background: hex }}
-                                                onClick={() => setColor(key)}
-                                                aria-label={label}
-                                                aria-pressed={color === key}
-                                            />
-                                        </Tooltip>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="prefs-section">
-                                <p className="prefs-label">{t('preferences.language')}</p>
-                                <div className="prefs-toggle">
-                                    {LANGUAGES.map(({ code, label, name }) => (
-                                        <Button
-                                            key={code}
-                                            variant="ghost"
-                                            className={`prefs-toggle-btn${currentLang === code ? ' active' : ''}`}
-                                            onClick={() => changeLanguage(code)}
-                                            aria-label={name}
-                                            aria-pressed={currentLang === code}
-                                            title={name}
-                                        >
-                                            {label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="prefs-section">
-                                <div className="prefs-autoplay-row">
-                                    <p className="prefs-label">{t('preferences.autoplay')}</p>
-                                    <button
-                                        className={['prefs-autoplay-toggle', autoplay ? 'prefs-autoplay-toggle--on' : ''].filter(Boolean).join(' ')}
-                                        onClick={() => setAutoplay(!autoplay)}
-                                        aria-pressed={autoplay}
-                                        aria-label={t('preferences.autoplay')}
-                                    >
-                                        <span className="prefs-autoplay-thumb" />
-                                    </button>
-                                </div>
-                            </div>
+                            <PreferencesPanel inline />
 
                             <div className="app-header__dropdown-sep" />
 

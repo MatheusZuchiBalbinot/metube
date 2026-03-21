@@ -3,23 +3,24 @@
 .app-sidebar {
     width: var(--sidebar-width, 220px);
     flex-shrink: 0;
-    background: color-mix(in srgb, var(--surface) 55%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: transparent;
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
     border-right: 1px solid var(--border);
     padding: 10px 0;
     position: sticky;
     top: 58px;
+    z-index: var(--z-sidebar);
     height: calc(100dvh - 58px);
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: contents;
 }
 
 :root[data-mode='light'] .app-sidebar {
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    background: color-mix(in srgb, var(--surface) 40%, transparent);
 }
 
 /* ─── Collapsed state ─────────────────────────────────────────────────────── */
@@ -45,22 +46,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 10px 6px 6px;
+    padding: 7px 10px 7px 8px;
     border-radius: var(--radius-sm);
     color: var(--text-2);
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
     text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
-    transition: color 0.15s, background 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: color var(--duration-default), background var(--duration-default), transform 0.18s var(--ease-bounce);
 }
 
 /* Hover */
 .app-sidebar__item:not(.app-sidebar__item--active):hover {
     color: var(--text);
     background: var(--surface-2);
-    transform: translateX(3px);
+    transform: translateX(2px);
 }
 
 /* Active */
@@ -113,7 +114,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: background 0.15s, box-shadow 0.15s;
+    transition: background var(--duration-default), box-shadow var(--duration-default);
 }
 
 .app-sidebar__item--active .app-sidebar__icon-chip {
@@ -140,14 +141,14 @@
 .app-sidebar__section-label {
     display: block;
     padding: 6px 20px 4px;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-3);
     white-space: nowrap;
     overflow: hidden;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-default);
 }
 
 /* ─── Label ───────────────────────────────────────────────────────────────── */
@@ -155,7 +156,7 @@
 .app-sidebar__label {
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-default);
 }
 
 /* ─── Collapsed — icon only ───────────────────────────────────────────────── */
