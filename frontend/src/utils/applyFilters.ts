@@ -15,6 +15,12 @@ export interface FilterState {
     sortBy: SortBy
 }
 
+export const SORT_OPTIONS: { value: SortBy; labelKey: string }[] = [
+    { value: SortBy.RECENT, labelKey: 'video.sort_recent' },
+    { value: SortBy.VIEWS,  labelKey: 'video.sort_views' },
+    { value: SortBy.AZ,     labelKey: 'video.sort_az' },
+];
+
 export class VideoFilter {
     static emptyState(): FilterState {
         return { tags: [], year: null, dateFrom: null, dateTo: null, sortBy: SortBy.RECENT };
