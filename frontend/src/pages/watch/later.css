@@ -26,6 +26,10 @@
     margin: 0;
 }
 
+.watch-later-page__filters {
+    display: flex;
+}
+
 .watch-later-page__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -51,13 +55,15 @@
     z-index: 2;
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
     color: var(--text-2) !important;
-    opacity: 0;
-    transition: opacity 0.15s, color 0.15s;
+    opacity: var(--opacity-ghost);
+    transition: opacity var(--duration-default), color var(--duration-default);
 }
 
-.watch-later-page__item:hover .watch-later-page__remove-btn {
+.watch-later-page__item:hover .watch-later-page__remove-btn,
+.watch-later-page__remove-btn:focus-visible,
+.watch-later-page__remove-btn--touch {
     opacity: 1;
 }
 

@@ -1,17 +1,117 @@
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListVideo } from 'lucide-react';
+import { ListVideo, Plus } from 'lucide-react';
+import { usePlaylist } from '@context/usePlaylist';
+import { useVideo } from '@context/useVideo';
+import PlaylistCard from '@components/playlist/card';
+import EmptyState from '@ui/empty/empty';
+import Button from '@ui/button/button';
+import Modal from '@ui/modal/modal';
+import Input from '@ui/input/input';
 import './playlists.css';
 
 export default function PlaylistsPage() {
     const { t } = useTranslation();
+    const { playlists, createPlaylist } = usePlaylist();
+    const { videos } = useVideo();
+
+    const [newModalOpen, setNewModalOpen] = useState(false);
+    const [newName, setNewName] = useState('');
+
+    const playlistsWithVideos = useMemo(() => {
+        return playlists.map(playlist => {
+            const resolvedVideos = (playlist.videoIds ?? [])
+                .map(id => videos.find(v => v.id === id))
+                .filter(v => v !== undefined);
+            return { playlist, videos: resolvedVideos };
+        });
+    }, [playlists, videos]);
+
+    const hasPlaylists = playlists.length > 0;
+
+    function handleOpenNewModal() {
+        setNewName('');
+        setNewModalOpen(true);
+    }
+
+    function handleCloseNewModal() {
+        setNewModalOpen(false);
+        setNewName('');
+    }
+
+    function handleCreatePlaylist() {
+        const trimmed = newName.trim();
+        const isEmpty = trimmed === '';
+        if (isEmpty) { return; }
+        createPlaylist(crypto.randomUUID(), trimmed);
+        handleCloseNewModal();
+    }
+
+    function handleInputKeyDown(e: React.KeyboardEvent) {
+        const isEnter = e.key === 'Enter';
+        if (isEnter) { handleCreatePlaylist(); }
+    }
 
     return (
         <div className="playlists-page">
-            <div className="playlists-page__empty">
-                <ListVideo size={40} strokeWidth={1.25} className="playlists-page__empty-icon" />
-                <p className="playlists-page__empty-title">{t('nav.playlists')}</p>
-                <p className="playlists-page__empty-text">{t('dashboard.coming_soon')}</p>
+            <div className="playlists-page__header">
+                <h1 className="playlists-page__title">{t('nav.playlists')}</h1>
+                <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Plus size={14} />}
+                    onClick={handleOpenNewModal}
+                >
+                    {t('playlist.new')}
+                </Button>
             </div>
+
+            {hasPlaylists ? (
+                <div className="playlists-page__list">
+                    {playlistsWithVideos.map(({ playlist, videos: resolved }) => (
+                        <PlaylistCard
+                            key={playlist.id}
+                            playlist={playlist}
+                            videos={resolved}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="playlists-page__empty-wrap">
+                    <EmptyState
+                        icon={<ListVideo size={40} strokeWidth={1.25} />}
+                        title={t('playlist.empty_title')}
+                        description={t('playlist.empty_desc')}
+                        actionLabel={t('playlist.new')}
+                        onAction={handleOpenNewModal}
+                    />
+                </div>
+            )}
+
+            <Modal
+                isOpen={newModalOpen}
+                onClose={handleCloseNewModal}
+                title={t('playlist.new')}
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={handleCloseNewModal}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button variant="primary" onClick={handleCreatePlaylist}>
+                            {t('playlist.create')}
+                        </Button>
+                    </>
+                }
+            >
+                <Input
+                    autoFocus
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    placeholder={t('playlist.name_placeholder')}
+                />
+            </Modal>
         </div>
     );
 }

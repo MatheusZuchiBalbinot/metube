@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Clock, Heart, Tag, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin } from 'lucide-react';
+import { Play, Clock, Heart, Tag, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { VideoFilter } from '@utils/applyFilters';
@@ -20,6 +20,27 @@ const TAB = {
     HISTORY: 'history',
 } as const;
 type Tab = typeof TAB[keyof typeof TAB];
+
+const HEATMAP_SHORT = 14;
+const HEATMAP_LONG = 30;
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatWatchTime(seconds: number): string {
+    const totalMinutes = Math.floor(seconds / 60);
+    const isLessThanHour = totalMinutes < 60;
+    if (isLessThanHour) {
+        return `${totalMinutes}m`;
+    }
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}h ${minutes}m`;
+}
+
+function formatHeatmapDate(dateStr: string): string {
+    const d = new Date(`${dateStr}T12:00:00Z`);
+    return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
 
 // eslint-disable-next-line complexity
 export default function ProfilePage() {
@@ -44,6 +65,12 @@ export default function ProfilePage() {
     const [editProfileOpen, setEditProfileOpen] = useState(false);
     const [editName, setEditName] = useState('');
     const [editBio, setEditBio] = useState('');
+
+    // UX-11: delete confirmation state
+    const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
+
+    // VISUAL-12: heatmap days toggle
+    const [heatmapDays, setHeatmapDays] = useState(HEATMAP_SHORT);
 
     const ownVideos = useMemo(
         () => videos.filter(v => v.channelId === channelId),
@@ -108,15 +135,15 @@ export default function ProfilePage() {
 
         const videosWatched = watchHistory.length;
 
-        let totalMinutes = 0;
-        for (const id of watchHistory) {
-            const pct = videoProgress[id] ?? 0;
-            totalMinutes += Math.round((pct / 100) * 10);
-        }
+        // VISUAL-11: accurate watch time using video duration
+        const totalWatchSeconds = watchHistory.reduce((sum, id) => {
+            const video = videos.find(v => v.id === id);
+            const duration = video?.duration ?? 600;
+            const progress = videoProgress[id] ?? 0;
+            return sum + (progress / 100) * duration;
+        }, 0);
 
-        const watchTimeStr = totalMinutes >= 60
-            ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
-            : `${totalMinutes}m`;
+        const watchTimeStr = formatWatchTime(totalWatchSeconds);
 
         const tagFreq = new Map<string, number>();
         for (const id of watchHistory) {
@@ -166,8 +193,8 @@ export default function ProfilePage() {
         return count;
     }, [isOwnProfile, watchEvents]);
 
-    // ─── Activity bars (last 14 days) ─────────────────────────────────────────
-    const activityBars = useMemo(() => {
+    // ─── Activity heatmap (configurable days) ─────────────────────────────────
+    const activityData = useMemo(() => {
         const isNotOwn = !isOwnProfile;
         if (isNotOwn) {
             return null;
@@ -180,8 +207,10 @@ export default function ProfilePage() {
         }
 
         const now = new Date();
+        const result: { key: string; dateLabel: string; count: number; pct: number }[] = [];
         const counts: number[] = [];
-        for (let i = 13; i >= 0; i--) {
+
+        for (let i = heatmapDays - 1; i >= 0; i--) {
             const d = new Date(now);
             d.setDate(d.getDate() - i);
             const key = d.toISOString().slice(0, 10);
@@ -189,8 +218,22 @@ export default function ProfilePage() {
         }
 
         const maxCount = Math.max(...counts, 1);
-        return counts.map(c => Math.round((c / maxCount) * 100));
-    }, [isOwnProfile, watchEvents]);
+
+        for (let i = heatmapDays - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            const count = eventsByDay.get(key) ?? 0;
+            result.push({
+                key,
+                dateLabel: formatHeatmapDate(key),
+                count,
+                pct: Math.round((count / maxCount) * 100),
+            });
+        }
+
+        return result;
+    }, [isOwnProfile, watchEvents, heatmapDays]);
 
     function handleTabChange(tab: Tab) {
         setActiveTab(tab);
@@ -236,6 +279,24 @@ export default function ProfilePage() {
         }
         updateProfile(editName.trim(), editBio.trim());
         setEditProfileOpen(false);
+    }
+
+    // UX-11: delete confirmation handlers
+    function handleDeleteClick(video: Video) {
+        setVideoToDelete(video);
+    }
+
+    function handleDeleteConfirm() {
+        const hasVideoToDelete = videoToDelete !== null;
+        if (!hasVideoToDelete) {
+            return;
+        }
+        deleteVideo(videoToDelete.id);
+        setVideoToDelete(null);
+    }
+
+    function handleDeleteCancel() {
+        setVideoToDelete(null);
     }
 
     const tabs: { key: Tab; label: string }[] = [
@@ -346,15 +407,49 @@ export default function ProfilePage() {
                         </div>
                     )}
 
-                    {activityBars && (
-                        <div className="profile-page__activity" aria-label={t('profile.activity')}>
-                            {activityBars.map((pct, i) => (
-                                <div
-                                    key={i}
-                                    className={['profile-page__activity-bar', pct > 0 ? 'profile-page__activity-bar--active' : ''].filter(Boolean).join(' ')}
-                                    style={{ '--bar-h': `${pct}%` } as React.CSSProperties}
-                                />
-                            ))}
+                    {/* VISUAL-12: heatmap with toggle, tooltip, and legend */}
+                    {activityData && (
+                        <div className="profile-page__heatmap-section">
+                            <div className="profile-page__heatmap-controls" aria-label={t('profile.activity')}>
+                                <span className="profile-page__heatmap-title">{t('profile.activity')}</span>
+                                <div className="profile-page__heatmap-toggle" role="group">
+                                    <button
+                                        className={['profile-page__heatmap-toggle-btn', heatmapDays === HEATMAP_SHORT ? 'profile-page__heatmap-toggle-btn--active' : ''].filter(Boolean).join(' ')}
+                                        onClick={() => setHeatmapDays(HEATMAP_SHORT)}
+                                        aria-pressed={heatmapDays === HEATMAP_SHORT}
+                                    >
+                                        {t('profile.heatmap_14d', '14d')}
+                                    </button>
+                                    <button
+                                        className={['profile-page__heatmap-toggle-btn', heatmapDays === HEATMAP_LONG ? 'profile-page__heatmap-toggle-btn--active' : ''].filter(Boolean).join(' ')}
+                                        onClick={() => setHeatmapDays(HEATMAP_LONG)}
+                                        aria-pressed={heatmapDays === HEATMAP_LONG}
+                                    >
+                                        {t('profile.heatmap_30d', '30d')}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="profile-page__activity" aria-label={t('profile.activity')}>
+                                {activityData.map(({ key, dateLabel, count, pct }) => (
+                                    <div
+                                        key={key}
+                                        className={['profile-page__activity-bar', pct > 0 ? 'profile-page__activity-bar--active' : ''].filter(Boolean).join(' ')}
+                                        style={{ '--bar-h': `${pct}%` } as React.CSSProperties}
+                                        title={`${dateLabel} · ${count} ${t('profile.heatmap_videos', 'videos')}`}
+                                        aria-label={`${dateLabel}: ${count} ${t('profile.heatmap_videos', 'videos')}`}
+                                        role="img"
+                                    />
+                                ))}
+                            </div>
+                            <div className="profile-page__heatmap-legend">
+                                <span className="profile-page__heatmap-legend-label">{t('profile.heatmap_less', 'Less')}</span>
+                                <div className="profile-page__heatmap-legend-swatches">
+                                    {[0, 1, 2, 3, 4].map(n => (
+                                        <span key={n} className={`profile-page__heatmap-swatch profile-page__heatmap-swatch--${n}`} />
+                                    ))}
+                                </div>
+                                <span className="profile-page__heatmap-legend-label">{t('profile.heatmap_more', 'More')}</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -396,7 +491,13 @@ export default function ProfilePage() {
                                 video={pinnedVideo}
                                 showActions={true}
                                 onEdit={handleEditOpen}
-                                onDelete={deleteVideo}
+                                onDelete={id => {
+                                    const video = videos.find(v => v.id === id);
+                                    const hasVideo = video !== undefined;
+                                    if (hasVideo) {
+                                        handleDeleteClick(video);
+                                    }
+                                }}
                             />
                         </div>
                     </div>
@@ -404,16 +505,34 @@ export default function ProfilePage() {
 
                 {hasVideos ? (
                     <div className="profile-page__grid">
-                        {filteredVideos.map((video, i) => (
-                            <VideoCard
-                                key={video.id}
-                                video={video}
-                                index={i}
-                                showActions={isOwnProfile && activeTab === TAB.VIDEOS}
-                                onEdit={handleEditOpen}
-                                onDelete={deleteVideo}
-                            />
-                        ))}
+                        {filteredVideos.map((video, i) => {
+                            const isPinned = video.id === pinnedVideoId;
+                            const isVideosTabOwn = isOwnProfile && activeTab === TAB.VIDEOS;
+                            return (
+                                <div key={video.id} className="profile-page__card-wrapper">
+                                    {/* UX-12: pinned badge overlay */}
+                                    {isPinned && isVideosTabOwn && (
+                                        <div className="profile-page__pinned-badge" aria-label={t('video.pinned')}>
+                                            <Pin size={10} />
+                                            <span>{t('video.pinned')}</span>
+                                        </div>
+                                    )}
+                                    <VideoCard
+                                        video={video}
+                                        index={i}
+                                        showActions={isVideosTabOwn}
+                                        onEdit={handleEditOpen}
+                                        onDelete={id => {
+                                            const found = videos.find(v => v.id === id);
+                                            const hasFound = found !== undefined;
+                                            if (hasFound) {
+                                                handleDeleteClick(found);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="profile-page__empty">
@@ -501,6 +620,37 @@ export default function ProfilePage() {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* ─── UX-11: Delete confirmation modal ─── */}
+            <Modal
+                isOpen={videoToDelete !== null}
+                onClose={handleDeleteCancel}
+                title={t('video.delete')}
+                size="sm"
+                footer={
+                    <div className="profile-page__edit-footer">
+                        <Button type="button" variant="ghost" size="sm" onClick={handleDeleteCancel}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={handleDeleteConfirm}
+                            leftIcon={<Trash2 size={13} />}
+                        >
+                            {t('video.delete')}
+                        </Button>
+                    </div>
+                }
+            >
+                <p className="profile-page__delete-confirm-text">
+                    {t('profile.delete_confirm', {
+                        title: videoToDelete?.title ?? '',
+                        defaultValue: `Delete '{{title}}'? This cannot be undone.`,
+                    })}
+                </p>
             </Modal>
         </div>
     );

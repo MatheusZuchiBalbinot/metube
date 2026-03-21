@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX, ChevronDown, Info, X } from 'lucide-react';
-import VideoPlayer from '@components/video/player';
+import ReactionBtn from '@components/video/reactionBtn';
+import ShortPlayer from '@components/video/shortPlayer';
 import { useVideo } from '@context/useVideo';
 import { Avatar, Tooltip } from '@ui';
-import { TagColors } from '@utils/tagColors';
 import { Format } from '@utils/format';
+import TagBadge from '@components/tag/badge';
 import { ROUTES } from '@utils/routes';
+import { useBurstAnimation } from '@utils/useBurstAnimation';
 import './shorts.css';
 
 const MAX_TAGS = 3;
@@ -28,7 +30,7 @@ interface ShortItemProps {
     onVolumeChange: (volume: number) => void;
 }
 
-function ShortItem({
+const ShortItem = memo(function ShortItem({
     video, index, total, isActive, videoRef, onVideoMounted,
     onEnded, onScrollNext,
     muted, volume, onMuteChange, onVolumeChange,
@@ -37,8 +39,8 @@ function ShortItem({
     const navigate = useNavigate();
     const { likedVideos, dislikedVideos, savedVideos, likeVideo, dislikeVideo, saveVideo, openTagView } = useVideo();
 
-    const [likeAnimating, setLikeAnimating] = useState(false);
-    const [dislikeAnimating, setDislikeAnimating] = useState(false);
+    const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
+    const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
     const [showVolumeSlider, setShowVolumeSlider] = useState(false);
     const [showDescription, setShowDescription] = useState(false);
 
@@ -70,15 +72,13 @@ function ShortItem({
     function handleLike(e: React.MouseEvent) {
         e.stopPropagation();
         likeVideo(video.id);
-        setLikeAnimating(true);
-        setTimeout(() => setLikeAnimating(false), 400);
+        triggerLikeAnimation();
     }
 
     function handleDislike(e: React.MouseEvent) {
         e.stopPropagation();
         dislikeVideo(video.id);
-        setDislikeAnimating(true);
-        setTimeout(() => setDislikeAnimating(false), 400);
+        triggerDislikeAnimation();
     }
 
     function handleSave(e: React.MouseEvent) {
@@ -107,6 +107,20 @@ function ShortItem({
         setShowDescription(false);
     }
 
+    // Close description panel on Escape key
+    useEffect(() => {
+        const isDescClosed = !showDescription;
+        if (isDescClosed) { return; }
+
+        function handleKeyDown(e: KeyboardEvent) {
+            const isPressedEscape = e.key === 'Escape';
+            if (isPressedEscape) { setShowDescription(false); }
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showDescription]);
+
     const visibleTags = video.tags.filter(tag => tag !== 'shorts').slice(0, MAX_TAGS);
     const volumeFill = `${effectiveVolume * 100}%`;
 
@@ -114,8 +128,7 @@ function ShortItem({
         <div className="shorts-page__item">
             {/* Portrait stage — constrained to portrait width */}
             <div className="shorts-page__stage">
-            <VideoPlayer
-                mode="short"
+            <ShortPlayer
                 videoRef={videoRef}
                 src={video.videoUrl ?? ''}
                 captureKeyboard={isActive}
@@ -148,19 +161,9 @@ function ShortItem({
 
                     {visibleTags.length > 0 && (
                         <div className="shorts-page__tags">
-                            {visibleTags.map(tag => {
-                                const palette = TagColors.palette(tag);
-                                return (
-                                    <button
-                                        key={tag}
-                                        className="shorts-page__tag"
-                                        style={{ background: palette.bg, color: palette.color }}
-                                        onClick={e => handleTagClick(e, tag)}
-                                    >
-                                        #{tag}
-                                    </button>
-                                );
-                            })}
+                            {visibleTags.map(tag => (
+                                <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
+                            ))}
                         </div>
                     )}
                 </div>
@@ -199,19 +202,9 @@ function ShortItem({
                         </p>
                         {visibleTags.length > 0 && (
                             <div className="shorts-page__tags">
-                                {visibleTags.map(tag => {
-                                    const palette = TagColors.palette(tag);
-                                    return (
-                                        <button
-                                            key={tag}
-                                            className="shorts-page__tag"
-                                            style={{ background: palette.bg, color: palette.color }}
-                                            onClick={e => handleTagClick(e, tag)}
-                                        >
-                                            #{tag}
-                                        </button>
-                                    );
-                                })}
+                                {visibleTags.map(tag => (
+                                    <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
+                                ))}
                             </div>
                         )}
                     </div>
@@ -223,52 +216,48 @@ function ShortItem({
                         <ChevronDown size={18} />
                     </div>
                 )}
-            </VideoPlayer>
+            </ShortPlayer>
             </div>{/* .shorts-page__stage */}
 
             {/* Side action panel — outside the stage */}
             <div className="shorts-page__side">
-                <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="right">
-                    <button
-                        className={['shorts-page__action', isLiked ? 'shorts-page__action--liked' : '', likeAnimating ? 'shorts-page__action--burst' : ''].filter(Boolean).join(' ')}
-                        aria-label={isLiked ? t('video.liked') : t('video.like')}
-                        aria-pressed={isLiked}
-                        onClick={handleLike}
-                    >
-                        <span className="shorts-page__action-icon">
-                            <ThumbsUp size={22} strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
-                        </span>
-                        <span className="shorts-page__action-label">{t('video.like')}</span>
-                    </button>
-                </Tooltip>
+                <ReactionBtn
+                    isActive={isLiked}
+                    isAnimating={likeAnimating}
+                    icon={<ThumbsUp size={22} strokeWidth={1.75} fill="none" />}
+                    iconActive={<ThumbsUp size={22} strokeWidth={1.75} fill="currentColor" />}
+                    label={t('video.like')}
+                    activeLabel={t('video.liked')}
+                    className="shorts-page__action"
+                    activeClass="shorts-page__action--liked"
+                    tooltipSide="right"
+                    onClick={handleLike}
+                />
 
-                <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="right">
-                    <button
-                        className={['shorts-page__action', isDisliked ? 'shorts-page__action--disliked' : '', dislikeAnimating ? 'shorts-page__action--burst' : ''].filter(Boolean).join(' ')}
-                        aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
-                        aria-pressed={isDisliked}
-                        onClick={handleDislike}
-                    >
-                        <span className="shorts-page__action-icon">
-                            <ThumbsDown size={22} strokeWidth={1.75} fill={isDisliked ? 'currentColor' : 'none'} />
-                        </span>
-                        <span className="shorts-page__action-label">{t('video.dislike')}</span>
-                    </button>
-                </Tooltip>
+                <ReactionBtn
+                    isActive={isDisliked}
+                    isAnimating={dislikeAnimating}
+                    icon={<ThumbsDown size={22} strokeWidth={1.75} fill="none" />}
+                    iconActive={<ThumbsDown size={22} strokeWidth={1.75} fill="currentColor" />}
+                    label={t('video.dislike')}
+                    activeLabel={t('video.disliked')}
+                    className="shorts-page__action"
+                    activeClass="shorts-page__action--disliked"
+                    tooltipSide="right"
+                    onClick={handleDislike}
+                />
 
-                <Tooltip content={isSaved ? t('video.saved') : t('video.save')} side="right">
-                    <button
-                        className={['shorts-page__action', isSaved ? 'shorts-page__action--saved' : ''].filter(Boolean).join(' ')}
-                        aria-label={isSaved ? t('video.saved') : t('video.save')}
-                        aria-pressed={isSaved}
-                        onClick={handleSave}
-                    >
-                        <span className="shorts-page__action-icon">
-                            <Bookmark size={22} strokeWidth={1.75} fill={isSaved ? 'currentColor' : 'none'} />
-                        </span>
-                        <span className="shorts-page__action-label">{t('video.save')}</span>
-                    </button>
-                </Tooltip>
+                <ReactionBtn
+                    isActive={isSaved}
+                    icon={<Bookmark size={22} strokeWidth={1.75} fill="none" />}
+                    iconActive={<Bookmark size={22} strokeWidth={1.75} fill="currentColor" />}
+                    label={t('video.save')}
+                    activeLabel={t('video.saved')}
+                    className="shorts-page__action"
+                    activeClass="shorts-page__action--saved"
+                    tooltipSide="right"
+                    onClick={handleSave}
+                />
 
                 {/* Description button */}
                 <Tooltip content={t('shorts.description')} side="right">
@@ -278,10 +267,10 @@ function ShortItem({
                         aria-pressed={showDescription}
                         onClick={handleDescriptionToggle}
                     >
-                        <span className="shorts-page__action-icon">
+                        <span className="rbtn__icon">
                             <Info size={22} strokeWidth={1.75} />
                         </span>
-                        <span className="shorts-page__action-label">{t('shorts.description')}</span>
+                        <span className="rbtn__label">{t('shorts.description')}</span>
                     </button>
                 </Tooltip>
 
@@ -293,7 +282,7 @@ function ShortItem({
                             aria-label={muted ? t('shorts.unmute') : t('shorts.mute')}
                             onClick={handleVolumeToggle}
                         >
-                            <span className="shorts-page__action-icon">
+                            <span className="rbtn__icon">
                                 {effectiveVolume === 0
                                     ? <VolumeX size={20} strokeWidth={1.75} />
                                     : effectiveVolume < 0.5
@@ -335,7 +324,7 @@ function ShortItem({
             </div>
         </div>
     );
-}
+});
 
 export default function ShortsPage() {
     const { t } = useTranslation();
@@ -356,7 +345,10 @@ export default function ShortsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const shorts = publishedVideos.filter(v => v.tags.includes('shorts'));
+    const shorts = useMemo(
+        () => publishedVideos.filter(v => v.tags.includes('shorts')),
+        [publishedVideos],
+    );
 
     // One stable ref per short item, created once
     const videoRefsArray = useRef<React.RefObject<HTMLVideoElement | null>[]>([]);
@@ -458,26 +450,29 @@ export default function ShortsPage() {
                     if (!videoRefsArray.current[index]) {
                         videoRefsArray.current[index] = { current: null };
                     }
+                    const isWithinWindow = Math.abs(index - activeIndex) <= 2;
                     return (
                         <div
                             key={video.id}
                             ref={el => { itemRefs.current[index] = el; }}
                             style={{ height: '100%' }}
                         >
-                            <ShortItem
-                                video={video}
-                                index={index}
-                                total={shorts.length}
-                                isActive={index === activeIndex}
-                                videoRef={videoRefsArray.current[index]}
-                                onVideoMounted={el => handleVideoMounted(index, el)}
-                                onEnded={() => scrollToIndex(index + 1)}
-                                onScrollNext={() => scrollToIndex(index + 1)}
-                                muted={muted}
-                                volume={volume}
-                                onMuteChange={setMuted}
-                                onVolumeChange={setVolume}
-                            />
+                            {isWithinWindow && (
+                                <ShortItem
+                                    video={video}
+                                    index={index}
+                                    total={shorts.length}
+                                    isActive={index === activeIndex}
+                                    videoRef={videoRefsArray.current[index]}
+                                    onVideoMounted={el => handleVideoMounted(index, el)}
+                                    onEnded={() => scrollToIndex(index + 1)}
+                                    onScrollNext={() => scrollToIndex(index + 1)}
+                                    muted={muted}
+                                    volume={volume}
+                                    onMuteChange={setMuted}
+                                    onVolumeChange={setVolume}
+                                />
+                            )}
                         </div>
                     );
                 })}
