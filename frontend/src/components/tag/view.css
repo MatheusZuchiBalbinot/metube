@@ -18,7 +18,7 @@
 }
 
 .tag-view__back {
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
     width: fit-content;
 }
 
@@ -32,7 +32,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     padding: 4px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     letter-spacing: 0.01em;
     line-height: 1.4;
 }

@@ -15,14 +15,14 @@
     height: auto;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-2);
     padding: 2px 10px;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.12s;
+    transition: all var(--duration-fast);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -56,14 +56,14 @@
     gap: 4px;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-2);
     padding: 2px 10px;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.12s;
+    transition: all var(--duration-fast);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -82,7 +82,7 @@
 }
 
 .filter-panel__chevron {
-    transition: transform 0.15s;
+    transition: transform var(--duration-default);
     flex-shrink: 0;
 }
 
@@ -106,7 +106,7 @@
     flex-direction: column;
     gap: 16px;
     z-index: 100;
-    animation: panelIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: panelIn var(--duration-default) var(--ease-out);
 }
 
 .filter-panel__dropdown-section {
@@ -142,7 +142,7 @@
     padding: 8px 32px 8px 10px;
     outline: none;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: border-color var(--duration-default);
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -155,7 +155,7 @@
 
 .filter-panel__year-select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    box-shadow: var(--focus-ring);
 }
 
 /* ─── Date inputs ──────────────────────────────────────────────────────────── */
@@ -198,7 +198,7 @@
     cursor: pointer;
     padding: 0;
     font-family: inherit;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-default);
 }
 
 .filter-panel__dropdown-clear:hover {
@@ -212,7 +212,7 @@
     align-items: center;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     overflow: hidden;
     flex-shrink: 0;
     margin-left: auto;
@@ -229,7 +229,7 @@
     color: var(--text-2);
     padding: 3px 12px;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition: background var(--duration-fast), color var(--duration-fast);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -262,7 +262,7 @@
     border-radius: 50%;
     color: var(--text-3);
     cursor: pointer;
-    transition: all 0.12s;
+    transition: all var(--duration-fast);
     flex-shrink: 0;
 }
 

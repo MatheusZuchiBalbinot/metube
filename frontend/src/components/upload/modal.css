@@ -44,7 +44,7 @@
     outline: none;
     resize: vertical;
     min-height: 80px;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-default), background var(--duration-default), box-shadow var(--duration-default);
 }
 
 .upload-modal__textarea::placeholder {
@@ -58,7 +58,7 @@
 
 .upload-modal__textarea:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    box-shadow: var(--focus-ring);
     background: var(--surface-3);
 }
 
