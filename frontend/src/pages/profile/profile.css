@@ -151,27 +151,78 @@
 .profile-page__top-tag {
     font-size: 0.75rem;
     font-weight: 500;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     padding: 2px 9px;
 }
 
-/* ─── Activity chart ─────────────────────────────────────────────────────────── */
+/* ─── Activity heatmap ───────────────────────────────────────────────────────── */
+
+.profile-page__heatmap-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.profile-page__heatmap-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-page__heatmap-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-page__heatmap-toggle {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+}
+
+.profile-page__heatmap-toggle-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    font-family: inherit;
+    padding: 2px 7px;
+    transition: color var(--duration-default), background var(--duration-default), border-color var(--duration-default);
+}
+
+.profile-page__heatmap-toggle-btn:hover {
+    color: var(--text);
+    border-color: var(--border-2);
+}
+
+.profile-page__heatmap-toggle-btn--active {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent);
+}
 
 .profile-page__activity {
     display: flex;
     align-items: flex-end;
     gap: 3px;
     height: 28px;
-    margin-top: 12px;
 }
 
 .profile-page__activity-bar {
-    width: 10px;
-    flex-shrink: 0;
+    flex: 1;
+    min-width: 0;
     border-radius: 2px;
     height: 3px;
     background: var(--surface-3);
-    transition: height 0.3s ease;
+    transition: height 0.3s ease, background var(--duration-slow);
+    cursor: default;
 }
 
 .profile-page__activity-bar--active {
@@ -182,6 +233,38 @@
 .profile-page__activity-bar--active:hover {
     background: var(--accent);
 }
+
+/* ─── Heatmap legend ─────────────────────────────────────────────────────────── */
+
+.profile-page__heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.profile-page__heatmap-legend-label {
+    font-size: 0.6875rem;
+    color: var(--text-3);
+    font-weight: 400;
+}
+
+.profile-page__heatmap-legend-swatches {
+    display: flex;
+    gap: 3px;
+}
+
+.profile-page__heatmap-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.profile-page__heatmap-swatch--0 { background: var(--surface-3); }
+.profile-page__heatmap-swatch--1 { background: color-mix(in srgb, var(--accent-subtle) 60%, var(--surface-3)); }
+.profile-page__heatmap-swatch--2 { background: var(--accent-subtle); }
+.profile-page__heatmap-swatch--3 { background: color-mix(in srgb, var(--accent) 50%, var(--accent-subtle)); }
+.profile-page__heatmap-swatch--4 { background: var(--accent); }
 
 /* ─── Tabs ─────────────────────────────────────────────────────────────────── */
 
@@ -205,7 +288,7 @@
     font-weight: 500;
     color: var(--text-2);
     margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color var(--duration-default), border-color var(--duration-default);
 }
 
 .profile-page__tabs .btn:hover {
@@ -266,6 +349,30 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
+}
+
+/* ─── UX-12: Card wrapper for pinned badge overlay ──────────────────────────── */
+
+.profile-page__card-wrapper {
+    position: relative;
+}
+
+.profile-page__pinned-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    padding: 3px 8px;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 1024px) {
@@ -329,7 +436,7 @@
     font-family: inherit;
     padding: 10px 12px;
     resize: vertical;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-default), box-shadow var(--duration-default);
     outline: none;
 }
 
@@ -339,7 +446,7 @@
 
 .profile-page__edit-textarea:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    box-shadow: var(--focus-ring);
 }
 
 .profile-page__edit-footer {
@@ -347,4 +454,13 @@
     justify-content: flex-end;
     gap: 8px;
     padding-top: 4px;
+}
+
+/* ─── UX-11: Delete confirmation text ──────────────────────────────────────── */
+
+.profile-page__delete-confirm-text {
+    font-size: 0.9375rem;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin: 0;
 }

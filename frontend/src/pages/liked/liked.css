@@ -28,12 +28,47 @@
     margin: 0;
 }
 
+/* ─── Filters ─────────────────────────────────────────────────────────────── */
+
+.liked-page__filters {
+    display: flex;
+}
+
 /* ─── Grid ────────────────────────────────────────────────────────────────── */
 
 .liked-page__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
+}
+
+/* ─── Item ────────────────────────────────────────────────────────────────── */
+
+.liked-page__item {
+    position: relative;
+}
+
+.liked-page__unlike-btn {
+    position: absolute !important;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-full) !important;
+    color: var(--text-2) !important;
+    opacity: var(--opacity-ghost);
+    transition: opacity var(--duration-default), color var(--duration-default);
+}
+
+.liked-page__item:hover .liked-page__unlike-btn,
+.liked-page__unlike-btn:focus-visible,
+.liked-page__unlike-btn--touch {
+    opacity: 1;
+}
+
+.liked-page__unlike-btn:hover {
+    color: #f87171 !important;
 }
 
 @media (max-width: 1024px) {

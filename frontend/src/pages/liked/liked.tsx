@@ -1,19 +1,49 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Heart } from 'lucide-react';
-import VideoCard from '@components/video/card';
+import { useMediaQuery } from '@utils/useMediaQuery';
+import { Heart, HeartOff } from 'lucide-react';
+import VideoActionCard from '@components/video/actionCard';
+import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useVideo } from '@context/useVideo';
+import { useAppDispatch } from '@store';
+import { toastActions } from '@store/toastSlice';
+import { VideoFilter } from '@utils/applyFilters';
 import './liked.css';
 
 export default function LikedPage() {
     const { t } = useTranslation();
-    const { likedVideos, videos } = useVideo();
+    const dispatch = useAppDispatch();
+    const { likedVideos, videos, likeVideo } = useVideo();
+
+    const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
     const likedVideoList = useMemo(() => {
         return videos.filter(v => likedVideos.has(v.id));
     }, [likedVideos, videos]);
 
+    const allTags = useMemo(() => {
+        const tagSet = new Set<string>();
+        for (const v of likedVideoList) {
+            for (const tag of v.tags) {
+                tagSet.add(tag);
+            }
+        }
+        return Array.from(tagSet).sort();
+    }, [likedVideoList]);
+
+    const filteredVideos = useMemo(
+        () => VideoFilter.apply(likedVideoList, filters),
+        [likedVideoList, filters],
+    );
+
     const hasLiked = likedVideoList.length > 0;
+    const hasResults = filteredVideos.length > 0;
+    const isTouchDevice = useMediaQuery('(hover: none)');
+
+    function handleUnlike(videoId: string) {
+        likeVideo(videoId);
+        dispatch(toastActions.addToast({ message: t('toast.unliked'), type: 'info' }));
+    }
 
     return (
         <div className="liked-page">
@@ -26,12 +56,35 @@ export default function LikedPage() {
                 )}
             </div>
 
-            {hasLiked ? (
-                <div className="liked-page__grid">
-                    {likedVideoList.map((video, i) => (
-                        <VideoCard key={video.id} video={video} index={i} />
-                    ))}
+            {hasLiked && (
+                <div className="liked-page__filters">
+                    <FilterPanel allTags={allTags} value={filters} onChange={setFilters} />
                 </div>
+            )}
+
+            {hasLiked ? (
+                hasResults ? (
+                    <div className="liked-page__grid">
+                        {filteredVideos.map((video, i) => (
+                            <VideoActionCard
+                                key={video.id}
+                                video={video}
+                                index={i}
+                                actionIcon={<HeartOff size={14} strokeWidth={2} />}
+                                actionLabel={t('liked.unlike')}
+                                itemClass="liked-page__item"
+                                btnClass={['liked-page__unlike-btn', isTouchDevice ? 'liked-page__unlike-btn--touch' : ''].filter(Boolean).join(' ')}
+                                onAction={handleUnlike}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="liked-page__empty">
+                        <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
+                        <p className="liked-page__empty-title">{t('video.no_results')}</p>
+                        <p className="liked-page__empty-text">{t('video.filter_clear')}</p>
+                    </div>
+                )
             ) : (
                 <div className="liked-page__empty">
                     <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
