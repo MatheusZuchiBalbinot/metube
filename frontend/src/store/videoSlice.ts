@@ -1,6 +1,7 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
 import { MOCK_VIDEOS, VideoStatus, type Video } from '@data/mockVideos';
 import { STORAGE_KEYS } from '@utils/storageKeys';
+import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
 
 export interface WatchEvent {
     videoId: string
@@ -35,6 +36,8 @@ interface VideoState {
     theaterMode: boolean
     shortsMuted: boolean
     shortsVolume: number
+    loading: boolean
+    error: string | null
 }
 
 const SEED_HISTORY = ['v003', 'v001', 'v008', 'v005', 'v007'];
@@ -48,36 +51,25 @@ function buildSeedEvents(): WatchEvent[] {
     }));
 }
 
-function loadOrSeed<T>(key: string, seed: T): T {
-    const stored = localStorage.getItem(key);
-    if (stored === null) {
-        localStorage.setItem(key, JSON.stringify(seed));
-        return seed;
-    }
-    const parsed = JSON.parse(stored) as T;
-    const isEmptyObject = typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed as object).length === 0;
-    return isEmptyObject ? seed : parsed;
-}
-
 const initialState: VideoState = {
     videos: MOCK_VIDEOS,
-    watchHistory: loadOrSeed<string[]>(STORAGE_KEYS.WATCH_HISTORY, SEED_HISTORY),
-    likedVideos: loadOrSeed<string[]>(STORAGE_KEYS.LIKED_VIDEOS, []),
-    dislikedVideos: loadOrSeed<string[]>(STORAGE_KEYS.DISLIKED_VIDEOS, []),
-    savedVideos: loadOrSeed<string[]>(STORAGE_KEYS.SAVED_VIDEOS, []),
-    videoProgress: loadOrSeed<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, SEED_PROGRESS),
-    autoplay: localStorage.getItem(STORAGE_KEYS.AUTOPLAY) === null
-        ? true
-        : localStorage.getItem(STORAGE_KEYS.AUTOPLAY) === 'true',
+    watchHistory: loadFromStorage<string[]>(STORAGE_KEYS.WATCH_HISTORY, SEED_HISTORY, isArray),
+    likedVideos: loadFromStorage<string[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
+    dislikedVideos: loadFromStorage<string[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
+    savedVideos: loadFromStorage<string[]>(STORAGE_KEYS.SAVED_VIDEOS, [], isArray),
+    videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, SEED_PROGRESS, isObject),
+    autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
     uploadModalOpen: false,
     activeTagView: null,
     miniPlayer: null,
     pendingVideoSeek: null,
-    watchEvents: loadOrSeed<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, buildSeedEvents()),
+    watchEvents: loadFromStorage<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, buildSeedEvents(), isArray),
     pinnedVideoId: localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null,
     theaterMode: false,
-    shortsMuted: localStorage.getItem(STORAGE_KEYS.SHORTS_MUTED) !== 'false',
-    shortsVolume: parseFloat(localStorage.getItem(STORAGE_KEYS.SHORTS_VOLUME) ?? '0.8'),
+    shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
+    shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
+    loading: false,
+    error: null,
 };
 
 const videoSlice = createSlice({
@@ -227,6 +219,25 @@ const videoSlice = createSlice({
         setShortsVolume(state, action: PayloadAction<number>) {
             state.shortsVolume = action.payload;
         },
+
+        // ─── Cross-tab sync reducers ───────────────────────────────────────────
+        // Dispatched only by crossTabSync — must NOT trigger the persist listener
+        // (names start with 'video/xTab' which the predicate explicitly excludes).
+        xTabSetWatchHistory(state, action: PayloadAction<string[]>) {
+            state.watchHistory = action.payload;
+        },
+        xTabSetLikedVideos(state, action: PayloadAction<string[]>) {
+            state.likedVideos = action.payload;
+        },
+        xTabSetDislikedVideos(state, action: PayloadAction<string[]>) {
+            state.dislikedVideos = action.payload;
+        },
+        xTabSetSavedVideos(state, action: PayloadAction<string[]>) {
+            state.savedVideos = action.payload;
+        },
+        xTabSetPinnedVideoId(state, action: PayloadAction<string | null>) {
+            state.pinnedVideoId = action.payload;
+        },
     },
 });
 
@@ -313,3 +324,7 @@ export function makeSelectRecommendations(limit: number) {
         },
     );
 }
+
+// Singleton for the common 200-item use-case — one shared memoised instance
+// instead of a new one per component call to useVideo().
+export const selectRecommendations = makeSelectRecommendations(200);
