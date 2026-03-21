@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, X } from 'lucide-react';
-import { SortBy, type FilterState } from '@utils/applyFilters';
+import { SortBy, SORT_OPTIONS, type FilterState } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
 import DatePicker from '@ui/date/picker';
 import { Button, Tooltip } from '@ui';
@@ -15,17 +15,13 @@ interface FilterPanelProps {
     onChange: (f: FilterState) => void
 }
 
-const SORT_OPTIONS: { value: FilterState['sortBy']; labelKey: string }[] = [
-    { value: SortBy.RECENT, labelKey: 'video.sort_recent' },
-    { value: SortBy.VIEWS, labelKey: 'video.sort_views' },
-    { value: SortBy.AZ, labelKey: 'video.sort_az' },
-];
-
 const YEAR_OPTIONS = Array.from(
     { length: new Date().getFullYear() - 2019 },
     (_, i) => new Date().getFullYear() - i,
 );
 
+// Number of tag chips shown inline before collapsing the rest into the
+// "Filters" dropdown. 8 keeps the filter bar a single line on most viewports.
 const VISIBLE_TAG_COUNT = 8;
 
 // eslint-disable-next-line complexity
@@ -65,6 +61,27 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
         return () => document.removeEventListener('mousedown', handleOutside);
     }, []);
 
+    useEffect(() => {
+        const isDropdownOpen = showMore;
+        if (!isDropdownOpen) {
+            return;
+        }
+
+        function handleKeyDown(e: KeyboardEvent) {
+            const isPressedEsc = e.key === 'Escape';
+            if (!isPressedEsc) {
+                return;
+            }
+
+            setShowMore(false);
+            const triggerButton = moreRef.current?.querySelector<HTMLButtonElement>('button');
+            triggerButton?.focus();
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showMore]);
+
     function toggleTag(tag: string) {
         const isSelected = value.tags.includes(tag);
         const nextTags = isSelected ? value.tags.filter(t => t !== tag) : [...value.tags, tag];
@@ -89,25 +106,26 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
         };
     }
 
+    function TagChip({ tag }: { tag: string }) {
+        const isActive = value.tags.includes(tag);
+        return (
+            <Button
+                variant="ghost"
+                className={`filter-panel__tag-chip${isActive ? ' filter-panel__tag-chip--active' : ''}`}
+                style={buildTagChipStyle(tag, isActive)}
+                onClick={() => toggleTag(tag)}
+                aria-pressed={isActive}
+                aria-label={tag}
+            >
+                {tag}
+            </Button>
+        );
+    }
+
     return (
         <div className="filter-panel">
             {/* Visible tag chips */}
-            {visibleTags.map(tag => {
-                const isActive = value.tags.includes(tag);
-                return (
-                    <Button
-                        key={tag}
-                        variant="ghost"
-                        className={`filter-panel__tag-chip${isActive ? ' filter-panel__tag-chip--active' : ''}`}
-                        style={buildTagChipStyle(tag, isActive)}
-                        onClick={() => toggleTag(tag)}
-                        aria-pressed={isActive}
-                        aria-label={tag}
-                    >
-                        {tag}
-                    </Button>
-                );
-            })}
+            {visibleTags.map(tag => <TagChip key={tag} tag={tag} />)}
 
             {/* More / Filters dropdown */}
             <div className="filter-panel__more-wrap" ref={moreRef}>
@@ -136,22 +154,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                             <div className="filter-panel__dropdown-section">
                                 <span className="filter-panel__dropdown-label">{t('video.filter_by_tags')}</span>
                                 <div className="filter-panel__dropdown-tags">
-                                    {hiddenTags.map(tag => {
-                                        const isActive = value.tags.includes(tag);
-                                        return (
-                                            <Button
-                                                key={tag}
-                                                variant="ghost"
-                                                className={`filter-panel__tag-chip${isActive ? ' filter-panel__tag-chip--active' : ''}`}
-                                                style={buildTagChipStyle(tag, isActive)}
-                                                onClick={() => toggleTag(tag)}
-                                                aria-pressed={isActive}
-                                                aria-label={tag}
-                                            >
-                                                {tag}
-                                            </Button>
-                                        );
-                                    })}
+                                    {hiddenTags.map(tag => <TagChip key={tag} tag={tag} />)}
                                 </div>
                             </div>
                         )}

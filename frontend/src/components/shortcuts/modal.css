@@ -6,6 +6,20 @@
     gap: 20px;
 }
 
+/* Two-column layout: navigation | divider | video */
+.shortcuts-modal__columns {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0 20px;
+    align-items: start;
+}
+
+.shortcuts-modal__divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+}
+
 .shortcuts-modal__section {
     display: flex;
     flex-direction: column;
@@ -18,10 +32,11 @@
     text-transform: uppercase;
     letter-spacing: 0.09em;
     color: var(--text-3);
-    margin: 0;
+    margin: 0 0 4px;
 }
 
 .shortcuts-modal__list {
+    list-style: none;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -31,10 +46,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 6px 8px;
+    gap: 12px;
+    padding: 5px 8px;
     border-radius: var(--radius-sm);
-    transition: background 0.12s;
+    transition: background var(--duration-fast);
 }
 
 .shortcuts-modal__item:hover {
@@ -42,16 +57,20 @@
 }
 
 .shortcuts-modal__label {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: var(--text-2);
+    flex: 1;
+    min-width: 0;
 }
 
 .shortcuts-modal__keys {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
 }
 
+/* <kbd> element styled as a physical key */
 .shortcuts-modal__key {
     display: inline-flex;
     align-items: center;
@@ -61,20 +80,56 @@
     padding: 0 6px;
     background: var(--surface-3);
     border: 1px solid var(--border-2);
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-bottom-width: 2px;
+    border-radius: var(--radius-xs);
+    font-size: 0.6875rem;
     font-weight: 600;
+    font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
     color: var(--text);
-    font-family: monospace;
-    box-shadow: 0 1px 0 var(--border-2);
+    letter-spacing: 0;
+    user-select: none;
 }
 
-.shortcuts-modal__footer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* "then" separator between chord keys */
+.shortcuts-modal__then {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-3);
+    font-style: italic;
+}
+
+/* "or" separator between alternative keys */
+.shortcuts-modal__or {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-3);
+}
+
+/* Note below video section */
+.shortcuts-modal__note {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    padding: 0 8px;
+    margin-top: 4px;
+}
+
+/* Tip line at the bottom */
+.shortcuts-modal__tip {
     font-size: 0.8125rem;
     color: var(--text-3);
-    padding-top: 4px;
+    padding-top: 16px;
     border-top: 1px solid var(--border);
+    line-height: 1.4;
+}
+
+/* Collapse to single column on narrow viewports */
+@media (max-width: 480px) {
+    .shortcuts-modal__columns {
+        grid-template-columns: 1fr;
+    }
+
+    .shortcuts-modal__divider {
+        width: auto;
+        height: 1px;
+    }
 }
