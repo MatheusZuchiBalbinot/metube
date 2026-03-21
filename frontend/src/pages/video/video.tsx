@@ -1,31 +1,27 @@
-import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Bookmark, Link2, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/video/player';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
+import ReactionBtn from '@components/video/reactionBtn';
+import ReadingMode from '@components/video/readingMode';
 import type { FilterState } from '@components/filter/panel';
 import { useVideo } from '@context/useVideo';
 import { useAppDispatch } from '@store';
-import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
-import { ROUTES } from '@utils/routes';
+import { useBurstAnimation } from '@utils/useBurstAnimation';
+import { useVideoProgress } from '@utils/useVideoProgress';
+import { useAutoplay } from '@utils/useAutoplay';
 import { getVideoSummary } from '@data/mockSummaries';
 import { TagColors } from '@utils/tagColors';
 import { useKeyboardShortcuts } from '@utils/useKeyboardShortcuts';
+import * as Popover from '@radix-ui/react-popover';
 import { Button, Tooltip, Badge } from '@ui';
 import './video.css';
-
-const AUTOPLAY_COUNTDOWN = 5;
-const PROGRESS_THROTTLE_MS = 3000;
-
-// For videos without a real file: simulate progress over time
-const SIMULATE_DURATION_S = 60; // treat as a 60-second "video"
-const SIMULATE_TICK_MS = 2000; // tick every 2s
-
 
 type SidebarTab = 'related' | 'summary';
 
@@ -58,72 +54,51 @@ export default function VideoPage() {
 
     const registeredRef = useRef(false);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const progressThrottleRef = useRef<number>(0);
-    const pendingSeekRef = useRef<number | null>(null);
-    const simulatedSecondsRef = useRef<number>(0);
-    const simulateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const currentTimeRef = useRef<number>(0);
-    const durationRef = useRef<number>(0);
-    const hasCompletedRef = useRef(false);
-    const readingContentRef = useRef<HTMLDivElement>(null);
 
-    const [likeAnimating, setLikeAnimating] = useState(false);
-    const [dislikeAnimating, setDislikeAnimating] = useState(false);
-    const [saveAnimating, setSaveAnimating] = useState(false);
-    const [isCopied, setIsCopied] = useState(false);
+    const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
+    const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
+    const [saveAnimating, triggerSaveAnimation] = useBurstAnimation();
+    const [isCopied, triggerCopied] = useBurstAnimation(2000);
     const [sidebarTab, setSidebarTab] = useState<SidebarTab>('related');
     const [readingMode, setReadingMode] = useState(false);
-    const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
-    const [showCompletion, setShowCompletion] = useState(false);
-    const [readingProgress, setReadingProgress] = useState(0);
-    const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Reset per-video state when id changes
-    useEffect(() => {
-        hasCompletedRef.current = false;
-        setReadingProgress(0);
-    }, [id]);
+    // VISUAL-09: chapter seeking feedback
+    const [seekingChapterIndex, setSeekingChapterIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        closeMiniPlayer();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
-
-    useEffect(() => {
-        const shouldRegister = hasVideo && !registeredRef.current;
-        if (!shouldRegister) {
-            return;
-        }
-
-        registeredRef.current = true;
-        watchVideo(id!);
-    }, [id, hasVideo, watchVideo]);
-
-    useEffect(() => {
-        if (!id) {
-            return;
-        }
-
-        const resumeTime = consumePendingVideoSeek(id);
-
-        if (resumeTime !== null) {
-            pendingSeekRef.current = resumeTime;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    // UX-16: share dropdown
+    const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
     const relatedVideos = useMemo(() => {
-        const isVideoMissing = !hasVideo;
-        if (isVideoMissing) {
-            return [];
-        }
-
-        const videoTagSet = new Set(video!.tags);
+        if (!video) { return []; }
+        const videoTagSet = new Set(video.tags);
         return videos
-            .filter(v => v.id !== video!.id && v.tags.some(t => videoTagSet.has(t)))
+            .filter(v => v.id !== video.id && v.tags.some(t => videoTagSet.has(t)))
             .sort((a, b) => b.views - a.views)
             .slice(0, 10);
-    }, [hasVideo, video, videos]);
+    }, [video, videos]);
+
+    // ─── Extracted hooks — declared before any derived state that depends on them ─
+
+    const { autoplayCountdown, startAutoplayCountdown, cancelAutoplay } = useAutoplay({
+        id,
+        autoplay,
+        relatedVideos,
+    });
+
+    const {
+        currentTime, showCompletion,
+        handleLoadedMetadata, handleTimeUpdate, handleVideoEnded, getCurrentTime,
+    } = useVideoProgress({
+        id,
+        videoRef,
+        video,
+        videoProgress,
+        updateProgress,
+        consumePendingVideoSeek,
+        onCompleted: startAutoplayCountdown,
+    });
+
+    // ─── Derived state that depends on hook output ────────────────────────────
 
     const allRelatedTags = useMemo(() => {
         const tagSet = new Set<string>();
@@ -139,249 +114,61 @@ export default function VideoPage() {
     );
 
     const summary = useMemo(() => {
-        const isVideoMissing = !hasVideo;
-        if (isVideoMissing) {
-            return null;
-        }
-
-        return getVideoSummary(video!.id);
-    }, [hasVideo, video]);
+        if (!video) { return null; }
+        return getVideoSummary(video.id);
+    }, [video]);
 
     const hasSummary = summary !== null;
 
     const readingTime = useMemo(() => {
         const hasSummaryContent = summary !== null;
-        if (!hasSummaryContent) {
-            return 0;
-        }
+        if (!hasSummaryContent) { return 0; }
         const words = summary.readingMode.split(/\s+/).length;
         return Math.max(1, Math.ceil(words / 200));
     }, [summary]);
 
-    function triggerCompletion() {
-        const isAlreadyCompleted = hasCompletedRef.current;
-        if (isAlreadyCompleted) {
-            return;
+    // VISUAL-08: active chapter index derived from current playback position
+    const activeChapterIndex = useMemo(() => {
+        if (!summary || summary.chapters.length === 0) { return -1; }
+        let active = -1;
+        for (let i = 0; i < summary.chapters.length; i++) {
+            const chapterTime = parseTimestamp(summary.chapters[i].timestamp);
+            const isBeforeOrAt = chapterTime <= currentTime;
+            if (isBeforeOrAt) { active = i; }
         }
-        hasCompletedRef.current = true;
-        setShowCompletion(true);
-        setTimeout(() => setShowCompletion(false), 1800);
-    }
+        return active;
+    }, [summary, currentTime]);
 
-    function startAutoplayCountdown() {
-        const hasRelated = relatedVideos.length > 0;
-        if (!autoplay || !hasRelated) {
-            return;
-        }
-
-        setAutoplayCountdown(AUTOPLAY_COUNTDOWN);
-    }
-
-    function cancelAutoplay() {
-        setAutoplayCountdown(null);
-        if (autoplayTimerRef.current) {
-            clearInterval(autoplayTimerRef.current);
-            autoplayTimerRef.current = null;
-        }
-    }
+    // ─── Side effects ─────────────────────────────────────────────────────────
 
     useEffect(() => {
-        const isCountingDown = autoplayCountdown !== null;
-        if (!isCountingDown) {
-            return;
-        }
-
-        autoplayTimerRef.current = setInterval(() => {
-            setAutoplayCountdown(prev => {
-                const isAtZero = prev !== null && prev <= 1;
-                if (isAtZero) {
-                    clearInterval(autoplayTimerRef.current!);
-                    autoplayTimerRef.current = null;
-                    const nextVideo = relatedVideos[0];
-                    if (nextVideo) {
-                        navigate(ROUTES.VIDEO.replace(':id', nextVideo.id));
-                    }
-
-                    return null;
-                }
-                return prev !== null ? prev - 1 : null;
-            });
-        }, 1000);
-
-        return () => {
-            if (autoplayTimerRef.current) {
-                clearInterval(autoplayTimerRef.current);
-            }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [autoplayCountdown]);
-
-    // ─── Simulate progress for no-file videos ─────────────────────────────────
-    useEffect(() => {
-        const isVideoMissing = !hasVideo || !id;
-        if (isVideoMissing) {
-            return;
-        }
-
-        const hasFile = video!.videoUrl !== undefined && video!.videoUrl !== '';
-        if (hasFile) {
-            return;
-        }
-
-        // Restore existing progress so we continue from where we left off
-        const existing = videoProgress[id] ?? 0;
-        const isFinished = existing >= 95;
-        if (isFinished) {
-            return;
-        }
-
-        // Start at least 4s into simulation (~7%) so mini-player always triggers on navigate-away
-        simulatedSecondsRef.current = Math.max(4, (existing / 100) * SIMULATE_DURATION_S);
-
-        simulateTimerRef.current = setInterval(() => {
-            simulatedSecondsRef.current += SIMULATE_TICK_MS / 1000;
-            const pct = Math.min((simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100, 100);
-            updateProgress(id, pct);
-
-            const isVideoFinished = pct >= 100;
-            if (isVideoFinished) {
-                clearInterval(simulateTimerRef.current!);
-                simulateTimerRef.current = null;
-                triggerCompletion();
-                startAutoplayCountdown();
-            }
-        }, SIMULATE_TICK_MS);
-
-        return () => {
-            if (simulateTimerRef.current) {
-                clearInterval(simulateTimerRef.current);
-                simulateTimerRef.current = null;
-            }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, hasVideo]);
-
-    const handleLoadedMetadata = useCallback(() => {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-
-        durationRef.current = el.duration;
-
-        const hasPendingSeek = pendingSeekRef.current !== null;
-        if (hasPendingSeek) {
-            el.currentTime = pendingSeekRef.current!;
-            pendingSeekRef.current = null;
-            el.play().catch(() => { });
-        }
-
-        currentTimeRef.current = el.currentTime;
-
-    }, []);
-
-    const handleTimeUpdate = useCallback(() => {
-        const el = videoRef.current;
-        if (!el || !id) {
-            return;
-        }
-
-        currentTimeRef.current = el.currentTime;
-
-        const now = Date.now();
-        const shouldThrottle = now - progressThrottleRef.current < PROGRESS_THROTTLE_MS;
-        if (shouldThrottle) {
-            return;
-        }
-
-        progressThrottleRef.current = now;
-        const percent = el.duration > 0 ? (el.currentTime / el.duration) * 100 : 0;
-
-        updateProgress(id, percent);
-    }, [id, updateProgress]);
-
-    const handleVideoEnded = useCallback(() => {
-        if (id) {
-            updateProgress(id, 100);
-        }
-
-        triggerCompletion();
-        startAutoplayCountdown();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, updateProgress, autoplay, relatedVideos]);
-
-    useEffect(() => {
-        return () => {
-            if (simulateTimerRef.current) {
-                clearInterval(simulateTimerRef.current);
-            }
-
-
-            if (!id) {
-                return;
-            }
-
-            const hasCurrentTime = currentTimeRef.current > 0;
-            const currentTime = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
-            const hasDuration = durationRef.current > 0;
-            const hasVideoEnded = hasDuration && currentTime >= durationRef.current;
-
-            if (!hasVideoEnded) {
-                dispatch(videoActions.setPendingVideoSeek({ videoId: id, time: currentTime }));
-                dispatch(videoActions.openMiniPlayer({ videoId: id, currentTime }));
-
-                const hasRealProgress = hasCurrentTime && hasDuration;
-                if (hasRealProgress) {
-                    const percent = (currentTimeRef.current / durationRef.current) * 100;
-                    dispatch(videoActions.updateProgress({ videoId: id, percent }));
-                } else if (!hasCurrentTime && simulatedSecondsRef.current > 0) {
-                    const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
-                    const isSimFinished = simPct >= 100;
-
-                    if (!isSimFinished) {
-                        dispatch(videoActions.updateProgress({ videoId: id, percent: simPct }));
-                    }
-                }
-            }
-
-            cancelAutoplay();
-        };
+        closeMiniPlayer();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    function handleReadingScroll() {
-        const el = readingContentRef.current;
-        if (!el) {
-            return;
-        }
-        const pct = el.scrollTop / (el.scrollHeight - el.clientHeight) * 100;
-        setReadingProgress(Math.min(100, pct));
-    }
+    useEffect(() => {
+        // Reset registration flag when navigating to a new video
+        registeredRef.current = false;
+    }, [id]);
 
-    function handleSeekToChapter(timestamp: string) {
-        const seconds = parseTimestamp(timestamp);
-        const el = videoRef.current;
-        if (el) {
-            el.currentTime = seconds;
-        } else {
-            simulatedSecondsRef.current = seconds;
-        }
-    }
+    useEffect(() => {
+        const shouldRegister = hasVideo && !registeredRef.current && id !== undefined;
+        if (!shouldRegister) { return; }
+        registeredRef.current = true;
+        watchVideo(id);
+    }, [id, hasVideo, watchVideo]);
 
     // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
+
     const handleLikeShortcut = useCallback(() => {
         const isCurrentlyLiked = likedVideos.has(video?.id ?? '');
         dispatch(toastActions.addToast({
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
             type: 'success',
         }));
-        if (video?.id) {
-            likeVideo(video.id);
-        }
-        setLikeAnimating(true);
-        setTimeout(() => setLikeAnimating(false), 400);
-
-    }, [video?.id, likedVideos, likeVideo, dispatch, t]);
+        if (video?.id) { likeVideo(video.id); }
+        triggerLikeAnimation();
+    }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
         const isCurrentlySaved = savedVideos.has(video?.id ?? '');
@@ -389,13 +176,9 @@ export default function VideoPage() {
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
-        if (video?.id) {
-            saveVideo(video.id);
-        }
-        setSaveAnimating(true);
-        setTimeout(() => setSaveAnimating(false), 400);
-
-    }, [video?.id, savedVideos, saveVideo, dispatch, t]);
+        if (video?.id) { saveVideo(video.id); }
+        triggerSaveAnimation();
+    }, [video?.id, savedVideos, saveVideo, dispatch, t, triggerSaveAnimation]);
 
     useKeyboardShortcuts({
         onOpenUpload: () => { },
@@ -428,20 +211,21 @@ export default function VideoPage() {
 
     const videoId = video.id;
 
+    // UX-07: named boolean for share copied state
+    const isShareCopied = isCopied;
+
     function handleLike() {
         dispatch(toastActions.addToast({
             message: t(isLiked ? 'toast.unliked' : 'toast.liked'),
             type: 'success',
         }));
         likeVideo(videoId);
-        setLikeAnimating(true);
-        setTimeout(() => setLikeAnimating(false), 400);
+        triggerLikeAnimation();
     }
 
     function handleDislike() {
         dislikeVideo(videoId);
-        setDislikeAnimating(true);
-        setTimeout(() => setDislikeAnimating(false), 400);
+        triggerDislikeAnimation();
     }
 
     function handleSave() {
@@ -450,26 +234,42 @@ export default function VideoPage() {
             type: 'success',
         }));
         saveVideo(videoId);
-        setSaveAnimating(true);
-        setTimeout(() => setSaveAnimating(false), 400);
+        triggerSaveAnimation();
     }
 
-    function handleShare() {
-        navigator.clipboard.writeText(window.location.href);
+    function handleShareCopyLink() {
+        const url = window.location.href.split('?')[0];
+        navigator.clipboard.writeText(url);
         dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: 'info' }));
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        triggerCopied();
+        setIsShareDropdownOpen(false);
     }
 
-    const saveBtnClass = [
-        'video-page__reaction-btn',
-        isSaved ? 'video-page__reaction-btn--saved' : '',
-        saveAnimating ? 'video-page__reaction-btn--burst' : '',
-    ].filter(Boolean).join(' ');
+    function handleShareCopyAtTime() {
+        const seconds = Math.floor(getCurrentTime());
+        const baseUrl = window.location.href.split('?')[0];
+        const url = `${baseUrl}?t=${seconds}s`;
+        navigator.clipboard.writeText(url);
+        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: 'info' }));
+        triggerCopied();
+        setIsShareDropdownOpen(false);
+    }
+
+    function handleSeekToChapter(timestamp: string, chapterIndex: number) {
+        const seconds = parseTimestamp(timestamp);
+        const el = videoRef.current;
+        if (el) { el.currentTime = seconds; }
+
+        // VISUAL-09: brief seeking feedback
+        setSeekingChapterIndex(chapterIndex);
+        setTimeout(() => setSeekingChapterIndex(null), 600);
+    }
+
+    const videoUrl = video.videoUrl ?? '';
 
     const shareBtnClass = [
         'video-page__reaction-btn',
-        isCopied ? 'video-page__reaction-btn--copied' : '',
+        isShareCopied ? 'video-page__reaction-btn--copied' : '',
     ].filter(Boolean).join(' ');
 
     return (
@@ -498,27 +298,13 @@ export default function VideoPage() {
             <div className="video-page__layout">
                 <main className="video-page__main">
                     {readingMode && summary ? (
-                        <div
-                            className="video-page__reading-mode"
-                            ref={readingContentRef}
-                            onScroll={handleReadingScroll}
-                        >
-                            <div
-                                className="video-page__reading-progress"
-                                style={{ width: `${readingProgress}%` }}
-                            />
-                            <div
-                                className="video-page__reading-content"
-                                // eslint-disable-next-line @stylistic/max-len
-                                dangerouslySetInnerHTML={{ __html: summary.readingMode.replace(/^## (.+)$/gm, '<h2>$1</h2>').replace(/^### (.+)$/gm, '<h3>$1</h3>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n\n/g, '</p><p>').replace(/^/, '<p>').replace(/$/, '</p>') }}
-                            />
-                        </div>
+                        <ReadingMode summary={summary} />
                     ) : (
                         <div className="video-page__player-wrap">
                             {hasVideoFile ? (
                                 <VideoPlayer
                                     videoRef={videoRef}
-                                    src={video.videoUrl!}
+                                    src={videoUrl}
                                     chapters={summary?.chapters}
                                     onTimeUpdate={handleTimeUpdate}
                                     onEnded={handleVideoEnded}
@@ -545,16 +331,18 @@ export default function VideoPage() {
                     )}
 
                     {isAutoplayActive && nextVideo && (
-                        <div className="video-page__autoplay-banner">
+                        <div
+                            className="video-page__autoplay-banner"
+                            aria-live="polite"
+                            aria-atomic="true"
+                            role="status"
+                        >
                             <div className="video-page__autoplay-info">
                                 <span className="video-page__autoplay-label">{t('video.autoplay_next')}</span>
                                 <span className="video-page__autoplay-title">{nextVideo.title}</span>
                             </div>
                             <div className="video-page__autoplay-countdown">
-                                <div
-                                    className="video-page__autoplay-progress"
-                                    style={{ animationDuration: `${AUTOPLAY_COUNTDOWN}s` }}
-                                />
+                                <div className="video-page__autoplay-progress" style={{ animationDuration: '5s' }} />
                                 <span className="video-page__autoplay-seconds">{autoplayCountdown}</span>
                             </div>
                             <Tooltip content={t('video.autoplay_cancel')} side="top">
@@ -583,60 +371,90 @@ export default function VideoPage() {
                             </div>
 
                             <div className="video-page__actions">
-                                <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
-                                    <button
-                                        className={['video-page__reaction-btn', isLiked ? 'video-page__reaction-btn--liked' : '', likeAnimating ? 'video-page__reaction-btn--burst' : ''].filter(Boolean).join(' ')}
-                                        onClick={handleLike}
-                                        aria-pressed={isLiked}
-                                        aria-label={isLiked ? t('video.liked') : t('video.like')}
-                                    >
-                                        <span className="video-page__reaction-icon">
-                                            <ThumbsUp size={20} strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
-                                        </span>
-                                        <span className="video-page__reaction-label">{t('video.like')}</span>
-                                    </button>
-                                </Tooltip>
+                                <ReactionBtn
+                                    isActive={isLiked}
+                                    isAnimating={likeAnimating}
+                                    icon={<ThumbsUp size={20} strokeWidth={1.75} fill="none" />}
+                                    iconActive={<ThumbsUp size={20} strokeWidth={1.75} fill="currentColor" />}
+                                    label={t('video.like')}
+                                    activeLabel={t('video.liked')}
+                                    className="video-page__reaction-btn"
+                                    activeClass="video-page__reaction-btn--liked"
+                                    onClick={handleLike}
+                                />
 
-                                <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
-                                    <button
-                                        className={['video-page__reaction-btn', isDisliked ? 'video-page__reaction-btn--disliked' : '', dislikeAnimating ? 'video-page__reaction-btn--burst' : ''].filter(Boolean).join(' ')}
-                                        onClick={handleDislike}
-                                        aria-pressed={isDisliked}
-                                        aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
-                                    >
-                                        <span className="video-page__reaction-icon">
-                                            <ThumbsDown size={20} strokeWidth={1.75} fill={isDisliked ? 'currentColor' : 'none'} />
-                                        </span>
-                                        <span className="video-page__reaction-label">{t('video.dislike')}</span>
-                                    </button>
-                                </Tooltip>
+                                <ReactionBtn
+                                    isActive={isDisliked}
+                                    isAnimating={dislikeAnimating}
+                                    icon={<ThumbsDown size={20} strokeWidth={1.75} fill="none" />}
+                                    iconActive={<ThumbsDown size={20} strokeWidth={1.75} fill="currentColor" />}
+                                    label={t('video.dislike')}
+                                    activeLabel={t('video.disliked')}
+                                    className="video-page__reaction-btn"
+                                    activeClass="video-page__reaction-btn--disliked"
+                                    onClick={handleDislike}
+                                />
 
-                                <Tooltip content={isSaved ? t('video.saved') : t('video.save')} side="top">
-                                    <button
-                                        className={saveBtnClass}
-                                        onClick={handleSave}
-                                        aria-pressed={isSaved}
-                                        aria-label={isSaved ? t('video.saved') : t('video.save')}
-                                    >
-                                        <span className="video-page__reaction-icon">
-                                            <Bookmark size={20} strokeWidth={1.75} fill={isSaved ? 'currentColor' : 'none'} />
-                                        </span>
-                                        <span className="video-page__reaction-label">{isSaved ? t('video.saved') : t('video.save')}</span>
-                                    </button>
-                                </Tooltip>
+                                <ReactionBtn
+                                    isActive={isSaved}
+                                    isAnimating={saveAnimating}
+                                    icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}
+                                    iconActive={<Bookmark size={20} strokeWidth={1.75} fill="currentColor" />}
+                                    label={t('video.save')}
+                                    activeLabel={t('video.saved')}
+                                    className="video-page__reaction-btn"
+                                    activeClass="video-page__reaction-btn--saved"
+                                    onClick={handleSave}
+                                />
 
-                                <Tooltip content={isCopied ? t('video.copied') : t('video.share')} side="top">
-                                    <button
-                                        className={shareBtnClass}
-                                        onClick={handleShare}
-                                        aria-label={t('video.share')}
-                                    >
-                                        <span className="video-page__reaction-icon">
-                                            <Link2 size={20} strokeWidth={1.75} />
-                                        </span>
-                                        <span className="video-page__reaction-label">{isCopied ? t('video.copied') : t('video.share')}</span>
-                                    </button>
-                                </Tooltip>
+                                <Popover.Root open={isShareDropdownOpen} onOpenChange={setIsShareDropdownOpen}>
+                                    <Popover.Trigger asChild>
+                                        <button
+                                            className={shareBtnClass}
+                                            aria-label={t('video.share')}
+                                            aria-expanded={isShareDropdownOpen}
+                                            aria-haspopup="dialog"
+                                        >
+                                            <span className="video-page__reaction-icon">
+                                                {isShareCopied ? (
+                                                    <Check size={20} strokeWidth={1.75} />
+                                                ) : (
+                                                    <>
+                                                        <Link2 size={16} strokeWidth={1.75} />
+                                                        <ChevronDown size={10} strokeWidth={2} className="video-page__share-chevron" />
+                                                    </>
+                                                )}
+                                            </span>
+                                            <span className="video-page__reaction-label">{isShareCopied ? t('video.copied') : t('video.share')}</span>
+                                        </button>
+                                    </Popover.Trigger>
+                                    <Popover.Portal>
+                                        <Popover.Content
+                                            className="video-page__share-dropdown"
+                                            side="top"
+                                            align="center"
+                                            sideOffset={6}
+                                            role="menu"
+                                        >
+                                            <button
+                                                className="video-page__share-option"
+                                                role="menuitem"
+                                                onClick={handleShareCopyLink}
+                                            >
+                                                <Link2 size={14} strokeWidth={1.75} />
+                                                {t('video.share_copy_link', 'Copy link')}
+                                            </button>
+                                            <button
+                                                className="video-page__share-option"
+                                                role="menuitem"
+                                                onClick={handleShareCopyAtTime}
+                                            >
+                                                <Clock size={14} strokeWidth={1.75} />
+                                                {t('video.share_copy_at_time', 'Copy link at current time')}
+                                            </button>
+                                        </Popover.Content>
+                                    </Popover.Portal>
+                                </Popover.Root>
                             </div>
                         </div>
 
@@ -696,12 +514,12 @@ export default function VideoPage() {
                         </div>
                     )}
 
-                    {sidebarTab === 'summary' && hasSummary && (
+                    {sidebarTab === 'summary' && summary && (
                         <div className="video-page__summary">
                             <div className="video-page__summary-section">
                                 <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>
                                 <ul className="video-page__key-points">
-                                    {summary!.keyPoints.map((point, i) => (
+                                    {summary.keyPoints.map((point, i) => (
                                         <li key={i} className="video-page__key-point">{point}</li>
                                     ))}
                                 </ul>
@@ -710,16 +528,26 @@ export default function VideoPage() {
                             <div className="video-page__summary-section">
                                 <h3 className="video-page__summary-heading">{t('video.chapters')}</h3>
                                 <div className="video-page__chapters">
-                                    {summary!.chapters.map((ch, i) => (
-                                        <div
-                                            key={i}
-                                            className="video-page__chapter"
-                                            onClick={() => handleSeekToChapter(ch.timestamp)}
-                                        >
-                                            <span className="video-page__chapter-time">{ch.timestamp}</span>
-                                            <span className="video-page__chapter-title">{ch.title}</span>
-                                        </div>
-                                    ))}
+                                    {summary.chapters.map((ch, i) => {
+                                        const isActiveChapter = i === activeChapterIndex;
+                                        const isSeekingChapter = i === seekingChapterIndex;
+                                        const chapterClass = [
+                                            'video-page__chapter',
+                                            isActiveChapter ? 'video-page__chapter--active' : '',
+                                            isSeekingChapter ? 'video-page__chapter--seeking' : '',
+                                        ].filter(Boolean).join(' ');
+                                        return (
+                                            <button
+                                                key={i}
+                                                className={chapterClass}
+                                                onClick={() => handleSeekToChapter(ch.timestamp, i)}
+                                                aria-label={ch.title}
+                                            >
+                                                <span className="video-page__chapter-time">{ch.timestamp}</span>
+                                                <span className="video-page__chapter-title">{ch.title}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

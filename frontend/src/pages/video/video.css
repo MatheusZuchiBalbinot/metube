@@ -11,7 +11,7 @@
     display: flex;
     gap: 24px;
     align-items: flex-start;
-    padding: 24px;
+    padding: 12px 24px;
     flex: 1;
 }
 
@@ -129,10 +129,25 @@
 /* ─── Reaction buttons (like / dislike) — shorts style ─────────────────── */
 
 @keyframes vp-reaction-burst {
-    0%   { transform: scale(1);    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
-    30%  { transform: scale(1.5);  box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 25%, transparent); }
-    60%  { transform: scale(0.92); box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 0%, transparent); }
-    100% { transform: scale(1);    box-shadow: 0 0 0 0 transparent; }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+
+    30% {
+        transform: scale(1.5);
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    60% {
+        transform: scale(0.92);
+        box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 0%, transparent);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 transparent;
+    }
 }
 
 .video-page__reaction-btn {
@@ -147,7 +162,7 @@
     color: var(--text-2);
 }
 
-.video-page__reaction-icon {
+.video-page__reaction-btn .rbtn__icon {
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -156,75 +171,118 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s, color 0.2s, border-color 0.2s;
+    transition: background var(--duration-slow), transform var(--duration-default), box-shadow var(--duration-slow), color var(--duration-slow), border-color var(--duration-slow);
 }
 
-.video-page__reaction-btn:hover .video-page__reaction-icon {
+.video-page__reaction-btn:hover .rbtn__icon {
     background: var(--surface-3);
     transform: scale(1.08);
 }
 
-.video-page__reaction-btn:active .video-page__reaction-icon {
+.video-page__reaction-btn:active .rbtn__icon {
     transform: scale(0.92);
 }
 
-.video-page__reaction-label {
+.video-page__reaction-btn .rbtn__label {
     font-size: 10px;
     font-weight: 600;
-    transition: color 0.2s;
+    transition: color var(--duration-slow);
     color: var(--text-3);
     white-space: nowrap;
     letter-spacing: 0.01em;
 }
 
 /* Liked state */
-.video-page__reaction-btn--liked .video-page__reaction-icon {
+.video-page__reaction-btn--liked .rbtn__icon {
     background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
     border-color: color-mix(in srgb, var(--accent) 50%, transparent);
     color: var(--accent);
     box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-.video-page__reaction-btn--liked .video-page__reaction-label {
+.video-page__reaction-btn--liked .rbtn__label {
     color: var(--accent);
 }
 
 /* Disliked state */
-.video-page__reaction-btn--disliked .video-page__reaction-icon {
+.video-page__reaction-btn--disliked .rbtn__icon {
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.4);
     color: #ef4444;
 }
 
-.video-page__reaction-btn--disliked .video-page__reaction-label {
+.video-page__reaction-btn--disliked .rbtn__label {
     color: #f87171;
 }
 
 /* Burst animation */
-.video-page__reaction-btn--burst .video-page__reaction-icon {
-    animation: vp-reaction-burst 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.video-page__reaction-btn[data-animating="true"] .rbtn__icon {
+    animation: vp-reaction-burst 0.4s var(--ease-bounce) forwards;
 }
 
 /* Saved state */
-.video-page__reaction-btn--saved .video-page__reaction-icon {
+.video-page__reaction-btn--saved .rbtn__icon {
     background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
     border-color: color-mix(in srgb, var(--accent) 50%, transparent);
     color: var(--accent);
 }
 
-.video-page__reaction-btn--saved .video-page__reaction-label {
+.video-page__reaction-btn--saved .rbtn__label {
     color: var(--accent);
 }
 
 /* Copied state */
-.video-page__reaction-btn--copied .video-page__reaction-icon {
+.video-page__reaction-btn--copied .rbtn__icon {
     background: rgba(16, 185, 129, 0.15);
     border-color: rgba(16, 185, 129, 0.4);
     color: #34d399;
 }
 
-.video-page__reaction-btn--copied .video-page__reaction-label {
+.video-page__reaction-btn--copied .rbtn__label {
     color: #34d399;
+}
+
+/* ─── Share dropdown (UX-16) ───────────────────────────────────────────────── */
+
+.video-page__share-chevron {
+    opacity: 0.6;
+    margin-left: -2px;
+}
+
+.video-page__share-dropdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    min-width: 190px;
+    z-index: var(--z-dropdown);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-page__share-dropdown[data-state='open'] {
+    animation: panelIn var(--duration-default) var(--ease-out);
+}
+
+.video-page__share-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--text-2);
+    text-align: left;
+    white-space: nowrap;
+    transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.video-page__share-option:hover {
+    background: var(--surface-2);
+    color: var(--text);
 }
 
 /* ─── Description & tags ───────────────────────────────────────────────────── */
@@ -248,7 +306,7 @@
     font-weight: 500;
     color: var(--accent);
     background: var(--accent-subtle);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     padding: 3px 10px;
 }
 
@@ -261,8 +319,8 @@
     flex-direction: column;
     gap: 14px;
     background: color-mix(in srgb, var(--surface) 60%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 16px;
@@ -305,16 +363,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 24px 24px 0;
+    padding: 12px 24px 0;
 }
 
 .video-page__back-btn {
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
     width: fit-content;
 }
 
 .video-page__reading-mode-btn {
-    border-radius: 999px !important;
+    border-radius: var(--radius-full) !important;
     gap: 6px;
 }
 
@@ -333,14 +391,14 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     border: none;
     background: transparent;
     color: var(--text-2);
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--duration-default), color var(--duration-default);
 }
 
 .video-page__sidebar-tab:hover {
@@ -414,11 +472,43 @@
     padding: 6px 8px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--duration-default), transform var(--duration-default), border-color var(--duration-default);
+    background: none;
+    border: none;
+    border-left: 2px solid transparent;
+    text-align: left;
+    width: 100%;
 }
 
 .video-page__chapter:hover {
     background: var(--surface-2);
+}
+
+/* VISUAL-08: active chapter highlight */
+.video-page__chapter--active {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border-left-color: var(--accent);
+}
+
+.video-page__chapter--active .video-page__chapter-title {
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* VISUAL-09: chapter seeking feedback */
+@keyframes vp-chapter-seek-flash {
+    0% {
+        background: color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    100% {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+}
+
+.video-page__chapter--seeking {
+    transform: scale(0.97);
+    animation: vp-chapter-seek-flash 0.6s ease forwards;
 }
 
 .video-page__chapter-time {
@@ -480,8 +570,13 @@
 /* ─── Autoplay banner ───────────────────────────────────────────────────────── */
 
 @keyframes vp-autoplay-progress {
-    from { width: 100%; }
-    to   { width: 0%; }
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
 }
 
 .video-page__autoplay-banner {
@@ -535,6 +630,7 @@
     bottom: 0;
     left: 0;
     right: 0;
+    transform-origin: left center;
     animation: vp-autoplay-progress linear forwards;
 }
 
@@ -550,10 +646,25 @@
 /* ─── Completion overlay ────────────────────────────────────────────────────── */
 
 @keyframes completion-pop {
-    0%   { opacity: 0; transform: scale(0.3); }
-    50%  { opacity: 1; transform: scale(1.1); }
-    75%  { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1); }
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    75% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 .video-page__completion-overlay {
@@ -565,7 +676,7 @@
     background: rgba(0, 0, 0, 0.4);
     color: #34d399;
     pointer-events: none;
-    animation: completion-pop 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: completion-pop 1.8s var(--ease-out) forwards;
     z-index: 10;
 }
 
@@ -580,14 +691,14 @@
 
 .video-page__speed-btn {
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text-2);
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background var(--duration-default), color var(--duration-default), border-color var(--duration-default);
 }
 
 .video-page__speed-btn:hover {
@@ -613,11 +724,9 @@
     content: '';
     position: absolute;
     inset: -20px;
-    background: radial-gradient(
-        ellipse 80% 60% at 50% 110%,
-        color-mix(in srgb, var(--accent) 14%, transparent),
-        transparent 70%
-    );
+    background: radial-gradient(ellipse 80% 60% at 50% 110%,
+            color-mix(in srgb, var(--accent) 14%, transparent),
+            transparent 70%);
     pointer-events: none;
     z-index: -1;
 }
@@ -652,10 +761,12 @@
     position: sticky;
     top: -32px;
     left: 0;
+    width: 100%;
     height: 3px;
     background: var(--accent);
     border-radius: 0 2px 2px 0;
-    transition: width 0.1s linear;
+    transform-origin: left center;
+    transition: transform 0.1s linear;
     margin: -32px -32px 24px;
     z-index: 1;
 }
