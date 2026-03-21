@@ -111,7 +111,7 @@
     background: rgba(0, 0, 0, 0.35);
     pointer-events: none;
     z-index: 6;
-    animation: vp-complete 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: vp-complete 1.8s var(--ease-out) forwards;
 }
 
 .vp__completion-icon {
@@ -135,6 +135,7 @@
     );
     opacity: 0;
     pointer-events: none;
+    will-change: opacity;
     transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 4;
 }
@@ -163,7 +164,7 @@
     position: relative;
     height: 3px;
     background: rgba(255, 255, 255, 0.28);
-    transition: height 0.15s ease;
+    transition: height var(--duration-default) ease;
     overflow: hidden;
 }
 
@@ -177,12 +178,15 @@
     position: absolute;
     left: 0;
     top: 0;
+    width: 100%;
     height: 100%;
     background: rgba(255, 255, 255, 0.38);
     border-radius: 2px;
     pointer-events: none;
     z-index: 0;
-    transition: width 0.4s ease;
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
 }
 
 /* Played portion — accent color */
@@ -190,11 +194,14 @@
     position: absolute;
     left: 0;
     top: 0;
+    width: 100%;
     height: 100%;
     background: var(--accent, #a78bfa);
     border-radius: 2px;
     pointer-events: none;
     z-index: 1;
+    transform-origin: left center;
+    transform: scaleX(0);
 }
 
 /* ─── Chapter dots ──────────────────────────────────────────────────────────── */
@@ -210,7 +217,7 @@
     pointer-events: all;
     cursor: pointer;
     z-index: 2;
-    transition: transform 0.12s, height 0.15s ease;
+    transition: transform var(--duration-fast), height var(--duration-default) ease;
 }
 
 .vp__seek:hover .vp__chapter-dot,
@@ -238,7 +245,7 @@
 /* Static thumb at current playback position — only visible when hovering */
 .vp__seek-thumb--current {
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-default);
 }
 
 .vp__seek:hover .vp__seek-thumb--current,
@@ -260,7 +267,7 @@
     gap: 5px;
     pointer-events: none;
     z-index: 10;
-    animation: vp-preview-in 0.12s ease forwards;
+    animation: vp-preview-in var(--duration-fast) ease forwards;
 }
 
 @keyframes vp-preview-in {
@@ -284,7 +291,7 @@
     width: 160px;
     height: 90px;
     display: block;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.7);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -296,7 +303,7 @@
     color: #fff;
     background: rgba(10, 10, 14, 0.96);
     padding: 3px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.04em;
     white-space: nowrap;
@@ -328,11 +335,11 @@
     width: 30px;
     height: 30px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: transparent;
     color: rgba(255, 255, 255, 0.88);
     cursor: pointer;
-    transition: background 0.12s, transform 0.12s, color 0.12s;
+    transition: background var(--duration-fast), transform var(--duration-fast), color var(--duration-fast);
     flex-shrink: 0;
     padding: 0;
 }
@@ -385,7 +392,7 @@
     cursor: pointer;
     outline: none;
     opacity: 0;
-    transition: width 0.2s ease, opacity 0.2s ease;
+    transition: opacity var(--duration-slow) ease;
     pointer-events: none;
     margin-left: 0;
 }
@@ -429,8 +436,8 @@
     right: 0;
     width: 160px;
     background: rgba(18, 18, 20, 0.96);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 12px;
@@ -470,7 +477,7 @@
     width: 100%;
     padding: 6px 10px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: transparent;
     color: rgba(255, 255, 255, 0.72);
     font-size: 0.8125rem;
@@ -532,7 +539,7 @@
     height: 56px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.14);
-    backdrop-filter: blur(4px);
+    backdrop-filter: var(--glass-blur-xs);
     color: #fff;
 }
 
@@ -544,7 +551,7 @@
     letter-spacing: 0.04em;
     background: rgba(0, 0, 0, 0.4);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
     white-space: nowrap;
 }
 
@@ -579,8 +586,11 @@
 
 .vp__short-seek-fill {
     height: 100%;
+    width: 100%;
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent);
+    transform-origin: left center;
+    transform: scaleX(0);
 }
 
 .vp__short-seek-input {
@@ -635,7 +645,7 @@
     justify-content: center;
     background: rgba(0, 0, 0, 0.35);
     opacity: 0;
-    transition: opacity 0.18s ease;
+    transition: opacity var(--duration-default) ease;
     z-index: 4;
     pointer-events: none;
 }
@@ -656,7 +666,7 @@
     border: none;
     cursor: pointer;
     color: white;
-    transition: background 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: background var(--duration-default), transform 0.18s var(--ease-bounce);
 }
 
 .vp__mini-btn:hover {
@@ -684,6 +694,9 @@
 
 .vp__mini-progress-fill {
     height: 100%;
+    width: 100%;
     background: var(--accent);
-    transition: width 0.3s linear;
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 0.3s linear;
 }
