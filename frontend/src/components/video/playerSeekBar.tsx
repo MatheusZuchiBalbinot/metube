@@ -1,0 +1,257 @@
+import { useRef, useState, useEffect } from 'react';
+import type { VideoChapter } from '@data/mockSummaries';
+
+// Width of the scrubber thumbnail preview (px).
+const PREVIEW_W = 160;
+const PREVIEW_HALF_W = PREVIEW_W / 2;
+
+function formatTime(s: number): string {
+    const isInvalid = !Number.isFinite(s) || s < 0;
+    if (isInvalid) { return '0:00'; }
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    const ss = String(sec).padStart(2, '0');
+    const hasHours = h > 0;
+    if (hasHours) { return `${h}:${String(m).padStart(2, '0')}:${ss}`; }
+    return `${m}:${ss}`;
+}
+
+function parseChapterTimestamp(ts: string): number {
+    const parts = ts.split(':').map(Number);
+    const isHMS = parts.length === 3;
+    if (isHMS) { return parts[0] * 3600 + parts[1] * 60 + parts[2]; }
+    return parts[0] * 60 + (parts[1] ?? 0);
+}
+
+interface PlayerSeekBarProps {
+    videoRef: React.RefObject<HTMLVideoElement | null>
+    src: string
+    duration: number
+    bufferedPct: number
+    currentTime: number
+    chapters?: VideoChapter[]
+    forceShow: () => void
+    scheduleHideControls: () => void
+    onDraggingChange: (isDragging: boolean) => void
+}
+
+export default function PlayerSeekBar({
+    videoRef, src, duration, bufferedPct, currentTime,
+    chapters, forceShow, scheduleHideControls, onDraggingChange,
+}: PlayerSeekBarProps) {
+    const seekInnerRef = useRef<HTMLDivElement>(null);
+    const previewVideoRef = useRef<HTMLVideoElement>(null);
+    const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+    const wasDraggingRef = useRef(false);
+
+    const [hoverSeekPct, setHoverSeekPct] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragPct, setDragPct] = useState<number | null>(null);
+    const [seekInnerWidth, setSeekInnerWidth] = useState(0);
+
+    function changeDragging(v: boolean) {
+        setIsDragging(v);
+        onDraggingChange(v);
+    }
+
+    // Reset own state when video source changes
+    useEffect(() => {
+        changeDragging(false);
+        setDragPct(null);
+        setHoverSeekPct(null);
+        wasDraggingRef.current = false;
+        const canvas = previewCanvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx?.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [src]);
+
+    // Track seek inner width for precise preview-arrow alignment
+    useEffect(() => {
+        const el = seekInnerRef.current;
+        if (!el) { return; }
+        const ro = new ResizeObserver(entries => {
+            const entry = entries[0];
+            if (entry) { setSeekInnerWidth(entry.contentRect.width); }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    // Seek the hidden preview video to the cursor hover position
+    useEffect(() => {
+        const pv = previewVideoRef.current;
+        const hasHover = hoverSeekPct !== null && duration > 0;
+        if (!pv || !hasHover) { return; }
+        pv.currentTime = hoverSeekPct! * duration;
+    }, [hoverSeekPct, duration]);
+
+    // Attach document-level mousemove/mouseup while dragging
+    useEffect(() => {
+        if (!isDragging) { return; }
+        forceShow();
+
+        function getPctFromEvent(e: MouseEvent): number {
+            const inner = seekInnerRef.current;
+            if (!inner) { return 0; }
+            const rect = inner.getBoundingClientRect();
+            return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        }
+
+        function onMouseMove(e: MouseEvent) {
+            const pct = getPctFromEvent(e);
+            setDragPct(pct);
+            setHoverSeekPct(pct);
+        }
+
+        function onMouseUp(e: MouseEvent) {
+            const el = videoRef.current;
+            if (el && el.duration > 0) { el.currentTime = getPctFromEvent(e) * el.duration; }
+            wasDraggingRef.current = true;
+            changeDragging(false);
+            setDragPct(null);
+            setHoverSeekPct(null);
+            scheduleHideControls();
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        return () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDragging]);
+
+    function handlePreviewSeeked() {
+        const pv = previewVideoRef.current;
+        const canvas = previewCanvasRef.current;
+        if (!pv || !canvas) { return; }
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { return; }
+        try { ctx.drawImage(pv, 0, 0, canvas.width, canvas.height); }
+        catch { /* CORS/decode error — canvas stays black */ }
+    }
+
+    function getSeekPct(e: React.MouseEvent<HTMLDivElement>): number {
+        const inner = seekInnerRef.current;
+        if (!inner) { return 0; }
+        const rect = inner.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    }
+
+    function handleSeekClick(e: React.MouseEvent<HTMLDivElement>) {
+        e.stopPropagation();
+        if (wasDraggingRef.current) { wasDraggingRef.current = false; return; }
+        const el = videoRef.current;
+        const hasDuration = duration > 0;
+        if (!el || !hasDuration) { return; }
+        el.currentTime = getSeekPct(e) * duration;
+    }
+
+    function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+        e.stopPropagation();
+        e.preventDefault();
+        const pct = getSeekPct(e);
+        changeDragging(true);
+        setDragPct(pct);
+        setHoverSeekPct(pct);
+    }
+
+    function handleSeekMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+        if (!isDragging) { setHoverSeekPct(getSeekPct(e)); }
+    }
+
+    function handleSeekMouseLeave() {
+        if (!isDragging) { setHoverSeekPct(null); }
+    }
+
+    // ─── Derived values ────────────────────────────────────────────────────────
+
+    const progressPct      = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const displayPct       = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
+    const activePct        = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
+    const hasChapters      = !!chapters && chapters.length > 0 && duration > 0;
+    const showHoverElements = hoverSeekPct !== null || isDragging;
+
+    const activePixel  = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
+    const maxClamp     = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
+    const clampedPixel = Math.min(Math.max(activePixel, PREVIEW_HALF_W), maxClamp);
+    const arrowOffset  = activePixel - clampedPixel;
+    const arrowLeftPct = Math.min(Math.max(50 + (arrowOffset / PREVIEW_W) * 100, 8), 92);
+    const hoverTime    = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
+
+    return (
+        <>
+            {/* Hidden video used only for scrubbing frame capture */}
+            <video
+                ref={previewVideoRef}
+                className="vp__preview-video"
+                src={src}
+                muted
+                preload="metadata"
+                onSeeked={handlePreviewSeeked}
+            />
+
+            <div
+                className="vp__seek"
+                onClick={handleSeekClick}
+                onMouseDown={handleSeekMouseDown}
+                onMouseMove={handleSeekMouseMove}
+                onMouseLeave={handleSeekMouseLeave}
+            >
+                <div className="vp__seek-inner" ref={seekInnerRef}>
+                    <div className="vp__seek-track">
+                        <div className="vp__seek-buffered" style={{ transform: `scaleX(${bufferedPct / 100})` }} />
+                        <div className="vp__seek-fill" style={{ transform: `scaleX(${displayPct / 100})` }} />
+                    </div>
+
+                    {hasChapters && chapters!.map((ch, i) => {
+                        const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
+                        const isVisible = chPct > 0.5 && chPct < 99.5;
+                        if (!isVisible) { return null; }
+                        return (
+                            <div
+                                key={i}
+                                className="vp__chapter-dot"
+                                style={{ left: `${chPct}%` }}
+                                title={ch.title}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const el = videoRef.current;
+                                    if (!el) { return; }
+                                    el.currentTime = parseChapterTimestamp(ch.timestamp);
+                                }}
+                            />
+                        );
+                    })}
+
+                    <div className="vp__seek-thumb vp__seek-thumb--current" style={{ left: `${displayPct}%` }} />
+
+                    {showHoverElements && duration > 0 && (
+                        <div
+                            className="vp__seek-preview"
+                            style={{
+                                '--preview-left': `${activePct}%`,
+                                '--arrow-left': `${arrowLeftPct}%`,
+                            } as React.CSSProperties}
+                        >
+                            <canvas
+                                ref={previewCanvasRef}
+                                className="vp__seek-preview-canvas"
+                                width={160}
+                                height={90}
+                            />
+                            <span className="vp__seek-preview-time">
+                                {formatTime(hoverTime)}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}
