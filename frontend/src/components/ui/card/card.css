@@ -4,13 +4,13 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-default), transform var(--duration-default), box-shadow var(--duration-default);
 }
 
 .card--hover:hover {
     border-color: var(--border-2);
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px var(--shadow);
+    box-shadow: var(--elevation-2);
     cursor: pointer;
 }
 

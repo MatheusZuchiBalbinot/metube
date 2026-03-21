@@ -6,18 +6,20 @@ interface AvatarProps {
     name: string
     size?: AvatarSize
     src?: string
+    ring?: boolean
+    glow?: boolean
     className?: string
 }
 
-export default function Avatar({ name, size = 'md', src, className = '' }: AvatarProps) {
+export default function Avatar({ name, size = 'md', src, ring = false, glow = false, className = '' }: AvatarProps) {
     const initial = name.charAt(0).toUpperCase();
 
     const classes = [
         'avatar',
         'avatar-grad',
         `avatar--${size}`,
-        size === 'sm' ? 'avatar-nav-ring' : '',
-        size === 'lg' ? 'avatar-glow' : '',
+        ring ? 'avatar-nav-ring' : '',
+        glow ? 'avatar-glow' : '',
         className,
     ]
         .filter(Boolean)
@@ -26,7 +28,7 @@ export default function Avatar({ name, size = 'md', src, className = '' }: Avata
     return (
         <div className={classes} role="img" aria-label={name}>
             {src ? (
-                <img src={src} alt={name} />
+                <img src={src} alt={name} loading="lazy" decoding="async" />
             ) : (
                 initial
             )}

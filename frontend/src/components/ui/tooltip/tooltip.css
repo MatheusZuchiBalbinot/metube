@@ -15,7 +15,7 @@
     z-index: 9999;
 
     transform-origin: var(--radix-tooltip-content-transform-origin);
-    animation: tooltip-in 0.12s ease;
+    animation: tooltip-in var(--duration-fast) ease;
 }
 
 @keyframes tooltip-in {

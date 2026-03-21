@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes } from 'react';
+import { forwardRef, type InputHTMLAttributes } from 'react';
 import './input.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -14,7 +14,7 @@ function buildInputClass(icon: React.ReactNode, error: string | undefined, class
         .join(' ');
 }
 
-export default function Input({
+const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     label,
     icon,
     error,
@@ -22,7 +22,7 @@ export default function Input({
     id,
     className = '',
     ...props
-}: InputProps) {
+}, ref) {
     const inputClass = buildInputClass(icon, error, className);
 
     return (
@@ -39,11 +39,13 @@ export default function Input({
                         {icon}
                     </span>
                 )}
-                <input id={id} className={inputClass} {...props} />
+                <input ref={ref} id={id} className={inputClass} {...props} />
             </div>
 
             {error && <p className="input-error-msg">{error}</p>}
             {!error && helper && <p className="input-helper-msg">{helper}</p>}
         </div>
     );
-}
+});
+
+export default Input;
