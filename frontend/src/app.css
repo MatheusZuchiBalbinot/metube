@@ -1,0 +1,32 @@
+/* ─── Route error fallback ────────────────────────────────────────────────── */
+
+.route-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text);
+}
+
+.route-error p {
+    font-size: 1.125rem;
+    color: var(--text-2);
+}
+
+.route-error button {
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.route-error button:hover {
+    background: var(--surface-3);
+}
