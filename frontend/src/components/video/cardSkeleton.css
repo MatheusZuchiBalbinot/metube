@@ -45,5 +45,5 @@
 .vc-skeleton__tag {
     height: 20px;
     width: 52px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
 }

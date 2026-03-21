@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMediaQuery } from '@utils/useMediaQuery';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Pin, PinOff } from 'lucide-react';
+import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import { ROUTES } from '@utils/routes';
-import { Format } from '@utils/format';
+import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
-import { useVideo } from '@context/useVideo';
-import Badge from '@ui/badge/badge';
+import { useAppDispatch, useAppSelector } from '@store';
+import { videoActions, selectSavedSet } from '@store/videoSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
+import SavePopover from './savePopover';
+import TagBadge from '@components/tag/badge';
+import VideoStatusBadges from './statusBadges';
 import './card.css';
 
 interface VideoCardProps {
@@ -27,7 +31,7 @@ function buildVideoCardClass(showActions: boolean) {
 }
 
 // eslint-disable-next-line complexity
-export default function VideoCard({
+const VideoCard = memo(function VideoCard({
     video,
     showActions = false,
     index,
@@ -36,14 +40,16 @@ export default function VideoCard({
 }: VideoCardProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-    const { openTagView, videoProgress, pinnedVideoId, pinVideo } = useVideo();
+    const dispatch = useAppDispatch();
+    const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
+    const isPinned = useAppSelector(s => s.video.pinnedVideoId === video.id);
+    const savedSet = useAppSelector(selectSavedSet);
+    const isSaved = savedSet.has(video.id);
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
-    const visibleTags = video.tags.slice(0, 3);
-    const extraTagCount = video.tags.length - 3;
+    const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags);
     const hasExtraTags = extraTagCount > 0;
 
-    const progress = videoProgress[video.id] ?? 0;
     const hasProgress = progress > 4 && progress < 96;
     const isWatched = progress >= 95;
 
@@ -53,15 +59,14 @@ export default function VideoCard({
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 
-    const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
     const isNew = !isScheduledAndFuture && Date.now() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
 
-    const isPinned = pinnedVideoId === video.id;
     const [thumbLoaded, setThumbLoaded] = useState(false);
+    const isTouchDevice = useMediaQuery('(hover: none)');
 
     function handlePin(e: React.MouseEvent) {
         e.stopPropagation();
-        pinVideo(video.id);
+        dispatch(videoActions.pinVideo(video.id));
     }
 
     function handleCardClick() {
@@ -85,14 +90,14 @@ export default function VideoCard({
 
     function handleTagClick(e: React.MouseEvent, tag: string) {
         e.stopPropagation();
-        openTagView(tag, video.id);
+        dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }));
     }
 
     return (
         <div
             className={buildVideoCardClass(showActions)}
             onClick={handleCardClick}
-            style={{ '--vc-color': palette.color, '--vc-bg': palette.bg, '--vc-index': index ?? 0 } as React.CSSProperties}
+            style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}
         >
             <div className="video-card__thumb">
                 <img
@@ -100,6 +105,7 @@ export default function VideoCard({
                     src={video.thumbnail}
                     alt={video.title}
                     loading="lazy"
+                    decoding="async"
                     onLoad={() => setThumbLoaded(true)}
                     style={{ opacity: thumbLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
                 />
@@ -108,30 +114,40 @@ export default function VideoCard({
                         <polygon points="6,3 20,12 6,21" />
                     </svg>
                 </div>
-                {isScheduledAndFuture && (
-                    <div className="video-card__badge-overlay">
-                        <Badge variant="warning">{t('video.scheduled')}</Badge>
-                    </div>
-                )}
-                {isNew && !isScheduledAndFuture && (
-                    <div className="video-card__new-overlay">
-                        <Badge variant="success">{t('video.new')}</Badge>
-                    </div>
-                )}
-                {isWatched && (
-                    <div className="video-card__watched-overlay">
-                        <CheckCircle2 size={12} />
-                        {t('video.watched')}
-                    </div>
-                )}
+                <VideoStatusBadges
+                    isScheduledAndFuture={isScheduledAndFuture}
+                    isNew={isNew}
+                    isWatched={isWatched}
+                    classPrefix="video-card"
+                />
                 {hasProgress && (
                     <div className="video-card__progress-bar">
                         <div
                             className="video-card__progress-fill"
-                            style={{ width: `${progress}%` }}
+                            style={{ transform: `scaleX(${progress / 100})` }}
                         />
                     </div>
                 )}
+                {video.duration != null && video.duration > 0 && (
+                    <div className="video-card__duration-badge">
+                        {Format.duration(video.duration)}
+                    </div>
+                )}
+                <div className={['video-card__save-trigger', isTouchDevice ? 'video-card__save-trigger--touch' : ''].filter(Boolean).join(' ')}>
+                    <SavePopover videoId={video.id}>
+                        <Tooltip content={t('video.save')} side="top">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label={t('video.save')}
+                                aria-pressed={isSaved}
+                                className={['video-card__save-btn', isSaved ? 'video-card__save-btn--active' : ''].filter(Boolean).join(' ')}
+                            >
+                                {isSaved ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
+                            </Button>
+                        </Tooltip>
+                    </SavePopover>
+                </div>
             </div>
 
             <div className="video-card__body">
@@ -153,20 +169,15 @@ export default function VideoCard({
                 </div>
 
                 <div className="video-card__tags">
-                    {visibleTags.map(tag => {
-                        const tagPalette = TagColors.palette(tag);
-                        return (
-                            <span
-                                key={tag}
-                                className="video-card__tag video-card__tag--clickable"
-                                style={{ background: tagPalette.bg, color: tagPalette.color }}
-                                role="button"
-                                onClick={e => handleTagClick(e, tag)}
-                            >
-                                {tag}
-                            </span>
-                        );
-                    })}
+                    {visibleTags.map(tag => (
+                        <TagBadge
+                            key={tag}
+                            tag={tag}
+                            className="video-card__tag"
+                            title={t('card.seeTagVideos', 'Ver vídeos com esta tag')}
+                            onClick={handleTagClick}
+                        />
+                    ))}
                     {hasExtraTags && (
                         <span className="video-card__tags-more">+{extraTagCount}</span>
                     )}
@@ -197,4 +208,6 @@ export default function VideoCard({
             </div>
         </div>
     );
-}
+});
+
+export default VideoCard;

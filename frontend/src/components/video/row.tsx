@@ -1,12 +1,13 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2 } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import { ROUTES } from '@utils/routes';
-import { Format } from '@utils/format';
+import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@context/useVideo';
-import Badge from '@ui/badge/badge';
+import TagBadge from '@components/tag/badge';
+import VideoStatusBadges from './statusBadges';
 import './row.css';
 
 interface VideoRowProps {
@@ -16,7 +17,7 @@ interface VideoRowProps {
 }
 
 // eslint-disable-next-line complexity
-export default function VideoRow({ video, highlighted = false, titleHighlight }: VideoRowProps) {
+const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighlight }: VideoRowProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { openTagView, videoProgress } = useVideo();
@@ -32,7 +33,6 @@ export default function VideoRow({ video, highlighted = false, titleHighlight }:
     const progress = videoProgress[video.id] ?? 0;
     const isWatched = progress >= 95;
 
-    const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
     const isNew = !isScheduledAndFuture && Date.now() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
 
     const rowClass = ['video-row', highlighted ? 'video-row--highlighted' : '']
@@ -53,8 +53,7 @@ export default function VideoRow({ video, highlighted = false, titleHighlight }:
         openTagView(tag, video.id);
     }
 
-    const visibleTags = video.tags.slice(0, 3);
-    const extraTagCount = video.tags.length - 3;
+    const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags);
     const hasExtraTags = extraTagCount > 0;
 
     return (
@@ -75,22 +74,12 @@ export default function VideoRow({ video, highlighted = false, titleHighlight }:
                         <polygon points="6,3 20,12 6,21" />
                     </svg>
                 </div>
-                {isScheduledAndFuture && (
-                    <div className="video-row__badge-overlay">
-                        <Badge variant="warning">{t('video.scheduled')}</Badge>
-                    </div>
-                )}
-                {isNew && !isScheduledAndFuture && (
-                    <div className="video-row__new-overlay">
-                        <Badge variant="success">{t('video.new')}</Badge>
-                    </div>
-                )}
-                {isWatched && (
-                    <div className="video-row__watched-overlay">
-                        <CheckCircle2 size={12} />
-                        {t('video.watched')}
-                    </div>
-                )}
+                <VideoStatusBadges
+                    isScheduledAndFuture={isScheduledAndFuture}
+                    isNew={isNew}
+                    isWatched={isWatched}
+                    classPrefix="video-row"
+                />
             </div>
 
             <div className="video-row__body">
@@ -123,20 +112,14 @@ export default function VideoRow({ video, highlighted = false, titleHighlight }:
                 </div>
 
                 <div className="video-row__tags">
-                    {visibleTags.map(tag => {
-                        const tagPalette = TagColors.palette(tag);
-                        return (
-                            <span
-                                key={tag}
-                                className="video-row__tag"
-                                style={{ background: tagPalette.bg, color: tagPalette.color }}
-                                role="button"
-                                onClick={e => handleTagClick(e, tag)}
-                            >
-                                {tag}
-                            </span>
-                        );
-                    })}
+                    {visibleTags.map(tag => (
+                        <TagBadge
+                            key={tag}
+                            tag={tag}
+                            className="video-row__tag"
+                            onClick={handleTagClick}
+                        />
+                    ))}
                     {hasExtraTags && (
                         <span className="video-row__tags-more">+{extraTagCount}</span>
                     )}
@@ -144,4 +127,6 @@ export default function VideoRow({ video, highlighted = false, titleHighlight }:
             </div>
         </div>
     );
-}
+});
+
+export default VideoRow;

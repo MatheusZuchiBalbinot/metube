@@ -59,27 +59,20 @@ export default function MiniPlayer() {
     }
 
     useEffect(() => {
-        function handleMouseMove(e: MouseEvent) {
-            if (!isDraggingRef.current) {
-                return;
-            }
+        if (!isDragging) { return; }
 
+        function handleMouseMove(e: MouseEvent) {
             const el = playerRef.current;
             const playerW = el?.offsetWidth ?? 360;
             const playerH = el?.offsetHeight ?? 254;
             const x = Math.max(0, Math.min(e.clientX - dragOffsetRef.current.x, window.innerWidth - playerW));
             const y = Math.max(0, Math.min(e.clientY - dragOffsetRef.current.y, window.innerHeight - playerH));
-
             setPos({ x, y });
         }
 
         function handleMouseUp() {
-            const wasDragging = isDraggingRef.current;
             isDraggingRef.current = false;
-
-            if (wasDragging) {
-                setIsDragging(false);
-            }
+            setIsDragging(false);
         }
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -89,7 +82,7 @@ export default function MiniPlayer() {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, []);
+    }, [isDragging]);
 
     function handleDragStart(e: React.MouseEvent<HTMLDivElement>) {
         const isButton = (e.target as HTMLElement).closest('button');
@@ -105,6 +98,35 @@ export default function MiniPlayer() {
         };
 
         e.preventDefault();
+    }
+
+    function handleDragKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        const isArrowKey = e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight';
+        if (!isArrowKey) {
+            return;
+        }
+
+        e.preventDefault();
+
+        const step = e.shiftKey ? 100 : 20;
+        const el = playerRef.current;
+        const playerW = el?.offsetWidth ?? 360;
+        const playerH = el?.offsetHeight ?? 254;
+
+        setPos(prev => {
+            const isUp = e.key === 'ArrowUp';
+            const isDown = e.key === 'ArrowDown';
+            const isLeft = e.key === 'ArrowLeft';
+            const isRight = e.key === 'ArrowRight';
+
+            const rawX = prev.x + (isRight ? step : isLeft ? -step : 0);
+            const rawY = prev.y + (isDown ? step : isUp ? -step : 0);
+
+            const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - playerW));
+            const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - playerH));
+
+            return { x: clampedX, y: clampedY };
+        });
     }
 
     function handleExpand() {
@@ -170,6 +192,9 @@ export default function MiniPlayer() {
             <div
                 className="mini-player__footer"
                 onMouseDown={handleDragStart}
+                onKeyDown={handleDragKeyDown}
+                tabIndex={0}
+                role="slider"
                 aria-label={t('mini_player.drag')}
             >
                 <div className="mini-player__info">
