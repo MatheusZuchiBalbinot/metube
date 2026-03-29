@@ -37,10 +37,25 @@ export default function VideoHero({ video }: VideoHeroProps) {
         openTagView(tag, video.id);
     }
 
+    function handleTagKeyDown(e: React.KeyboardEvent, tag: string) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+        if (!isActivationKey) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openTagView(tag, video.id);
+    }
+
     return (
-        <div
+        <article
             className="video-hero"
+            tabIndex={0}
             onClick={handleClick}
+            onKeyDown={(e) => {
+                const isActivationKey = e.key === 'Enter' || e.key === ' ';
+                if (!isActivationKey) return;
+                e.preventDefault();
+                handleClick();
+            }}
             style={{ '--vh-color': palette.color, '--vh-bg': palette.bg } as React.CSSProperties}
         >
             <div className="video-hero__thumb">
@@ -90,7 +105,9 @@ export default function VideoHero({ video }: VideoHeroProps) {
                                 className="video-hero__tag"
                                 style={{ background: tagPalette.bg, color: tagPalette.color }}
                                 role="button"
+                                tabIndex={0}
                                 onClick={e => handleTagClick(e, tag)}
+                                onKeyDown={e => handleTagKeyDown(e, tag)}
                             >
                                 {tag}
                             </span>
@@ -101,6 +118,6 @@ export default function VideoHero({ video }: VideoHeroProps) {
                     )}
                 </div>
             </div>
-        </div>
+        </article>
     );
 }

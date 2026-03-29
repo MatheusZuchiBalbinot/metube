@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@utils/routes';
 import AppHeader from '@components/header/header';
 import AppSidebar from '@components/sidebar/sidebar';
@@ -16,6 +17,7 @@ import { useSearch } from '@context/searchContext';
 import './layout.css';
 
 export default function AppLayout() {
+    const { t } = useTranslation();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
@@ -54,13 +56,14 @@ export default function AppLayout() {
 
     return (
         <div className="app-layout">
+            <a href="#main-content" className="skip-link">{t('nav.skip_to_content')}</a>
             <div className="app-layout__bg" aria-hidden="true">
                 <div className="app-layout__bg-orb" />
             </div>
             <AppHeader onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
             <div className="app-layout__body">
                 <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
-                <main className={['app-layout__content', isFullHeightPage ? 'app-layout__content--full' : ''].filter(Boolean).join(' ')}>
+                <main id="main-content" className={['app-layout__content', isFullHeightPage ? 'app-layout__content--full' : ''].filter(Boolean).join(' ')}>
                     <Suspense fallback={<PageSkeleton pathname={pathname} />}>
                         {activeTagView ? <TagView /> : <Outlet />}
                     </Suspense>

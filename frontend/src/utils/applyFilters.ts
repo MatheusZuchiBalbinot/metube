@@ -1,4 +1,5 @@
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
+import type { Tag } from '@models/tag';
 
 export const SortBy = {
     RECENT: 'recent',
@@ -8,7 +9,7 @@ export const SortBy = {
 export type SortBy = typeof SortBy[keyof typeof SortBy];
 
 export interface FilterState {
-    tags: string[]
+    tags: Tag[]
     year: number | null
     dateFrom: string | null
     dateTo: string | null
@@ -23,7 +24,7 @@ export const SORT_OPTIONS: { value: SortBy; labelKey: string }[] = [
 
 export class VideoFilter {
     static emptyState(): FilterState {
-        return { tags: [], year: null, dateFrom: null, dateTo: null, sortBy: SortBy.RECENT };
+        return { tags: [] as Tag[], year: null, dateFrom: null, dateTo: null, sortBy: SortBy.RECENT };
     }
 
     static apply(videos: Video[], f: FilterState): Video[] {

@@ -255,8 +255,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 50%;

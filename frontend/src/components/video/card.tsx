@@ -4,6 +4,7 @@ import { useMediaQuery } from '@utils/useMediaQuery';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
 import { ROUTES } from '@utils/routes';
 import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
@@ -21,7 +22,7 @@ interface VideoCardProps {
     showActions?: boolean
     index?: number
     onEdit?: (video: Video) => void
-    onDelete?: (id: string) => void
+    onDelete?: (id: VideoId) => void
 }
 
 function buildVideoCardClass(showActions: boolean) {
@@ -73,7 +74,22 @@ const VideoCard = memo(function VideoCard({
         navigate(ROUTES.VIDEO.replace(':id', video.id));
     }
 
+    function handleCardKeyDown(e: React.KeyboardEvent) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+        if (!isActivationKey) return;
+        e.preventDefault();
+        navigate(ROUTES.VIDEO.replace(':id', video.id));
+    }
+
     function handleChannelClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
+    }
+
+    function handleChannelKeyDown(e: React.KeyboardEvent) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+        if (!isActivationKey) return;
+        e.preventDefault();
         e.stopPropagation();
         navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
     }
@@ -94,9 +110,11 @@ const VideoCard = memo(function VideoCard({
     }
 
     return (
-        <div
+        <article
             className={buildVideoCardClass(showActions)}
+            tabIndex={0}
             onClick={handleCardClick}
+            onKeyDown={handleCardKeyDown}
             style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}
         >
             <div className="video-card__thumb">
@@ -157,7 +175,9 @@ const VideoCard = memo(function VideoCard({
                     <span
                         className="video-card__meta-channel"
                         role="button"
+                        tabIndex={0}
                         onClick={handleChannelClick}
+                        onKeyDown={handleChannelKeyDown}
                     >
                         {video.channel}
                     </span>
@@ -206,7 +226,7 @@ const VideoCard = memo(function VideoCard({
                     </div>
                 )}
             </div>
-        </div>
+        </article>
     );
 });
 

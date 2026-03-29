@@ -2,11 +2,12 @@ import { useRef, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, Tooltip } from '@ui';
+import type { Tag } from '@models/tag';
 import './input.css';
 
 interface TagInputProps {
-    value: string[]
-    onChange: (tags: string[]) => void
+    value: Tag[]
+    onChange: (tags: Tag[]) => void
     placeholder?: string
 }
 
@@ -20,7 +21,7 @@ export default function TagInput({
     const resolvedPlaceholder = placeholder ?? t('tag.add_placeholder');
 
     function addTag(raw: string) {
-        const trimmed = raw.trim().toLowerCase();
+        const trimmed = raw.trim().toLowerCase() as Tag;
         const isEmpty = trimmed === '';
         if (isEmpty) {
             return;
@@ -32,7 +33,7 @@ export default function TagInput({
         onChange([...value, trimmed]);
     }
 
-    function removeTag(tag: string) {
+    function removeTag(tag: Tag) {
         onChange(value.filter(t => t !== tag));
     }
 
@@ -88,6 +89,7 @@ export default function TagInput({
                     ref={inputRef}
                     type="text"
                     className="tag-input__field"
+                    aria-label={t('tag.add_placeholder')}
                     placeholder={value.length === 0 ? resolvedPlaceholder : ''}
                     onKeyDown={handleKeyDown}
                     onBlur={e => {

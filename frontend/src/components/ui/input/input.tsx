@@ -39,10 +39,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
                         {icon}
                     </span>
                 )}
-                <input ref={ref} id={id} className={inputClass} {...props} />
+                <input
+                    ref={ref}
+                    id={id}
+                    className={inputClass}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? `${id}-error` : undefined}
+                    {...props}
+                />
             </div>
 
-            {error && <p className="input-error-msg">{error}</p>}
+            {error && <p id={`${id}-error`} className="input-error-msg" role="alert">{error}</p>}
             {!error && helper && <p className="input-helper-msg">{helper}</p>}
         </div>
     );

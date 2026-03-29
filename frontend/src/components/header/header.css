@@ -112,8 +112,8 @@
 /* ─── Icon button (menu, bell) ────────────────────────────────────────────── */
 
 .app-header__icon-btn {
-    width: var(--icon-sm);
-    height: var(--icon-sm);
+    width: var(--icon-md);
+    height: var(--icon-md);
     border-radius: var(--radius-sm);
     border: none;
     background: transparent;

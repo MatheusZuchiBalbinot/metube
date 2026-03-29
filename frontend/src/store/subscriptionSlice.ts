@@ -1,21 +1,22 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray } from '@utils/loadFromStorage';
+import type { ChannelId } from '@models/channel';
 import type { RootState } from './index';
 
 interface SubscriptionState {
-    subscribedChannelIds: string[]
+    subscribedChannelIds: ChannelId[]
 }
 
-const SEED_SUBSCRIPTIONS = ['ch_1', 'ch_3', 'ch_5'];
+const SEED_SUBSCRIPTIONS = ['ch_1', 'ch_3', 'ch_5'] as ChannelId[];
 
 const subscriptionSlice = createSlice({
     name: 'subscription',
     initialState: (): SubscriptionState => ({
-        subscribedChannelIds: loadFromStorage<string[]>(STORAGE_KEYS.SUBSCRIPTIONS, SEED_SUBSCRIPTIONS, isArray),
+        subscribedChannelIds: loadFromStorage<ChannelId[]>(STORAGE_KEYS.SUBSCRIPTIONS, SEED_SUBSCRIPTIONS, isArray),
     }),
     reducers: {
-        toggleSubscription(state, action: PayloadAction<string>) {
+        toggleSubscription(state, action: PayloadAction<ChannelId>) {
             const channelId = action.payload;
             const index = state.subscribedChannelIds.indexOf(channelId);
             const isAlreadySubscribed = index !== -1;
@@ -27,7 +28,7 @@ const subscriptionSlice = createSlice({
         },
 
         // Cross-tab sync — name starts with 'subscription/xTab', excluded from persist listener
-        xTabSetSubscriptions(state, action: PayloadAction<string[]>) {
+        xTabSetSubscriptions(state, action: PayloadAction<ChannelId[]>) {
             state.subscribedChannelIds = action.payload;
         },
     },

@@ -43,6 +43,7 @@ Sempre use aliases — nunca caminhos relativos longos como `../../components/..
 | `@data/*` | `src/data/*` |
 | `@utils/*` | `src/utils/*` |
 | `@lib/*` | `src/lib/*` |
+| `@models/*` | `src/types/*` (domain DTOs: Video, Channel, Tag, User, Playlist, etc.) |
 
 **Excecao importante — componentes dentro de `src/components/ui/`:** como eles proprios sao exportados pelo barrel `@ui`, importar de `@ui` dentro deles criaria dependencia circular. Nesses arquivos, use caminho relativo direto: `import Button from '../button/button'`.
 

@@ -1,17 +1,11 @@
 import axios from 'axios';
 import client from './client';
+import type { User } from '@models/user';
 
-export interface User {
-    id: number
-    name: string
-    email: string
-    bio?: string
-    created_at: string
-}
+export type { User } from '@models/user';
 
 export interface LoginPayload {
     email: string
-    bio?: string
     password: string
 }
 

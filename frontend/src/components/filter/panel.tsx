@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, X } from 'lucide-react';
 import { SortBy, SORT_OPTIONS, type FilterState } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
+import type { Tag } from '@models/tag';
 import DatePicker from '@ui/date/picker';
 import { Button, Tooltip } from '@ui';
 import './panel.css';
@@ -10,7 +11,7 @@ import './panel.css';
 export type { FilterState };
 
 interface FilterPanelProps {
-    allTags: string[]
+    allTags: Tag[]
     value: FilterState
     onChange: (f: FilterState) => void
 }

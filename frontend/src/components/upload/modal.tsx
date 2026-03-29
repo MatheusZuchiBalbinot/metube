@@ -6,6 +6,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
 import { VideoStatus } from '@data/mockVideos';
+import type { Tag } from '@models/tag';
 import TagInput from '@components/tag/input';
 import DatePicker from '@ui/date/picker';
 import Badge from '@ui/badge/badge';
@@ -14,7 +15,7 @@ import './modal.css';
 interface FormState {
     title: string
     description: string
-    tags: string[]
+    tags: Tag[]
     thumbnailBase64: string | null
     videoObjectUrl: string | null
     publishAt: string | null
@@ -24,7 +25,7 @@ interface FormState {
 const INITIAL_FORM: FormState = {
     title: '',
     description: '',
-    tags: [],
+    tags: [] as Tag[],
     thumbnailBase64: null,
     videoObjectUrl: null,
     publishAt: null,
