@@ -10,7 +10,8 @@ import {
     selectSavedSet,
     selectRecommendations,
 } from '@store/videoSlice';
-import type { Video } from '@data/mockVideos';
+import type { Video, VideoId } from '@models/video';
+import type { Tag } from '@models/tag';
 import type { TagView, MiniPlayerState, WatchEvent } from '@store/videoSlice';
 
 export type { TagView, MiniPlayerState, WatchEvent };
@@ -46,31 +47,31 @@ export function useVideo() {
         [dispatch],
     );
     const editVideo = useCallback(
-        (id: string, partial: Partial<Video>) => dispatch(videoActions.editVideo({ id, partial })),
+        (id: VideoId, partial: Partial<Video>) => dispatch(videoActions.editVideo({ id, partial })),
         [dispatch],
     );
     const deleteVideo = useCallback(
-        (id: string) => dispatch(videoActions.deleteVideo(id)),
+        (id: VideoId) => dispatch(videoActions.deleteVideo(id)),
         [dispatch],
     );
     const likeVideo = useCallback(
-        (id: string) => dispatch(videoActions.likeVideo(id)),
+        (id: VideoId) => dispatch(videoActions.likeVideo(id)),
         [dispatch],
     );
     const dislikeVideo = useCallback(
-        (id: string) => dispatch(videoActions.dislikeVideo(id)),
+        (id: VideoId) => dispatch(videoActions.dislikeVideo(id)),
         [dispatch],
     );
     const saveVideo = useCallback(
-        (id: string) => dispatch(videoActions.saveVideo(id)),
+        (id: VideoId) => dispatch(videoActions.saveVideo(id)),
         [dispatch],
     );
     const watchVideo = useCallback(
-        (videoId: string) => dispatch(videoActions.watchVideo(videoId)),
+        (videoId: VideoId) => dispatch(videoActions.watchVideo(videoId)),
         [dispatch],
     );
     const removeFromHistory = useCallback(
-        (videoId: string) => dispatch(videoActions.removeFromHistory(videoId)),
+        (videoId: VideoId) => dispatch(videoActions.removeFromHistory(videoId)),
         [dispatch],
     );
     const clearHistory = useCallback(
@@ -78,7 +79,7 @@ export function useVideo() {
         [dispatch],
     );
     const updateProgress = useCallback(
-        (videoId: string, percent: number) => dispatch(videoActions.updateProgress({ videoId, percent })),
+        (videoId: VideoId, percent: number) => dispatch(videoActions.updateProgress({ videoId, percent })),
         [dispatch],
     );
     const setAutoplay = useCallback(
@@ -94,7 +95,7 @@ export function useVideo() {
         [dispatch],
     );
     const openTagView = useCallback(
-        (tag: string, fromVideoId: string | null) => dispatch(videoActions.openTagView({ tag, fromVideoId })),
+        (tag: Tag, fromVideoId: VideoId | null) => dispatch(videoActions.openTagView({ tag, fromVideoId })),
         [dispatch],
     );
     const closeTagView = useCallback(
@@ -110,17 +111,17 @@ export function useVideo() {
         [dispatch],
     );
     const setPendingVideoSeek = useCallback(
-        (videoId: string, time: number) => dispatch(videoActions.setPendingVideoSeek({ videoId, time })),
+        (videoId: VideoId, time: number) => dispatch(videoActions.setPendingVideoSeek({ videoId, time })),
         [dispatch],
     );
-    const consumePendingVideoSeek = useCallback((videoId: string): number | null => {
+    const consumePendingVideoSeek = useCallback((videoId: VideoId): number | null => {
         const isMatchingVideo = pendingVideoSeek?.videoId === videoId;
         if (!isMatchingVideo) { return null; }
         dispatch(videoActions.clearPendingVideoSeek());
         return pendingVideoSeek!.time;
     }, [dispatch, pendingVideoSeek]);
     const pinVideo = useCallback(
-        (id: string) => dispatch(videoActions.pinVideo(id)),
+        (id: VideoId) => dispatch(videoActions.pinVideo(id)),
         [dispatch],
     );
     const unpinVideo = useCallback(

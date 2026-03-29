@@ -47,8 +47,8 @@
 }
 
 .modal-close {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--radius-sm);
     border: none;
     background: transparent;

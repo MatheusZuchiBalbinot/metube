@@ -35,9 +35,42 @@ export default function Modal({
         if (!isOpen) {
             return;
         }
-        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
+
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Escape') {
+                onClose();
+                return;
+            }
+
+            const isTab = e.key === 'Tab';
+            if (!isTab) return;
+
+            const focusable = boxRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
+            const isNoFocusable = !focusable || focusable.length === 0;
+            if (isNoFocusable) {
+                e.preventDefault();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const isFocusOnFirst = document.activeElement === first;
+            const isFocusOnLast = document.activeElement === last;
+
+            if (e.shiftKey && isFocusOnFirst) {
+                e.preventDefault();
+                last.focus();
+                return;
+            }
+
+            if (!e.shiftKey && isFocusOnLast) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
 
     useEffect(() => {

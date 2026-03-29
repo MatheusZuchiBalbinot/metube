@@ -20,7 +20,7 @@
     --border-2: #38383f;
     --text: #eeeef2;
     --text-2: #9898b0;
-    --text-3: #6e6e86;
+    --text-3: #9191ab;
     --shadow: rgba(0, 0, 0, 0.55);
     --shadow-lg: rgba(0, 0, 0, 0.7);
     --glass-bg: rgba(17, 17, 22, 0.8);
@@ -55,7 +55,7 @@
     --border-2: #c8c8d8;
     --text: #0e0e18;
     --text-2: #5a5a72;
-    --text-3: #74748a;
+    --text-3: #565669;
     --shadow: rgba(0, 0, 0, 0.07);
     --shadow-lg: rgba(0, 0, 0, 0.14);
     --glass-bg: rgba(255, 255, 255, 0.88);
@@ -154,6 +154,34 @@
     --accent-orb-a: rgba(190, 18, 60, 0.07);
     --accent-orb-b: rgba(159, 18, 57, 0.05);
     --gradient-accent: linear-gradient(135deg, #be123c, #9f1239);
+}
+
+/* ─── System color scheme fallback (when JS theme-init hasn't run yet) ──── */
+@media (prefers-color-scheme: light) {
+    :root:not([data-mode]) {
+        --bg: #f2f2f7;
+        --bg-2: #e8e8f0;
+        --surface: #ffffff;
+        --surface-2: #f7f7fc;
+        --surface-3: #ededf5;
+        --border: #dcdce8;
+        --border-2: #c8c8d8;
+        --text: #0e0e18;
+        --text-2: #5a5a72;
+        --text-3: #565669;
+        --shadow: rgba(0, 0, 0, 0.07);
+        --shadow-lg: rgba(0, 0, 0, 0.14);
+        --glass-bg: rgba(255, 255, 255, 0.88);
+        --color-error: #dc2626;
+        --color-error-subtle: rgba(220, 38, 38, 0.10);
+        --color-error-fg: #ef4444;
+        --color-success: #059669;
+        --color-success-subtle: rgba(5, 150, 105, 0.10);
+        --color-success-fg: #10b981;
+        --color-warning: #d97706;
+        --color-warning-subtle: rgba(217, 119, 6, 0.10);
+        --color-warning-fg: #f59e0b;
+    }
 }
 
 /* ─── Custom scrollbar ───────────────────────────────────────────────────── */
@@ -319,6 +347,25 @@ h4 {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ─── Skip link ──────────────────────────────────────────────────────────── */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: var(--space-2);
+    z-index: var(--z-max);
+    padding: var(--space-2) var(--space-4);
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-base);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+}
+
+.skip-link:focus {
+    left: var(--space-2);
 }
 
 /* ─── Screen reader only ─────────────────────────────────────────────────── */

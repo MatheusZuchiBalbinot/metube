@@ -13,11 +13,10 @@ import './row.css';
 interface VideoRowProps {
     video: Video
     highlighted?: boolean
-    titleHighlight?: string
 }
 
 // eslint-disable-next-line complexity
-const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighlight }: VideoRowProps) {
+const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRowProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { openTagView, videoProgress } = useVideo();
@@ -43,7 +42,22 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighl
         navigate(ROUTES.VIDEO.replace(':id', video.id));
     }
 
+    function handleRowKeyDown(e: React.KeyboardEvent) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+        if (!isActivationKey) return;
+        e.preventDefault();
+        navigate(ROUTES.VIDEO.replace(':id', video.id));
+    }
+
     function handleChannelClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
+    }
+
+    function handleChannelKeyDown(e: React.KeyboardEvent) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+        if (!isActivationKey) return;
+        e.preventDefault();
         e.stopPropagation();
         navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
     }
@@ -57,9 +71,11 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighl
     const hasExtraTags = extraTagCount > 0;
 
     return (
-        <div
+        <article
             className={rowClass}
+            tabIndex={0}
             onClick={handleRowClick}
+            onKeyDown={handleRowKeyDown}
             style={{ '--vr-color': palette.color, '--vr-bg': palette.bg } as React.CSSProperties}
         >
             <div className="video-row__thumb">
@@ -83,14 +99,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighl
             </div>
 
             <div className="video-row__body">
-                {titleHighlight ? (
-                    <p
-                        className="video-row__title"
-                        dangerouslySetInnerHTML={{ __html: titleHighlight }}
-                    />
-                ) : (
-                    <p className="video-row__title">{video.title}</p>
-                )}
+                <p className="video-row__title">{video.title}</p>
 
                 {video.description && (
                     <p className="video-row__description">{video.description}</p>
@@ -100,7 +109,9 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighl
                     <span
                         className="video-row__meta-channel"
                         role="button"
+                        tabIndex={0}
                         onClick={handleChannelClick}
+                        onKeyDown={handleChannelKeyDown}
                     >
                         {video.channel}
                     </span>
@@ -125,7 +136,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, titleHighl
                     )}
                 </div>
             </div>
-        </div>
+        </article>
     );
 });
 

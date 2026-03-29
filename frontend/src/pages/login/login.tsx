@@ -47,7 +47,8 @@ export default function LoginPage() {
             <div className="login-card">
 
                 <div className="login-logo-mark">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" role="img" aria-label={t('common.app_name')}>
+                        <title>{t('common.app_name')}</title>
                         <polygon points="5,3 19,12 5,21" fill="white" />
                     </svg>
                 </div>

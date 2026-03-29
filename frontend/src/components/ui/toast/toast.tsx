@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
@@ -12,6 +13,7 @@ interface ToastItemProps {
 
 function ToastItem({ toast }: ToastItemProps) {
     const dispatch = useAppDispatch();
+    const { t } = useTranslation();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -36,7 +38,7 @@ function ToastItem({ toast }: ToastItemProps) {
         <div className={toastClass} role="alert">
             <span className="toast__icon">{iconMap[toast.type]}</span>
             <span className="toast__message">{toast.message}</span>
-            <button className="toast__close" onClick={handleClose} aria-label="Close">
+            <button className="toast__close" onClick={handleClose} aria-label={t('common.close')}>
                 <X size={14} />
             </button>
             <div
@@ -51,7 +53,7 @@ export default function ToastContainer() {
     const toasts = useAppSelector(state => state.toast.toasts);
 
     return (
-        <div className="toast-container" aria-live="polite">
+        <div className="toast-container" aria-live="polite" aria-atomic="true">
             {toasts.map(toast => (
                 <ToastItem key={toast.id} toast={toast} />
             ))}

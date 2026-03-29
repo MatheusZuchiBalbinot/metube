@@ -144,7 +144,8 @@
         "your_videos": "Your videos",
         "dashboard": "Dashboard",
         "toggle_sidebar": "Toggle sidebar",
-        "subscriptions": "Subscriptions"
+        "subscriptions": "Subscriptions",
+        "skip_to_content": "Skip to main content"
     },
     "shorts": {
         "empty_title": "No Shorts yet",

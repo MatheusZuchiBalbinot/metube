@@ -144,7 +144,8 @@
         "your_videos": "Seus vídeos",
         "dashboard": "Dashboard",
         "toggle_sidebar": "Alternar barra lateral",
-        "subscriptions": "Inscrições"
+        "subscriptions": "Inscrições",
+        "skip_to_content": "Pular para o conteúdo principal"
     },
     "shorts": {
         "empty_title": "Nenhum Short ainda",

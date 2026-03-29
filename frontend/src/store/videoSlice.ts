@@ -1,38 +1,40 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
-import { MOCK_VIDEOS, VideoStatus, type Video } from '@data/mockVideos';
+import { MOCK_VIDEOS } from '@data/mockVideos';
+import { VideoStatus, type Video, type VideoId } from '@models/video';
+import type { Tag } from '@models/tag';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
 
 export interface WatchEvent {
-    videoId: string
+    videoId: VideoId
     date: string
 }
 
 export interface TagView {
-    tag: string
-    fromVideoId: string | null
+    tag: Tag
+    fromVideoId: VideoId | null
 }
 
 export interface MiniPlayerState {
-    videoId: string
+    videoId: VideoId
     currentTime: number
     seekSession: number
 }
 
 interface VideoState {
     videos: Video[]
-    watchHistory: string[]
-    likedVideos: string[]
-    dislikedVideos: string[]
-    savedVideos: string[]
+    watchHistory: VideoId[]
+    likedVideos: VideoId[]
+    dislikedVideos: VideoId[]
+    savedVideos: VideoId[]
     videoProgress: Record<string, number>
     autoplay: boolean
     uploadModalOpen: boolean
     activeTagView: TagView | null
     miniPlayer: MiniPlayerState | null
-    pendingVideoSeek: { videoId: string; time: number } | null
+    pendingVideoSeek: { videoId: VideoId; time: number } | null
     watchEvents: WatchEvent[]
-    pinnedVideoId: string | null
+    pinnedVideoId: VideoId | null
     theaterMode: boolean
     shortsMuted: boolean
     shortsVolume: number
@@ -40,12 +42,12 @@ interface VideoState {
     error: string | null
 }
 
-const SEED_HISTORY = ['v003', 'v001', 'v008', 'v005', 'v007'];
+const SEED_HISTORY = ['v003', 'v001', 'v008', 'v005', 'v007'] as VideoId[];
 const SEED_PROGRESS: Record<string, number> = { v001: 67, v005: 38, v008: 82 };
 
 function buildSeedEvents(): WatchEvent[] {
     const now = Date.now();
-    return ['v003', 'v001', 'v008', 'v005', 'v007'].map((videoId, i) => ({
+    return (['v003', 'v001', 'v008', 'v005', 'v007'] as VideoId[]).map((videoId, i) => ({
         videoId,
         date: new Date(now - i * 24 * 60 * 60 * 1000).toISOString(),
     }));
@@ -53,10 +55,10 @@ function buildSeedEvents(): WatchEvent[] {
 
 const initialState: VideoState = {
     videos: MOCK_VIDEOS,
-    watchHistory: loadFromStorage<string[]>(STORAGE_KEYS.WATCH_HISTORY, SEED_HISTORY, isArray),
-    likedVideos: loadFromStorage<string[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
-    dislikedVideos: loadFromStorage<string[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
-    savedVideos: loadFromStorage<string[]>(STORAGE_KEYS.SAVED_VIDEOS, [], isArray),
+    watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, SEED_HISTORY, isArray),
+    likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
+    dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
+    savedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.SAVED_VIDEOS, [], isArray),
     videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, SEED_PROGRESS, isObject),
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
     uploadModalOpen: false,
@@ -64,7 +66,7 @@ const initialState: VideoState = {
     miniPlayer: null,
     pendingVideoSeek: null,
     watchEvents: loadFromStorage<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, buildSeedEvents(), isArray),
-    pinnedVideoId: localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null,
+    pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
     theaterMode: false,
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
     shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
@@ -80,7 +82,7 @@ const videoSlice = createSlice({
             state.videos.unshift({ ...action.payload, id: crypto.randomUUID(), views: 0 });
         },
 
-        editVideo(state, action: PayloadAction<{ id: string; partial: Partial<Video> }>) {
+        editVideo(state, action: PayloadAction<{ id: VideoId; partial: Partial<Video> }>) {
             const idx = state.videos.findIndex(v => v.id === action.payload.id);
             const isFound = idx !== -1;
             if (isFound) {
@@ -88,7 +90,7 @@ const videoSlice = createSlice({
             }
         },
 
-        deleteVideo(state, action: PayloadAction<string>) {
+        deleteVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
             state.videos = state.videos.filter(v => v.id !== id);
             state.watchHistory = state.watchHistory.filter(vid => vid !== id);
@@ -102,7 +104,7 @@ const videoSlice = createSlice({
             }
         },
 
-        likeVideo(state, action: PayloadAction<string>) {
+        likeVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
             const idx = state.likedVideos.indexOf(id);
             const isAlreadyLiked = idx !== -1;
@@ -114,7 +116,7 @@ const videoSlice = createSlice({
             }
         },
 
-        dislikeVideo(state, action: PayloadAction<string>) {
+        dislikeVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
             const idx = state.dislikedVideos.indexOf(id);
             const isAlreadyDisliked = idx !== -1;
@@ -126,7 +128,7 @@ const videoSlice = createSlice({
             }
         },
 
-        saveVideo(state, action: PayloadAction<string>) {
+        saveVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
             const idx = state.savedVideos.indexOf(id);
             const isAlreadySaved = idx !== -1;
@@ -137,7 +139,7 @@ const videoSlice = createSlice({
             }
         },
 
-        watchVideo(state, action: PayloadAction<string>) {
+        watchVideo(state, action: PayloadAction<VideoId>) {
             const videoId = action.payload;
             const isAlreadyFirst = state.watchHistory[0] === videoId;
             if (!isAlreadyFirst) {
@@ -150,7 +152,7 @@ const videoSlice = createSlice({
             state.watchEvents.push({ videoId, date: new Date().toISOString() });
         },
 
-        removeFromHistory(state, action: PayloadAction<string>) {
+        removeFromHistory(state, action: PayloadAction<VideoId>) {
             state.watchHistory = state.watchHistory.filter(id => id !== action.payload);
         },
 
@@ -158,7 +160,7 @@ const videoSlice = createSlice({
             state.watchHistory = [];
         },
 
-        updateProgress(state, action: PayloadAction<{ videoId: string; percent: number }>) {
+        updateProgress(state, action: PayloadAction<{ videoId: VideoId; percent: number }>) {
             state.videoProgress[action.payload.videoId] = action.payload.percent;
         },
 
@@ -191,7 +193,7 @@ const videoSlice = createSlice({
             state.miniPlayer = null;
         },
 
-        setPendingVideoSeek(state, action: PayloadAction<{ videoId: string; time: number }>) {
+        setPendingVideoSeek(state, action: PayloadAction<{ videoId: VideoId; time: number }>) {
             state.pendingVideoSeek = action.payload;
         },
 
@@ -199,7 +201,7 @@ const videoSlice = createSlice({
             state.pendingVideoSeek = null;
         },
 
-        pinVideo(state, action: PayloadAction<string>) {
+        pinVideo(state, action: PayloadAction<VideoId>) {
             const isAlreadyPinned = state.pinnedVideoId === action.payload;
             state.pinnedVideoId = isAlreadyPinned ? null : action.payload;
         },
@@ -223,19 +225,19 @@ const videoSlice = createSlice({
         // ─── Cross-tab sync reducers ───────────────────────────────────────────
         // Dispatched only by crossTabSync — must NOT trigger the persist listener
         // (names start with 'video/xTab' which the predicate explicitly excludes).
-        xTabSetWatchHistory(state, action: PayloadAction<string[]>) {
+        xTabSetWatchHistory(state, action: PayloadAction<VideoId[]>) {
             state.watchHistory = action.payload;
         },
-        xTabSetLikedVideos(state, action: PayloadAction<string[]>) {
+        xTabSetLikedVideos(state, action: PayloadAction<VideoId[]>) {
             state.likedVideos = action.payload;
         },
-        xTabSetDislikedVideos(state, action: PayloadAction<string[]>) {
+        xTabSetDislikedVideos(state, action: PayloadAction<VideoId[]>) {
             state.dislikedVideos = action.payload;
         },
-        xTabSetSavedVideos(state, action: PayloadAction<string[]>) {
+        xTabSetSavedVideos(state, action: PayloadAction<VideoId[]>) {
             state.savedVideos = action.payload;
         },
-        xTabSetPinnedVideoId(state, action: PayloadAction<string | null>) {
+        xTabSetPinnedVideoId(state, action: PayloadAction<VideoId | null>) {
             state.pinnedVideoId = action.payload;
         },
     },

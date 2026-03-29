@@ -28,6 +28,7 @@ export default function ChannelPage() {
         if (isIdMissing) {
             return [];
         }
+
         return publishedVideos.filter(v => v.channelId === id);
     }, [publishedVideos, id]);
 

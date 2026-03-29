@@ -1,25 +1,12 @@
 /* eslint-disable @stylistic/max-len */
-export const VideoStatus = {
-    PUBLISHED: 'published',
-    SCHEDULED: 'scheduled',
-} as const;
-export type VideoStatus = typeof VideoStatus[keyof typeof VideoStatus];
+export type { Video, VideoId, VideoStatus } from '@models/video';
+export { VideoStatus } from '@models/video';
+export type { ChannelId } from '@models/channel';
+export type { Tag } from '@models/tag';
 
-export interface Video {
-    id: string
-    title: string
-    description: string
-    tags: string[]
-    thumbnail: string
-    publishedAt: string
-    scheduledAt?: string
-    channel: string
-    channelId: string
-    views: number
-    status: VideoStatus
-    duration?: number
-    videoUrl?: string
-}
+import type { Video, VideoId } from '@models/video';
+import type { ChannelId } from '@models/channel';
+import type { Tag } from '@models/tag';
 
 const CHANNELS: Record<string, string> = {
     ch_1: 'CodeWithPedro',
@@ -52,15 +39,15 @@ function v(
     duration?: number,
 ): Video {
     return {
-        id,
+        id: id as VideoId,
         title,
         description,
-        tags,
+        tags: tags as Tag[],
         thumbnail: `https://picsum.photos/seed/${id}/320/180`,
         publishedAt,
         scheduledAt,
         channel: CHANNELS[channelId],
-        channelId,
+        channelId: channelId as ChannelId,
         views,
         status,
         duration,

@@ -76,9 +76,14 @@ function AppInit({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         dispatch(fetchMe());
 
+        function isSessionExpiredEvent(e: Event): e is CustomEvent<{ message: string }> {
+            return e instanceof CustomEvent && typeof (e.detail as { message?: unknown })?.message === 'string';
+        }
+
         function onSessionExpired(e: Event) {
-            const message = (e as CustomEvent<{ message: string }>).detail.message;
-            dispatch(authActions.sessionExpired(message));
+            const isValid = isSessionExpiredEvent(e);
+            if (!isValid) return;
+            dispatch(authActions.sessionExpired(e.detail.message));
         }
 
         window.addEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
