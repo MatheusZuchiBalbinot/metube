@@ -1,5 +1,5 @@
 /* eslint-disable @stylistic/max-len */
-export type { Video, VideoId, VideoStatus } from '@models/video';
+export type { Video, VideoId } from '@models/video';
 export { VideoStatus } from '@models/video';
 export type { ChannelId } from '@models/channel';
 export type { Tag } from '@models/tag';
