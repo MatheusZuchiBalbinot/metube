@@ -45,23 +45,25 @@ export default function ShortPlayer({
 }: ShortPlayerProps) {
     const { t } = useTranslation();
 
-    const popTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const skipTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const popAnimKeyRef  = useRef(0);
+    const popTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const skipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const popAnimKeyRef = useRef(0);
     const skipAnimKeyRef = useRef(0);
 
-    const [isPlaying, setIsPlaying]     = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration]       = useState(0);
-    const [_isMuted, setIsMuted]         = useState(controlledMuted ?? true);
+    const [duration, setDuration] = useState(0);
+    const [_isMuted, setIsMuted] = useState(controlledMuted ?? true);
     const [isBuffering, setIsBuffering] = useState(false);
-    const [popIcon, setPopIcon]         = useState<{ type: 'play' | 'pause'; key: number } | null>(null);
+    const [popIcon, setPopIcon] = useState<{ type: 'play' | 'pause'; key: number } | null>(null);
     const [skipIndicator, setSkipIndicator] = useState<SkipIndicator | null>(null);
-    const [shortDragPct, setShortDragPct]   = useState<number | null>(null);
+    const [shortDragPct, setShortDragPct] = useState<number | null>(null);
 
     // ─── Register video element with parent (ShortsPage) ──────────────────────
     useLayoutEffect(() => {
-        if (!onVideoMounted) { return; }
+        if (!onVideoMounted) {
+            return;
+        }
         onVideoMounted(videoRef.current);
         return () => onVideoMounted(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,19 +72,27 @@ export default function ShortPlayer({
     // ─── Sync controlled muted from parent ────────────────────────────────────
     useEffect(() => {
         const hasValue = controlledMuted !== undefined;
-        if (!hasValue) { return; }
+        if (!hasValue) {
+            return;
+        }
         setIsMuted(controlledMuted!);
         const el = videoRef.current;
-        if (el) { el.muted = controlledMuted!; }
+        if (el) {
+            el.muted = controlledMuted!;
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlledMuted]);
 
     // ─── Sync controlled volume from parent ───────────────────────────────────
     useEffect(() => {
         const hasValue = controlledVolume !== undefined;
-        if (!hasValue) { return; }
+        if (!hasValue) {
+            return;
+        }
         const el = videoRef.current;
-        if (el) { el.volume = controlledVolume!; }
+        if (el) {
+            el.volume = controlledVolume!;
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlledVolume]);
 
@@ -99,26 +109,40 @@ export default function ShortPlayer({
     // ─── Timer cleanup ────────────────────────────────────────────────────────
     useEffect(() => {
         return () => {
-            if (popTimerRef.current)  { clearTimeout(popTimerRef.current); }
-            if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); }
+            if (popTimerRef.current) {
+                clearTimeout(popTimerRef.current);
+            }
+
+            if (skipTimerRef.current) {
+                clearTimeout(skipTimerRef.current);
+            }
         };
     }, []);
 
     // ─── Keyboard shortcuts ────────────────────────────────────────────────────
     useEffect(() => {
-        if (!captureKeyboard) { return; }
+        if (!captureKeyboard) {
+            return;
+        }
         function onKeyDown(e: KeyboardEvent) {
             const el = videoRef.current;
-            if (!el) { return; }
+            if (!el) {
+                return;
+            }
             const target = e.target as HTMLElement;
             const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
-            if (isTyping) { return; }
+            if (isTyping) {
+                return;
+            }
 
             if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 const isVideoPaused = el.paused;
-                if (isVideoPaused) { el.play().catch(() => {}); showPopIcon('play'); }
-                else { el.pause(); showPopIcon('pause'); }
+                if (isVideoPaused) {
+                    el.play().catch(() => {}); showPopIcon('play');
+                } else {
+                    el.pause(); showPopIcon('pause');
+                }
                 return;
             }
 
@@ -150,7 +174,9 @@ export default function ShortPlayer({
     }, [captureKeyboard, onMuteChange]);
 
     function showPopIcon(type: 'play' | 'pause') {
-        if (popTimerRef.current) { clearTimeout(popTimerRef.current); }
+        if (popTimerRef.current) {
+            clearTimeout(popTimerRef.current);
+        }
         popAnimKeyRef.current += 1;
         setPopIcon({ type, key: popAnimKeyRef.current });
         popTimerRef.current = setTimeout(() => setPopIcon(null), 500);
@@ -159,7 +185,9 @@ export default function ShortPlayer({
     function showSkipIndicator(dir: 'fwd' | 'bwd') {
         skipAnimKeyRef.current += 1;
         const key = skipAnimKeyRef.current;
-        if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); }
+        if (skipTimerRef.current) {
+            clearTimeout(skipTimerRef.current);
+        }
         setSkipIndicator(prev => ({
             dir,
             count: prev?.dir === dir ? prev.count + 1 : 1,
@@ -181,7 +209,9 @@ export default function ShortPlayer({
 
     const handleVideoTimeUpdate = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         setCurrentTime(el.currentTime);
         setShortDragPct(null);
         onTimeUpdate?.();
@@ -189,7 +219,9 @@ export default function ShortPlayer({
 
     const handleVideoLoadedMetadata = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         setDuration(el.duration);
         onLoadedMetadata?.();
     }, [videoRef, onLoadedMetadata]);
@@ -202,10 +234,15 @@ export default function ShortPlayer({
     function handleTap() {
         onTap?.();
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const isVideoPaused = el.paused;
-        if (isVideoPaused) { el.play().catch(() => {}); showPopIcon('play'); }
-        else { el.pause(); showPopIcon('pause'); }
+        if (isVideoPaused) {
+            el.play().catch(() => {}); showPopIcon('play');
+        } else {
+            el.pause(); showPopIcon('pause');
+        }
     }
 
     function handleShortSeek(e: React.ChangeEvent<HTMLInputElement>) {
@@ -213,7 +250,9 @@ export default function ShortPlayer({
         const el = videoRef.current;
         const val = parseFloat(e.target.value);
         const hasDuration = el !== null && el.duration > 0;
-        if (!hasDuration) { return; }
+        if (!hasDuration) {
+            return;
+        }
         setShortDragPct(val);
         el!.currentTime = (val / 100) * el!.duration;
     }

@@ -50,9 +50,17 @@ export async function uploadVideo(payload: VideoUploadPayload): Promise<Video> {
     form.append('channelId', payload.channelId);
     form.append('status', payload.status);
     payload.tags.forEach(tag => form.append('tags[]', tag));
-    if (payload.scheduledAt) { form.append('scheduledAt', payload.scheduledAt); }
-    if (payload.thumbnail) { form.append('thumbnail', payload.thumbnail); }
-    if (payload.videoFile) { form.append('videoFile', payload.videoFile); }
+    if (payload.scheduledAt) {
+        form.append('scheduledAt', payload.scheduledAt);
+    }
+
+    if (payload.thumbnail) {
+        form.append('thumbnail', payload.thumbnail);
+    }
+
+    if (payload.videoFile) {
+        form.append('videoFile', payload.videoFile);
+    }
 
     const { data } = await client.post<Video>('/videos', form, {
         headers: { 'Content-Type': 'multipart/form-data' },

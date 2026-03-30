@@ -18,7 +18,9 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
 
     const focusSearch = useCallback(() => {
         const input = inputRef.current;
-        if (!input) { return; }
+        if (!input) {
+            return;
+        }
         input.focus();
         input.select();
     }, []);
@@ -32,6 +34,8 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
 
 export function useSearch(): SearchContextValue {
     const ctx = useContext(SearchContext);
-    if (!ctx) { throw new Error('useSearch must be used inside SearchProvider'); }
+    if (!ctx) {
+        throw new Error('useSearch must be used inside SearchProvider');
+    }
     return ctx;
 }

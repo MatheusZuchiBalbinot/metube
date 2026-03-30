@@ -26,20 +26,24 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
 
     function startAutoplayCountdown() {
         const hasRelated = relatedVideos.length > 0;
-        if (!autoplay || !hasRelated) { return; }
+        if (!autoplay || !hasRelated) {
+            return;
+        }
         setAutoplayCountdown(AUTOPLAY_COUNTDOWN);
     }
 
     // Cancel autoplay when navigating to a different video
     useEffect(() => {
         return () => cancelAutoplay();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [id]);
 
     // Drive the countdown timer
     useEffect(() => {
         const isCountingDown = autoplayCountdown !== null;
-        if (!isCountingDown) { return; }
+        if (!isCountingDown) {
+            return;
+        }
 
         autoplayTimerRef.current = setInterval(() => {
             setAutoplayCountdown(prev => {
@@ -58,7 +62,9 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
         }, 1000);
 
         return () => {
-            if (autoplayTimerRef.current) { clearInterval(autoplayTimerRef.current); }
+            if (autoplayTimerRef.current) {
+                clearInterval(autoplayTimerRef.current);
+            }
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoplayCountdown]);

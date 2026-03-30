@@ -20,13 +20,17 @@ type SkipIndicator = { dir: 'fwd' | 'bwd'; count: number; key: number };
 
 function formatTime(s: number): string {
     const isInvalid = !Number.isFinite(s) || s < 0;
-    if (isInvalid) { return '0:00'; }
+    if (isInvalid) {
+        return '0:00';
+    }
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     const ss = String(sec).padStart(2, '0');
     const hasHours = h > 0;
-    if (hasHours) { return `${h}:${String(m).padStart(2, '0')}:${ss}`; }
+    if (hasHours) {
+        return `${h}:${String(m).padStart(2, '0')}:${ss}`;
+    }
     return `${m}:${ss}`;
 }
 
@@ -115,7 +119,9 @@ export default function VideoPlayer({
     // ─── Helper functions ──────────────────────────────────────────────────────
 
     function showPopIcon(type: 'play' | 'pause') {
-        if (popTimerRef.current) { clearTimeout(popTimerRef.current); }
+        if (popTimerRef.current) {
+            clearTimeout(popTimerRef.current);
+        }
         popAnimKeyRef.current += 1;
         setPopIcon({ type, key: popAnimKeyRef.current });
         popTimerRef.current = setTimeout(() => setPopIcon(null), 500);
@@ -124,7 +130,9 @@ export default function VideoPlayer({
     function showSkipIndicator(dir: 'fwd' | 'bwd') {
         skipAnimKeyRef.current += 1;
         const key = skipAnimKeyRef.current;
-        if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); }
+        if (skipTimerRef.current) {
+            clearTimeout(skipTimerRef.current);
+        }
         setSkipIndicator(prev => ({
             dir,
             count: prev?.dir === dir ? prev.count + 1 : 1,
@@ -135,9 +143,15 @@ export default function VideoPlayer({
 
     function handleFullscreenToggle() {
         const container = containerRef.current;
-        if (!container) { return; }
-        if (document.fullscreenElement) { document.exitFullscreen().catch(() => { }); }
-        else { container.requestFullscreen().catch(() => { }); }
+        if (!container) {
+            return;
+        }
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
+        } else {
+            container.requestFullscreen().catch(() => { });
+        }
     }
 
     // ─── Effects ───────────────────────────────────────────────────────────────
@@ -145,9 +159,17 @@ export default function VideoPlayer({
     // Cleanup animation timers on unmount
     useEffect(() => {
         return () => {
-            if (popTimerRef.current) { clearTimeout(popTimerRef.current); }
-            if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); }
-            if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); }
+            if (popTimerRef.current) {
+                clearTimeout(popTimerRef.current);
+            }
+
+            if (clickTimerRef.current) {
+                clearTimeout(clickTimerRef.current);
+            }
+
+            if (skipTimerRef.current) {
+                clearTimeout(skipTimerRef.current);
+            }
         };
     }, []);
 
@@ -169,10 +191,14 @@ export default function VideoPlayer({
 
     // Close settings panel when clicking outside (default mode only)
     useEffect(() => {
-        if (!isDefault) { return; }
+        if (!isDefault) {
+            return;
+        }
         function handleOutsideClick(e: MouseEvent) {
             const isOutside = settingsRef.current && !settingsRef.current.contains(e.target as Node);
-            if (isOutside) { setShowSettings(false); }
+            if (isOutside) {
+                setShowSettings(false);
+            }
         }
         document.addEventListener('mousedown', handleOutsideClick);
         return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -181,12 +207,18 @@ export default function VideoPlayer({
 
     // Mouse wheel to control volume (default mode only)
     useEffect(() => {
-        if (!isDefault) { return; }
+        if (!isDefault) {
+            return;
+        }
         const container = containerRef.current;
-        if (!container) { return; }
+        if (!container) {
+            return;
+        }
         function onWheel(e: WheelEvent) {
             const el = videoRef.current;
-            if (!el) { return; }
+            if (!el) {
+                return;
+            }
             const delta = e.deltaY < 0 ? 0.05 : -0.05;
             const newVol = Math.min(1, Math.max(0, el.volume + delta));
             applyVolume(newVol);
@@ -199,7 +231,9 @@ export default function VideoPlayer({
 
     // Fullscreen change listener
     useEffect(() => {
-        function onFsChange() { setIsFullscreen(document.fullscreenElement !== null); }
+        function onFsChange() {
+            setIsFullscreen(document.fullscreenElement !== null);
+        }
         document.addEventListener('fullscreenchange', onFsChange);
         return () => document.removeEventListener('fullscreenchange', onFsChange);
     }, []);
@@ -208,10 +242,15 @@ export default function VideoPlayer({
 
     function handleTogglePlayImmediate() {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const isVideoPaused = el.paused;
-        if (isVideoPaused) { el.play().catch(() => { }); showPopIcon('play'); }
-        else { el.pause(); showPopIcon('pause'); }
+        if (isVideoPaused) {
+            el.play().catch(() => { }); showPopIcon('play');
+        } else {
+            el.pause(); showPopIcon('pause');
+        }
     }
 
     function handleMiniProgressClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -220,17 +259,25 @@ export default function VideoPlayer({
         const rect = e.currentTarget.getBoundingClientRect();
         const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         const hasDuration = el !== null && el.duration > 0;
-        if (!hasDuration) { return; }
+        if (!hasDuration) {
+            return;
+        }
         el!.currentTime = pct * el!.duration;
     }
 
     function handleContainerClick() {
-        if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); }
-        clickTimerRef.current = setTimeout(() => { handleTogglePlayImmediate(); }, DOUBLE_CLICK_DELAY_MS);
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+        }
+        clickTimerRef.current = setTimeout(() => {
+            handleTogglePlayImmediate();
+        }, DOUBLE_CLICK_DELAY_MS);
     }
 
     function handleContainerDoubleClick() {
-        if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current); clickTimerRef.current = null;
+        }
         handleFullscreenToggle();
     }
 
@@ -268,8 +315,13 @@ export default function VideoPlayer({
     function getVolumeIcon() {
         const isVolumeZero = isMuted || volume === 0;
         const isVolumeLow = !isVolumeZero && volume < 0.5;
-        if (isVolumeZero) { return <VolumeX size={16} />; }
-        if (isVolumeLow) { return <Volume1 size={16} />; }
+        if (isVolumeZero) {
+            return <VolumeX size={16} />;
+        }
+
+        if (isVolumeLow) {
+            return <Volume1 size={16} />;
+        }
         return <Volume2 size={16} />;
     }
 
@@ -332,7 +384,9 @@ export default function VideoPlayer({
             onMouseLeave={() => {
                 const isVideoPaused = videoRef.current?.paused ?? true;
                 const shouldHide = !isVideoPaused && !isDragging;
-                if (shouldHide) { setShowControls(false); }
+                if (shouldHide) {
+                    setShowControls(false);
+                }
             }}
             style={ambientColor ? ({ '--vp-ambient': ambientColor } as React.CSSProperties) : undefined}
             onClick={handleContainerClick}

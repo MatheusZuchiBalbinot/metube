@@ -116,7 +116,9 @@ export function useVideo() {
     );
     const consumePendingVideoSeek = useCallback((videoId: VideoId): number | null => {
         const isMatchingVideo = pendingVideoSeek?.videoId === videoId;
-        if (!isMatchingVideo) { return null; }
+        if (!isMatchingVideo) {
+            return null;
+        }
         dispatch(videoActions.clearPendingVideoSeek());
         return pendingVideoSeek!.time;
     }, [dispatch, pendingVideoSeek]);

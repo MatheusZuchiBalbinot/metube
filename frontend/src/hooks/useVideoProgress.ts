@@ -50,15 +50,21 @@ export function useVideoProgress({
 
     // Consume a pending resume-seek when id changes
     useEffect(() => {
-        if (!id) { return; }
+        if (!id) {
+            return;
+        }
         const resumeTime = consumePendingVideoSeek(id);
-        if (resumeTime !== null) { pendingSeekRef.current = resumeTime; }
+        if (resumeTime !== null) {
+            pendingSeekRef.current = resumeTime;
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     function triggerCompletion() {
         const isAlreadyCompleted = hasCompletedRef.current;
-        if (isAlreadyCompleted) { return; }
+        if (isAlreadyCompleted) {
+            return;
+        }
         hasCompletedRef.current = true;
         setShowCompletion(true);
         setTimeout(() => setShowCompletion(false), 1800);
@@ -67,14 +73,20 @@ export function useVideoProgress({
     // Simulate progress for videos without a real file
     useEffect(() => {
         const isVideoMissing = !video || !id;
-        if (isVideoMissing) { return; }
+        if (isVideoMissing) {
+            return;
+        }
 
         const hasFile = video.videoUrl !== undefined && video.videoUrl !== '';
-        if (hasFile) { return; }
+        if (hasFile) {
+            return;
+        }
 
         const existing = videoProgress[id] ?? 0;
         const isFinished = existing >= 95;
-        if (isFinished) { return; }
+        if (isFinished) {
+            return;
+        }
 
         // Start at least 4s in so the mini player always triggers on navigate-away
         simulatedSecondsRef.current = Math.max(4, (existing / 100) * SIMULATE_DURATION_S);
@@ -106,8 +118,13 @@ export function useVideoProgress({
     // Persist progress and open mini player on unmount / id change
     useEffect(() => {
         return () => {
-            if (simulateTimerRef.current) { clearInterval(simulateTimerRef.current); }
-            if (!id) { return; }
+            if (simulateTimerRef.current) {
+                clearInterval(simulateTimerRef.current);
+            }
+
+            if (!id) {
+                return;
+            }
 
             const hasCurrentTime = currentTimeRef.current > 0;
             const currentT = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
@@ -137,7 +154,9 @@ export function useVideoProgress({
 
     const handleLoadedMetadata = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
 
         durationRef.current = el.duration;
 
@@ -153,14 +172,18 @@ export function useVideoProgress({
 
     const handleTimeUpdate = useCallback(() => {
         const el = videoRef.current;
-        if (!el || !id) { return; }
+        if (!el || !id) {
+            return;
+        }
 
         currentTimeRef.current = el.currentTime;
         setCurrentTime(el.currentTime);
 
         const now = Date.now();
         const shouldThrottle = now - progressThrottleRef.current < PROGRESS_THROTTLE_MS;
-        if (shouldThrottle) { return; }
+        if (shouldThrottle) {
+            return;
+        }
 
         progressThrottleRef.current = now;
         const percent = el.duration > 0 ? (el.currentTime / el.duration) * 100 : 0;
@@ -168,10 +191,12 @@ export function useVideoProgress({
     }, [id, updateProgress, videoRef]);
 
     const handleVideoEnded = useCallback(() => {
-        if (id) { updateProgress(id, 100); }
+        if (id) {
+            updateProgress(id, 100);
+        }
         triggerCompletion();
         onCompletedRef.current();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [id, updateProgress]);
 
     // Returns the best-known current playback position (real or simulated)

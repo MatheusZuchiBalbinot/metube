@@ -114,8 +114,12 @@ export default function HomePage() {
 
     useEffect(() => {
         const el = trendingRef.current;
-        if (!el) { return; }
-        function update() { setTrendingScroll(getScrollState(el!)); }
+        if (!el) {
+            return;
+        }
+        function update() {
+            setTrendingScroll(getScrollState(el!));
+        }
         update();
         el.addEventListener('scroll', update, { passive: true });
         return () => el.removeEventListener('scroll', update);
@@ -123,8 +127,12 @@ export default function HomePage() {
 
     useEffect(() => {
         const el = continueRef.current;
-        if (!el) { return; }
-        function update() { setContinueScroll(getScrollState(el!)); }
+        if (!el) {
+            return;
+        }
+        function update() {
+            setContinueScroll(getScrollState(el!));
+        }
         update();
         el.addEventListener('scroll', update, { passive: true });
         return () => el.removeEventListener('scroll', update);

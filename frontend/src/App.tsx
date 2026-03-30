@@ -29,17 +29,17 @@ const ShortsPage = React.lazy(() => import('@pages/shorts/shorts'));
 const NotFoundPage = React.lazy(() => import('@pages/notFound/notFound'));
 
 const PROTECTED_ROUTES: { path: string; Page: React.LazyExoticComponent<() => React.ReactElement> }[] = [
-    { path: ROUTES.HOME,        Page: HomePage },
-    { path: ROUTES.SHORTS,      Page: ShortsPage },
-    { path: ROUTES.HISTORY,     Page: HistoryPage },
-    { path: ROUTES.PLAYLISTS,   Page: PlaylistsPage },
+    { path: ROUTES.HOME, Page: HomePage },
+    { path: ROUTES.SHORTS, Page: ShortsPage },
+    { path: ROUTES.HISTORY, Page: HistoryPage },
+    { path: ROUTES.PLAYLISTS, Page: PlaylistsPage },
     { path: ROUTES.WATCH_LATER, Page: WatchLaterPage },
-    { path: ROUTES.LIKED,       Page: LikedPage },
-    { path: ROUTES.PROFILE,     Page: ProfilePage },
-    { path: ROUTES.USER,        Page: ProfilePage },
-    { path: ROUTES.VIDEO,       Page: VideoPage },
-    { path: ROUTES.SEARCH,      Page: SearchPage },
-    { path: ROUTES.CHANNEL,     Page: ChannelPage },
+    { path: ROUTES.LIKED, Page: LikedPage },
+    { path: ROUTES.PROFILE, Page: ProfilePage },
+    { path: ROUTES.USER, Page: ProfilePage },
+    { path: ROUTES.VIDEO, Page: VideoPage },
+    { path: ROUTES.SEARCH, Page: SearchPage },
+    { path: ROUTES.CHANNEL, Page: ChannelPage },
 ];
 
 class RouteErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -82,7 +82,9 @@ function AppInit({ children }: { children: React.ReactNode }) {
 
         function onSessionExpired(e: Event) {
             const isValid = isSessionExpiredEvent(e);
-            if (!isValid) return;
+            if (!isValid) {
+                return;
+            }
             dispatch(authActions.sessionExpired(e.detail.message));
         }
 
@@ -114,22 +116,22 @@ export default function App() {
             <BrowserRouter>
                 <AppInit>
                     <SearchProvider>
-                    <TooltipProvider delayDuration={150}>
-                        <Suspense fallback={null}>
-                            <UploadModal />
-                        </Suspense>
-                        <RouteErrorBoundary>
-                            <Routes>
-                                <Route path={ROUTES.LOGIN} element={<Suspense fallback={<PageSpinner />}><LoginPage /></Suspense>} />
-                                <Route element={<Guard><AppLayout /></Guard>}>
-                                    {PROTECTED_ROUTES.map(({ path, Page }) => (
-                                        <Route key={path} path={path} element={<Page />} />
-                                    ))}
-                                </Route>
-                                <Route path="*" element={<Suspense fallback={null}><NotFoundPage /></Suspense>} />
-                            </Routes>
-                        </RouteErrorBoundary>
-                    </TooltipProvider>
+                        <TooltipProvider delayDuration={150}>
+                            <Suspense fallback={null}>
+                                <UploadModal />
+                            </Suspense>
+                            <RouteErrorBoundary>
+                                <Routes>
+                                    <Route path={ROUTES.LOGIN} element={<Suspense fallback={<PageSpinner />}><LoginPage /></Suspense>} />
+                                    <Route element={<Guard><AppLayout /></Guard>}>
+                                        {PROTECTED_ROUTES.map(({ path, Page }) => (
+                                            <Route key={path} path={path} element={<Page />} />
+                                        ))}
+                                    </Route>
+                                    <Route path="*" element={<Suspense fallback={null}><NotFoundPage /></Suspense>} />
+                                </Routes>
+                            </RouteErrorBoundary>
+                        </TooltipProvider>
                     </SearchProvider>
                 </AppInit>
             </BrowserRouter>

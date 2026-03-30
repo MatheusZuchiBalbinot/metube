@@ -20,7 +20,9 @@ export default function TagBadge({ tag, prefix, className, title, onClick }: Tag
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLSpanElement>) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey || !onClick) return;
+        if (!isActivationKey || !onClick) {
+            return;
+        }
         e.preventDefault();
         onClick(e, tag);
     }

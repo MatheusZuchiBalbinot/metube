@@ -7,14 +7,18 @@ export function usePlayerControls(videoRef: React.RefObject<HTMLVideoElement | n
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const cancelHide = useCallback(() => {
-        if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); }
+        if (hideTimerRef.current) {
+            clearTimeout(hideTimerRef.current);
+        }
     }, []);
 
     const scheduleHideControls = useCallback(() => {
         cancelHide();
         hideTimerRef.current = setTimeout(() => {
             const isVideoPaused = videoRef.current?.paused ?? true;
-            if (!isVideoPaused) { setShowControls(false); }
+            if (!isVideoPaused) {
+                setShowControls(false);
+            }
         }, HIDE_CONTROLS_DELAY_MS);
     }, [cancelHide, videoRef]);
 

@@ -44,14 +44,18 @@ export default function PlaylistsPage() {
     function handleCreatePlaylist() {
         const trimmed = newName.trim();
         const isEmpty = trimmed === '';
-        if (isEmpty) { return; }
+        if (isEmpty) {
+            return;
+        }
         createPlaylist(crypto.randomUUID(), trimmed);
         handleCloseNewModal();
     }
 
     function handleInputKeyDown(e: React.KeyboardEvent) {
         const isEnter = e.key === 'Enter';
-        if (isEnter) { handleCreatePlaylist(); }
+        if (isEnter) {
+            handleCreatePlaylist();
+        }
     }
 
     return (

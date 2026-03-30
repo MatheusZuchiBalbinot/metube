@@ -45,7 +45,9 @@ export default function ChannelPage() {
         for (const video of channelVideos) {
             for (const tag of video.tags) {
                 const isShorts = tag === 'shorts';
-                if (isShorts) { continue; }
+                if (isShorts) {
+                    continue;
+                }
                 tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
             }
         }
@@ -57,7 +59,9 @@ export default function ChannelPage() {
 
     const mostViewedVideo = useMemo(() => {
         const hasNoVideos = channelVideos.length === 0;
-        if (hasNoVideos) { return null; }
+        if (hasNoVideos) {
+            return null;
+        }
         return channelVideos.reduce((best, v) => v.views > best.views ? v : best);
     }, [channelVideos]);
 

@@ -7,20 +7,26 @@ const PREVIEW_HALF_W = PREVIEW_W / 2;
 
 function formatTime(s: number): string {
     const isInvalid = !Number.isFinite(s) || s < 0;
-    if (isInvalid) { return '0:00'; }
+    if (isInvalid) {
+        return '0:00';
+    }
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     const ss = String(sec).padStart(2, '0');
     const hasHours = h > 0;
-    if (hasHours) { return `${h}:${String(m).padStart(2, '0')}:${ss}`; }
+    if (hasHours) {
+        return `${h}:${String(m).padStart(2, '0')}:${ss}`;
+    }
     return `${m}:${ss}`;
 }
 
 function parseChapterTimestamp(ts: string): number {
     const parts = ts.split(':').map(Number);
     const isHMS = parts.length === 3;
-    if (isHMS) { return parts[0] * 3600 + parts[1] * 60 + parts[2]; }
+    if (isHMS) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
     return parts[0] * 60 + (parts[1] ?? 0);
 }
 
@@ -72,10 +78,14 @@ export default function PlayerSeekBar({
     // Track seek inner width for precise preview-arrow alignment
     useEffect(() => {
         const el = seekInnerRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const ro = new ResizeObserver(entries => {
             const entry = entries[0];
-            if (entry) { setSeekInnerWidth(entry.contentRect.width); }
+            if (entry) {
+                setSeekInnerWidth(entry.contentRect.width);
+            }
         });
         ro.observe(el);
         return () => ro.disconnect();
@@ -85,18 +95,24 @@ export default function PlayerSeekBar({
     useEffect(() => {
         const pv = previewVideoRef.current;
         const hasHover = hoverSeekPct !== null && duration > 0;
-        if (!pv || !hasHover) { return; }
+        if (!pv || !hasHover) {
+            return;
+        }
         pv.currentTime = hoverSeekPct! * duration;
     }, [hoverSeekPct, duration]);
 
     // Attach document-level mousemove/mouseup while dragging
     useEffect(() => {
-        if (!isDragging) { return; }
+        if (!isDragging) {
+            return;
+        }
         forceShow();
 
         function getPctFromEvent(e: MouseEvent): number {
             const inner = seekInnerRef.current;
-            if (!inner) { return 0; }
+            if (!inner) {
+                return 0;
+            }
             const rect = inner.getBoundingClientRect();
             return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         }
@@ -109,7 +125,9 @@ export default function PlayerSeekBar({
 
         function onMouseUp(e: MouseEvent) {
             const el = videoRef.current;
-            if (el && el.duration > 0) { el.currentTime = getPctFromEvent(e) * el.duration; }
+            if (el && el.duration > 0) {
+                el.currentTime = getPctFromEvent(e) * el.duration;
+            }
             wasDraggingRef.current = true;
             changeDragging(false);
             setDragPct(null);
@@ -129,26 +147,37 @@ export default function PlayerSeekBar({
     function handlePreviewSeeked() {
         const pv = previewVideoRef.current;
         const canvas = previewCanvasRef.current;
-        if (!pv || !canvas) { return; }
+        if (!pv || !canvas) {
+            return;
+        }
         const ctx = canvas.getContext('2d');
-        if (!ctx) { return; }
-        try { ctx.drawImage(pv, 0, 0, canvas.width, canvas.height); }
-        catch { /* CORS/decode error — canvas stays black */ }
+        if (!ctx) {
+            return;
+        }
+        try {
+            ctx.drawImage(pv, 0, 0, canvas.width, canvas.height);
+        } catch { /* CORS/decode error — canvas stays black */ }
     }
 
     function getSeekPct(e: React.MouseEvent<HTMLDivElement>): number {
         const inner = seekInnerRef.current;
-        if (!inner) { return 0; }
+        if (!inner) {
+            return 0;
+        }
         const rect = inner.getBoundingClientRect();
         return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     }
 
     function handleSeekClick(e: React.MouseEvent<HTMLDivElement>) {
         e.stopPropagation();
-        if (wasDraggingRef.current) { wasDraggingRef.current = false; return; }
+        if (wasDraggingRef.current) {
+            wasDraggingRef.current = false; return;
+        }
         const el = videoRef.current;
         const hasDuration = duration > 0;
-        if (!el || !hasDuration) { return; }
+        if (!el || !hasDuration) {
+            return;
+        }
         el.currentTime = getSeekPct(e) * duration;
     }
 
@@ -162,27 +191,31 @@ export default function PlayerSeekBar({
     }
 
     function handleSeekMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-        if (!isDragging) { setHoverSeekPct(getSeekPct(e)); }
+        if (!isDragging) {
+            setHoverSeekPct(getSeekPct(e));
+        }
     }
 
     function handleSeekMouseLeave() {
-        if (!isDragging) { setHoverSeekPct(null); }
+        if (!isDragging) {
+            setHoverSeekPct(null);
+        }
     }
 
     // ─── Derived values ────────────────────────────────────────────────────────
 
-    const progressPct      = duration > 0 ? (currentTime / duration) * 100 : 0;
-    const displayPct       = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
-    const activePct        = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
-    const hasChapters      = !!chapters && chapters.length > 0 && duration > 0;
+    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const displayPct = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
+    const activePct = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
+    const hasChapters = !!chapters && chapters.length > 0 && duration > 0;
     const showHoverElements = hoverSeekPct !== null || isDragging;
 
-    const activePixel  = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
-    const maxClamp     = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
+    const activePixel = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
+    const maxClamp = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
     const clampedPixel = Math.min(Math.max(activePixel, PREVIEW_HALF_W), maxClamp);
-    const arrowOffset  = activePixel - clampedPixel;
+    const arrowOffset = activePixel - clampedPixel;
     const arrowLeftPct = Math.min(Math.max(50 + (arrowOffset / PREVIEW_W) * 100, 8), 92);
-    const hoverTime    = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
+    const hoverTime = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
 
     return (
         <>
@@ -212,7 +245,9 @@ export default function PlayerSeekBar({
                     {hasChapters && chapters!.map((ch, i) => {
                         const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
                         const isVisible = chPct > 0.5 && chPct < 99.5;
-                        if (!isVisible) { return null; }
+                        if (!isVisible) {
+                            return null;
+                        }
                         return (
                             <div
                                 key={i}
@@ -222,7 +257,9 @@ export default function PlayerSeekBar({
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     const el = videoRef.current;
-                                    if (!el) { return; }
+                                    if (!el) {
+                                        return;
+                                    }
                                     el.currentTime = parseChapterTimestamp(ch.timestamp);
                                 }}
                             />

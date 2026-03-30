@@ -136,7 +136,7 @@ describe('VideoFilter.apply — dateFrom / dateTo', () => {
 describe('VideoFilter.apply — sortBy', () => {
     const videos = [
         makeVideo({ id: 'b', title: 'Banana', views: 500, publishedAt: '2024-02-01T00:00:00Z' }),
-        makeVideo({ id: 'a', title: 'Apple',  views: 200, publishedAt: '2024-03-01T00:00:00Z' }),
+        makeVideo({ id: 'a', title: 'Apple', views: 200, publishedAt: '2024-03-01T00:00:00Z' }),
         makeVideo({ id: 'c', title: 'Cherry', views: 900, publishedAt: '2024-01-01T00:00:00Z' }),
     ];
 
