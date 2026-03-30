@@ -31,7 +31,9 @@ function parseJSON<T>(raw: string): T | null {
 export function initCrossTabSync(dispatch: AppDispatch): () => void {
     function handleStorageChange(event: StorageEvent) {
         const hasNewValue = event.newValue !== null;
-        if (!hasNewValue) { return; }
+        if (!hasNewValue) {
+            return;
+        }
 
         switch (event.key) {
             // ─── Theme ─────────────────────────────────────────────────────────
@@ -52,25 +54,33 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
             case STORAGE_KEYS.WATCH_HISTORY: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetWatchHistory(data as VideoId[])); }
+                if (isValid) {
+                    dispatch(videoActions.xTabSetWatchHistory(data as VideoId[]));
+                }
                 break;
             }
             case STORAGE_KEYS.LIKED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetLikedVideos(data as VideoId[])); }
+                if (isValid) {
+                    dispatch(videoActions.xTabSetLikedVideos(data as VideoId[]));
+                }
                 break;
             }
             case STORAGE_KEYS.DISLIKED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[])); }
+                if (isValid) {
+                    dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
+                }
                 break;
             }
             case STORAGE_KEYS.SAVED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetSavedVideos(data as VideoId[])); }
+                if (isValid) {
+                    dispatch(videoActions.xTabSetSavedVideos(data as VideoId[]));
+                }
                 break;
             }
             case STORAGE_KEYS.PINNED_VIDEO: {
@@ -82,7 +92,9 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
             case STORAGE_KEYS.PLAYLISTS: {
                 const data = parseJSON<Playlist[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(playlistActions.xTabSetPlaylists(data)); }
+                if (isValid) {
+                    dispatch(playlistActions.xTabSetPlaylists(data));
+                }
                 break;
             }
 
@@ -90,7 +102,9 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
             case STORAGE_KEYS.SUBSCRIPTIONS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[])); }
+                if (isValid) {
+                    dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[]));
+                }
                 break;
             }
         }

@@ -30,37 +30,49 @@ const playlistSlice = createSlice({
             const { id, name } = action.payload;
             const playlist = state.playlists.find(p => p.id === id);
             const isFound = playlist !== undefined;
-            if (!isFound) { return; }
+            if (!isFound) {
+                return;
+            }
             playlist.name = name;
         },
         deletePlaylist(state, action: PayloadAction<PlaylistId>) {
             const id = action.payload;
             const index = state.playlists.findIndex(p => p.id === id);
             const isFound = index !== -1;
-            if (!isFound) { return; }
+            if (!isFound) {
+                return;
+            }
             state.playlists.splice(index, 1);
         },
         addVideoToPlaylist(state, action: PayloadAction<{ playlistId: PlaylistId; videoId: VideoId }>) {
             const { playlistId, videoId } = action.payload;
             const playlist = state.playlists.find(p => p.id === playlistId);
             const isFound = playlist !== undefined;
-            if (!isFound) { return; }
+            if (!isFound) {
+                return;
+            }
             const isAlreadyIn = playlist.videoIds.includes(videoId);
-            if (isAlreadyIn) { return; }
+            if (isAlreadyIn) {
+                return;
+            }
             playlist.videoIds.push(videoId);
         },
         removeVideoFromPlaylist(state, action: PayloadAction<{ playlistId: PlaylistId; videoId: VideoId }>) {
             const { playlistId, videoId } = action.payload;
             const playlist = state.playlists.find(p => p.id === playlistId);
             const isFound = playlist !== undefined;
-            if (!isFound) { return; }
+            if (!isFound) {
+                return;
+            }
             playlist.videoIds = playlist.videoIds.filter(id => id !== videoId);
         },
         reorderVideosInPlaylist(state, action: PayloadAction<{ playlistId: PlaylistId; videoIds: VideoId[] }>) {
             const { playlistId, videoIds } = action.payload;
             const playlist = state.playlists.find(p => p.id === playlistId);
             const isFound = playlist !== undefined;
-            if (!isFound) { return; }
+            if (!isFound) {
+                return;
+            }
             playlist.videoIds = videoIds;
         },
 

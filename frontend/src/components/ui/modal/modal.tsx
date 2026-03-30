@@ -43,7 +43,9 @@ export default function Modal({
             }
 
             const isTab = e.key === 'Tab';
-            if (!isTab) return;
+            if (!isTab) {
+                return;
+            }
 
             const focusable = boxRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
             const isNoFocusable = !focusable || focusable.length === 0;

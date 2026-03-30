@@ -12,7 +12,9 @@ export default function ReadingMode({ summary }: ReadingModeProps) {
 
     function handleScroll() {
         const el = contentRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const pct = el.scrollTop / (el.scrollHeight - el.clientHeight) * 100;
         setReadingProgress(Math.min(100, pct));
     }

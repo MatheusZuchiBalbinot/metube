@@ -34,16 +34,16 @@ const SidebarLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 );
 
 const MAIN_NAV = [
-    { to: ROUTES.HOME,   icon: Home,         labelKey: 'nav.home',   end: true },
+    { to: ROUTES.HOME, icon: Home, labelKey: 'nav.home', end: true },
     { to: ROUTES.SHORTS, icon: Clapperboard, labelKey: 'nav.shorts', end: false },
 ] as const;
 
 const YOU_NAV = [
-    { to: ROUTES.HISTORY,     icon: History,   labelKey: 'nav.history',     end: false },
-    { to: ROUTES.PLAYLISTS,   icon: ListVideo, labelKey: 'nav.playlists',   end: false },
-    { to: ROUTES.WATCH_LATER, icon: Clock,     labelKey: 'nav.watch_later', end: false },
-    { to: ROUTES.LIKED,       icon: ThumbsUp,  labelKey: 'nav.liked_videos', end: false },
-    { to: ROUTES.PROFILE,     icon: User,      labelKey: 'nav.your_videos', end: false },
+    { to: ROUTES.HISTORY, icon: History, labelKey: 'nav.history', end: false },
+    { to: ROUTES.PLAYLISTS, icon: ListVideo, labelKey: 'nav.playlists', end: false },
+    { to: ROUTES.WATCH_LATER, icon: Clock, labelKey: 'nav.watch_later', end: false },
+    { to: ROUTES.LIKED, icon: ThumbsUp, labelKey: 'nav.liked_videos', end: false },
+    { to: ROUTES.PROFILE, icon: User, labelKey: 'nav.your_videos', end: false },
 ] as const;
 
 interface SidebarItemProps {
@@ -95,7 +95,9 @@ function SubscriptionsSection() {
         for (const video of videos) {
             const isChannelSubscribed = subscribedSet.has(video.channelId);
             const isAlreadySeen = seen.has(video.channelId);
-            if (!isChannelSubscribed || isAlreadySeen) { continue; }
+            if (!isChannelSubscribed || isAlreadySeen) {
+                continue;
+            }
             seen.add(video.channelId);
             result.push({ id: video.channelId, name: video.channel });
         }
@@ -103,7 +105,9 @@ function SubscriptionsSection() {
     }, [videos, subscribedSet]);
 
     const hasSubscriptions = channels.length > 0;
-    if (!hasSubscriptions) { return null; }
+    if (!hasSubscriptions) {
+        return null;
+    }
 
     return (
         <div className="app-sidebar__section">

@@ -81,7 +81,9 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         e.stopPropagation();
         const trimmedName = newPlaylistName.trim();
         const isNameEmpty = trimmedName === '';
-        if (isNameEmpty) { return; }
+        if (isNameEmpty) {
+            return;
+        }
 
         const newId = crypto.randomUUID();
         createPlaylist(newId, trimmedName);
@@ -102,6 +104,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         if (isEnter) {
             handleCreatePlaylist(e as unknown as React.MouseEvent);
         }
+
         if (isEscape) {
             setNewPlaylistOpen(false);
             setNewPlaylistName('');

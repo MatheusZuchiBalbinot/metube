@@ -11,7 +11,9 @@ export function useClickOutside(
     });
 
     useEffect(() => {
-        if (!enabled) { return; }
+        if (!enabled) {
+            return;
+        }
 
         function handleMouseDown(event: MouseEvent) {
             const isOutsideClick = ref.current !== null && !ref.current.contains(event.target as Node);

@@ -72,7 +72,9 @@ export default function VideoPage() {
     const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
     const relatedVideos = useMemo(() => {
-        if (!video) { return []; }
+        if (!video) {
+            return [];
+        }
         const videoTagSet = new Set(video.tags);
         return videos
             .filter((v: Video) => v.id !== video.id && v.tags.some((t: Tag) => videoTagSet.has(t)))
@@ -106,7 +108,9 @@ export default function VideoPage() {
     const allRelatedTags = useMemo(() => {
         const tagSet = new Set<string>();
         for (const v of relatedVideos) {
-            for (const tag of v.tags) { tagSet.add(tag as string); }
+            for (const tag of v.tags) {
+                tagSet.add(tag as string);
+            }
         }
         return Array.from(tagSet).sort() as unknown as Tag[];
     }, [relatedVideos]);
@@ -117,7 +121,9 @@ export default function VideoPage() {
     );
 
     const summary = useMemo(() => {
-        if (!video) { return null; }
+        if (!video) {
+            return null;
+        }
         return getVideoSummary(video.id);
     }, [video]);
 
@@ -125,19 +131,25 @@ export default function VideoPage() {
 
     const readingTime = useMemo(() => {
         const hasSummaryContent = summary !== null;
-        if (!hasSummaryContent) { return 0; }
+        if (!hasSummaryContent) {
+            return 0;
+        }
         const words = summary.readingMode.split(/\s+/).length;
         return Math.max(1, Math.ceil(words / 200));
     }, [summary]);
 
     // VISUAL-08: active chapter index derived from current playback position
     const activeChapterIndex = useMemo(() => {
-        if (!summary || summary.chapters.length === 0) { return -1; }
+        if (!summary || summary.chapters.length === 0) {
+            return -1;
+        }
         let active = -1;
         for (let i = 0; i < summary.chapters.length; i++) {
             const chapterTime = parseTimestamp(summary.chapters[i].timestamp);
             const isBeforeOrAt = chapterTime <= currentTime;
-            if (isBeforeOrAt) { active = i; }
+            if (isBeforeOrAt) {
+                active = i;
+            }
         }
         return active;
     }, [summary, currentTime]);
@@ -156,7 +168,9 @@ export default function VideoPage() {
 
     useEffect(() => {
         const shouldRegister = hasVideo && !registeredRef.current && id !== undefined;
-        if (!shouldRegister) { return; }
+        if (!shouldRegister) {
+            return;
+        }
         registeredRef.current = true;
         watchVideo(id as unknown as VideoId);
     }, [id, hasVideo, watchVideo]);
@@ -169,7 +183,9 @@ export default function VideoPage() {
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
             type: 'success',
         }));
-        if (video?.id) { likeVideo(video.id); }
+        if (video?.id) {
+            likeVideo(video.id);
+        }
         triggerLikeAnimation();
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
@@ -179,7 +195,9 @@ export default function VideoPage() {
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
-        if (video?.id) { saveVideo(video.id); }
+        if (video?.id) {
+            saveVideo(video.id);
+        }
         triggerSaveAnimation();
     }, [video?.id, savedVideos, saveVideo, dispatch, t, triggerSaveAnimation]);
 
@@ -261,7 +279,9 @@ export default function VideoPage() {
     function handleSeekToChapter(timestamp: string, chapterIndex: number) {
         const seconds = parseTimestamp(timestamp);
         const el = videoRef.current;
-        if (el) { el.currentTime = seconds; }
+        if (el) {
+            el.currentTime = seconds;
+        }
 
         // VISUAL-09: brief seeking feedback
         setSeekingChapterIndex(chapterIndex);

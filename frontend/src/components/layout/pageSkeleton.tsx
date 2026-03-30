@@ -303,18 +303,23 @@ export default function PageSkeleton({ pathname }: PageSkeletonProps) {
     if (isVideoPage) {
         return <VideoPageSkeleton />;
     }
+
     if (isProfilePage) {
         return <ProfilePageSkeleton />;
     }
+
     if (isChannelPage) {
         return <ChannelPageSkeleton />;
     }
+
     if (isHistoryPage) {
         return <HistoryPageSkeleton />;
     }
+
     if (isSearchPage) {
         return <SearchPageSkeleton />;
     }
+
     if (isLikedPage || isWatchLaterPage) {
         return <CollectionPageSkeleton />;
     }

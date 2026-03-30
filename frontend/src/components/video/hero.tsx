@@ -40,7 +40,9 @@ export default function VideoHero({ video }: VideoHeroProps) {
 
     function handleTagKeyDown(e: React.KeyboardEvent, tag: Tag) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) return;
+        if (!isActivationKey) {
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
         openTagView(tag, video.id);
@@ -53,7 +55,9 @@ export default function VideoHero({ video }: VideoHeroProps) {
             onClick={handleClick}
             onKeyDown={(e) => {
                 const isActivationKey = e.key === 'Enter' || e.key === ' ';
-                if (!isActivationKey) return;
+                if (!isActivationKey) {
+                    return;
+                }
                 e.preventDefault();
                 handleClick();
             }}
