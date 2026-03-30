@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Maximize2 } from 'lucide-react';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { ROUTES } from '@utils/routes';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
-import VideoPlayer from '@components/video/player';
+import VideoPlayer from '@components/player/player';
+import type { Video } from '@data/mockVideos';
 import './player.css';
 
 function defaultPos() {
@@ -29,7 +30,7 @@ export default function MiniPlayer() {
     const isDraggingRef = useRef(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
 
-    const video = miniPlayer ? videos.find(v => v.id === miniPlayer.videoId) : null;
+    const video = miniPlayer ? videos.find((v: Video) => v.id === miniPlayer.videoId) : null;
     const hasVideoFile = video?.videoUrl !== undefined && video?.videoUrl !== '';
 
     useEffect(() => {

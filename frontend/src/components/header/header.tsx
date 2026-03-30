@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Plus, Bell, Menu, LogOut, Search, Clock, X } from 'lucide-react';
-import { useAuth } from '@context/useAuth';
-import { useVideo } from '@context/useVideo';
+import { useAuth } from '@hooks/useAuth';
+import { useVideo } from '@hooks/useVideo';
 import { ROUTES } from '@utils/routes';
-import { useClickOutside } from '@utils/useClickOutside';
+import { useClickOutside } from '@hooks/useClickOutside';
 import { useSearch } from '@context/searchContext';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
@@ -28,7 +28,6 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { openUploadModal } = useVideo();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [scrolled, setScrolled] = useState(false);
     const [recentDropdownOpen, setRecentDropdownOpen] = useState(false);
 
     const { registerSearchInput } = useSearch();
@@ -36,15 +35,6 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const searchWrapRef = useRef<HTMLDivElement>(null);
 
     const isRecentDropdownVisible = recentDropdownOpen && recentSearches.length > 0 && searchQuery.trim() === '';
-
-    const handleScroll = useCallback(() => {
-        setScrolled(window.scrollY > 24);
-    }, []);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [handleScroll]);
 
     useEffect(() => {
         function handleOutsideClick(e: MouseEvent) {

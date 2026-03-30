@@ -2,10 +2,11 @@ import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
+import type { Tag } from '@models/tag';
 import { ROUTES } from '@utils/routes';
 import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './row.css';
@@ -62,7 +63,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
         navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
     }
 
-    function handleTagClick(e: React.MouseEvent, tag: string) {
+    function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
         openTagView(tag, video.id);
     }

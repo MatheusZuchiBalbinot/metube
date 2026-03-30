@@ -12,7 +12,7 @@ import NavProgress from '@components/ui/navProgress/navProgress';
 import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { useKeyboardShortcuts } from '@utils/useKeyboardShortcuts';
+import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import { useSearch } from '@context/searchContext';
 import './layout.css';
 

@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import Button from '../button/button';
 import './empty.css';
 
@@ -11,8 +10,6 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
-    const { t } = useTranslation();
-
     const hasDescription = description !== undefined && description !== '';
     const hasAction = actionLabel !== undefined && onAction !== undefined;
 

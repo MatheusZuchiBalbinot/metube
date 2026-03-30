@@ -1,18 +1,20 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { useInView } from '@utils/useInView';
+import { motion, type Transition } from 'framer-motion';
+import { useInView } from '@hooks/useInView';
 import { Filter, Flame, PlayCircle, Shuffle } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
-import { useVideo } from '@context/useVideo';
-import { useFilterState } from '@context/useFilterState';
+import { useVideo } from '@hooks/useVideo';
+import { useFilterState } from '@hooks/useFilterState';
 import { VideoFilter } from '@utils/applyFilters';
 import { ROUTES } from '@utils/routes';
 import Button from '@ui/button/button';
 import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
+import type { Tag } from '@models/tag';
+import type { Video } from '@data/mockVideos';
 import './home.css';
 
 // 2 years: long enough to include recent uploads but short enough to filter
@@ -35,7 +37,7 @@ const GRID_ROWS_BEFORE_INTERSTITIAL = 8;
 
 const SECTION_VISIBLE = { opacity: 1, y: 0 };
 const SECTION_HIDDEN = { opacity: 0, y: 16 };
-const SECTION_TRANSITION = { duration: 0.35, ease: [0.16, 1, 0.3, 1] };
+const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1] };
 
 export default function HomePage() {
     const { t } = useTranslation();
@@ -56,7 +58,7 @@ export default function HomePage() {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort();
+        return Array.from(tagSet).sort() as unknown as Tag[];
     }, [recommendations]);
 
     const visibleVideos = useMemo(
@@ -74,9 +76,9 @@ export default function HomePage() {
     }, [publishedVideos]);
 
     const continueWatchingVideos = useMemo(() => {
-        const videoMap = new Map(videos.map(v => [v.id, v]));
+        const videoMap = new Map<string, Video>(videos.map((v: Video) => [v.id as string, v]));
         return watchHistory
-            .map(id => videoMap.get(id))
+            .map((id: string) => videoMap.get(id))
             .filter((v): v is NonNullable<typeof v> => {
                 if (!v) {
                     return false;
@@ -242,7 +244,7 @@ export default function HomePage() {
                                 />
                             </div>
                             <div className="home-page__carousel" ref={continueRef}>
-                                {continueWatchingVideos.map(video => (
+                                {continueWatchingVideos.map((video: Video) => (
                                     <div key={video.id} className="home-page__carousel-item">
                                         <VideoCard video={video} />
                                     </div>

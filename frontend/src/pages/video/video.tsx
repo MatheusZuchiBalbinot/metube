@@ -2,25 +2,28 @@ import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
-import VideoPlayer from '@components/video/player';
+import VideoPlayer from '@components/player/player';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import ReactionBtn from '@components/video/reactionBtn';
 import ReadingMode from '@components/video/readingMode';
 import type { FilterState } from '@components/filter/panel';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
-import { useBurstAnimation } from '@utils/useBurstAnimation';
-import { useVideoProgress } from '@utils/useVideoProgress';
-import { useAutoplay } from '@utils/useAutoplay';
+import { useBurstAnimation } from '@hooks/useBurstAnimation';
+import { useVideoProgress } from '@hooks/useVideoProgress';
+import { useAutoplay } from '@hooks/useAutoplay';
 import { getVideoSummary } from '@data/mockSummaries';
 import { TagColors } from '@utils/tagColors';
-import { useKeyboardShortcuts } from '@utils/useKeyboardShortcuts';
+import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
 import { Button, Tooltip, Badge } from '@ui';
+import type { Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
+import type { Tag } from '@models/tag';
 import './video.css';
 
 type SidebarTab = 'related' | 'summary';
@@ -49,7 +52,7 @@ export default function VideoPage() {
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
 
-    const video = videos.find(v => v.id === id);
+    const video = videos.find((v: Video) => v.id === (id as unknown as VideoId));
     const hasVideo = video !== undefined;
 
     const registeredRef = useRef(false);
@@ -72,8 +75,8 @@ export default function VideoPage() {
         if (!video) { return []; }
         const videoTagSet = new Set(video.tags);
         return videos
-            .filter(v => v.id !== video.id && v.tags.some(t => videoTagSet.has(t)))
-            .sort((a, b) => b.views - a.views)
+            .filter((v: Video) => v.id !== video.id && v.tags.some((t: Tag) => videoTagSet.has(t)))
+            .sort((a: Video, b: Video) => b.views - a.views)
             .slice(0, 10);
     }, [video, videos]);
 
@@ -93,8 +96,8 @@ export default function VideoPage() {
         videoRef,
         video,
         videoProgress,
-        updateProgress,
-        consumePendingVideoSeek,
+        updateProgress: (id: string, pct: number) => updateProgress(id as unknown as VideoId, pct),
+        consumePendingVideoSeek: (id: string) => consumePendingVideoSeek(id as unknown as VideoId),
         onCompleted: startAutoplayCountdown,
     });
 
@@ -103,9 +106,9 @@ export default function VideoPage() {
     const allRelatedTags = useMemo(() => {
         const tagSet = new Set<string>();
         for (const v of relatedVideos) {
-            for (const tag of v.tags) { tagSet.add(tag); }
+            for (const tag of v.tags) { tagSet.add(tag as string); }
         }
-        return Array.from(tagSet).sort();
+        return Array.from(tagSet).sort() as unknown as Tag[];
     }, [relatedVideos]);
 
     const filteredRelated = useMemo(
@@ -155,13 +158,13 @@ export default function VideoPage() {
         const shouldRegister = hasVideo && !registeredRef.current && id !== undefined;
         if (!shouldRegister) { return; }
         registeredRef.current = true;
-        watchVideo(id);
+        watchVideo(id as unknown as VideoId);
     }, [id, hasVideo, watchVideo]);
 
     // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
 
     const handleLikeShortcut = useCallback(() => {
-        const isCurrentlyLiked = likedVideos.has(video?.id ?? '');
+        const isCurrentlyLiked = video?.id ? likedVideos.has(video.id) : false;
         dispatch(toastActions.addToast({
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
             type: 'success',
@@ -171,7 +174,7 @@ export default function VideoPage() {
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
-        const isCurrentlySaved = savedVideos.has(video?.id ?? '');
+        const isCurrentlySaved = video?.id ? savedVideos.has(video.id) : false;
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',

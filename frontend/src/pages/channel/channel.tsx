@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, PlayCircle, Eye, TrendingUp } from 'lucide-react';
 import VideoCard from '@components/video/card';
-import { useVideo } from '@context/useVideo';
-import { useSubscription } from '@context/useSubscription';
+import { useVideo } from '@hooks/useVideo';
+import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Format } from '@utils/format';
 import TagBadge from '@components/tag/badge';
+import type { Tag } from '@models/tag';
 import Button from '@ui/button/button';
 import Avatar from '@ui/avatar/avatar';
 import './channel.css';
@@ -142,7 +143,7 @@ export default function ChannelPage() {
                     {topTags.length > 0 && (
                         <div className="channel-page__top-tags">
                             {topTags.map(tag => (
-                                <TagBadge key={tag} tag={tag} prefix="#" className="channel-page__tag-pill" />
+                                <TagBadge key={tag} tag={tag as unknown as Tag} prefix="#" className="channel-page__tag-pill" />
                             ))}
                         </div>
                     )}

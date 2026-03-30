@@ -1,5 +1,4 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
@@ -15,7 +14,7 @@ export default defineConfig({
             '@styles': resolve(__dirname, 'src/styles'),
             '@data': resolve(__dirname, 'src/data'),
             '@utils': resolve(__dirname, 'src/utils'),
-            '@lib': resolve(__dirname, 'src/lib'),
+            '@hooks': resolve(__dirname, 'src/hooks'),
             '@store': resolve(__dirname, 'src/store'),
             '@models': resolve(__dirname, 'src/types'),
         },
@@ -29,6 +28,7 @@ export default defineConfig({
         }),
     ],
     build: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -38,15 +38,18 @@ export default defineConfig({
                     'vendor-i18n': ['i18next', 'react-i18next'],
                 },
             },
-        },
+        } as any,
     },
     test: {
         environment: 'node',
+        include: ['tests/**/*.test.ts'],
         alias: {
             '@data': resolve(__dirname, 'src/data'),
             '@utils': resolve(__dirname, 'src/utils'),
+            '@hooks': resolve(__dirname, 'src/hooks'),
             '@store': resolve(__dirname, 'src/store'),
             '@models': resolve(__dirname, 'src/types'),
+            '@context': resolve(__dirname, 'src/context'),
         },
     },
     server: {

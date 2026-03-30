@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Home, Clapperboard, History, Clock, ThumbsUp, User, ListVideo } from 'lucide-react';
 import { ROUTES } from '@utils/routes';
 import { useAppSelector } from '@store';
-import { useSubscription } from '@context/useSubscription';
+import { useSubscription } from '@hooks/useSubscription';
 import { Tooltip, Avatar } from '@ui';
 import './sidebar.css';
 

@@ -34,7 +34,7 @@ export default function ShortPlayer({
     controlledMuted,
     controlledVolume,
     onMuteChange,
-    onVolumeChange,
+    onVolumeChange: _onVolumeChange,
     onTap,
     onVideoMounted,
     captureKeyboard = false,
@@ -53,7 +53,7 @@ export default function ShortPlayer({
     const [isPlaying, setIsPlaying]     = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration]       = useState(0);
-    const [isMuted, setIsMuted]         = useState(controlledMuted ?? true);
+    const [_isMuted, setIsMuted]         = useState(controlledMuted ?? true);
     const [isBuffering, setIsBuffering] = useState(false);
     const [popIcon, setPopIcon]         = useState<{ type: 'play' | 'pause'; key: number } | null>(null);
     const [skipIndicator, setSkipIndicator] = useState<SkipIndicator | null>(null);

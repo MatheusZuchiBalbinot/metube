@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@utils/useMediaQuery';
+import { useMediaQuery } from '@hooks/useMediaQuery';
 import { Clock, X } from 'lucide-react';
 import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
+import type { Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
+import type { Tag } from '@models/tag';
 import './later.css';
 
 export default function WatchLaterPage() {
@@ -18,7 +21,7 @@ export default function WatchLaterPage() {
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
     const watchLaterList = useMemo(() => {
-        return videos.filter(v => savedVideos.has(v.id));
+        return videos.filter((v: Video) => savedVideos.has(v.id));
     }, [savedVideos, videos]);
 
     const allTags = useMemo(() => {
@@ -28,7 +31,7 @@ export default function WatchLaterPage() {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort();
+        return Array.from(tagSet).sort() as unknown as Tag[];
     }, [watchLaterList]);
 
     const filteredVideos = useMemo(
@@ -41,12 +44,12 @@ export default function WatchLaterPage() {
     const isTouchDevice = useMediaQuery('(hover: none)');
 
     function handleRemove(videoId: string) {
-        const isCurrentlySaved = savedVideos.has(videoId);
+        const isCurrentlySaved = savedVideos.has(videoId as unknown as VideoId);
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
-        saveVideo(videoId);
+        saveVideo(videoId as unknown as VideoId);
     }
 
     return (

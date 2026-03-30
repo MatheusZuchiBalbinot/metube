@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import type { Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
 
 const PROGRESS_THROTTLE_MS = 3000;
 const SIMULATE_DURATION_S = 60;
@@ -114,18 +115,19 @@ export function useVideoProgress({
             const hasVideoEnded = hasDuration && currentT >= durationRef.current;
 
             if (!hasVideoEnded) {
-                dispatch(videoActions.setPendingVideoSeek({ videoId: id, time: currentT }));
-                dispatch(videoActions.openMiniPlayer({ videoId: id, currentTime: currentT }));
+                const videoId = id as unknown as VideoId;
+                dispatch(videoActions.setPendingVideoSeek({ videoId, time: currentT }));
+                dispatch(videoActions.openMiniPlayer({ videoId, currentTime: currentT }));
 
                 const hasRealProgress = hasCurrentTime && hasDuration;
                 if (hasRealProgress) {
                     const percent = (currentTimeRef.current / durationRef.current) * 100;
-                    dispatch(videoActions.updateProgress({ videoId: id, percent }));
+                    dispatch(videoActions.updateProgress({ videoId, percent }));
                 } else if (!hasCurrentTime && simulatedSecondsRef.current > 0) {
                     const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
                     const isSimFinished = simPct >= 100;
                     if (!isSimFinished) {
-                        dispatch(videoActions.updateProgress({ videoId: id, percent: simPct }));
+                        dispatch(videoActions.updateProgress({ videoId, percent: simPct }));
                     }
                 }
             }

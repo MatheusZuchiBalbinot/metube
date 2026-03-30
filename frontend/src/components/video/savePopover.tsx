@@ -5,7 +5,9 @@ import { Check, Plus, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions, selectSavedSet } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
-import { usePlaylist } from '@context/usePlaylist';
+import { usePlaylist } from '@hooks/usePlaylist';
+import type { Playlist } from '@data/mockPlaylists';
+import type { VideoId } from '@models/video';
 import Button from '@ui/button/button';
 import Input from '@ui/input/input';
 import './savePopover.css';
@@ -19,7 +21,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const savedSet = useAppSelector(selectSavedSet);
-    const isSaved = savedSet.has(videoId);
+    const isSaved = savedSet.has(videoId as unknown as VideoId);
 
     const {
         playlists,
@@ -35,7 +37,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [pendingPlaylists, setPendingPlaylists] = useState<{ id: string; name: string }[]>([]);
 
     const visiblePlaylists = useMemo(() => {
-        const existingIds = new Set(playlists.map(p => p.id));
+        const existingIds = new Set(playlists.map((p: Playlist) => p.id as string));
         const extras = pendingPlaylists.filter(p => !existingIds.has(p.id));
         return [...playlists, ...extras];
     }, [playlists, pendingPlaylists]);
@@ -44,7 +46,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
     function handleWatchLaterToggle(e: React.MouseEvent) {
         e.stopPropagation();
-        dispatch(videoActions.saveVideo(videoId));
+        dispatch(videoActions.saveVideo(videoId as unknown as VideoId));
         const isNowSaved = !isSaved;
         dispatch(toastActions.addToast({
             message: t(isNowSaved ? 'toast.saved' : 'toast.unsaved'),
