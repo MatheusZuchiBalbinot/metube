@@ -1,5 +1,12 @@
+/**
+ * Store type derivation — exists to break the circular dependency between
+ * index.ts (which imports persistMiddleware) and persistMiddleware.ts (which
+ * needs RootState/AppDispatch from index.ts).
+ *
+ * This file derives the types from the reducer shape alone, with no reference
+ * to the middleware, so it can be safely imported by any store file.
+ */
 import { configureStore } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
 import videoSlice from './videoSlice';
 import themeSlice from './themeSlice';
 import authSlice from './authSlice';
@@ -7,12 +14,8 @@ import toastSlice from './toastSlice';
 import subscriptionSlice from './subscriptionSlice';
 import playlistSlice from './playlistSlice';
 import searchSlice from './searchSlice';
-import { persistMiddleware } from './persistMiddleware';
 
-export type { RootState, AppDispatch } from './types';
-import type { RootState, AppDispatch } from './types';
-
-export const store = configureStore({
+const _typeStore = configureStore({
     reducer: {
         video: videoSlice.reducer,
         theme: themeSlice.reducer,
@@ -22,11 +25,7 @@ export const store = configureStore({
         playlist: playlistSlice.reducer,
         search: searchSlice.reducer,
     },
-    middleware: getDefault => getDefault().concat(persistMiddleware.middleware),
 });
 
-// RootState and AppDispatch are derived in ./types to avoid the circular
-// dependency with persistMiddleware, and re-exported above for convenience.
-
-export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
-export const useAppSelector = useSelector.withTypes<RootState>();
+export type RootState = ReturnType<typeof _typeStore.getState>;
+export type AppDispatch = typeof _typeStore.dispatch;
