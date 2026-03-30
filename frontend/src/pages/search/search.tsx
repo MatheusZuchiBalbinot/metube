@@ -68,12 +68,14 @@ export default function SearchPage() {
 
     const listRef = useRef<HTMLDivElement>(null);
 
+    /* eslint-disable react-hooks/refs */
     const virtualizer = useWindowVirtualizer({
         count: hasResults ? results.length : 0,
         estimateSize: () => VIDEO_ROW_ESTIMATED_HEIGHT,
         overscan: 5,
         scrollMargin: listRef.current?.offsetTop ?? 0,
     });
+    /* eslint-enable react-hooks/refs */
 
     function handleSearchSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault();

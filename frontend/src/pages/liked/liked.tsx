@@ -65,34 +65,34 @@ export default function LikedPage() {
                 </div>
             )}
 
-            {hasLiked ? (
-                hasResults ? (
-                    <div className="liked-page__grid">
-                        {filteredVideos.map((video, i) => (
-                            <VideoActionCard
-                                key={video.id}
-                                video={video}
-                                index={i}
-                                actionIcon={<HeartOff size={14} strokeWidth={2} />}
-                                actionLabel={t('liked.unlike')}
-                                itemClass="liked-page__item"
-                                btnClass={['liked-page__unlike-btn', isTouchDevice ? 'liked-page__unlike-btn--touch' : ''].filter(Boolean).join(' ')}
-                                onAction={handleUnlike}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="liked-page__empty">
-                        <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
-                        <p className="liked-page__empty-title">{t('video.no_results')}</p>
-                        <p className="liked-page__empty-text">{t('video.filter_clear')}</p>
-                    </div>
-                )
-            ) : (
+            {!hasLiked && (
                 <div className="liked-page__empty">
                     <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
                     <p className="liked-page__empty-title">{t('nav.liked_videos')}</p>
                     <p className="liked-page__empty-text">{t('liked.empty_text')}</p>
+                </div>
+            )}
+            {hasLiked && !hasResults && (
+                <div className="liked-page__empty">
+                    <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
+                    <p className="liked-page__empty-title">{t('video.no_results')}</p>
+                    <p className="liked-page__empty-text">{t('video.filter_clear')}</p>
+                </div>
+            )}
+            {hasLiked && hasResults && (
+                <div className="liked-page__grid">
+                    {filteredVideos.map((video, i) => (
+                        <VideoActionCard
+                            key={video.id}
+                            video={video}
+                            index={i}
+                            actionIcon={<HeartOff size={14} strokeWidth={2} />}
+                            actionLabel={t('liked.unlike')}
+                            itemClass="liked-page__item"
+                            btnClass={['liked-page__unlike-btn', isTouchDevice ? 'liked-page__unlike-btn--touch' : ''].filter(Boolean).join(' ')}
+                            onAction={handleUnlike}
+                        />
+                    ))}
                 </div>
             )}
         </div>

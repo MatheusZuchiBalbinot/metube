@@ -33,7 +33,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
     const progress = videoProgress[video.id] ?? 0;
     const isWatched = progress >= 95;
 
-    const isNew = !isScheduledAndFuture && Date.now() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
+    const isNew = !isScheduledAndFuture && now.getTime() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
 
     const rowClass = ['video-row', highlighted ? 'video-row--highlighted' : '']
         .filter(Boolean)
@@ -45,7 +45,9 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
 
     function handleRowKeyDown(e: React.KeyboardEvent) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) return;
+        if (!isActivationKey) {
+            return;
+        }
         e.preventDefault();
         navigate(ROUTES.VIDEO.replace(':id', video.id));
     }
@@ -57,7 +59,9 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
 
     function handleChannelKeyDown(e: React.KeyboardEvent) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) return;
+        if (!isActivationKey) {
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
         navigate(ROUTES.CHANNEL.replace(':id', video.channelId));

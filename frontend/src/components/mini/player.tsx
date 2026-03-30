@@ -60,7 +60,9 @@ export default function MiniPlayer() {
     }
 
     useEffect(() => {
-        if (!isDragging) { return; }
+        if (!isDragging) {
+            return;
+        }
 
         function handleMouseMove(e: MouseEvent) {
             const el = playerRef.current;
@@ -120,8 +122,22 @@ export default function MiniPlayer() {
             const isLeft = e.key === 'ArrowLeft';
             const isRight = e.key === 'ArrowRight';
 
-            const rawX = prev.x + (isRight ? step : isLeft ? -step : 0);
-            const rawY = prev.y + (isDown ? step : isUp ? -step : 0);
+            let xDelta = 0;
+            if (isRight) {
+                xDelta = step;
+            } else if (isLeft) {
+                xDelta = -step;
+            }
+
+            let yDelta = 0;
+            if (isDown) {
+                yDelta = step;
+            } else if (isUp) {
+                yDelta = -step;
+            }
+
+            const rawX = prev.x + xDelta;
+            const rawY = prev.y + yDelta;
 
             const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - playerW));
             const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - playerH));

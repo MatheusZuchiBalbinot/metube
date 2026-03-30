@@ -69,34 +69,34 @@ export default function WatchLaterPage() {
                 </div>
             )}
 
-            {hasVideos ? (
-                hasResults ? (
-                    <div className="watch-later-page__grid">
-                        {filteredVideos.map((video, i) => (
-                            <VideoActionCard
-                                key={video.id}
-                                video={video}
-                                index={i}
-                                actionIcon={<X size={14} strokeWidth={2} />}
-                                actionLabel={t('watch_later.remove')}
-                                itemClass="watch-later-page__item"
-                                btnClass={['watch-later-page__remove-btn', isTouchDevice ? 'watch-later-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
-                                onAction={handleRemove}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="watch-later-page__empty">
-                        <Clock size={40} strokeWidth={1.25} className="watch-later-page__empty-icon" />
-                        <p className="watch-later-page__empty-title">{t('video.no_results')}</p>
-                        <p className="watch-later-page__empty-text">{t('video.filter_clear')}</p>
-                    </div>
-                )
-            ) : (
+            {!hasVideos && (
                 <div className="watch-later-page__empty">
                     <Clock size={40} strokeWidth={1.25} className="watch-later-page__empty-icon" />
                     <p className="watch-later-page__empty-title">{t('nav.watch_later')}</p>
                     <p className="watch-later-page__empty-text">{t('watch_later.empty_text')}</p>
+                </div>
+            )}
+            {hasVideos && !hasResults && (
+                <div className="watch-later-page__empty">
+                    <Clock size={40} strokeWidth={1.25} className="watch-later-page__empty-icon" />
+                    <p className="watch-later-page__empty-title">{t('video.no_results')}</p>
+                    <p className="watch-later-page__empty-text">{t('video.filter_clear')}</p>
+                </div>
+            )}
+            {hasVideos && hasResults && (
+                <div className="watch-later-page__grid">
+                    {filteredVideos.map((video, i) => (
+                        <VideoActionCard
+                            key={video.id}
+                            video={video}
+                            index={i}
+                            actionIcon={<X size={14} strokeWidth={2} />}
+                            actionLabel={t('watch_later.remove')}
+                            itemClass="watch-later-page__item"
+                            btnClass={['watch-later-page__remove-btn', isTouchDevice ? 'watch-later-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
+                            onAction={handleRemove}
+                        />
+                    ))}
                 </div>
             )}
         </div>

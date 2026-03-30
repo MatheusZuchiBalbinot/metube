@@ -61,7 +61,7 @@ const VideoCard = memo(function VideoCard({
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 
-    const isNew = !isScheduledAndFuture && Date.now() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
+    const isNew = !isScheduledAndFuture && now.getTime() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const isTouchDevice = useMediaQuery('(hover: none)');
@@ -77,7 +77,9 @@ const VideoCard = memo(function VideoCard({
 
     function handleCardKeyDown(e: React.KeyboardEvent) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) return;
+        if (!isActivationKey) {
+            return;
+        }
         e.preventDefault();
         navigate(ROUTES.VIDEO.replace(':id', video.id));
     }
@@ -89,7 +91,9 @@ const VideoCard = memo(function VideoCard({
 
     function handleChannelKeyDown(e: React.KeyboardEvent) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) return;
+        if (!isActivationKey) {
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
         navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
@@ -147,7 +151,7 @@ const VideoCard = memo(function VideoCard({
                         />
                     </div>
                 )}
-                {video.duration != null && video.duration > 0 && (
+                {video.duration !== undefined && video.duration > 0 && (
                     <div className="video-card__duration-badge">
                         {Format.duration(video.duration)}
                     </div>

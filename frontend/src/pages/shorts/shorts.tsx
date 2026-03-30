@@ -66,7 +66,9 @@ const ShortItem = memo(function ShortItem({
             el.muted = nextMuted;
         }
         const shouldUpdateStoredVolume = val > 0;
-        if (shouldUpdateStoredVolume) { onVolumeChange(val); }
+        if (shouldUpdateStoredVolume) {
+            onVolumeChange(val);
+        }
         onMuteChange(nextMuted);
     }
 
@@ -108,11 +110,15 @@ const ShortItem = memo(function ShortItem({
     // Close description panel on Escape key
     useEffect(() => {
         const isDescClosed = !showDescription;
-        if (isDescClosed) { return; }
+        if (isDescClosed) {
+            return;
+        }
 
         function handleKeyDown(e: KeyboardEvent) {
             const isPressedEscape = e.key === 'Escape';
-            if (isPressedEscape) { setShowDescription(false); }
+            if (isPressedEscape) {
+                setShowDescription(false);
+            }
         }
 
         document.addEventListener('keydown', handleKeyDown);
@@ -122,82 +128,50 @@ const ShortItem = memo(function ShortItem({
     const visibleTags = video.tags.filter(tag => tag !== 'shorts').slice(0, MAX_TAGS);
     const volumeFill = `${effectiveVolume * 100}%`;
 
+    let volumeIcon;
+    if (effectiveVolume === 0) {
+        volumeIcon = <VolumeX size={20} strokeWidth={1.75} />;
+    } else if (effectiveVolume < 0.5) {
+        volumeIcon = <Volume1 size={20} strokeWidth={1.75} />;
+    } else {
+        volumeIcon = <Volume2 size={20} strokeWidth={1.75} />;
+    }
+
     return (
         <div className="shorts-page__item">
             {/* Portrait stage — constrained to portrait width */}
             <div className="shorts-page__stage">
-            <ShortPlayer
-                videoRef={videoRef}
-                src={video.videoUrl ?? ''}
-                captureKeyboard={isActive}
-                controlledMuted={muted}
-                controlledVolume={volume}
-                onMuteChange={onMuteChange}
-                onVolumeChange={onVolumeChange}
-                onVideoMounted={onVideoMounted}
-                onEnded={onEnded}
-                onTap={handleTap}
-            >
-                {/* Counter */}
-                <span className="shorts-page__counter">
-                    {t('shorts.counter', { current: index + 1, total })}
-                </span>
-
-                {/* Bottom overlay */}
-                <div className="shorts-page__overlay">
-                    <button
-                        className="shorts-page__channel"
-                        onClick={handleChannelClick}
-                        aria-label={video.channel}
-                    >
-                        <Avatar name={video.channel} size="sm" />
-                        <span className="shorts-page__channel-name">{video.channel}</span>
-                        <span className="shorts-page__views">{Format.views(video.views)} views</span>
-                    </button>
-
-                    <p className="shorts-page__title">{video.title}</p>
-
-                    {visibleTags.length > 0 && (
-                        <div className="shorts-page__tags">
-                            {visibleTags.map(tag => (
-                                <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Description overlay panel */}
-                <div
-                    className={['shorts-page__desc-panel', showDescription ? 'shorts-page__desc-panel--open' : ''].filter(Boolean).join(' ')}
-                    role="dialog"
-                    aria-label={t('shorts.description')}
+                <ShortPlayer
+                    videoRef={videoRef}
+                    src={video.videoUrl ?? ''}
+                    captureKeyboard={isActive}
+                    controlledMuted={muted}
+                    controlledVolume={volume}
+                    onMuteChange={onMuteChange}
+                    onVolumeChange={onVolumeChange}
+                    onVideoMounted={onVideoMounted}
+                    onEnded={onEnded}
+                    onTap={handleTap}
                 >
-                    <div className="shorts-page__desc-header">
-                        <span className="shorts-page__desc-title">{t('shorts.description')}</span>
+                    {/* Counter */}
+                    <span className="shorts-page__counter">
+                        {t('shorts.counter', { current: index + 1, total })}
+                    </span>
+
+                    {/* Bottom overlay */}
+                    <div className="shorts-page__overlay">
                         <button
-                            className="shorts-page__desc-close"
-                            aria-label={t('common.close')}
-                            onClick={handleDescriptionToggle}
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                    <div className="shorts-page__desc-body">
-                        <button
-                            className="shorts-page__desc-channel"
+                            className="shorts-page__channel"
                             onClick={handleChannelClick}
                             aria-label={video.channel}
                         >
                             <Avatar name={video.channel} size="sm" />
-                            <span>{video.channel}</span>
+                            <span className="shorts-page__channel-name">{video.channel}</span>
+                            <span className="shorts-page__views">{Format.views(video.views)} views</span>
                         </button>
-                        <p className="shorts-page__desc-video-title">{video.title}</p>
-                        {video.description && (
-                            <p className="shorts-page__desc-text">{video.description}</p>
-                        )}
-                        <p className="shorts-page__desc-meta">
-                            {Format.views(video.views)} views · {Format.relativeDate(video.publishedAt, 'en')}
-                        </p>
+
+                        <p className="shorts-page__title">{video.title}</p>
+
                         {visibleTags.length > 0 && (
                             <div className="shorts-page__tags">
                                 {visibleTags.map(tag => (
@@ -206,15 +180,56 @@ const ShortItem = memo(function ShortItem({
                             </div>
                         )}
                     </div>
-                </div>
 
-                {/* Scroll hint on first short */}
-                {index === 0 && (
-                    <div className="shorts-page__scroll-hint" aria-hidden>
-                        <ChevronDown size={18} />
+                    {/* Description overlay panel */}
+                    <div
+                        className={['shorts-page__desc-panel', showDescription ? 'shorts-page__desc-panel--open' : ''].filter(Boolean).join(' ')}
+                        role="dialog"
+                        aria-label={t('shorts.description')}
+                    >
+                        <div className="shorts-page__desc-header">
+                            <span className="shorts-page__desc-title">{t('shorts.description')}</span>
+                            <button
+                                className="shorts-page__desc-close"
+                                aria-label={t('common.close')}
+                                onClick={handleDescriptionToggle}
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="shorts-page__desc-body">
+                            <button
+                                className="shorts-page__desc-channel"
+                                onClick={handleChannelClick}
+                                aria-label={video.channel}
+                            >
+                                <Avatar name={video.channel} size="sm" />
+                                <span>{video.channel}</span>
+                            </button>
+                            <p className="shorts-page__desc-video-title">{video.title}</p>
+                            {video.description && (
+                                <p className="shorts-page__desc-text">{video.description}</p>
+                            )}
+                            <p className="shorts-page__desc-meta">
+                                {Format.views(video.views)} views · {Format.relativeDate(video.publishedAt, 'en')}
+                            </p>
+                            {visibleTags.length > 0 && (
+                                <div className="shorts-page__tags">
+                                    {visibleTags.map(tag => (
+                                        <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
-            </ShortPlayer>
+
+                    {/* Scroll hint on first short */}
+                    {index === 0 && (
+                        <div className="shorts-page__scroll-hint" aria-hidden>
+                            <ChevronDown size={18} />
+                        </div>
+                    )}
+                </ShortPlayer>
             </div>{/* .shorts-page__stage */}
 
             {/* Side action panel — outside the stage */}
@@ -281,12 +296,7 @@ const ShortItem = memo(function ShortItem({
                             onClick={handleVolumeToggle}
                         >
                             <span className="rbtn__icon">
-                                {effectiveVolume === 0
-                                    ? <VolumeX size={20} strokeWidth={1.75} />
-                                    : effectiveVolume < 0.5
-                                        ? <Volume1 size={20} strokeWidth={1.75} />
-                                        : <Volume2 size={20} strokeWidth={1.75} />
-                                }
+                                {volumeIcon}
                             </span>
                         </button>
                     </Tooltip>
@@ -313,7 +323,9 @@ const ShortItem = memo(function ShortItem({
                         <button
                             className="shorts-page__nav-btn"
                             aria-label={t('shorts.next')}
-                            onClick={e => { e.stopPropagation(); onScrollNext(); }}
+                            onClick={e => {
+                                e.stopPropagation(); onScrollNext();
+                            }}
                         >
                             <ChevronDown size={20} strokeWidth={2} />
                         </button>
@@ -370,7 +382,9 @@ export default function ShortsPage() {
     const activateIndex = useCallback((newIndex: number) => {
         const isAlreadyActive = newIndex === activeIndexRef.current;
         const isPlaying = !(videoRefsMap.current.get(newIndex)?.paused ?? true);
-        if (isAlreadyActive && isPlaying) { return; }
+        if (isAlreadyActive && isPlaying) {
+            return;
+        }
 
         videoRefsMap.current.forEach((el, i) => {
             const isCurrent = i === newIndex;
@@ -384,7 +398,9 @@ export default function ShortsPage() {
 
         const shortId = shorts[newIndex]?.id;
         const hasId = shortId !== undefined;
-        if (hasId) { watchVideo(shortId); }
+        if (hasId) {
+            watchVideo(shortId);
+        }
 
         setActiveIndex(newIndex);
         activeIndexRef.current = newIndex;
@@ -393,23 +409,31 @@ export default function ShortsPage() {
 
     const scrollToIndex = useCallback((index: number) => {
         const isOutOfBounds = index < 0 || index >= shorts.length;
-        if (isOutOfBounds) { return; }
+        if (isOutOfBounds) {
+            return;
+        }
         itemRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
     }, [shorts.length]);
 
     useEffect(() => {
         const feed = feedRef.current;
         const isNoShorts = shorts.length === 0;
-        if (!feed || isNoShorts) { return; }
+        if (!feed || isNoShorts) {
+            return;
+        }
 
         const observer = new IntersectionObserver(
             entries => {
                 for (const entry of entries) {
                     const isVisible = entry.intersectionRatio >= 0.6;
-                    if (!isVisible) { continue; }
+                    if (!isVisible) {
+                        continue;
+                    }
                     const idx = itemRefs.current.indexOf(entry.target as HTMLDivElement);
                     const isValidIndex = idx !== -1;
-                    if (isValidIndex) { activateIndex(idx); }
+                    if (isValidIndex) {
+                        activateIndex(idx);
+                    }
                 }
             },
             { root: feed, threshold: 0.6 },
@@ -417,7 +441,9 @@ export default function ShortsPage() {
 
         itemRefs.current.forEach(el => {
             const isMounted = el !== null;
-            if (isMounted) { observer.observe(el); }
+            if (isMounted) {
+                observer.observe(el);
+            }
         });
 
         return () => observer.disconnect();
@@ -452,7 +478,9 @@ export default function ShortsPage() {
                     return (
                         <div
                             key={video.id}
-                            ref={el => { itemRefs.current[index] = el; }}
+                            ref={el => {
+                                itemRefs.current[index] = el;
+                            }}
                             style={{ height: '100%' }}
                         >
                             {isWithinWindow && (

@@ -21,7 +21,7 @@ const VIDEO_ROW_HEIGHT = 136;
 
 type FlatItem =
     | { type: 'header'; label: string }
-    | { type: 'video'; id: string }
+    | { type: 'video'; id: string };
 
 interface HistoryGroup {
     label: string
@@ -162,6 +162,7 @@ export default function HistoryPage() {
 
     const listRef = useRef<HTMLDivElement>(null);
 
+    /* eslint-disable react-hooks/refs */
     const virtualizer = useWindowVirtualizer({
         count: flatItems.length,
         estimateSize: (i) => {
@@ -171,6 +172,7 @@ export default function HistoryPage() {
         overscan: 5,
         scrollMargin: listRef.current?.offsetTop ?? 0,
     });
+    /* eslint-enable react-hooks/refs */
 
     function handleRemoveFromHistory(id: string) {
         removeFromHistory(id as unknown as VideoId);
@@ -254,60 +256,60 @@ export default function HistoryPage() {
                 </div>
             )}
 
-            {hasHistory ? (
-                hasResults ? (
-                    <div className="history-page__content" ref={listRef}>
-                        <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
-                            {virtualizer.getVirtualItems().map(virtualItem => {
-                                const item = flatItems[virtualItem.index];
-                                return (
-                                    <div
-                                        key={virtualItem.key}
-                                        data-index={virtualItem.index}
-                                        ref={virtualizer.measureElement}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
-                                        }}
-                                    >
-                                        {item.type === 'header' ? (
-                                            <h2 className="history-page__group-label">{item.label}</h2>
-                                        ) : (
-                                            <div className="history-page__item">
-                                                <VideoRow video={videoMap.get(item.id)!} />
-                                                <Tooltip content={t('history.remove')} side="left">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className={['history-page__remove-btn', isTouchDevice ? 'history-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
-                                                        onClick={() => handleRemoveFromHistory(item.id)}
-                                                        aria-label={t('history.remove')}
-                                                    >
-                                                        <X size={14} strokeWidth={2} />
-                                                    </Button>
-                                                </Tooltip>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="history-page__empty">
-                        <Search size={40} strokeWidth={1.25} className="history-page__empty-icon" />
-                        <p className="history-page__empty-title">{t('history.no_results_title')}</p>
-                        <p className="history-page__empty-text">{t('history.no_results_text')}</p>
-                    </div>
-                )
-            ) : (
+            {!hasHistory && (
                 <div className="history-page__empty">
                     <History size={40} strokeWidth={1.25} className="history-page__empty-icon" />
                     <p className="history-page__empty-title">{t('nav.history')}</p>
                     <p className="history-page__empty-text">{t('video.no_history_title')}</p>
+                </div>
+            )}
+            {hasHistory && !hasResults && (
+                <div className="history-page__empty">
+                    <Search size={40} strokeWidth={1.25} className="history-page__empty-icon" />
+                    <p className="history-page__empty-title">{t('history.no_results_title')}</p>
+                    <p className="history-page__empty-text">{t('history.no_results_text')}</p>
+                </div>
+            )}
+            {hasHistory && hasResults && (
+                <div className="history-page__content" ref={listRef}>
+                    <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+                        {virtualizer.getVirtualItems().map(virtualItem => {
+                            const item = flatItems[virtualItem.index];
+                            return (
+                                <div
+                                    key={virtualItem.key}
+                                    data-index={virtualItem.index}
+                                    ref={virtualizer.measureElement}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
+                                    }}
+                                >
+                                    {item.type === 'header' ? (
+                                        <h2 className="history-page__group-label">{item.label}</h2>
+                                    ) : (
+                                        <div className="history-page__item">
+                                            <VideoRow video={videoMap.get(item.id)!} />
+                                            <Tooltip content={t('history.remove')} side="left">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={['history-page__remove-btn', isTouchDevice ? 'history-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
+                                                    onClick={() => handleRemoveFromHistory(item.id)}
+                                                    aria-label={t('history.remove')}
+                                                >
+                                                    <X size={14} strokeWidth={2} />
+                                                </Button>
+                                            </Tooltip>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
 

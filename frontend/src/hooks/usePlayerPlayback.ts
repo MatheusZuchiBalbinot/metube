@@ -23,6 +23,7 @@ export function usePlayerPlayback(
 
     // Keep callbacks in ref so handlers don't need to be recreated on prop change
     const cbRef = useRef(callbacks);
+    // eslint-disable-next-line react-hooks/refs
     cbRef.current = callbacks;
 
     const handleVideoPlay = useCallback(() => {
@@ -38,14 +39,18 @@ export function usePlayerPlayback(
 
     const handleVideoTimeUpdate = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         setCurrentTime(el.currentTime);
         cbRef.current.onTimeUpdate?.();
     }, [videoRef]);
 
     const handleVideoLoadedMetadata = useCallback(() => {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         setDuration(el.duration);
         cbRef.current.onLoadedMetadata?.();
     }, [videoRef]);
@@ -59,7 +64,9 @@ export function usePlayerPlayback(
     const handleVideoProgress = useCallback(() => {
         const el = videoRef.current;
         const hasDuration = el && el.duration > 0 && el.buffered.length > 0;
-        if (!hasDuration) { return; }
+        if (!hasDuration) {
+            return;
+        }
         const bufferedEnd = el.buffered.end(el.buffered.length - 1);
         setBufferedPct((bufferedEnd / el.duration) * 100);
     }, [videoRef]);
@@ -69,12 +76,16 @@ export function usePlayerPlayback(
         setVolume(newVol);
         const shouldMute = newVol === 0;
         setIsMuted(shouldMute);
-        if (el) { el.volume = newVol; el.muted = shouldMute; }
+        if (el) {
+            el.volume = newVol; el.muted = shouldMute;
+        }
     }
 
     function applyMuteToggle() {
         const el = videoRef.current;
-        if (!el) { return; }
+        if (!el) {
+            return;
+        }
         const newMuted = !isMuted;
         el.muted = newMuted;
         setIsMuted(newMuted);
@@ -83,7 +94,9 @@ export function usePlayerPlayback(
     function applyPlaybackRate(rate: number) {
         const el = videoRef.current;
         setPlaybackRate(rate);
-        if (el) { el.playbackRate = rate; }
+        if (el) {
+            el.playbackRate = rate;
+        }
     }
 
     return {

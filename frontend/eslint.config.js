@@ -10,6 +10,14 @@ export default defineConfig([
     // Ignore build output
     globalIgnores(['dist']),
 
+    // Browser globals for plain JS files in public/
+    {
+        files: ['public/**/*.js'],
+        languageOptions: {
+            globals: globals.browser,
+        },
+    },
+
     // Base recommended configs
     js.configs.recommended,
     ...tseslint.configs.recommended,

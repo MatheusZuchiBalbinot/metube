@@ -25,20 +25,27 @@ export function usePlayerKeyboard({
 }: PlayerKeyboardOptions) {
     // Keep callbacks in a ref so the effect never needs to re-run when they change identity.
     const cbRef = useRef({ onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle });
+    // eslint-disable-next-line react-hooks/refs
     cbRef.current = { onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle };
 
     useEffect(() => {
-        if (!captureKeyboard) { return; }
+        if (!captureKeyboard) {
+            return;
+        }
 
         function onKeyDown(e: KeyboardEvent) {
             const el = videoRef.current;
-            if (!el) { return; }
+            if (!el) {
+                return;
+            }
 
             const target = e.target as HTMLElement;
             const isTyping =
                 ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
                 target.isContentEditable;
-            if (isTyping) { return; }
+            if (isTyping) {
+                return;
+            }
 
             if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
@@ -47,7 +54,9 @@ export function usePlayerKeyboard({
             }
 
             const isInteractive = ['BUTTON', 'A'].includes(target.tagName);
-            if (isInteractive) { return; }
+            if (isInteractive) {
+                return;
+            }
 
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
@@ -69,6 +78,7 @@ export function usePlayerKeyboard({
                     cbRef.current.onVolumeChange(Math.min(el.volume + 0.1, 1));
                     return;
                 }
+
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     cbRef.current.onVolumeChange(Math.max(el.volume - 0.1, 0));

@@ -18,9 +18,15 @@ export default function NavProgress() {
             return;
         }
 
-        if (doneTimer.current) { clearTimeout(doneTimer.current); }
-        if (idleTimer.current) { clearTimeout(idleTimer.current); }
+        if (doneTimer.current) {
+            clearTimeout(doneTimer.current);
+        }
 
+        if (idleTimer.current) {
+            clearTimeout(idleTimer.current);
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setState('loading');
 
         // Complete the bar shortly after the sync cross-fade finishes (≈150ms)
@@ -34,13 +40,20 @@ export default function NavProgress() {
         }, 550);
 
         return () => {
-            if (doneTimer.current) { clearTimeout(doneTimer.current); }
-            if (idleTimer.current) { clearTimeout(idleTimer.current); }
+            if (doneTimer.current) {
+                clearTimeout(doneTimer.current);
+            }
+
+            if (idleTimer.current) {
+                clearTimeout(idleTimer.current);
+            }
         };
     }, [pathname]);
 
     const isIdle = state === 'idle';
-    if (isIdle) { return null; }
+    if (isIdle) {
+        return null;
+    }
 
     const barClass = ['nav-progress', `nav-progress--${state}`].join(' ');
 
