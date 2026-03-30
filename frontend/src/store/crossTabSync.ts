@@ -9,7 +9,9 @@
  * pinned video, playlists, and subscriptions (all on next Redux render cycle).
  */
 
-import type { AppDispatch } from './index';
+import type { AppDispatch } from './types';
+import type { ChannelId } from '@models/channel';
+import type { VideoId } from '@models/video';
 import { themeActions } from './themeSlice';
 import { videoActions } from './videoSlice';
 import { playlistActions } from './playlistSlice';
@@ -50,29 +52,29 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
             case STORAGE_KEYS.WATCH_HISTORY: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetWatchHistory(data)); }
+                if (isValid) { dispatch(videoActions.xTabSetWatchHistory(data as VideoId[])); }
                 break;
             }
             case STORAGE_KEYS.LIKED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetLikedVideos(data)); }
+                if (isValid) { dispatch(videoActions.xTabSetLikedVideos(data as VideoId[])); }
                 break;
             }
             case STORAGE_KEYS.DISLIKED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetDislikedVideos(data)); }
+                if (isValid) { dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[])); }
                 break;
             }
             case STORAGE_KEYS.SAVED_VIDEOS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(videoActions.xTabSetSavedVideos(data)); }
+                if (isValid) { dispatch(videoActions.xTabSetSavedVideos(data as VideoId[])); }
                 break;
             }
             case STORAGE_KEYS.PINNED_VIDEO: {
-                dispatch(videoActions.xTabSetPinnedVideoId(event.newValue || null));
+                dispatch(videoActions.xTabSetPinnedVideoId((event.newValue || null) as VideoId | null));
                 break;
             }
 
@@ -88,7 +90,7 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
             case STORAGE_KEYS.SUBSCRIPTIONS: {
                 const data = parseJSON<string[]>(event.newValue);
                 const isValid = Array.isArray(data);
-                if (isValid) { dispatch(subscriptionActions.xTabSetSubscriptions(data)); }
+                if (isValid) { dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[])); }
                 break;
             }
         }

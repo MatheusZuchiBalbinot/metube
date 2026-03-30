@@ -79,7 +79,7 @@ const videoSlice = createSlice({
     initialState,
     reducers: {
         addVideo(state, action: PayloadAction<Omit<Video, 'id' | 'views'>>) {
-            state.videos.unshift({ ...action.payload, id: crypto.randomUUID(), views: 0 });
+            state.videos.unshift({ ...action.payload, id: crypto.randomUUID() as unknown as VideoId, views: 0 });
         },
 
         editVideo(state, action: PayloadAction<{ id: VideoId; partial: Partial<Video> }>) {
