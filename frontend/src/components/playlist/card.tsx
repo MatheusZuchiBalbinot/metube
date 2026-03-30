@@ -56,7 +56,7 @@ function PlaylistVideoRow({ video, playlistId }: PlaylistVideoRowProps) {
             <div className="playlist-video-row__body">
                 <p className="playlist-video-row__title">{video.title}</p>
                 <span className="playlist-video-row__channel">{video.channel}</span>
-                {video.duration != null && video.duration > 0 && (
+                {video.duration !== undefined && video.duration > 0 && (
                     <span className="playlist-video-row__duration">{Format.duration(video.duration)}</span>
                 )}
             </div>
@@ -102,7 +102,9 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         e.stopPropagation();
         const trimmed = renameName.trim();
         const isEmpty = trimmed === '';
-        if (isEmpty) { return; }
+        if (isEmpty) {
+            return;
+        }
         renamePlaylist(playlist.id, trimmed);
         setRenaming(false);
     }
@@ -116,8 +118,13 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
     function handleRenameKeyDown(e: React.KeyboardEvent) {
         const isEnter = e.key === 'Enter';
         const isEscape = e.key === 'Escape';
-        if (isEnter) { handleRenameConfirm(e as unknown as React.MouseEvent); }
-        if (isEscape) { handleRenameCancel(e as unknown as React.MouseEvent); }
+        if (isEnter) {
+            handleRenameConfirm(e as unknown as React.MouseEvent);
+        }
+
+        if (isEscape) {
+            handleRenameCancel(e as unknown as React.MouseEvent);
+        }
     }
 
     function handleDeleteConfirm() {

@@ -176,11 +176,18 @@ export default function ProfilePage() {
 
         const daySet = new Set(watchEvents.map((e: { date: string }) => e.date.slice(0, 10)));
         const today = new Date().toISOString().slice(0, 10);
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = yesterdayDate.toISOString().slice(0, 10);
 
         const hasToday = daySet.has(today);
         const hasYesterday = daySet.has(yesterday);
-        const startDay = hasToday ? today : (hasYesterday ? yesterday : null);
+        let startDay: string | null = null;
+        if (hasToday) {
+            startDay = today;
+        } else if (hasYesterday) {
+            startDay = yesterday;
+        }
         const hasStartDay = startDay !== null;
         if (!hasStartDay) {
             return 0;
@@ -313,10 +320,14 @@ export default function ProfilePage() {
 
     const hasVideos = filteredVideos.length > 0;
 
-    const emptyIcon = activeTab === TAB.LIKED ? HeartOff
-        : activeTab === TAB.HISTORY ? History
-            : VideoOff;
-    const EmptyIcon = emptyIcon;
+    let EmptyIcon;
+    if (activeTab === TAB.LIKED) {
+        EmptyIcon = HeartOff;
+    } else if (activeTab === TAB.HISTORY) {
+        EmptyIcon = History;
+    } else {
+        EmptyIcon = VideoOff;
+    }
 
     return (
         <div className="profile-page">
@@ -650,7 +661,7 @@ export default function ProfilePage() {
                 <p className="profile-page__delete-confirm-text">
                     {t('profile.delete_confirm', {
                         title: videoToDelete?.title ?? '',
-                        defaultValue: `Delete '{{title}}'? This cannot be undone.`,
+                        defaultValue: 'Delete \'{{title}}\'? This cannot be undone.',
                     })}
                 </p>
             </Modal>

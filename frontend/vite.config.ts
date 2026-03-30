@@ -28,7 +28,7 @@ export default defineConfig({
         }),
     ],
     build: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -38,6 +38,7 @@ export default defineConfig({
                     'vendor-i18n': ['i18next', 'react-i18next'],
                 },
             },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
     },
     test: {
