@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@context/useAuth';
-import { useVideo } from '@context/useVideo';
+import { useAuth } from '@hooks/useAuth';
+import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
 import { VideoStatus } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
+import type { ChannelId } from '@models/channel';
 import TagInput from '@components/tag/input';
 import DatePicker from '@ui/date/picker';
 import Badge from '@ui/badge/badge';
@@ -147,7 +148,7 @@ export default function UploadModal() {
             publishedAt,
             scheduledAt,
             channel: user?.name ?? 'Eu',
-            channelId: String(user?.id ?? 'me'),
+            channelId: String(user?.id ?? 'me') as unknown as ChannelId,
             status,
             videoUrl: form.videoObjectUrl ?? undefined,
         });

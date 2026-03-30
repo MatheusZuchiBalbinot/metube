@@ -91,7 +91,7 @@ export default function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps)
                                 </ul>
                                 {section.noteKey && (
                                     <p className="shortcuts-modal__note">
-                                        {t(section.noteKey, section.noteDefault)}
+                                        {t(section.noteKey, section.noteDefault ?? '')}
                                     </p>
                                 )}
                             </section>

@@ -1,16 +1,18 @@
 import { useMemo, useState, useRef } from 'react';
-import { useDebounce } from '@utils/useDebounce';
+import { useDebounce } from '@hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@utils/useMediaQuery';
+import { useMediaQuery } from '@hooks/useMediaQuery';
 import { History, Search, Trash2, X } from 'lucide-react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
 import Modal from '@ui/modal/modal';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
+import type { Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
 import './history.css';
 
 // Estimated heights for virtualizer — group headers are shorter than rows.
@@ -102,7 +104,7 @@ export default function HistoryPage() {
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const videoMap = useMemo(() => {
-        const map = new Map(videos.map(v => [v.id, v]));
+        const map = new Map<string, Video>(videos.map((v: Video) => [v.id as string, v]));
         return map;
     }, [videos]);
 
@@ -171,7 +173,7 @@ export default function HistoryPage() {
     });
 
     function handleRemoveFromHistory(id: string) {
-        removeFromHistory(id);
+        removeFromHistory(id as unknown as VideoId);
         dispatch(toastActions.addToast({ message: t('toast.history_removed'), type: 'info' }));
     }
 

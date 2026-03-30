@@ -1,9 +1,10 @@
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMediaQuery } from '@utils/useMediaQuery';
+import { useMediaQuery } from '@hooks/useMediaQuery';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
+import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
 import { ROUTES } from '@utils/routes';
 import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
@@ -35,7 +36,7 @@ function buildVideoCardClass(showActions: boolean) {
 const VideoCard = memo(function VideoCard({
     video,
     showActions = false,
-    index,
+    index: _index,
     onEdit,
     onDelete,
 }: VideoCardProps) {
@@ -104,7 +105,7 @@ const VideoCard = memo(function VideoCard({
         onDelete?.(video.id);
     }
 
-    function handleTagClick(e: React.MouseEvent, tag: string) {
+    function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
         dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }));
     }

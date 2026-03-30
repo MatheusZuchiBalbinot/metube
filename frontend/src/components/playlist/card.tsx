@@ -7,7 +7,7 @@ import type { Video } from '@data/mockVideos';
 import type { Playlist } from '@data/mockPlaylists';
 import { ROUTES } from '@utils/routes';
 import { Format } from '@utils/format';
-import { usePlaylist } from '@context/usePlaylist';
+import { usePlaylist } from '@hooks/usePlaylist';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';

@@ -54,7 +54,7 @@ export default function ToastContainer() {
 
     return (
         <div className="toast-container" aria-live="polite" aria-atomic="true">
-            {toasts.map(toast => (
+            {toasts.map((toast: Toast) => (
                 <ToastItem key={toast.id} toast={toast} />
             ))}
         </div>

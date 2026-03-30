@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListVideo, Plus } from 'lucide-react';
-import { usePlaylist } from '@context/usePlaylist';
-import { useVideo } from '@context/useVideo';
+import { usePlaylist } from '@hooks/usePlaylist';
+import { useVideo } from '@hooks/useVideo';
 import PlaylistCard from '@components/playlist/card';
 import EmptyState from '@ui/empty/empty';
 import Button from '@ui/button/button';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
+import type { Playlist } from '@data/mockPlaylists';
+import type { Video } from '@data/mockVideos';
 import './playlists.css';
 
 export default function PlaylistsPage() {
@@ -19,10 +21,10 @@ export default function PlaylistsPage() {
     const [newName, setNewName] = useState('');
 
     const playlistsWithVideos = useMemo(() => {
-        return playlists.map(playlist => {
+        return playlists.map((playlist: Playlist) => {
             const resolvedVideos = (playlist.videoIds ?? [])
-                .map(id => videos.find(v => v.id === id))
-                .filter(v => v !== undefined);
+                .map((id: string) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
+                .filter((v: Video | undefined): v is Video => v !== undefined);
             return { playlist, videos: resolvedVideos };
         });
     }, [playlists, videos]);

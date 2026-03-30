@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { TagColors } from '@utils/tagColors';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
+import type { Video } from '@data/mockVideos';
 import './view.css';
 
 export default function TagView() {
@@ -18,8 +19,8 @@ export default function TagView() {
     const tagPalette = TagColors.palette(tag);
 
     const taggedVideos = useMemo(() => {
-        const matched = videos.filter(v =>
-            v.tags.some(vt => vt.toLowerCase() === lowerTag),
+        const matched = videos.filter((v: Video) =>
+            v.tags.some((vt: string) => vt.toLowerCase() === lowerTag),
         );
 
         const isFromVideoFirst = fromVideoId !== null && matched[0]?.id === fromVideoId;
@@ -27,19 +28,19 @@ export default function TagView() {
             return matched;
         }
 
-        const fromIndex = matched.findIndex(v => v.id === fromVideoId);
+        const fromIndex = matched.findIndex((v: Video) => v.id === fromVideoId);
         const hasFromVideo = fromIndex > 0;
 
         if (!hasFromVideo) {
             return matched.sort(
-                (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+                (a: Video, b: Video) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
             );
         }
 
         const sorted = [...matched].sort(
-            (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+            (a: Video, b: Video) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
         );
-        const fromVideo = sorted.splice(sorted.findIndex(v => v.id === fromVideoId), 1)[0];
+        const fromVideo = sorted.splice(sorted.findIndex((v: Video) => v.id === fromVideoId), 1)[0];
         return [fromVideo, ...sorted];
     }, [videos, lowerTag, fromVideoId]);
 

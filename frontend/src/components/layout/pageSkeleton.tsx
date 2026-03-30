@@ -10,7 +10,7 @@ function FilterBarSkeleton() {
     return (
         <div className="ps-filter" aria-hidden="true">
             {[72, 64, 88, 60, 76].map((w, i) => (
-                <Skeleton key={i} className="ps-filter__chip" style={{ width: w }} />
+                <Skeleton key={i} className="ps-filter__chip" width={w} />
             ))}
             <Skeleton className="ps-filter__sort" />
         </div>
@@ -88,7 +88,7 @@ function HistoryPageSkeleton() {
                 <Skeleton className="ps-history-controls__search" />
                 <div className="ps-history-controls__periods">
                     {[48, 52, 76, 64].map((w, i) => (
-                        <Skeleton key={i} className="ps-history-controls__period" style={{ width: w }} />
+                        <Skeleton key={i} className="ps-history-controls__period" width={w} />
                     ))}
                 </div>
             </div>
@@ -164,7 +164,7 @@ function ProfilePageSkeleton() {
                     <Skeleton className="ps-profile__bio" />
                     <div className="ps-profile__stats">
                         {[84, 110, 72, 98, 88].map((w, i) => (
-                            <Skeleton key={i} className="ps-profile__stat" style={{ width: w }} />
+                            <Skeleton key={i} className="ps-profile__stat" width={w} />
                         ))}
                     </div>
                     <div className="ps-profile__heatmap-controls">
@@ -181,7 +181,7 @@ function ProfilePageSkeleton() {
 
             <div className="ps-profile__tabs">
                 {[100, 72, 88].map((w, i) => (
-                    <Skeleton key={i} className="ps-profile__tab" style={{ width: w }} />
+                    <Skeleton key={i} className="ps-profile__tab" width={w} />
                 ))}
             </div>
 
@@ -219,13 +219,13 @@ function VideoPageSkeleton() {
 
                 <div className="ps-video__tags">
                     {[72, 88, 60, 96, 68].map((w, i) => (
-                        <Skeleton key={i} className="ps-video__tag" style={{ width: w }} />
+                        <Skeleton key={i} className="ps-video__tag" width={w} />
                     ))}
                 </div>
 
                 <div className="ps-video__desc">
                     {[100, 95, 82, 70].map((pct, i) => (
-                        <Skeleton key={i} className="ps-video__desc-line" style={{ width: `${pct}%` }} />
+                        <Skeleton key={i} className="ps-video__desc-line" width={`${pct}%`} />
                     ))}
                 </div>
             </div>
@@ -267,12 +267,12 @@ function ChannelPageSkeleton() {
                     </div>
                     <div className="ps-channel__stats">
                         {[80, 96, 72].map((w, i) => (
-                            <Skeleton key={i} className="ps-channel__stat" style={{ width: w }} />
+                            <Skeleton key={i} className="ps-channel__stat" width={w} />
                         ))}
                     </div>
                     <div className="ps-channel__tags">
                         {[68, 84, 56, 72].map((w, i) => (
-                            <Skeleton key={i} className="ps-channel__tag" style={{ width: w }} />
+                            <Skeleton key={i} className="ps-channel__tag" width={w} />
                         ))}
                     </div>
                 </div>

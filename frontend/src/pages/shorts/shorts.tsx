@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX, ChevronDown, Info, X } from 'lucide-react';
 import ReactionBtn from '@components/video/reactionBtn';
 import ShortPlayer from '@components/video/shortPlayer';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { Avatar, Tooltip } from '@ui';
 import { Format } from '@utils/format';
 import TagBadge from '@components/tag/badge';
 import { ROUTES } from '@utils/routes';
-import { useBurstAnimation } from '@utils/useBurstAnimation';
+import { useBurstAnimation } from '@hooks/useBurstAnimation';
+import type { Tag } from '@models/tag';
 import './shorts.css';
 
 const MAX_TAGS = 3;
@@ -69,24 +70,21 @@ const ShortItem = memo(function ShortItem({
         onMuteChange(nextMuted);
     }
 
-    function handleLike(e: React.MouseEvent) {
-        e.stopPropagation();
+    function handleLike() {
         likeVideo(video.id);
         triggerLikeAnimation();
     }
 
-    function handleDislike(e: React.MouseEvent) {
-        e.stopPropagation();
+    function handleDislike() {
         dislikeVideo(video.id);
         triggerDislikeAnimation();
     }
 
-    function handleSave(e: React.MouseEvent) {
-        e.stopPropagation();
+    function handleSave() {
         saveVideo(video.id);
     }
 
-    function handleTagClick(e: React.MouseEvent, tag: string) {
+    function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
         openTagView(tag, video.id);
     }
@@ -346,7 +344,7 @@ export default function ShortsPage() {
     }, []);
 
     const shorts = useMemo(
-        () => publishedVideos.filter(v => v.tags.includes('shorts')),
+        () => publishedVideos.filter(v => v.tags.includes('shorts' as unknown as Tag)),
         [publishedVideos],
     );
 

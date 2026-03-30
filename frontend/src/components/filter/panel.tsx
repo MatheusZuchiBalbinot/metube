@@ -84,8 +84,8 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
     }, [showMore]);
 
     function toggleTag(tag: string) {
-        const isSelected = value.tags.includes(tag);
-        const nextTags = isSelected ? value.tags.filter(t => t !== tag) : [...value.tags, tag];
+        const isSelected = value.tags.includes(tag as unknown as Tag);
+        const nextTags = isSelected ? value.tags.filter(t => t !== tag) : [...value.tags, tag as unknown as Tag];
 
         onChange({ ...value, tags: nextTags });
     }
@@ -108,7 +108,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
     }
 
     function TagChip({ tag }: { tag: string }) {
-        const isActive = value.tags.includes(tag);
+        const isActive = value.tags.includes(tag as unknown as Tag);
         return (
             <Button
                 variant="ghost"

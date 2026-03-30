@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Clock, Heart, Tag, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
+import { Play, Clock, Heart, Tag as TagIcon, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { VideoFilter } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
 import type { FilterState } from '@utils/applyFilters';
 import type { Video } from '@data/mockVideos';
-import { useAuth } from '@context/useAuth';
-import { useVideo } from '@context/useVideo';
+import type { Tag } from '@models/tag';
+import type { VideoId } from '@models/video';
+import { useAuth } from '@hooks/useAuth';
+import { useVideo } from '@hooks/useVideo';
 import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
 import TagInput from '@components/tag/input';
 import './profile.css';
@@ -60,7 +62,7 @@ export default function ProfilePage() {
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [editDescription, setEditDescription] = useState('');
-    const [editTags, setEditTags] = useState<string[]>([]);
+    const [editTags, setEditTags] = useState<Tag[]>([]);
 
     const [editProfileOpen, setEditProfileOpen] = useState(false);
     const [editName, setEditName] = useState('');
@@ -73,18 +75,18 @@ export default function ProfilePage() {
     const [heatmapDays, setHeatmapDays] = useState(HEATMAP_SHORT);
 
     const ownVideos = useMemo(
-        () => videos.filter(v => v.channelId === channelId),
+        () => videos.filter((v: Video) => v.channelId === channelId),
         [videos, channelId],
     );
 
     const likedVideoList = useMemo(
-        () => videos.filter(v => likedVideos.has(v.id)),
+        () => videos.filter((v: Video) => likedVideos.has(v.id)),
         [videos, likedVideos],
     );
 
     const historyVideoList = useMemo(
         () => watchHistory
-            .map(id => videos.find(v => v.id === id))
+            .map((id: string) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
             .filter((v): v is Video => v !== undefined),
         [watchHistory, videos],
     );
@@ -104,8 +106,8 @@ export default function ProfilePage() {
     }, [activeTab, ownVideos, likedVideoList, historyVideoList]);
 
     const allTags = useMemo(() => {
-        const tagSet = new Set(tabVideos.flatMap(v => v.tags));
-        return Array.from(tagSet).sort();
+        const tagSet = new Set(tabVideos.flatMap((v: Video) => v.tags));
+        return Array.from(tagSet).sort() as unknown as Tag[];
     }, [tabVideos]);
 
     const pinnedVideo = useMemo(
@@ -136,8 +138,8 @@ export default function ProfilePage() {
         const videosWatched = watchHistory.length;
 
         // VISUAL-11: accurate watch time using video duration
-        const totalWatchSeconds = watchHistory.reduce((sum, id) => {
-            const video = videos.find(v => v.id === id);
+        const totalWatchSeconds = watchHistory.reduce((sum: number, id: string) => {
+            const video = videos.find((v: Video) => v.id === (id as unknown as typeof v.id));
             const duration = video?.duration ?? 600;
             const progress = videoProgress[id] ?? 0;
             return sum + (progress / 100) * duration;
@@ -147,7 +149,7 @@ export default function ProfilePage() {
 
         const tagFreq = new Map<string, number>();
         for (const id of watchHistory) {
-            const video = videos.find(v => v.id === id);
+            const video = videos.find((v: Video) => v.id === (id as unknown as typeof v.id));
             if (!video) {
                 continue;
             }
@@ -172,7 +174,7 @@ export default function ProfilePage() {
             return 0;
         }
 
-        const daySet = new Set(watchEvents.map(e => e.date.slice(0, 10)));
+        const daySet = new Set(watchEvents.map((e: { date: string }) => e.date.slice(0, 10)));
         const today = new Date().toISOString().slice(0, 10);
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
@@ -387,7 +389,7 @@ export default function ProfilePage() {
                             )}
                             {stats.topTags.length > 0 && (
                                 <div className="profile-page__stat profile-page__stat--tags">
-                                    <Tag size={13} className="profile-page__stat-icon" />
+                                    <TagIcon size={13} className="profile-page__stat-icon" />
                                     <div className="profile-page__top-tags">
                                         {stats.topTags.map(tag => {
                                             const p = TagColors.palette(tag);
@@ -491,8 +493,8 @@ export default function ProfilePage() {
                                 video={pinnedVideo}
                                 showActions={true}
                                 onEdit={handleEditOpen}
-                                onDelete={id => {
-                                    const video = videos.find(v => v.id === id);
+                                onDelete={(id: VideoId) => {
+                                    const video = videos.find((v: Video) => v.id === id);
                                     const hasVideo = video !== undefined;
                                     if (hasVideo) {
                                         handleDeleteClick(video);
@@ -522,8 +524,8 @@ export default function ProfilePage() {
                                         index={i}
                                         showActions={isVideosTabOwn}
                                         onEdit={handleEditOpen}
-                                        onDelete={id => {
-                                            const found = videos.find(v => v.id === id);
+                                        onDelete={(id: VideoId) => {
+                                            const found = videos.find((v: Video) => v.id === id);
                                             const hasFound = found !== undefined;
                                             if (hasFound) {
                                                 handleDeleteClick(found);

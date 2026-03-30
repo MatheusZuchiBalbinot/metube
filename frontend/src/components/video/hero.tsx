@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
+import type { Tag } from '@models/tag';
 import { ROUTES } from '@utils/routes';
 import { Format } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import Badge from '@ui/badge/badge';
 import './hero.css';
 
@@ -32,12 +33,12 @@ export default function VideoHero({ video }: VideoHeroProps) {
         navigate(ROUTES.VIDEO.replace(':id', video.id));
     }
 
-    function handleTagClick(e: React.MouseEvent, tag: string) {
+    function handleTagClick(e: React.MouseEvent, tag: Tag) {
         e.stopPropagation();
         openTagView(tag, video.id);
     }
 
-    function handleTagKeyDown(e: React.KeyboardEvent, tag: string) {
+    function handleTagKeyDown(e: React.KeyboardEvent, tag: Tag) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
         if (!isActivationKey) return;
         e.preventDefault();

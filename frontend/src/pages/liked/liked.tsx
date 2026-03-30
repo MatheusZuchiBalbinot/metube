@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@utils/useMediaQuery';
+import { useMediaQuery } from '@hooks/useMediaQuery';
 import { Heart, HeartOff } from 'lucide-react';
 import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
-import { useVideo } from '@context/useVideo';
+import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
+import type { Video } from '@data/mockVideos';
+import type { VideoId } from '@models/video';
+import type { Tag } from '@models/tag';
 import './liked.css';
 
 export default function LikedPage() {
@@ -18,7 +21,7 @@ export default function LikedPage() {
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
     const likedVideoList = useMemo(() => {
-        return videos.filter(v => likedVideos.has(v.id));
+        return videos.filter((v: Video) => likedVideos.has(v.id));
     }, [likedVideos, videos]);
 
     const allTags = useMemo(() => {
@@ -28,7 +31,7 @@ export default function LikedPage() {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort();
+        return Array.from(tagSet).sort() as unknown as Tag[];
     }, [likedVideoList]);
 
     const filteredVideos = useMemo(
@@ -41,7 +44,7 @@ export default function LikedPage() {
     const isTouchDevice = useMediaQuery('(hover: none)');
 
     function handleUnlike(videoId: string) {
-        likeVideo(videoId);
+        likeVideo(videoId as unknown as VideoId);
         dispatch(toastActions.addToast({ message: t('toast.unliked'), type: 'info' }));
     }
 
