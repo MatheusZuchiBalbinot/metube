@@ -16,6 +16,7 @@ import './channel.css';
 
 const TOP_TAGS_COUNT = 4;
 
+// eslint-disable-next-line complexity
 export default function ChannelPage() {
     const { t, i18n } = useTranslation();
     const { id } = useParams<{ id: string }>();

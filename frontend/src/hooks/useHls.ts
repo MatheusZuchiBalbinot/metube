@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import type Hls from 'hls.js';
 
 interface HlsLevel {
     height: number;
@@ -12,11 +13,14 @@ interface HlsLevel {
 }
 
 export function useHls(videoRef: React.RefObject<HTMLVideoElement | null>, src: string) {
-    const hlsRef = useRef<any>(null);
+    const hlsRef = useRef<Hls | null>(null);
 
     useEffect(() => {
         const video = videoRef.current;
-        if (!video || !src) return;
+        const isNotReady = !video || !src;
+        if (isNotReady) {
+            return;
+        }
 
         // Cleanup previous instance
         if (hlsRef.current) {
@@ -64,12 +68,14 @@ export function useHls(videoRef: React.RefObject<HTMLVideoElement | null>, src: 
                 // Manifest loaded, HLS is ready
             });
 
-            hls.on(HlsClass.Events.ERROR, (_event: any, data: any) => {
+            hls.on(HlsClass.Events.ERROR, (_event: unknown, data: unknown) => {
+                // eslint-disable-next-line no-console
                 console.warn('[HLS Error]', data);
             });
         };
 
         loadHls().catch(err => {
+            // eslint-disable-next-line no-console
             console.error('[HLS Load Error]', err);
             // Fallback to direct src
             video.src = src;

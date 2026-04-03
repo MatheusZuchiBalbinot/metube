@@ -291,38 +291,27 @@ interface PageSkeletonProps {
     pathname: string;
 }
 
+function getSkeletonComponent(pathname: string): React.FC {
+    const matchers: [test: (p: string) => boolean, component: React.FC][] = [
+        [p => p.startsWith('/video/'), VideoPageSkeleton],
+        [p => p === ROUTES.PROFILE || p.startsWith('/user/'), ProfilePageSkeleton],
+        [p => p.startsWith('/channel/'), ChannelPageSkeleton],
+        [p => p === ROUTES.HISTORY, HistoryPageSkeleton],
+        [p => p === ROUTES.SEARCH || p.startsWith('/search'), SearchPageSkeleton],
+        [p => p === ROUTES.LIKED || p === ROUTES.WATCH_LATER, CollectionPageSkeleton],
+    ];
+
+    for (const [test, component] of matchers) {
+        if (test(pathname)) {
+            return component;
+        }
+    }
+
+    return HomePageSkeleton;
+}
+
 export default function PageSkeleton({ pathname }: PageSkeletonProps) {
-    const isVideoPage = pathname.startsWith('/video/');
-    const isProfilePage = pathname === ROUTES.PROFILE || pathname.startsWith('/user/');
-    const isChannelPage = pathname.startsWith('/channel/');
-    const isHistoryPage = pathname === ROUTES.HISTORY;
-    const isSearchPage = pathname === ROUTES.SEARCH || pathname.startsWith('/search');
-    const isLikedPage = pathname === ROUTES.LIKED;
-    const isWatchLaterPage = pathname === ROUTES.WATCH_LATER;
-
-    if (isVideoPage) {
-        return <VideoPageSkeleton />;
-    }
-
-    if (isProfilePage) {
-        return <ProfilePageSkeleton />;
-    }
-
-    if (isChannelPage) {
-        return <ChannelPageSkeleton />;
-    }
-
-    if (isHistoryPage) {
-        return <HistoryPageSkeleton />;
-    }
-
-    if (isSearchPage) {
-        return <SearchPageSkeleton />;
-    }
-
-    if (isLikedPage || isWatchLaterPage) {
-        return <CollectionPageSkeleton />;
-    }
-
-    return <HomePageSkeleton />;
+    const SkeletonComponent = getSkeletonComponent(pathname);
+    // eslint-disable-next-line
+    return <SkeletonComponent />;
 }

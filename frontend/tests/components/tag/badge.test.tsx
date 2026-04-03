@@ -3,7 +3,7 @@
  * Simple component that renders a tag with deterministic color.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
 import TagBadge from '@components/tag/badge';
 import { renderWithProviders } from '../../helpers/renderWithProviders';

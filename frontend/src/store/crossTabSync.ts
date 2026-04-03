@@ -28,85 +28,74 @@ function parseJSON<T>(raw: string): T | null {
     }
 }
 
+type SyncHandler = (value: string) => void;
+
 export function initCrossTabSync(dispatch: AppDispatch): () => void {
+    const SYNC_HANDLERS: Record<string, SyncHandler> = {
+        [STORAGE_KEYS.THEME_MODE]: (value: string) => {
+            dispatch(themeActions.setMode(value as ThemeMode));
+            document.documentElement.dataset.mode = value;
+        },
+        [STORAGE_KEYS.THEME_COLOR]: (value: string) => {
+            dispatch(themeActions.setColor(value as ThemeColor));
+            document.documentElement.dataset.color = value;
+        },
+        [STORAGE_KEYS.WATCH_HISTORY]: (value: string) => {
+            const data = parseJSON<string[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(videoActions.xTabSetWatchHistory(data as VideoId[]));
+            }
+        },
+        [STORAGE_KEYS.LIKED_VIDEOS]: (value: string) => {
+            const data = parseJSON<string[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(videoActions.xTabSetLikedVideos(data as VideoId[]));
+            }
+        },
+        [STORAGE_KEYS.DISLIKED_VIDEOS]: (value: string) => {
+            const data = parseJSON<string[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
+            }
+        },
+        [STORAGE_KEYS.SAVED_VIDEOS]: (value: string) => {
+            const data = parseJSON<string[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(videoActions.xTabSetSavedVideos(data as VideoId[]));
+            }
+        },
+        [STORAGE_KEYS.PINNED_VIDEO]: (value: string) => {
+            dispatch(videoActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
+        },
+        [STORAGE_KEYS.PLAYLISTS]: (value: string) => {
+            const data = parseJSON<Playlist[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(playlistActions.xTabSetPlaylists(data));
+            }
+        },
+        [STORAGE_KEYS.SUBSCRIPTIONS]: (value: string) => {
+            const data = parseJSON<string[]>(value);
+            const isValid = Array.isArray(data);
+            if (isValid) {
+                dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[]));
+            }
+        },
+    };
+
     function handleStorageChange(event: StorageEvent) {
         const hasNewValue = event.newValue !== null;
         if (!hasNewValue) {
             return;
         }
 
-        switch (event.key) {
-            // ─── Theme ─────────────────────────────────────────────────────────
-            case STORAGE_KEYS.THEME_MODE: {
-                const mode = event.newValue as ThemeMode;
-                dispatch(themeActions.setMode(mode));
-                document.documentElement.dataset.mode = mode;
-                break;
-            }
-            case STORAGE_KEYS.THEME_COLOR: {
-                const color = event.newValue as ThemeColor;
-                dispatch(themeActions.setColor(color));
-                document.documentElement.dataset.color = color;
-                break;
-            }
-
-            // ─── Video state ────────────────────────────────────────────────────
-            case STORAGE_KEYS.WATCH_HISTORY: {
-                const data = parseJSON<string[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(videoActions.xTabSetWatchHistory(data as VideoId[]));
-                }
-                break;
-            }
-            case STORAGE_KEYS.LIKED_VIDEOS: {
-                const data = parseJSON<string[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(videoActions.xTabSetLikedVideos(data as VideoId[]));
-                }
-                break;
-            }
-            case STORAGE_KEYS.DISLIKED_VIDEOS: {
-                const data = parseJSON<string[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
-                }
-                break;
-            }
-            case STORAGE_KEYS.SAVED_VIDEOS: {
-                const data = parseJSON<string[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(videoActions.xTabSetSavedVideos(data as VideoId[]));
-                }
-                break;
-            }
-            case STORAGE_KEYS.PINNED_VIDEO: {
-                dispatch(videoActions.xTabSetPinnedVideoId((event.newValue || null) as VideoId | null));
-                break;
-            }
-
-            // ─── Playlists ──────────────────────────────────────────────────────
-            case STORAGE_KEYS.PLAYLISTS: {
-                const data = parseJSON<Playlist[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(playlistActions.xTabSetPlaylists(data));
-                }
-                break;
-            }
-
-            // ─── Subscriptions ──────────────────────────────────────────────────
-            case STORAGE_KEYS.SUBSCRIPTIONS: {
-                const data = parseJSON<string[]>(event.newValue);
-                const isValid = Array.isArray(data);
-                if (isValid) {
-                    dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[]));
-                }
-                break;
-            }
+        const handler = SYNC_HANDLERS[event.key ?? ''];
+        if (handler) {
+            handler(event.newValue);
         }
     }
 

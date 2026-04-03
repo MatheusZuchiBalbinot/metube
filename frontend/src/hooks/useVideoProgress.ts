@@ -116,38 +116,54 @@ export function useVideoProgress({
     }, [id, !!video]);
 
     // Persist progress and open mini player on unmount / id change
+    function updateProgressDispatch(videoId: VideoId) {
+        const hasCurrentTime = currentTimeRef.current > 0;
+        const hasDuration = durationRef.current > 0;
+        const hasRealProgress = hasCurrentTime && hasDuration;
+        if (hasRealProgress) {
+            const percent = (currentTimeRef.current / durationRef.current) * 100;
+            dispatch(videoActions.updateProgress({ videoId, percent }));
+        }
+
+        const shouldUpdateSimulated = !hasCurrentTime && simulatedSecondsRef.current > 0;
+        if (!shouldUpdateSimulated) {
+            return;
+        }
+
+        const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
+        const isSimFinished = simPct >= 100;
+        if (!isSimFinished) {
+            dispatch(videoActions.updateProgress({ videoId, percent: simPct }));
+        }
+    }
+
+    function persistProgressOnUnmount() {
+        if (simulateTimerRef.current) {
+            clearInterval(simulateTimerRef.current);
+        }
+
+        if (!id) {
+            return;
+        }
+
+        const videoId = id as unknown as VideoId;
+        const hasCurrentTime = currentTimeRef.current > 0;
+        const currentT = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
+        const hasDuration = durationRef.current > 0;
+        const hasVideoEnded = hasDuration && currentT >= durationRef.current;
+
+        if (hasVideoEnded) {
+            return;
+        }
+
+        dispatch(videoActions.setPendingVideoSeek({ videoId, time: currentT }));
+        dispatch(videoActions.openMiniPlayer({ videoId, currentTime: currentT }));
+        updateProgressDispatch(videoId);
+    }
+
     useEffect(() => {
         return () => {
-            if (simulateTimerRef.current) {
-                clearInterval(simulateTimerRef.current);
-            }
-
-            if (!id) {
-                return;
-            }
-
-            const hasCurrentTime = currentTimeRef.current > 0;
-            const currentT = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
-            const hasDuration = durationRef.current > 0;
-            const hasVideoEnded = hasDuration && currentT >= durationRef.current;
-
-            if (!hasVideoEnded) {
-                const videoId = id as unknown as VideoId;
-                dispatch(videoActions.setPendingVideoSeek({ videoId, time: currentT }));
-                dispatch(videoActions.openMiniPlayer({ videoId, currentTime: currentT }));
-
-                const hasRealProgress = hasCurrentTime && hasDuration;
-                if (hasRealProgress) {
-                    const percent = (currentTimeRef.current / durationRef.current) * 100;
-                    dispatch(videoActions.updateProgress({ videoId, percent }));
-                } else if (!hasCurrentTime && simulatedSecondsRef.current > 0) {
-                    const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
-                    const isSimFinished = simPct >= 100;
-                    if (!isSimFinished) {
-                        dispatch(videoActions.updateProgress({ videoId, percent: simPct }));
-                    }
-                }
-            }
+            persistProgressOnUnmount();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);

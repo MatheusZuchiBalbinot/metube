@@ -39,6 +39,7 @@ const SECTION_VISIBLE = { opacity: 1, y: 0 };
 const SECTION_HIDDEN = { opacity: 0, y: 16 };
 const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1] };
 
+// eslint-disable-next-line complexity
 export default function HomePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();

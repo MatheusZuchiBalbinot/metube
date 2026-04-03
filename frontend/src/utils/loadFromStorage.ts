@@ -22,6 +22,7 @@ export function loadFromStorage<T>(
 
         const isInvalid = validate !== undefined && !validate(parsed);
         if (isInvalid) {
+            // eslint-disable-next-line no-console
             console.warn(`[storage] Invalid schema for key "${key}", resetting to seed`);
             localStorage.setItem(key, JSON.stringify(seed));
             return seed;

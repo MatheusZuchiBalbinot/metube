@@ -13,7 +13,7 @@ import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
-import { useSearch } from '@context/searchContext';
+import { useSearch } from '@context/search';
 import './layout.css';
 
 export default function AppLayout() {

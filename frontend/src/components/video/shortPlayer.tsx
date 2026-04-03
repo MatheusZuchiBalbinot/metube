@@ -29,6 +29,7 @@ export interface ShortPlayerProps {
     children?: React.ReactNode
 }
 
+// eslint-disable-next-line complexity
 export default function ShortPlayer({
     videoRef,
     src,
@@ -67,7 +68,7 @@ export default function ShortPlayer({
         }
         onVideoMounted(videoRef.current);
         return () => onVideoMounted(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ─── Sync controlled muted from parent ────────────────────────────────────
@@ -81,7 +82,7 @@ export default function ShortPlayer({
         if (el) {
             el.muted = controlledMuted!;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlledMuted]);
 
     // ─── Sync controlled volume from parent ───────────────────────────────────
@@ -94,7 +95,7 @@ export default function ShortPlayer({
         if (el) {
             el.volume = controlledVolume!;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlledVolume]);
 
     // ─── Reset state when src changes ─────────────────────────────────────────
@@ -124,57 +125,80 @@ export default function ShortPlayer({
     useHls(videoRef, src);
 
     // ─── Keyboard shortcuts ────────────────────────────────────────────────────
+
+    function handlePlayPause(el: HTMLVideoElement) {
+        const isVideoPaused = el.paused;
+        if (isVideoPaused) {
+            el.play().catch(() => { }); showPopIcon('play');
+        } else {
+            el.pause(); showPopIcon('pause');
+        }
+    }
+
+    function handleMuteToggle(el: HTMLVideoElement) {
+        const newMuted = !el.muted;
+        el.muted = newMuted;
+        setIsMuted(newMuted);
+        onMuteChange?.(newMuted);
+    }
+
+    function handleKeyboardShortcuts(el: HTMLVideoElement, e: KeyboardEvent) {
+        const handlers: Record<string, () => void> = {
+            ' ': () => {
+                e.preventDefault();
+                handlePlayPause(el);
+            },
+            'Code': () => {
+                e.preventDefault();
+                handlePlayPause(el);
+            },
+            'ArrowRight': () => {
+                e.preventDefault();
+                el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
+                showSkipIndicator('fwd');
+            },
+            'ArrowLeft': () => {
+                e.preventDefault();
+                el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
+                showSkipIndicator('bwd');
+            },
+            'm': () => {
+                handleMuteToggle(el);
+            },
+            'M': () => {
+                handleMuteToggle(el);
+            },
+        };
+
+        const handler = handlers[e.key];
+        if (handler) {
+            handler();
+        }
+    }
+
     useEffect(() => {
         if (!captureKeyboard) {
             return;
         }
+
         function onKeyDown(e: KeyboardEvent) {
             const el = videoRef.current;
             if (!el) {
                 return;
             }
+
             const target = e.target as HTMLElement;
             const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
             if (isTyping) {
                 return;
             }
 
-            if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                const isVideoPaused = el.paused;
-                if (isVideoPaused) {
-                    el.play().catch(() => {}); showPopIcon('play');
-                } else {
-                    el.pause(); showPopIcon('pause');
-                }
-                return;
-            }
-
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
-                showSkipIndicator('fwd');
-                return;
-            }
-
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
-                showSkipIndicator('bwd');
-                return;
-            }
-
-            if (e.key === 'm' || e.key === 'M') {
-                const newMuted = !el.muted;
-                el.muted = newMuted;
-                setIsMuted(newMuted);
-                onMuteChange?.(newMuted);
-            }
+            handleKeyboardShortcuts(el, e);
         }
 
         document.addEventListener('keydown', onKeyDown, true);
         return () => document.removeEventListener('keydown', onKeyDown, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [captureKeyboard, onMuteChange]);
 
     function showPopIcon(type: 'play' | 'pause') {
@@ -243,7 +267,7 @@ export default function ShortPlayer({
         }
         const isVideoPaused = el.paused;
         if (isVideoPaused) {
-            el.play().catch(() => {}); showPopIcon('play');
+            el.play().catch(() => { }); showPopIcon('play');
         } else {
             el.pause(); showPopIcon('pause');
         }
