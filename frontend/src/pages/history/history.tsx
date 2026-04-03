@@ -93,6 +93,7 @@ function isWithinPeriod(dateStr: string, period: Period): boolean {
     return date >= monthStart;
 }
 
+// eslint-disable-next-line complexity
 export default function HistoryPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
@@ -297,7 +298,10 @@ export default function HistoryPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className={['history-page__remove-btn', isTouchDevice ? 'history-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
+                                                    className={[
+                                                        'history-page__remove-btn',
+                                                        isTouchDevice ? 'history-page__remove-btn--touch' : '',
+                                                    ].filter(Boolean).join(' ')}
                                                     onClick={() => handleRemoveFromHistory(item.id)}
                                                     aria-label={t('history.remove')}
                                                 >

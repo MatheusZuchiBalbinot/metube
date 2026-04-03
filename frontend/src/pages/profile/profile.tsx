@@ -427,14 +427,20 @@ export default function ProfilePage() {
                                 <span className="profile-page__heatmap-title">{t('profile.activity')}</span>
                                 <div className="profile-page__heatmap-toggle" role="group">
                                     <button
-                                        className={['profile-page__heatmap-toggle-btn', heatmapDays === HEATMAP_SHORT ? 'profile-page__heatmap-toggle-btn--active' : ''].filter(Boolean).join(' ')}
+                                        className={[
+                                            'profile-page__heatmap-toggle-btn',
+                                            heatmapDays === HEATMAP_SHORT ? 'profile-page__heatmap-toggle-btn--active' : '',
+                                        ].filter(Boolean).join(' ')}
                                         onClick={() => setHeatmapDays(HEATMAP_SHORT)}
                                         aria-pressed={heatmapDays === HEATMAP_SHORT}
                                     >
                                         {t('profile.heatmap_14d', '14d')}
                                     </button>
                                     <button
-                                        className={['profile-page__heatmap-toggle-btn', heatmapDays === HEATMAP_LONG ? 'profile-page__heatmap-toggle-btn--active' : ''].filter(Boolean).join(' ')}
+                                        className={[
+                                            'profile-page__heatmap-toggle-btn',
+                                            heatmapDays === HEATMAP_LONG ? 'profile-page__heatmap-toggle-btn--active' : '',
+                                        ].filter(Boolean).join(' ')}
                                         onClick={() => setHeatmapDays(HEATMAP_LONG)}
                                         aria-pressed={heatmapDays === HEATMAP_LONG}
                                     >

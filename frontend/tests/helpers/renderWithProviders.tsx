@@ -3,11 +3,11 @@
  * Use this in component tests instead of directly rendering components.
  */
 
-import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import React, { type ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { MemoryRouter, MemoryRouterProps } from 'react-router-dom';
-import { configureStore, PreloadedState } from '@reduxjs/toolkit';
+import { MemoryRouter } from 'react-router-dom';
+import { configureStore, type PreloadedState } from '@reduxjs/toolkit';
 import videoSlice from '@store/videoSlice';
 import authSlice from '@store/authSlice';
 import themeSlice from '@store/themeSlice';

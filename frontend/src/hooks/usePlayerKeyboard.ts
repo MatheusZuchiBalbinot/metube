@@ -33,6 +33,61 @@ export function usePlayerKeyboard({
             return;
         }
 
+        function handleKeyPress(el: HTMLVideoElement, e: KeyboardEvent) {
+            const keyHandlers: Record<string, () => void> = {
+                ' ': () => {
+                    cbRef.current.onTogglePlay();
+                },
+                'ArrowRight': () => {
+                    el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
+                    cbRef.current.onSkip('fwd');
+                },
+                'ArrowLeft': () => {
+                    el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
+                    cbRef.current.onSkip('bwd');
+                },
+                'm': () => {
+                    cbRef.current.onMuteToggle();
+                },
+                'M': () => {
+                    cbRef.current.onMuteToggle();
+                },
+            };
+
+            const handler = keyHandlers[e.key];
+            if (handler) {
+                e.preventDefault();
+                handler();
+            } else if (isDefault) {
+                const defaultHandlers: Record<string, () => void> = {
+                    'ArrowUp': () => {
+                        cbRef.current.onVolumeChange(Math.min(el.volume + 0.1, 1));
+                    },
+                    'ArrowDown': () => {
+                        cbRef.current.onVolumeChange(Math.max(el.volume - 0.1, 0));
+                    },
+                    'f': () => {
+                        cbRef.current.onFullscreenToggle();
+                    },
+                    'F': () => {
+                        cbRef.current.onFullscreenToggle();
+                    },
+                    't': () => {
+                        cbRef.current.onFullscreenToggle();
+                    },
+                    'T': () => {
+                        cbRef.current.onFullscreenToggle();
+                    },
+                };
+
+                const defaultHandler = defaultHandlers[e.key];
+                if (defaultHandler) {
+                    e.preventDefault();
+                    defaultHandler();
+                }
+            }
+        }
+
         function onKeyDown(e: KeyboardEvent) {
             const el = videoRef.current;
             if (!el) {
@@ -47,53 +102,12 @@ export function usePlayerKeyboard({
                 return;
             }
 
-            if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                cbRef.current.onTogglePlay();
-                return;
-            }
-
             const isInteractive = ['BUTTON', 'A'].includes(target.tagName);
             if (isInteractive) {
                 return;
             }
 
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
-                cbRef.current.onSkip('fwd');
-                return;
-            }
-
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
-                cbRef.current.onSkip('bwd');
-                return;
-            }
-
-            if (isDefault) {
-                if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    cbRef.current.onVolumeChange(Math.min(el.volume + 0.1, 1));
-                    return;
-                }
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    cbRef.current.onVolumeChange(Math.max(el.volume - 0.1, 0));
-                    return;
-                }
-            }
-
-            if (e.key === 'm' || e.key === 'M') {
-                cbRef.current.onMuteToggle();
-                return;
-            }
-
-            if (isDefault && (e.key === 'f' || e.key === 'F' || e.key === 't' || e.key === 'T')) {
-                cbRef.current.onFullscreenToggle();
-            }
+            handleKeyPress(el, e);
         }
 
         document.addEventListener('keydown', onKeyDown, true);

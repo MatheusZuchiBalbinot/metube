@@ -6,7 +6,7 @@ import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { ROUTES } from '@utils/routes';
 import { useClickOutside } from '@hooks/useClickOutside';
-import { useSearch } from '@context/searchContext';
+import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
 import { Avatar, Button, Input, Tooltip } from '@ui';

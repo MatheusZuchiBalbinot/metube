@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListVideo, Plus } from 'lucide-react';
 import { usePlaylist } from '@hooks/usePlaylist';
@@ -20,14 +20,18 @@ export default function PlaylistsPage() {
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newName, setNewName] = useState('');
 
+    const resolvePlaylistVideos = useCallback((videoIds: (string | undefined)[]): Video[] => {
+        return videoIds
+            .map((id: string | undefined) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
+            .filter((v: Video | undefined): v is Video => v !== undefined);
+    }, [videos]);
+
     const playlistsWithVideos = useMemo(() => {
-        return playlists.map((playlist: Playlist) => {
-            const resolvedVideos = (playlist.videoIds ?? [])
-                .map((id: string) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
-                .filter((v: Video | undefined): v is Video => v !== undefined);
-            return { playlist, videos: resolvedVideos };
-        });
-    }, [playlists, videos]);
+        return playlists.map((playlist: Playlist) => ({
+            playlist,
+            videos: resolvePlaylistVideos(playlist.videoIds ?? []),
+        }));
+    }, [playlists, resolvePlaylistVideos]);
 
     const hasPlaylists = playlists.length > 0;
 

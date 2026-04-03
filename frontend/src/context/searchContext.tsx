@@ -1,15 +1,7 @@
-import { createContext, useRef, useCallback, useContext } from 'react';
+import { useRef, useCallback, type ReactNode } from 'react';
+import { SearchContext } from './search';
 
-interface SearchContextValue {
-    /** Registers the search input ref from AppHeader. */
-    registerSearchInput: (el: HTMLInputElement | null) => void
-    /** Focuses and selects the search input. Called from layout keyboard shortcut. */
-    focusSearch: () => void
-}
-
-const SearchContext = createContext<SearchContextValue | null>(null);
-
-export function SearchProvider({ children }: { children: React.ReactNode }) {
+export function SearchProvider({ children }: { children: ReactNode }) {
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const registerSearchInput = useCallback((el: HTMLInputElement | null) => {
@@ -30,12 +22,4 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
             {children}
         </SearchContext>
     );
-}
-
-export function useSearch(): SearchContextValue {
-    const ctx = useContext(SearchContext);
-    if (!ctx) {
-        throw new Error('useSearch must be used inside SearchProvider');
-    }
-    return ctx;
 }

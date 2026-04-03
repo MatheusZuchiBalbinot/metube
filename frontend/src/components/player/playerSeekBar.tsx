@@ -159,13 +159,70 @@ export default function PlayerSeekBar({
         } catch { /* CORS/decode error — canvas stays black */ }
     }
 
-    function getSeekPct(e: React.MouseEvent<HTMLDivElement>): number {
+    function getSeekPct(e: React.MouseEvent<HTMLDivElement> | MouseEvent): number {
         const inner = seekInnerRef.current;
         if (!inner) {
             return 0;
         }
         const rect = inner.getBoundingClientRect();
-        return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const clientX = 'clientX' in e ? e.clientX : e.clientX;
+        return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    }
+
+    function renderChapters() {
+        const hasChapters = !!chapters && chapters.length > 0 && duration > 0;
+        if (!hasChapters) {
+            return null;
+        }
+        return chapters!.map((ch, i) => {
+            const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
+            const isVisible = chPct > 0.5 && chPct < 99.5;
+            if (!isVisible) {
+                return null;
+            }
+            return (
+                <div
+                    key={i}
+                    className="vp__chapter-dot"
+                    style={{ left: `${chPct}%` }}
+                    title={ch.title}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        const el = videoRef.current;
+                        if (!el) {
+                            return;
+                        }
+                        el.currentTime = parseChapterTimestamp(ch.timestamp);
+                    }}
+                />
+            );
+        });
+    }
+
+    function renderPreview() {
+        const showHoverElements = hoverSeekPct !== null || isDragging;
+        if (!showHoverElements || duration <= 0) {
+            return null;
+        }
+        return (
+            <div
+                className="vp__seek-preview"
+                style={{
+                    '--preview-left': `${activePct}%`,
+                    '--arrow-left': `${arrowLeftPct}%`,
+                } as React.CSSProperties}
+            >
+                <canvas
+                    ref={previewCanvasRef}
+                    className="vp__seek-preview-canvas"
+                    width={160}
+                    height={90}
+                />
+                <span className="vp__seek-preview-time">
+                    {formatTime(hoverTime)}
+                </span>
+            </div>
+        );
     }
 
     function handleSeekClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -207,8 +264,6 @@ export default function PlayerSeekBar({
     const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
     const displayPct = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
     const activePct = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
-    const hasChapters = !!chapters && chapters.length > 0 && duration > 0;
-    const showHoverElements = hoverSeekPct !== null || isDragging;
 
     const activePixel = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
     const maxClamp = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
@@ -242,51 +297,11 @@ export default function PlayerSeekBar({
                         <div className="vp__seek-fill" style={{ transform: `scaleX(${displayPct / 100})` }} />
                     </div>
 
-                    {hasChapters && chapters!.map((ch, i) => {
-                        const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
-                        const isVisible = chPct > 0.5 && chPct < 99.5;
-                        if (!isVisible) {
-                            return null;
-                        }
-                        return (
-                            <div
-                                key={i}
-                                className="vp__chapter-dot"
-                                style={{ left: `${chPct}%` }}
-                                title={ch.title}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const el = videoRef.current;
-                                    if (!el) {
-                                        return;
-                                    }
-                                    el.currentTime = parseChapterTimestamp(ch.timestamp);
-                                }}
-                            />
-                        );
-                    })}
+                    {renderChapters()}
 
                     <div className="vp__seek-thumb vp__seek-thumb--current" style={{ left: `${displayPct}%` }} />
 
-                    {showHoverElements && duration > 0 && (
-                        <div
-                            className="vp__seek-preview"
-                            style={{
-                                '--preview-left': `${activePct}%`,
-                                '--arrow-left': `${arrowLeftPct}%`,
-                            } as React.CSSProperties}
-                        >
-                            <canvas
-                                ref={previewCanvasRef}
-                                className="vp__seek-preview-canvas"
-                                width={160}
-                                height={90}
-                            />
-                            <span className="vp__seek-preview-time">
-                                {formatTime(hoverTime)}
-                            </span>
-                        </div>
-                    )}
+                    {renderPreview()}
                 </div>
             </div>
         </>

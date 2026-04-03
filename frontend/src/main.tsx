@@ -4,7 +4,7 @@ import './i18n';
 import './styles/base.css';
 import './styles/animations.css';
 import './styles/tailwind.css';
-import App from './App.tsx';
+import App from './App';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 
 const initialMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE) ?? 'dark';

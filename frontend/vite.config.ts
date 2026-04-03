@@ -31,17 +31,18 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: (id: string) => {
-                    if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
-                        return 'vendor-react';
-                    }
-                    if (id.includes('node_modules/framer-motion') || id.includes('node_modules/@radix-ui')) {
-                        return 'vendor-ui';
-                    }
-                    if (id.includes('node_modules/@reduxjs/toolkit') || id.includes('node_modules/react-redux')) {
-                        return 'vendor-state';
-                    }
-                    if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
-                        return 'vendor-i18n';
+                    const CHUNK_RULES: [string[], string][] = [
+                        [['node_modules/react', 'node_modules/react-dom', 'node_modules/react-router-dom'], 'vendor-react'],
+                        [['node_modules/framer-motion', 'node_modules/@radix-ui'], 'vendor-ui'],
+                        [['node_modules/@reduxjs/toolkit', 'node_modules/react-redux'], 'vendor-state'],
+                        [['node_modules/i18next', 'node_modules/react-i18next'], 'vendor-i18n'],
+                    ];
+
+                    for (const [patterns, chunk] of CHUNK_RULES) {
+                        const isMatch = patterns.some(p => id.includes(p));
+                        if (isMatch) {
+                            return chunk;
+                        }
                     }
                 },
             },

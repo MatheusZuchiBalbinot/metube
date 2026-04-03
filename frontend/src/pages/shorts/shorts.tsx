@@ -31,6 +31,107 @@ interface ShortItemProps {
     onVolumeChange: (volume: number) => void;
 }
 
+interface ShortOverlayProps {
+    video: ReturnType<typeof useVideo>['videos'][number];
+    visibleTags: Tag[];
+    onTagClick: (e: React.MouseEvent | React.KeyboardEvent, tag: Tag) => void;
+    onChannelClick: (e: React.MouseEvent) => void;
+}
+
+function ShortOverlay({ video, visibleTags, onTagClick, onChannelClick }: ShortOverlayProps) {
+    return (
+        <div className="shorts-page__overlay">
+            <button
+                className="shorts-page__channel"
+                onClick={onChannelClick}
+                aria-label={video.channel}
+            >
+                <Avatar name={video.channel} size="sm" />
+                <span className="shorts-page__channel-name">{video.channel}</span>
+                <span className="shorts-page__views">{Format.views(video.views)} views</span>
+            </button>
+
+            <p className="shorts-page__title">{video.title}</p>
+
+            {visibleTags.length > 0 && (
+                <div className="shorts-page__tags">
+                    {visibleTags.map(tag => (
+                        <TagBadge
+                            key={tag}
+                            tag={tag}
+                            prefix="#"
+                            className="shorts-page__tag"
+                            onClick={(e: React.MouseEvent | React.KeyboardEvent) => onTagClick(e, tag)}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+interface ShortDescriptionProps {
+    video: ReturnType<typeof useVideo>['videos'][number];
+    visibleTags: Tag[];
+    isOpen: boolean;
+    onClose: (e: React.MouseEvent) => void;
+    onTagClick: (e: React.MouseEvent | React.KeyboardEvent, tag: Tag) => void;
+    onChannelClick: (e: React.MouseEvent) => void;
+}
+
+function ShortDescription({ video, visibleTags, isOpen, onClose, onTagClick, onChannelClick }: ShortDescriptionProps) {
+    const { t } = useTranslation();
+    return (
+        <div
+            className={['shorts-page__desc-panel', isOpen ? 'shorts-page__desc-panel--open' : ''].filter(Boolean).join(' ')}
+            role="dialog"
+            aria-label={t('shorts.description')}
+        >
+            <div className="shorts-page__desc-header">
+                <span className="shorts-page__desc-title">{t('shorts.description')}</span>
+                <button
+                    className="shorts-page__desc-close"
+                    aria-label={t('common.close')}
+                    onClick={onClose}
+                >
+                    <X size={16} />
+                </button>
+            </div>
+            <div className="shorts-page__desc-body">
+                <button
+                    className="shorts-page__desc-channel"
+                    onClick={onChannelClick}
+                    aria-label={video.channel}
+                >
+                    <Avatar name={video.channel} size="sm" />
+                    <span>{video.channel}</span>
+                </button>
+                <p className="shorts-page__desc-video-title">{video.title}</p>
+                {video.description && (
+                    <p className="shorts-page__desc-text">{video.description}</p>
+                )}
+                <p className="shorts-page__desc-meta">
+                    {Format.views(video.views)} views · {Format.relativeDate(video.publishedAt, 'en')}
+                </p>
+                {visibleTags.length > 0 && (
+                    <div className="shorts-page__tags">
+                        {visibleTags.map(tag => (
+                            <TagBadge
+                                key={tag}
+                                tag={tag}
+                                prefix="#"
+                                className="shorts-page__tag"
+                                onClick={(e: React.MouseEvent | React.KeyboardEvent) => onTagClick(e, tag)}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// eslint-disable-next-line complexity
 const ShortItem = memo(function ShortItem({
     video, index, total, isActive, videoRef, onVideoMounted,
     onEnded, onScrollNext,
@@ -45,12 +146,14 @@ const ShortItem = memo(function ShortItem({
     const [showVolumeSlider, setShowVolumeSlider] = useState(false);
     const [showDescription, setShowDescription] = useState(false);
 
+    // Derived state
     const isLiked = likedVideos.has(video.id);
     const isDisliked = dislikedVideos.has(video.id);
     const isSaved = savedVideos.has(video.id);
     const isLast = index === total - 1;
     const effectiveVolume = muted ? 0 : volume;
 
+    // Event handlers - grouped by type
     function handleVolumeToggle(e: React.MouseEvent) {
         e.stopPropagation();
         setShowVolumeSlider(v => !v);
@@ -65,58 +168,63 @@ const ShortItem = memo(function ShortItem({
             el.volume = val === 0 ? 0 : val;
             el.muted = nextMuted;
         }
-        const shouldUpdateStoredVolume = val > 0;
-        if (shouldUpdateStoredVolume) {
+
+        if (val > 0) {
             onVolumeChange(val);
         }
         onMuteChange(nextMuted);
     }
 
-    function handleLike() {
-        likeVideo(video.id);
-        triggerLikeAnimation();
+    function handleReaction(action: 'like' | 'dislike' | 'save') {
+        switch (action) {
+            case 'like':
+                likeVideo(video.id);
+                triggerLikeAnimation();
+                break;
+            case 'dislike':
+                dislikeVideo(video.id);
+                triggerDislikeAnimation();
+                break;
+            case 'save':
+                saveVideo(video.id);
+                break;
+        }
     }
 
-    function handleDislike() {
-        dislikeVideo(video.id);
-        triggerDislikeAnimation();
+    function handleNavigation(dest: 'channel' | 'tag', value: string | Tag) {
+        if (dest === 'channel') {
+            navigate(ROUTES.CHANNEL.replace(':id', value as string));
+        } else if (dest === 'tag') {
+            openTagView(value as Tag, video.id);
+        }
     }
 
-    function handleSave() {
-        saveVideo(video.id);
+    function handlePanelToggle(e: React.MouseEvent | React.KeyboardEvent, panel: 'volume' | 'description') {
+        if (e) {
+            e.stopPropagation();
+        }
+
+        if (panel === 'volume') {
+            setShowVolumeSlider(v => !v);
+        } else {
+            setShowDescription(v => !v);
+        }
     }
 
-    function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
-        e.stopPropagation();
-        openTagView(tag, video.id);
-    }
-
-    function handleChannelClick(e: React.MouseEvent) {
-        e.stopPropagation();
-        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
-    }
-
-    function handleDescriptionToggle(e: React.MouseEvent) {
-        e.stopPropagation();
-        setShowDescription(v => !v);
-    }
-
-    // Called by VideoPlayer when the tap overlay is clicked — close side panels
+    // Tap closes side panels
     function handleTap() {
         setShowVolumeSlider(false);
         setShowDescription(false);
     }
 
-    // Close description panel on Escape key
+    // Escape key closes description panel
     useEffect(() => {
-        const isDescClosed = !showDescription;
-        if (isDescClosed) {
+        if (!showDescription) {
             return;
         }
 
         function handleKeyDown(e: KeyboardEvent) {
-            const isPressedEscape = e.key === 'Escape';
-            if (isPressedEscape) {
+            if (e.key === 'Escape') {
                 setShowDescription(false);
             }
         }
@@ -159,69 +267,34 @@ const ShortItem = memo(function ShortItem({
                     </span>
 
                     {/* Bottom overlay */}
-                    <div className="shorts-page__overlay">
-                        <button
-                            className="shorts-page__channel"
-                            onClick={handleChannelClick}
-                            aria-label={video.channel}
-                        >
-                            <Avatar name={video.channel} size="sm" />
-                            <span className="shorts-page__channel-name">{video.channel}</span>
-                            <span className="shorts-page__views">{Format.views(video.views)} views</span>
-                        </button>
-
-                        <p className="shorts-page__title">{video.title}</p>
-
-                        {visibleTags.length > 0 && (
-                            <div className="shorts-page__tags">
-                                {visibleTags.map(tag => (
-                                    <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <ShortOverlay
+                        video={video}
+                        visibleTags={visibleTags}
+                        onTagClick={(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) => {
+                            e.stopPropagation();
+                            handleNavigation('tag', tag);
+                        }}
+                        onChannelClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            handleNavigation('channel', video.channelId);
+                        }}
+                    />
 
                     {/* Description overlay panel */}
-                    <div
-                        className={['shorts-page__desc-panel', showDescription ? 'shorts-page__desc-panel--open' : ''].filter(Boolean).join(' ')}
-                        role="dialog"
-                        aria-label={t('shorts.description')}
-                    >
-                        <div className="shorts-page__desc-header">
-                            <span className="shorts-page__desc-title">{t('shorts.description')}</span>
-                            <button
-                                className="shorts-page__desc-close"
-                                aria-label={t('common.close')}
-                                onClick={handleDescriptionToggle}
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
-                        <div className="shorts-page__desc-body">
-                            <button
-                                className="shorts-page__desc-channel"
-                                onClick={handleChannelClick}
-                                aria-label={video.channel}
-                            >
-                                <Avatar name={video.channel} size="sm" />
-                                <span>{video.channel}</span>
-                            </button>
-                            <p className="shorts-page__desc-video-title">{video.title}</p>
-                            {video.description && (
-                                <p className="shorts-page__desc-text">{video.description}</p>
-                            )}
-                            <p className="shorts-page__desc-meta">
-                                {Format.views(video.views)} views · {Format.relativeDate(video.publishedAt, 'en')}
-                            </p>
-                            {visibleTags.length > 0 && (
-                                <div className="shorts-page__tags">
-                                    {visibleTags.map(tag => (
-                                        <TagBadge key={tag} tag={tag} prefix="#" className="shorts-page__tag" onClick={handleTagClick} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ShortDescription
+                        video={video}
+                        visibleTags={visibleTags}
+                        isOpen={showDescription}
+                        onClose={e => handlePanelToggle(e, 'description')}
+                        onTagClick={(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) => {
+                            e.stopPropagation();
+                            handleNavigation('tag', tag);
+                        }}
+                        onChannelClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            handleNavigation('channel', video.channelId);
+                        }}
+                    />
 
                     {/* Scroll hint on first short */}
                     {index === 0 && (
@@ -244,7 +317,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--liked"
                     tooltipSide="right"
-                    onClick={handleLike}
+                    onClick={() => handleReaction('like')}
                 />
 
                 <ReactionBtn
@@ -257,7 +330,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--disliked"
                     tooltipSide="right"
-                    onClick={handleDislike}
+                    onClick={() => handleReaction('dislike')}
                 />
 
                 <ReactionBtn
@@ -269,7 +342,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--saved"
                     tooltipSide="right"
-                    onClick={handleSave}
+                    onClick={() => handleReaction('save')}
                 />
 
                 {/* Description button */}
@@ -278,7 +351,7 @@ const ShortItem = memo(function ShortItem({
                         className={['shorts-page__action', showDescription ? 'shorts-page__action--active' : ''].filter(Boolean).join(' ')}
                         aria-label={t('shorts.description')}
                         aria-pressed={showDescription}
-                        onClick={handleDescriptionToggle}
+                        onClick={e => handlePanelToggle(e, 'description')}
                     >
                         <span className="rbtn__icon">
                             <Info size={22} strokeWidth={1.75} />

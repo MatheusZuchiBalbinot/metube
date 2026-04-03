@@ -36,6 +36,26 @@ export default function Modal({
             return;
         }
 
+        function handleFocusTrap(e: KeyboardEvent, focusable: HTMLElement[]) {
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const isFocusOnFirst = document.activeElement === first;
+            const isFocusOnLast = document.activeElement === last;
+
+            const isShiftTab = e.shiftKey && isFocusOnFirst;
+            if (isShiftTab) {
+                e.preventDefault();
+                last.focus();
+                return;
+            }
+
+            const isTab = !e.shiftKey && isFocusOnLast;
+            if (isTab) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === 'Escape') {
                 onClose();
@@ -54,21 +74,7 @@ export default function Modal({
                 return;
             }
 
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-            const isFocusOnFirst = document.activeElement === first;
-            const isFocusOnLast = document.activeElement === last;
-
-            if (e.shiftKey && isFocusOnFirst) {
-                e.preventDefault();
-                last.focus();
-                return;
-            }
-
-            if (!e.shiftKey && isFocusOnLast) {
-                e.preventDefault();
-                first.focus();
-            }
+            handleFocusTrap(e, Array.from(focusable));
         }
 
         document.addEventListener('keydown', handleKeyDown);

@@ -14,6 +14,7 @@ function buildInputClass(icon: React.ReactNode, error: string | undefined, class
         .join(' ');
 }
 
+// eslint-disable-next-line complexity
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     label,
     icon,
