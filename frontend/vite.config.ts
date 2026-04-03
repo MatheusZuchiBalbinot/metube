@@ -28,18 +28,24 @@ export default defineConfig({
         }),
     ],
     build: {
-
         rollupOptions: {
             output: {
-                manualChunks: {
-                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-                    'vendor-ui': ['framer-motion', '@radix-ui/react-tooltip', '@radix-ui/react-popover', '@radix-ui/react-slot'],
-                    'vendor-state': ['@reduxjs/toolkit', 'react-redux'],
-                    'vendor-i18n': ['i18next', 'react-i18next'],
+                manualChunks: (id: string) => {
+                    if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+                        return 'vendor-react';
+                    }
+                    if (id.includes('node_modules/framer-motion') || id.includes('node_modules/@radix-ui')) {
+                        return 'vendor-ui';
+                    }
+                    if (id.includes('node_modules/@reduxjs/toolkit') || id.includes('node_modules/react-redux')) {
+                        return 'vendor-state';
+                    }
+                    if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+                        return 'vendor-i18n';
+                    }
                 },
             },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
+        },
     },
     test: {
         environment: 'jsdom',

@@ -5,6 +5,7 @@ import type { VideoChapter } from '@data/mockSummaries';
 import { usePlayerControls } from '@hooks/usePlayerControls';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
+import { useHls } from '@hooks/useHls';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerSettings from './playerSettings';
@@ -91,6 +92,9 @@ export default function VideoPlayer({
         handleVideoLoadedMetadata, handleVideoEnded, handleVideoProgress,
         applyVolume, applyMuteToggle, applyPlaybackRate,
     } = usePlayerPlayback(videoRef, { onTimeUpdate, onEnded, onLoadedMetadata }, scheduleHideControls, forceShow);
+
+    // HLS streaming support: handles adaptive bitrate with fallback to native/direct playback
+    useHls(videoRef, src);
 
     // ─── Local UI state ────────────────────────────────────────────────────────
 
@@ -335,7 +339,6 @@ export default function VideoPlayer({
                 <video
                     ref={videoRef}
                     className="vp__video"
-                    src={src}
                     onPlay={handleVideoPlay}
                     onPause={handleVideoPause}
                     onTimeUpdate={handleVideoTimeUpdate}
@@ -395,7 +398,6 @@ export default function VideoPlayer({
             <video
                 ref={videoRef}
                 className="vp__video"
-                src={src}
                 autoPlay
                 onPlay={handleVideoPlay}
                 onPause={handleVideoPause}
