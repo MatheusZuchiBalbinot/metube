@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
-import './player.css';
+import { useHls } from '@hooks/useHls';
+import '../player/player.css';
 
 const KEYBOARD_SKIP_SECONDS = 5;
 
@@ -118,6 +119,9 @@ export default function ShortPlayer({
             }
         };
     }, []);
+
+    // HLS streaming support: handles adaptive bitrate with fallback to native/direct playback
+    useHls(videoRef, src);
 
     // ─── Keyboard shortcuts ────────────────────────────────────────────────────
     useEffect(() => {
@@ -284,7 +288,6 @@ export default function ShortPlayer({
             <video
                 ref={videoRef}
                 className="vp__video"
-                src={src}
                 playsInline
                 preload="metadata"
                 onPlay={handleVideoPlay}
