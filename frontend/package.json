@@ -28,7 +28,7 @@
     "dompurify": "^3.3.3",
     "framer-motion": "^12.36.0",
     "hls.js": "^1.6.15",
-    "i18next": "^25.1.0",
+    "i18next": "^26.0.3",
     "inquirer": "^13.3.0",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
