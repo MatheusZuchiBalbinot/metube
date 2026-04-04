@@ -21,6 +21,10 @@ export function countTagFrequency(videos: Video[]): Record<string, number> {
 
 export class Format {
     static duration(seconds: number): string {
+        const isInvalid = !Number.isFinite(seconds) || seconds < 0;
+        if (isInvalid) {
+            return '0:00';
+        }
         const totalSeconds = Math.floor(seconds);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
