@@ -5,31 +5,18 @@ import { usePlayerControls } from '@hooks/usePlayerControls';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
 import { useHls } from '@hooks/useHls';
+import { usePopIcon } from '@hooks/usePopIcon';
+import { useSkipIndicator } from '@hooks/useSkipIndicator';
+import { useFullscreen } from '@hooks/useFullscreen';
+import { useVolumeWheel } from '@hooks/useVolumeWheel';
+import { useClickDoubleClick } from '@hooks/useClickDoubleClick';
+import { useOutsideClick } from '@hooks/useOutsideClick';
+import { Format } from '@utils/format';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerSettings from './playerSettings';
 import type { VideoPlayerProps } from './player';
-
-const DOUBLE_CLICK_DELAY_MS = 200;
-const KEYBOARD_SKIP_SECONDS = 5;
-
-type SkipIndicator = { dir: 'fwd' | 'bwd'; count: number; key: number };
-
-function formatTime(s: number): string {
-    const isInvalid = !Number.isFinite(s) || s < 0;
-    if (isInvalid) {
-        return '0:00';
-    }
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = Math.floor(s % 60);
-    const ss = String(sec).padStart(2, '0');
-    const hasHours = h > 0;
-    if (hasHours) {
-        return `${h}:${String(m).padStart(2, '0')}:${ss}`;
-    }
-    return `${m}:${ss}`;
-}
+import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({
@@ -47,215 +34,76 @@ export function DefaultVideoPlayer({
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
-    const popTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const popAnimKeyRef = useRef(0);
-    const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const skipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const skipAnimKeyRef = useRef(0);
+
+    const [showSettings, setShowSettings] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    // ─── Hooks ────────────────────────────────────────────────────────────────
 
     const {
-        showControls,
-        setShowControls,
-        scheduleHideControls,
-        revealControls,
-        forceShow,
+        showControls, setShowControls,
+        scheduleHideControls, revealControls, forceShow,
     } = usePlayerControls(videoRef);
 
     const {
-        isPlaying,
-        isBuffering,
-        currentTime,
-        duration,
-        volume,
-        isMuted,
-        playbackRate,
-        bufferedPct,
-        setIsPlaying,
+        isPlaying, isBuffering, currentTime, duration,
+        volume, isMuted, playbackRate, bufferedPct,
         setIsBuffering,
-        setCurrentTime,
-        setDuration,
-        setBufferedPct,
-        handleVideoPlay,
-        handleVideoPause,
-        handleVideoTimeUpdate,
-        handleVideoLoadedMetadata,
-        handleVideoEnded,
-        handleVideoProgress,
-        applyVolume,
-        applyMuteToggle,
-        applyPlaybackRate,
-    } = usePlayerPlayback(videoRef, { onTimeUpdate, onEnded, onLoadedMetadata }, scheduleHideControls, forceShow);
+        handleVideoPlay, handleVideoPause, handleVideoTimeUpdate,
+        handleVideoLoadedMetadata, handleVideoEnded, handleVideoProgress,
+        handleTogglePlay, applyVolume, applyMuteToggle, applyPlaybackRate,
+    } = usePlayerPlayback(videoRef, {
+        callbacks: { onTimeUpdate, onEnded, onLoadedMetadata },
+        scheduleHideControls,
+        forceShowControls: forceShow,
+    });
 
-    // HLS streaming support
+    const { popIcon, showPopIcon, resetPopIcon } = usePopIcon();
+    const { skipIndicator, showSkipIndicator, resetSkipIndicator } = useSkipIndicator();
+    const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+
     useHls(videoRef, src);
+    useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
+    useOutsideClick(settingsRef, () => setShowSettings(false));
 
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [popIcon, setPopIcon] = useState<{ type: 'play' | 'pause'; key: number } | null>(null);
-    const [showSettings, setShowSettings] = useState(false);
-    const [skipIndicator, setSkipIndicator] = useState<SkipIndicator | null>(null);
+    function handleTogglePlayWithFeedback() {
+        const wasPaused = videoRef.current?.paused ?? true;
+        handleTogglePlay();
+        showPopIcon(wasPaused ? 'play' : 'pause');
+    }
 
-    // Keyboard hook
+    const { handleClick: handleContainerClick, handleDoubleClick: handleContainerDoubleClick } =
+        useClickDoubleClick(handleTogglePlayWithFeedback, toggleFullscreen);
+
     const shouldCaptureKeyboard = captureKeyboard ?? true;
     usePlayerKeyboard({
         videoRef,
         isDefault: true,
         captureKeyboard: shouldCaptureKeyboard,
-        onTogglePlay: handleTogglePlayImmediate,
+        onTogglePlay: handleTogglePlayWithFeedback,
         onSkip: showSkipIndicator,
         onVolumeChange: applyVolume,
         onMuteToggle: applyMuteToggle,
-        onFullscreenToggle: handleFullscreenToggle,
+        onFullscreenToggle: toggleFullscreen,
     });
 
-    // ─── Helper functions ──────────────────────────────────────────────────────
+    // ─── Effects ──────────────────────────────────────────────────────────────
 
-    function showPopIcon(type: 'play' | 'pause') {
-        if (popTimerRef.current) {
-            clearTimeout(popTimerRef.current);
-        }
-        popAnimKeyRef.current += 1;
-        setPopIcon({ type, key: popAnimKeyRef.current });
-        popTimerRef.current = setTimeout(() => setPopIcon(null), 500);
-    }
-
-    function showSkipIndicator(dir: 'fwd' | 'bwd') {
-        skipAnimKeyRef.current += 1;
-        const key = skipAnimKeyRef.current;
-        if (skipTimerRef.current) {
-            clearTimeout(skipTimerRef.current);
-        }
-        setSkipIndicator(prev => ({
-            dir,
-            count: prev?.dir === dir ? prev.count + 1 : 1,
-            key,
-        }));
-        skipTimerRef.current = setTimeout(() => setSkipIndicator(null), 800);
-    }
-
-    function handleFullscreenToggle() {
-        const container = containerRef.current;
-        if (!container) {
-            return;
-        }
-
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => { });
-        } else {
-            container.requestFullscreen().catch(() => { });
-        }
-    }
-
-    // ─── Effects ───────────────────────────────────────────────────────────────
-
-    // Cleanup animation timers on unmount
+    // Reset local state when source changes
     useEffect(() => {
-        return () => {
-            if (popTimerRef.current) {
-                clearTimeout(popTimerRef.current);
-            }
-
-            if (clickTimerRef.current) {
-                clearTimeout(clickTimerRef.current);
-            }
-
-            if (skipTimerRef.current) {
-                clearTimeout(skipTimerRef.current);
-            }
-        };
-    }, []);
-
-    // Reset playback state when the video source changes
-    useEffect(() => {
-        setIsPlaying(false);
-        setCurrentTime(0);
-        setDuration(0);
+        resetPopIcon();
+        resetSkipIndicator();
         applyPlaybackRate(1);
-        setPopIcon(null);
         setShowSettings(false);
-        setBufferedPct(0);
         setIsDragging(false);
-        setIsBuffering(false);
-        setSkipIndicator(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src]);
 
-    // Close settings panel when clicking outside
-    useEffect(() => {
-        function handleOutsideClick(e: MouseEvent) {
-            const isOutside = settingsRef.current && !settingsRef.current.contains(e.target as Node);
-            if (isOutside) {
-                setShowSettings(false);
-            }
-        }
-        document.addEventListener('mousedown', handleOutsideClick);
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
-    }, []);
+    // ─── Event handlers ───────────────────────────────────────────────────────
 
-    // Mouse wheel to control volume
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) {
-            return;
-        }
-        function onWheel(e: WheelEvent) {
-            const el = videoRef.current;
-            if (!el) {
-                return;
-            }
-            const delta = e.deltaY < 0 ? 0.05 : -0.05;
-            const newVol = Math.min(1, Math.max(0, el.volume + delta));
-            applyVolume(newVol);
-            revealControls();
-        }
-        container.addEventListener('wheel', onWheel, { passive: true });
-        return () => container.removeEventListener('wheel', onWheel);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Fullscreen change listener
-    useEffect(() => {
-        function onFsChange() {
-            setIsFullscreen(document.fullscreenElement !== null);
-        }
-        document.addEventListener('fullscreenchange', onFsChange);
-        return () => document.removeEventListener('fullscreenchange', onFsChange);
-    }, []);
-
-    // ─── Event handlers ────────────────────────────────────────────────────────
-
-    function handleTogglePlayImmediate() {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-        const isVideoPaused = el.paused;
-        if (isVideoPaused) {
-            el.play().catch(() => { }); showPopIcon('play');
-        } else {
-            el.pause(); showPopIcon('pause');
-        }
-    }
-
-    function handleContainerClick() {
-        if (clickTimerRef.current) {
-            clearTimeout(clickTimerRef.current);
-        }
-        clickTimerRef.current = setTimeout(() => {
-            handleTogglePlayImmediate();
-        }, DOUBLE_CLICK_DELAY_MS);
-    }
-
-    function handleContainerDoubleClick() {
-        if (clickTimerRef.current) {
-            clearTimeout(clickTimerRef.current); clickTimerRef.current = null;
-        }
-        handleFullscreenToggle();
-    }
-
-    function handleTogglePlay(e: React.MouseEvent) {
+    function handleTogglePlayBtn(e: React.MouseEvent) {
         e.stopPropagation();
-        handleTogglePlayImmediate();
+        handleTogglePlayWithFeedback();
     }
 
     function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -274,9 +122,9 @@ export function DefaultVideoPlayer({
         setShowSettings(false);
     }
 
-    function handleTheaterToggle(e: React.MouseEvent) {
+    function handleFullscreenBtn(e: React.MouseEvent) {
         e.stopPropagation();
-        handleFullscreenToggle();
+        toggleFullscreen();
     }
 
     function handleToggleSettings(e: React.MouseEvent) {
@@ -297,7 +145,7 @@ export function DefaultVideoPlayer({
         return <Volume2 size={16} />;
     }, [isMuted, volume]);
 
-    // ─── Render ────────────────────────────────────────────────────────────────
+    // ─── Render ───────────────────────────────────────────────────────────────
 
     const wrapClass = [
         'vp',
@@ -362,7 +210,7 @@ export function DefaultVideoPlayer({
                     <div className="vp__bar-left">
                         <button
                             className="vp__btn"
-                            onClick={handleTogglePlay}
+                            onClick={handleTogglePlayBtn}
                             title={isPlaying ? t('player.pause') : t('player.play')}
                             aria-label={isPlaying ? t('player.pause') : t('player.play')}
                         >
@@ -393,7 +241,7 @@ export function DefaultVideoPlayer({
                         </div>
 
                         <span className="vp__time">
-                            {formatTime(currentTime)} / {formatTime(duration)}
+                            {Format.duration(currentTime)} / {Format.duration(duration)}
                         </span>
                     </div>
 
@@ -408,7 +256,7 @@ export function DefaultVideoPlayer({
 
                         <button
                             className="vp__btn"
-                            onClick={handleTheaterToggle}
+                            onClick={handleFullscreenBtn}
                             title={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
                             aria-label={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
                             aria-pressed={isFullscreen}

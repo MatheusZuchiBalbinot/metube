@@ -1,12 +1,10 @@
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
-
-// Mirrors the type in player.tsx — kept local to avoid coupling.
-type SkipIndicator = { dir: 'fwd' | 'bwd'; count: number; key: number };
+import type { SkipIndicator, PopIcon } from './playerTypes';
 
 interface PlayerOverlaysProps {
     isBuffering: boolean
     showCompletion: boolean | undefined
-    popIcon: { type: 'play' | 'pause'; key: number } | null
+    popIcon: PopIcon | null
     skipIndicator: SkipIndicator | null
     skipSeconds: number
 }

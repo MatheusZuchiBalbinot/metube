@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX, ChevronDown, Info, X } from 'lucide-react';
 import ReactionBtn from '@components/video/reactionBtn';
-import ShortPlayer from '@components/video/shortPlayer';
+import ShortPlayer from '@components/player/playerShort';
 import { useVideo } from '@hooks/useVideo';
 import { Avatar, Tooltip } from '@ui';
 import { Format } from '@utils/format';
