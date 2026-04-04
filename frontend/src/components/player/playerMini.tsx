@@ -1,4 +1,5 @@
 import { Play, Pause } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { useHls } from '@hooks/useHls';
 import type { VideoPlayerProps } from './player';
@@ -10,39 +11,22 @@ export function MiniVideoPlayer({
     onEnded,
     onLoadedMetadata,
 }: Pick<VideoPlayerProps, 'videoRef' | 'src' | 'onTimeUpdate' | 'onEnded' | 'onLoadedMetadata'>) {
-    const {
-        isPlaying,
-        currentTime,
-        duration,
-        handleVideoPlay,
-        handleVideoPause,
-        handleVideoTimeUpdate,
-        handleVideoLoadedMetadata,
-        handleVideoEnded,
-        handleVideoProgress,
-    } = usePlayerPlayback(videoRef, { onTimeUpdate, onEnded, onLoadedMetadata }, () => { }, () => { });
+    const { t } = useTranslation();
 
-    // HLS streaming support
+    const {
+        isPlaying, progressPct,
+        handleVideoPlay, handleVideoPause, handleVideoTimeUpdate,
+        handleVideoLoadedMetadata, handleVideoEnded, handleVideoProgress,
+        handleTogglePlay,
+    } = usePlayerPlayback(videoRef, {
+        callbacks: { onTimeUpdate, onEnded, onLoadedMetadata },
+    });
+
     useHls(videoRef, src);
 
-    function handleTogglePlayImmediate() {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-
-        const isVideoPaused = el.paused;
-        if (!isVideoPaused) {
-            el.pause();
-            return;
-        }
-
-        el.play().catch(() => { });
-    }
-
-    function handleTogglePlay(e: React.MouseEvent) {
+    function handleTogglePlayBtn(e: React.MouseEvent) {
         e.stopPropagation();
-        handleTogglePlayImmediate();
+        handleTogglePlay();
     }
 
     function handleMiniProgressClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -58,10 +42,8 @@ export function MiniVideoPlayer({
         el!.currentTime = pct * el!.duration;
     }
 
-    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
-
     return (
-        <div className="vp vp--mini" onClick={handleTogglePlayImmediate}>
+        <div className="vp vp--mini" onClick={handleTogglePlay}>
             <video
                 ref={videoRef}
                 className="vp__video"
@@ -74,7 +56,7 @@ export function MiniVideoPlayer({
             />
 
             <div className="vp__mini-overlay">
-                <button className="vp__mini-btn" onClick={handleTogglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}>
+                <button className="vp__mini-btn" onClick={handleTogglePlayBtn} aria-label={isPlaying ? t('player.pause') : t('player.play')}>
                     {isPlaying ? <Pause size={22} fill="white" strokeWidth={0} /> : <Play size={22} fill="white" strokeWidth={0} />}
                 </button>
             </div>

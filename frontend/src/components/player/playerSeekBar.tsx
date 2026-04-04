@@ -1,25 +1,10 @@
 import { useRef, useState, useEffect } from 'react';
 import type { VideoChapter } from '@data/mockSummaries';
+import { Format } from '@utils/format';
 
 // Width of the scrubber thumbnail preview (px).
 const PREVIEW_W = 160;
 const PREVIEW_HALF_W = PREVIEW_W / 2;
-
-function formatTime(s: number): string {
-    const isInvalid = !Number.isFinite(s) || s < 0;
-    if (isInvalid) {
-        return '0:00';
-    }
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = Math.floor(s % 60);
-    const ss = String(sec).padStart(2, '0');
-    const hasHours = h > 0;
-    if (hasHours) {
-        return `${h}:${String(m).padStart(2, '0')}:${ss}`;
-    }
-    return `${m}:${ss}`;
-}
 
 function parseChapterTimestamp(ts: string): number {
     const parts = ts.split(':').map(Number);
@@ -219,7 +204,7 @@ export default function PlayerSeekBar({
                     height={90}
                 />
                 <span className="vp__seek-preview-time">
-                    {formatTime(hoverTime)}
+                    {Format.duration(hoverTime)}
                 </span>
             </div>
         );
