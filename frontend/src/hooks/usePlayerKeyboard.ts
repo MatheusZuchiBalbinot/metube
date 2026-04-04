@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-
-const KEYBOARD_SKIP_SECONDS = 5;
+import { KEYBOARD_SKIP_SECONDS } from '@components/player/playerTypes';
+import { isTypingInInput } from '@utils/dom';
 
 interface PlayerKeyboardOptions {
     videoRef: React.RefObject<HTMLVideoElement | null>
@@ -94,14 +94,11 @@ export function usePlayerKeyboard({
                 return;
             }
 
-            const target = e.target as HTMLElement;
-            const isTyping =
-                ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
-                target.isContentEditable;
-            if (isTyping) {
+            if (isTypingInInput(e.target)) {
                 return;
             }
 
+            const target = e.target as HTMLElement;
             const isInteractive = ['BUTTON', 'A'].includes(target.tagName);
             if (isInteractive) {
                 return;

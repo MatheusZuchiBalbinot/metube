@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface PlayerCallbacks {
     onTimeUpdate?: () => void
@@ -6,18 +6,37 @@ interface PlayerCallbacks {
     onEnded?: () => void
 }
 
+interface PlayerPlaybackOptions {
+    callbacks: PlayerCallbacks
+    scheduleHideControls?: () => void
+    forceShowControls?: () => void
+    /** When provided, mute state is controlled by the parent (e.g. ShortsPage). */
+    controlledMuted?: boolean
+    /** When provided, volume is controlled by the parent. */
+    controlledVolume?: number
+    /** Notifies the parent when mute state changes internally (keyboard shortcut). */
+    onMuteChange?: (muted: boolean) => void
+}
+
 export function usePlayerPlayback(
     videoRef: React.RefObject<HTMLVideoElement | null>,
-    callbacks: PlayerCallbacks,
-    scheduleHideControls: () => void,
-    forceShowControls: () => void,
+    options: PlayerPlaybackOptions,
 ) {
+    const {
+        callbacks,
+        scheduleHideControls,
+        forceShowControls,
+        controlledMuted,
+        controlledVolume,
+        onMuteChange,
+    } = options;
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [isBuffering, setIsBuffering] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(controlledMuted ?? false);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [bufferedPct, setBufferedPct] = useState(0);
 
@@ -26,15 +45,46 @@ export function usePlayerPlayback(
     // eslint-disable-next-line react-hooks/refs
     cbRef.current = callbacks;
 
+    const muteChangeRef = useRef(onMuteChange);
+    // eslint-disable-next-line react-hooks/refs
+    muteChangeRef.current = onMuteChange;
+
+    // ─── Sync controlled muted from parent ────────────────────────────────────
+    useEffect(() => {
+        const hasValue = controlledMuted !== undefined;
+        if (!hasValue) {
+            return;
+        }
+        setIsMuted(controlledMuted);
+        const el = videoRef.current;
+        if (el) {
+            el.muted = controlledMuted;
+        }
+    }, [controlledMuted, videoRef]);
+
+    // ─── Sync controlled volume from parent ───────────────────────────────────
+    useEffect(() => {
+        const hasValue = controlledVolume !== undefined;
+        if (!hasValue) {
+            return;
+        }
+        const el = videoRef.current;
+        if (el) {
+            el.volume = controlledVolume;
+        }
+    }, [controlledVolume, videoRef]);
+
+    // ─── Video event handlers ─────────────────────────────────────────────────
+
     const handleVideoPlay = useCallback(() => {
         setIsPlaying(true);
         setIsBuffering(false);
-        scheduleHideControls();
+        scheduleHideControls?.();
     }, [scheduleHideControls]);
 
     const handleVideoPause = useCallback(() => {
         setIsPlaying(false);
-        forceShowControls();
+        forceShowControls?.();
     }, [forceShowControls]);
 
     const handleVideoTimeUpdate = useCallback(() => {
@@ -57,7 +107,7 @@ export function usePlayerPlayback(
 
     const handleVideoEnded = useCallback(() => {
         setIsPlaying(false);
-        forceShowControls();
+        forceShowControls?.();
         cbRef.current.onEnded?.();
     }, [forceShowControls]);
 
@@ -69,6 +119,21 @@ export function usePlayerPlayback(
         }
         const bufferedEnd = el.buffered.end(el.buffered.length - 1);
         setBufferedPct((bufferedEnd / el.duration) * 100);
+    }, [videoRef]);
+
+    // ─── Actions ──────────────────────────────────────────────────────────────
+
+    const handleTogglePlay = useCallback(() => {
+        const el = videoRef.current;
+        if (!el) {
+            return;
+        }
+        const isVideoPaused = el.paused;
+        if (isVideoPaused) {
+            el.play().catch(() => { });
+        } else {
+            el.pause();
+        }
     }, [videoRef]);
 
     function applyVolume(newVol: number) {
@@ -89,6 +154,7 @@ export function usePlayerPlayback(
         const newMuted = !isMuted;
         el.muted = newMuted;
         setIsMuted(newMuted);
+        muteChangeRef.current?.(newMuted);
     }
 
     function applyPlaybackRate(rate: number) {
@@ -99,12 +165,14 @@ export function usePlayerPlayback(
         }
     }
 
+    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+
     return {
         isPlaying, isBuffering, currentTime, duration,
-        volume, isMuted, playbackRate, bufferedPct,
+        volume, isMuted, playbackRate, bufferedPct, progressPct,
         setIsPlaying, setIsBuffering, setCurrentTime, setDuration, setBufferedPct,
         handleVideoPlay, handleVideoPause, handleVideoTimeUpdate,
         handleVideoLoadedMetadata, handleVideoEnded, handleVideoProgress,
-        applyVolume, applyMuteToggle, applyPlaybackRate,
+        handleTogglePlay, applyVolume, applyMuteToggle, applyPlaybackRate,
     };
 }
