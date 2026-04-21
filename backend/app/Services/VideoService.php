@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\VideoStatus;
+use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * VideoService — Business logic for videos.
@@ -28,15 +31,30 @@ class VideoService
     {
         return DB::transaction(function () use ($user, $data) {
             $video = Video::create([
-                'channel_id' => $user->id,
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'tags' => $data['tags'] ?? [],
-                'status' => $data['status'],
+                'channel_id'   => $user->id,
+                'title'        => $data['title'],
+                'description'  => $data['description'] ?? null,
+                'tags'         => $data['tags'] ?? [],
+                'status'       => VideoStatus::PROCESSING,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
             ]);
 
-            return $video;
+            /** @var \Illuminate\Http\UploadedFile $videoFile */
+            $videoFile = $data['video_file'];
+            $ext = $videoFile->getClientOriginalExtension();
+            $tmpPath = $videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
+
+            $tmpThumbPath = null;
+            if (isset($data['thumbnail_file'])) {
+                /** @var \Illuminate\Http\UploadedFile $thumbFile */
+                $thumbFile = $data['thumbnail_file'];
+                $thumbExt = $thumbFile->getClientOriginalExtension();
+                $tmpThumbPath = $thumbFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
+            }
+
+            ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath);
+
+            return $video->load('channel');
         });
     }
 
@@ -86,8 +104,28 @@ class VideoService
     public function deleteVideo(Video $video): void
     {
         DB::transaction(function () use ($video) {
+            $this->deleteVideoFiles($video);
             $video->delete();
         });
+    }
+
+    /**
+     * @param  Video  $video
+     */
+    private function deleteVideoFiles(Video $video): void
+    {
+        $publicBase = rtrim(Storage::disk('public')->url(''), '/');
+
+        foreach (['video_url', 'thumbnail_url'] as $field) {
+            $url = $video->$field;
+
+            if ($url === null) {
+                continue;
+            }
+
+            $path = ltrim(str_replace($publicBase, '', $url), '/');
+            Storage::disk('public')->delete($path);
+        }
     }
 
     /**
