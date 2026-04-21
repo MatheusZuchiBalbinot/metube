@@ -1,6 +1,5 @@
 import { apiClient } from './client';
 import type { Video, VideoStatus } from '@models/video';
-import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
 import type { PaginatedResponse } from '@models/common';
 import { VideoApiSchema, VideoListApiSchema, VideoSummaryApiSchema } from '@validation';
@@ -14,12 +13,10 @@ export interface VideoUploadPayload {
     title: string
     description: string
     tags: Tag[]
-    channel: string
-    channelId: ChannelId
     status: VideoStatus
     scheduledAt?: string
     thumbnail?: File
-    videoFile?: File
+    videoFile: File
 }
 
 export interface VideoUpdatePayload {
@@ -57,20 +54,18 @@ class VideoApi {
         const form = new FormData();
         form.append('title', payload.title);
         form.append('description', payload.description);
-        form.append('channel', payload.channel);
-        form.append('channelId', payload.channelId);
         form.append('status', payload.status);
         payload.tags.forEach(tag => form.append('tags[]', tag));
         if (payload.scheduledAt) {
-            form.append('scheduledAt', payload.scheduledAt);
+            form.append('scheduled_at', payload.scheduledAt);
         }
 
         if (payload.thumbnail) {
-            form.append('thumbnail', payload.thumbnail);
+            form.append('thumbnail_file', payload.thumbnail);
         }
 
         if (payload.videoFile) {
-            form.append('videoFile', payload.videoFile);
+            form.append('video_file', payload.videoFile);
         }
 
         const startTime = Date.now();
