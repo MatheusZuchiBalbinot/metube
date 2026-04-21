@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\VideoService;
@@ -20,7 +21,7 @@ describe('VideoService', function () {
         $title = $faker->unique()->sentence(3);
         $description = $faker->paragraph();
         $tags = array_slice($faker->words(5), 0, rand(1, 3));
-        $status = $faker->randomElement(['published', 'scheduled', 'draft']);
+        $status = $faker->randomElement(VideoStatus::cases());
 
         $data = [
             'title' => $title,
@@ -60,7 +61,7 @@ describe('VideoService', function () {
         $oldTitle = $faker->sentence(2);
         $newTitle = $faker->sentence(2);
         $newDescription = $faker->paragraph();
-        $newStatus = $faker->randomElement(['published', 'scheduled', 'draft']);
+        $newStatus = $faker->randomElement(VideoStatus::cases());
 
         $video = Video::factory()->create(['title' => $oldTitle]);
         $newData = [

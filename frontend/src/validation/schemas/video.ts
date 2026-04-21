@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import type { VideoId } from '@models/video';
+import { VideoStatus, type VideoId } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
 
-const VideoStatusSchema = z.enum(['published', 'scheduled', 'processing']);
+const VideoStatusSchema = z.nativeEnum(VideoStatus);
 
 const VideoTagSchema = z.string().transform(t => t as Tag);
 

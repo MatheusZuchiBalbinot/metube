@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 
@@ -29,7 +30,7 @@ class VideoPolicy
         }
 
         // Others can only view published videos
-        return $video->status === 'published';
+        return $video->status === VideoStatus::PUBLISHED;
     }
 
     /**

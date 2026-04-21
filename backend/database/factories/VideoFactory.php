@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,7 +26,7 @@ class VideoFactory extends Factory
             'title' => $this->faker->sentence(4),
             'description' => $this->faker->paragraph(),
             'tags' => ['tutorial', 'coding', 'education'],
-            'status' => $this->faker->randomElement(['published', 'scheduled', 'processing']),
+            'status' => $this->faker->randomElement(VideoStatus::cases()),
             'duration' => $this->faker->numberBetween(60, 3600),
             'views' => $this->faker->numberBetween(0, 100000),
             'video_url' => $this->faker->url(),
@@ -41,7 +42,7 @@ class VideoFactory extends Factory
     public function published(): self
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'published',
+            'status' => VideoStatus::PUBLISHED,
             'published_at' => now(),
         ]);
     }
@@ -52,7 +53,7 @@ class VideoFactory extends Factory
     public function scheduled(): self
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'scheduled',
+            'status' => VideoStatus::SCHEDULED,
             'scheduled_at' => now()->addDay(),
             'published_at' => null,
         ]);
@@ -64,7 +65,7 @@ class VideoFactory extends Factory
     public function processing(): self
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'processing',
+            'status' => VideoStatus::PROCESSING,
             'published_at' => null,
         ]);
     }

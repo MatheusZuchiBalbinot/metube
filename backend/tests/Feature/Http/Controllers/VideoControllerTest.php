@@ -1,11 +1,10 @@
 <?php
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
-use Tests\TestCase;
-
 
 describe('VideoController', function () {
     test('index returns paginated videos', function () {
@@ -20,7 +19,7 @@ describe('VideoController', function () {
 
     test('show returns specific video', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create(['status' => 'published']);
+        $video = Video::factory()->create(['status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson("/api/videos/{$video->vuid}");
 
@@ -34,7 +33,7 @@ describe('VideoController', function () {
         $response = $this->actingAs($user)->postJson('/api/videos', [
             'title' => 'New Video',
             'description' => 'Test Description',
-            'status' => 'published',
+            'status' => VideoStatus::PUBLISHED->value,
         ]);
 
         $response->assertCreated();

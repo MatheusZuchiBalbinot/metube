@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Video;
 
+use App\Enums\VideoStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -35,7 +36,7 @@ class UpdateVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['nullable', 'in:published,scheduled,processing'],
+            'status' => ['nullable', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
         ];
     }
@@ -51,7 +52,7 @@ class UpdateVideoRequest extends FormRequest
             'title.max' => 'Título não pode exceder 255 caracteres',
             'description.max' => 'Descrição não pode exceder 5000 caracteres',
             'tags.max' => 'Máximo de 20 tags permitidas',
-            'status.in' => 'Status deve ser published, scheduled ou processing',
+            'status.in' => 'Status inválido',
         ];
     }
 
@@ -66,7 +67,7 @@ class UpdateVideoRequest extends FormRequest
             $status = $this->get('status');
             $scheduledAt = $this->get('scheduled_at');
 
-            if ($status === 'scheduled' && $scheduledAt === null) {
+            if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
                 $validator->errors()->add('scheduled_at', 'Data de agendamento é obrigatória quando status é scheduled');
             }
         });
