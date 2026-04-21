@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import * as authApi from '../api/auth';
+import { auth } from '../api/auth';
 import type { User } from '@models/user';
 
 interface AuthState {
@@ -15,20 +15,23 @@ const initialState: AuthState = {
 };
 
 export const fetchMe = createAsyncThunk('auth/fetchMe', async () => {
-    await authApi.getCsrfCookie();
-    return authApi.me();
+    await auth.getCsrfCookie();
+    const me = await auth.me();
+    return me;
 });
 
 export const signInThunk = createAsyncThunk(
     'auth/signIn',
     async (payload: { email: string; password: string }) => {
-        const { user } = await authApi.login(payload);
-        return user;
+        await auth.getCsrfCookie();
+        const response = await auth.login(payload);
+        if (!response) throw new Error('Login failed');
+        return response.user;
     },
 );
 
 export const signOutThunk = createAsyncThunk('auth/signOut', async () => {
-    await authApi.logout().catch(() => null);
+    await auth.logout().catch(() => null);
 });
 
 const authSlice = createSlice({
