@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  * @property string $title
  * @property string $description
  * @property array<string> $tags
- * @property string $status
+ * @property \App\Enums\VideoStatus $status
  * @property float|null $duration
  * @property int $views
  * @property string|null $video_url
@@ -51,6 +51,7 @@ class Video extends Model
     {
         return [
             'tags' => 'array',
+            'status' => VideoStatus::class,
             'published_at' => 'datetime',
             'scheduled_at' => 'datetime',
             'duration' => 'float',
@@ -140,7 +141,7 @@ class Video extends Model
      */
     public function scopePublished(Builder $query): Builder
     {
-        $query->where('status', VideoStatus::PUBLISHED->value);
+        $query->where('status', VideoStatus::PUBLISHED);
 
         return $query;
     }

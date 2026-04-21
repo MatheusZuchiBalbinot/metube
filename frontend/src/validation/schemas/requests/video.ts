@@ -1,13 +1,16 @@
 import { z } from 'zod';
+import { VideoStatus } from '@models/video';
+
+const uploadableStatuses = [VideoStatus.PUBLISHED, VideoStatus.SCHEDULED] as const;
 
 export const VideoUploadRequestSchema = z.object({
     title: z.string().min(1, 'Title is required').max(255),
     description: z.string().max(5000).optional().default(''),
     tags: z.array(z.string()).max(20).default([]),
-    status: z.enum(['published', 'scheduled']),
+    status: z.enum(uploadableStatuses),
     scheduledAt: z.string().datetime({ offset: true }).optional(),
 }).refine(data => {
-    const isScheduled = data.status === 'scheduled';
+    const isScheduled = data.status === VideoStatus.SCHEDULED;
     return !isScheduled || !!data.scheduledAt;
 }, {
     message: 'scheduledAt is required when status is scheduled',
@@ -18,7 +21,7 @@ export const VideoUpdateRequestSchema = z.object({
     title: z.string().min(1).max(255).optional(),
     description: z.string().max(5000).optional(),
     tags: z.array(z.string()).max(20).optional(),
-    status: z.enum(['published', 'scheduled']).optional(),
+    status: z.enum(uploadableStatuses).optional(),
     scheduledAt: z.string().datetime({ offset: true }).optional(),
 });
 

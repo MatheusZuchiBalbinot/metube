@@ -7,6 +7,7 @@ export const VideoStatus = {
     PUBLISHED: 'published',
     SCHEDULED: 'scheduled',
     PROCESSING: 'processing',
+    DRAFT: 'draft',
 } as const;
 export type VideoStatus = typeof VideoStatus[keyof typeof VideoStatus];
 

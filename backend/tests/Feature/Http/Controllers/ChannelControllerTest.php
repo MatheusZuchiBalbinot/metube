@@ -1,10 +1,11 @@
 <?php
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 uses(RefreshDatabase::class);
-use Tests\TestCase;
 
 
 describe('ChannelController', function () {
@@ -21,8 +22,8 @@ describe('ChannelController', function () {
     test('videos returns published videos from channel', function () {
         $channel = User::factory()->create();
         $user = User::factory()->create();
-        Video::factory(3)->for($channel, 'channel')->create(['status' => 'published']);
-        Video::factory(2)->for($channel, 'channel')->create(['status' => 'draft']);
+        Video::factory(3)->for($channel, 'channel')->create(['status' => VideoStatus::PUBLISHED]);
+        Video::factory(2)->for($channel, 'channel')->create(['status' => VideoStatus::DRAFT]);
 
         $response = $this->actingAs($user)->getJson("/api/channels/{$channel->uuid}/videos");
 
