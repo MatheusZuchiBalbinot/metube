@@ -3,6 +3,7 @@
 .badge {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
     padding: 3px 9px;
     border-radius: var(--radius-full);
     font-size: var(--text-xs);
@@ -34,4 +35,13 @@
 .badge--neutral {
     background: var(--surface-3);
     color: var(--text-2);
+}
+
+.badge-spin {
+    animation: badge-spin 1s linear infinite;
+}
+
+@keyframes badge-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }

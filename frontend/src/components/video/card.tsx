@@ -62,6 +62,8 @@ const VideoCard = memo(function VideoCard({
         new Date(video.scheduledAt) > now;
 
     const isNew = !isScheduledAndFuture && now.getTime() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
+    const isProcessing = video.status === VideoStatus.PROCESSING;
+    const isFailed = video.status === VideoStatus.FAILED;
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const isTouchDevice = useMediaQuery('(hover: none)');
@@ -141,6 +143,8 @@ const VideoCard = memo(function VideoCard({
                     isScheduledAndFuture={isScheduledAndFuture}
                     isNew={isNew}
                     isWatched={isWatched}
+                    isProcessing={isProcessing}
+                    isFailed={isFailed}
                     classPrefix="video-card"
                 />
                 {hasProgress && (
