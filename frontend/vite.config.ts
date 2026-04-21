@@ -7,6 +7,7 @@ import { resolve } from 'path';
 export default defineConfig({
     resolve: {
         alias: {
+            '@api': resolve(__dirname, 'src/api'),
             '@context': resolve(__dirname, 'src/context'),
             '@components': resolve(__dirname, 'src/components'),
             '@ui': resolve(__dirname, 'src/components/ui'),
@@ -54,6 +55,7 @@ export default defineConfig({
         include: ['tests/**/*.test.{ts,tsx}'],
         setupFiles: ['tests/setup.ts'],
         alias: {
+            '@api': resolve(__dirname, 'src/api'),
             '@components': resolve(__dirname, 'src/components'),
             '@context': resolve(__dirname, 'src/context'),
             '@data': resolve(__dirname, 'src/data'),
