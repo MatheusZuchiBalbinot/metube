@@ -1,6 +1,7 @@
 import axios from 'axios';
-import client from './client';
+import { apiClient } from './client';
 import type { User } from '@models/user';
+import { UserApiSchema, LoginResponseApiSchema } from '@validation';
 
 export type { User } from '@models/user';
 
@@ -13,20 +14,34 @@ export interface LoginResponse {
     user: User
 }
 
-export async function getCsrfCookie(): Promise<void> {
-    await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+export interface UpdateProfilePayload {
+    name?: string
+    bio?: string
 }
 
-export async function login(payload: LoginPayload): Promise<LoginResponse> {
-    const { data } = await client.post<LoginResponse>('/auth/login', payload);
-    return data;
+class AuthApi {
+    private readonly baseUrl = '/auth';
+    private readonly csrfUrl = '/sanctum/csrf-cookie';
+
+    async getCsrfCookie(): Promise<void> {
+        await axios.get(this.csrfUrl, { withCredentials: true });
+    }
+
+    async login(payload: LoginPayload): Promise<LoginResponse | null> {
+        return apiClient.postValidated(`${this.baseUrl}/login`, LoginResponseApiSchema, payload);
+    }
+
+    async logout(): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/logout`);
+    }
+
+    async me(): Promise<User | null> {
+        return apiClient.getValidated(`${this.baseUrl}/me`, UserApiSchema);
+    }
+
+    async updateProfile(payload: UpdateProfilePayload): Promise<User | null> {
+        return apiClient.patchValidated(`${this.baseUrl}/me`, UserApiSchema, payload);
+    }
 }
 
-export async function logout(): Promise<void> {
-    await client.post('/auth/logout');
-}
-
-export async function me(): Promise<User> {
-    const { data } = await client.get<User>('/auth/me');
-    return data;
-}
+export const auth = new AuthApi();

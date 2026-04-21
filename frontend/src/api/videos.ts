@@ -1,8 +1,12 @@
-import client from './client';
-import type { Video, VideoId, VideoStatus } from '@models/video';
+import { apiClient } from './client';
+import type { Video, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
 import type { PaginatedResponse } from '@models/common';
+import { VideoApiSchema, VideoListApiSchema, VideoSummaryApiSchema } from '@validation';
+import { buildProgress, type ProgressCallback } from '@utils/upload';
+
+export type Vuid = string & { readonly _brand: 'Vuid' };
 
 export type VideoListResponse = PaginatedResponse<Video>;
 
@@ -26,53 +30,90 @@ export interface VideoUpdatePayload {
     scheduledAt?: string
 }
 
-export async function fetchVideos(params?: {
-    page?: number
-    perPage?: number
-    search?: string
-    tags?: Tag[]
-    status?: VideoStatus
-}): Promise<VideoListResponse> {
-    const { data } = await client.get<VideoListResponse>('/videos', { params });
-    return data;
+export interface VideoSummary {
+    keyPoints: string[]
+    chapters: { timestamp: string; title: string }[]
+    readingMode: string
 }
 
-export async function fetchVideo(id: VideoId): Promise<Video> {
-    const { data } = await client.get<Video>(`/videos/${id}`);
-    return data;
-}
+class VideoApi {
+    private readonly baseUrl = '/videos';
 
-export async function uploadVideo(payload: VideoUploadPayload): Promise<Video> {
-    const form = new FormData();
-    form.append('title', payload.title);
-    form.append('description', payload.description);
-    form.append('channel', payload.channel);
-    form.append('channelId', payload.channelId);
-    form.append('status', payload.status);
-    payload.tags.forEach(tag => form.append('tags[]', tag));
-    if (payload.scheduledAt) {
-        form.append('scheduledAt', payload.scheduledAt);
+    async list(params?: {
+        page?: number
+        perPage?: number
+        search?: string
+        tags?: Tag[]
+        status?: VideoStatus
+    }): Promise<VideoListResponse | null> {
+        return apiClient.getValidated(this.baseUrl, VideoListApiSchema, { params });
     }
 
-    if (payload.thumbnail) {
-        form.append('thumbnail', payload.thumbnail);
+    async get(vuid: Vuid): Promise<Video | null> {
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}`, VideoApiSchema);
     }
 
-    if (payload.videoFile) {
-        form.append('videoFile', payload.videoFile);
+    async create(payload: VideoUploadPayload, onProgress?: ProgressCallback): Promise<Video | null> {
+        const form = new FormData();
+        form.append('title', payload.title);
+        form.append('description', payload.description);
+        form.append('channel', payload.channel);
+        form.append('channelId', payload.channelId);
+        form.append('status', payload.status);
+        payload.tags.forEach(tag => form.append('tags[]', tag));
+        if (payload.scheduledAt) {
+            form.append('scheduledAt', payload.scheduledAt);
+        }
+
+        if (payload.thumbnail) {
+            form.append('thumbnail', payload.thumbnail);
+        }
+
+        if (payload.videoFile) {
+            form.append('videoFile', payload.videoFile);
+        }
+
+        const startTime = Date.now();
+
+        return apiClient.postValidated(this.baseUrl, VideoApiSchema, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            onUploadProgress: onProgress
+                ? (event) => onProgress(buildProgress(event, startTime))
+                : undefined,
+        });
     }
 
-    const { data } = await client.post<Video>('/videos', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
+    async update(vuid: Vuid, payload: VideoUpdatePayload): Promise<Video | null> {
+        return apiClient.patchValidated(`${this.baseUrl}/${vuid}`, VideoApiSchema, payload);
+    }
+
+    async delete(vuid: Vuid): Promise<void> {
+        await apiClient.delete(`${this.baseUrl}/${vuid}`);
+    }
+
+    async recordView(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/views`);
+    }
+
+    async toggleLike(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/like`);
+    }
+
+    async toggleDislike(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/dislike`);
+    }
+
+    async toggleSave(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/save`);
+    }
+
+    async updateProgress(vuid: Vuid, percent: number): Promise<void> {
+        await apiClient.put(`${this.baseUrl}/${vuid}/progress`, { percent });
+    }
+
+    async getSummary(vuid: Vuid): Promise<VideoSummary | null> {
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}/summary`, VideoSummaryApiSchema);
+    }
 }
 
-export async function updateVideo(id: VideoId, payload: VideoUpdatePayload): Promise<Video> {
-    const { data } = await client.patch<Video>(`/videos/${id}`, payload);
-    return data;
-}
-
-export async function deleteVideo(id: VideoId): Promise<void> {
-    await client.delete(`/videos/${id}`);
-}
+export const video = new VideoApi();
