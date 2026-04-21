@@ -8,6 +8,7 @@ export const VideoStatus = {
     SCHEDULED: 'scheduled',
     PROCESSING: 'processing',
     DRAFT: 'draft',
+    FAILED: 'failed',
 } as const;
 export type VideoStatus = typeof VideoStatus[keyof typeof VideoStatus];
 
