@@ -50,6 +50,25 @@ services:
     networks:
       - app_net
 
+  queue:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --tries=3 --timeout=3600
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/vendor
+      - /app/bootstrap/cache
+    working_dir: /app
+    networks:
+      - app_net
+
   frontend:
     build: ./frontend
     restart: unless-stopped
@@ -72,6 +91,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/storage/app/public:/var/www/storage:ro
     depends_on:
       - backend
     networks:

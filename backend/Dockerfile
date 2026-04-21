@@ -29,6 +29,8 @@ RUN install-php-extensions \
 
 COPY --from=vendor /app /app
 
+COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
