@@ -64,6 +64,12 @@
       ],
       "@models/*": [
         "src/types/*"
+      ],
+      "@validation": [
+        "src/validation/index.ts"
+      ],
+      "@validation/*": [
+        "src/validation/*"
       ]
     }
   },

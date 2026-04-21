@@ -1,0 +1,50 @@
+import { z } from 'zod';
+import type { VideoId } from '@models/video';
+import type { ChannelId } from '@models/channel';
+import type { Tag } from '@models/tag';
+
+const VideoStatusSchema = z.enum(['published', 'scheduled', 'processing']);
+
+const VideoTagSchema = z.string().transform(t => t as Tag);
+
+export const VideoApiSchema = z.object({
+    vuid: z.string().min(1),
+    title: z.string().min(1).max(255),
+    description: z.string(),
+    status: VideoStatusSchema,
+    views: z.number().int().nonnegative(),
+    duration: z.number().nonnegative().nullable().optional(),
+    video_url: z.string().url().nullable().optional(),
+    thumbnail_url: z.string().nullable().optional(),
+    published_at: z.string().datetime({ offset: true }).nullable().optional(),
+    scheduled_at: z.string().datetime({ offset: true }).nullable().optional(),
+    tags: z.array(VideoTagSchema).default([]),
+    channel: z.string(),
+    channel_id: z.string().min(1),
+}).transform(raw => ({
+    id: raw.vuid as unknown as VideoId,
+    title: raw.title,
+    description: raw.description,
+    status: raw.status,
+    views: raw.views,
+    duration: raw.duration ?? undefined,
+    videoUrl: raw.video_url ?? undefined,
+    thumbnail: raw.thumbnail_url ?? `https://picsum.photos/seed/${raw.vuid}/320/180`,
+    publishedAt: raw.published_at ?? new Date().toISOString(),
+    scheduledAt: raw.scheduled_at ?? undefined,
+    tags: raw.tags,
+    channel: raw.channel,
+    channelId: raw.channel_id as unknown as ChannelId,
+}));
+
+export const VideoListApiSchema = z.object({
+    data: z.array(VideoApiSchema),
+    meta: z.object({
+        total: z.number().int().nonnegative(),
+        page: z.number().int().positive(),
+        perPage: z.number().int().positive(),
+    }),
+});
+
+export type VideoApiInput = z.input<typeof VideoApiSchema>;
+export type VideoApiOutput = z.output<typeof VideoApiSchema>;
