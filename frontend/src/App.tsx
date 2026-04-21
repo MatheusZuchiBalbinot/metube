@@ -4,12 +4,15 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store, useAppDispatch } from '@store';
 import { fetchMe, authActions } from '@store/authSlice';
+import { toastActions } from '@store/toastSlice';
 import { APP_EVENTS } from '@utils/events';
 import { initCrossTabSync } from '@store/crossTabSync';
 import Guard from '@components/guard/guard';
 import { SearchProvider } from '@context/searchContext';
 import AppLayout from '@components/layout/layout';
 import Spinner from '@components/ui/spinner/spinner';
+import ErrorBoundary from '@components/error/boundary';
+import { useTranslation } from 'react-i18next';
 
 const LoginPage = React.lazy(() => import('@pages/login/login'));
 const UploadModal = React.lazy(() => import('@components/upload/modal'));
@@ -42,60 +45,57 @@ const PROTECTED_ROUTES: { path: string; Page: React.LazyExoticComponent<() => Re
     { path: ROUTES.CHANNEL, Page: ChannelPage },
 ];
 
-class RouteErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-    constructor(props: { children: React.ReactNode }) {
-        super(props);
-        this.state = { hasError: false };
-    }
-
-    static getDerivedStateFromError() {
-        return { hasError: true };
-    }
-
-    render() {
-        const { hasError } = this.state;
-        if (hasError) {
-            return (
-                <div className="route-error">
-                    <p>Something went wrong.</p>
-                    <button onClick={() => window.location.reload()}>Try again</button>
-                </div>
-            );
-        }
-        return this.props.children;
-    }
-}
-
 function PageSpinner() {
     return <Spinner fullPage />;
 }
 
 function AppInit({ children }: { children: React.ReactNode }) {
     const dispatch = useAppDispatch();
+    const { t } = useTranslation();
 
     useEffect(() => {
         dispatch(fetchMe());
 
-        function isSessionExpiredEvent(e: Event): e is CustomEvent<{ message: string }> {
+        function isEventWithMessage(e: Event): e is CustomEvent<{ message: string }> {
             return e instanceof CustomEvent && typeof (e.detail as { message?: unknown })?.message === 'string';
         }
 
         function onSessionExpired(e: Event) {
-            const isValid = isSessionExpiredEvent(e);
+            const isValid = isEventWithMessage(e);
             if (!isValid) {
                 return;
             }
             dispatch(authActions.sessionExpired(e.detail.message));
         }
 
+        function onForbidden(e: Event) {
+            const isValid = isEventWithMessage(e);
+            if (!isValid) {
+                return;
+            }
+            dispatch(toastActions.addToast({ message: e.detail.message, type: 'error' }));
+        }
+
+        function onServiceUnavailable(e: Event) {
+            const isValid = isEventWithMessage(e);
+            if (!isValid) {
+                return;
+            }
+            dispatch(toastActions.addToast({ message: e.detail.message, type: 'error' }));
+        }
+
         window.addEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
+        window.addEventListener(APP_EVENTS.FORBIDDEN, onForbidden);
+        window.addEventListener(APP_EVENTS.SERVICE_UNAVAILABLE, onServiceUnavailable);
         const stopCrossTabSync = initCrossTabSync(dispatch);
 
         return () => {
             window.removeEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
+            window.removeEventListener(APP_EVENTS.FORBIDDEN, onForbidden);
+            window.removeEventListener(APP_EVENTS.SERVICE_UNAVAILABLE, onServiceUnavailable);
             stopCrossTabSync();
         };
-    }, [dispatch]);
+    }, [dispatch, t]);
 
     useEffect(() => {
         function onVisibilityChange() {
@@ -120,17 +120,17 @@ export default function App() {
                             <Suspense fallback={null}>
                                 <UploadModal />
                             </Suspense>
-                            <RouteErrorBoundary>
+                            <ErrorBoundary level="page">
                                 <Routes>
                                     <Route path={ROUTES.LOGIN} element={<Suspense fallback={<PageSpinner />}><LoginPage /></Suspense>} />
                                     <Route element={<Guard><AppLayout /></Guard>}>
                                         {PROTECTED_ROUTES.map(({ path, Page }) => (
-                                            <Route key={path} path={path} element={<Page />} />
+                                            <Route key={path} path={path} element={<ErrorBoundary level="section" key={path}><Page /></ErrorBoundary>} />
                                         ))}
                                     </Route>
                                     <Route path="*" element={<Suspense fallback={null}><NotFoundPage /></Suspense>} />
                                 </Routes>
-                            </RouteErrorBoundary>
+                            </ErrorBoundary>
                         </TooltipProvider>
                     </SearchProvider>
                 </AppInit>
