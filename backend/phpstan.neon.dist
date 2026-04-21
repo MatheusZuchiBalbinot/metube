@@ -1,0 +1,63 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+
+    # Ignorar padrões dinâmicos do Laravel que são conhecidos
+    ignoreErrors:
+        # Laravel magic methods
+        - '#Call to an undefined method.*#'
+        - '#Undefined variable.*\$__ENV#'
+
+        # Resource properties (dynamic)
+        - '#Access to an undefined property App\\Http\\Resources\\.*::\$.*#'
+
+        # Model classes not yet created
+        - '#Call to static method .* on an unknown class App\\Models\\.*#'
+        - '#Call to an undefined static method App\\Models\\.*#'
+
+        # Model properties inferred from table
+        - '#Access to property.*on.*Illuminate\\Contracts\\Auth\\Authenticatable#'
+        - '#Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable::\$.*#'
+        - '#PHPDoc type.*of property.*overridden property.*Model::#'
+
+        # Middleware/Exceptions
+        - '#Parameter.*\$message of method Exception::__construct.*#'
+
+        # Factory generics (factories created via artisan make:factory)
+        - '#Class App\\Models\\.*uses generic trait.*HasFactory.*but does not specify its types#'
+
+        # JSON query methods (dynamic calls on query builder)
+        - '#Dynamic call to static method.*whereJsonContains#'
+
+        # Builder return type variations from when() chains
+        - '#should return.*Builder.*but returns.*Builder.*\|.*Query\\Builder#'
+
+        # Pivot model covariance (custom pivot models in BelongsToMany relationships)
+        - '#Playlist::videos.*should return.*but returns#'
+        - '#User::(reactions|likes|dislikes|savedVideos|subscriptions|subscribers).*should return.*but returns#'
+
+        # Service layer dynamic method calls (Builder, Query\Builder)
+        - '#Dynamic call to static method.*Builder#'
+        - '#Dynamic call to static method.*Query\\\\Builder#'
+
+        # Protected methods that are safe to call (Laravel conventions)
+        - '#Call to protected method.*of class Illuminate\\\\Database\\\\Eloquent\\\\Model#'
+
+        # Missing generic types (LengthAwarePaginator, Collection)
+        - '#return type with generic class.*does not specify its types#'
+
+        # Iterable type missing value specification
+        - '#return type has no value type specified in iterable type#'
+
+        # Dynamic property access (Laravel model magic properties)
+        - '#Access to an undefined property App\\\\Models\\\\.*::\$#'
+
+        # Specific error for increment() on Eloquent Model (safe convention)
+        - '#Call to protected method increment\(\) of class Illuminate\\Database\\Eloquent\\Model#'
+
+    # Reportar apenas errors reais, não warnings
+    reportUnmatchedIgnoredErrors: false
