@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class VideoResource extends JsonResource
+{
+    /** @return array<string, mixed> */
+    public function toArray(Request $request): array
+    {
+        return [
+            'vuid'          => $this->vuid,
+            'title'         => $this->title,
+            'description'   => $this->description ?? '',
+            'status'        => $this->status->value,
+            'views'         => $this->views,
+            'duration'      => $this->duration,
+            'video_url'     => $this->video_url,
+            'thumbnail_url' => $this->thumbnail_url,
+            'published_at'  => $this->published_at?->toIso8601String(),
+            'scheduled_at'  => $this->scheduled_at?->toIso8601String(),
+            'tags'          => $this->tags ?? [],
+            'channel'       => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
+            'channel_id'    => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),
+        ];
+    }
+}
