@@ -88,4 +88,33 @@ export class Format {
         }
         return rtf.format(-diffY, 'year');
     }
+
+    static bytes(bytes: number): string {
+        if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
+        if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} MB`;
+        if (bytes >= 1_024) return `${(bytes / 1_024).toFixed(0)} KB`;
+        return `${bytes} B`;
+    }
+
+    static speed(bytesPerSec: number): string {
+        return `${Format.bytes(bytesPerSec)}/s`;
+    }
+
+    static eta(seconds: number, locale = 'en'): string {
+        if (seconds <= 0 || !Number.isFinite(seconds)) return '';
+        const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
+        if (seconds < 60) return rtf.format(Math.ceil(seconds), 'second').replace('in ', '') + ' left';
+        if (seconds < 3600) return rtf.format(Math.ceil(seconds / 60), 'minute').replace('in ', '') + ' left';
+        return rtf.format(Math.ceil(seconds / 3600), 'hour').replace('in ', '') + ' left';
+    }
+
+    static percent(value: number): string {
+        return `${Math.round(value)}%`;
+    }
+
+    static truncate(text: string, max: number): string {
+        const isShort = text.length <= max;
+        if (isShort) return text;
+        return `${text.slice(0, max - 3)}...`;
+    }
 }
