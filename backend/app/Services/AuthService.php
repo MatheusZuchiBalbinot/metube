@@ -12,13 +12,12 @@ class AuthService
      * Attempt login, regenerate session, and return the authenticated user.
      *
      * @param  array{email: string, password: string}  $credentials
-     * @return User
      *
      * @throws InvalidCredentialsException
      */
     public function login(array $credentials): User
     {
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             throw new InvalidCredentialsException;
         }
 
