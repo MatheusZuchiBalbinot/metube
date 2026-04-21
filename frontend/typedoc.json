@@ -1,0 +1,22 @@
+{
+  "entryPoints": [
+    "src/api/index.ts",
+    "src/types/index.ts",
+    "src/hooks/index.ts",
+    "src/context/index.ts"
+  ],
+  "out": "docs",
+  "name": "Video Summarizer — Frontend Documentation",
+  "readme": "DOCS.md",
+  "theme": "default",
+  "includeVersion": true,
+  "excludePrivate": false,
+  "excludeInternal": false,
+  "excludeProtected": false,
+  "categorizeByGroup": true,
+  "searchInComments": true,
+  "navigation": {
+    "includeCategories": true
+  },
+  "treatWarningsAsErrors": false
+}
