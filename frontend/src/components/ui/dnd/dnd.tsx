@@ -98,6 +98,7 @@ export default function DragAndDrop({
                     accept={accept}
                     className="dnd-input"
                     onChange={handleChange}
+                    onClick={(e) => e.stopPropagation()}
                     tabIndex={-1}
                 />
 
