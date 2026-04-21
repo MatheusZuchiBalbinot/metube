@@ -150,7 +150,7 @@ export default function PlayerSeekBar({
             return 0;
         }
         const rect = inner.getBoundingClientRect();
-        const clientX = 'clientX' in e ? e.clientX : e.clientX;
+        const clientX = 'clientX' in e ? (e as MouseEvent).clientX : (e as TouchEvent).touches[0].clientX;
         return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     }
 
