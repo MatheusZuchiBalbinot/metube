@@ -43,7 +43,7 @@ export function useVideo() {
 
     // Stable function references — safe to use in React.memo'd children and useEffect deps
     const addVideo = useCallback(
-        (video: Omit<Video, 'id' | 'views'>) => dispatch(videoActions.addVideo(video)),
+        (v: Video) => dispatch(videoActions.addVideo(v)),
         [dispatch],
     );
     const editVideo = useCallback(

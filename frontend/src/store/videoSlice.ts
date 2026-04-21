@@ -78,8 +78,16 @@ const videoSlice = createSlice({
     name: 'video',
     initialState,
     reducers: {
-        addVideo(state, action: PayloadAction<Omit<Video, 'id' | 'views'>>) {
-            state.videos.unshift({ ...action.payload, id: crypto.randomUUID() as unknown as VideoId, views: 0 });
+        addVideo(state, action: PayloadAction<Video>) {
+            state.videos.unshift(action.payload);
+        },
+
+        updateVideo(state, action: PayloadAction<Video>) {
+            const idx = state.videos.findIndex(v => v.id === action.payload.id);
+            const isFound = idx !== -1;
+            if (isFound) {
+                state.videos[idx] = action.payload;
+            }
         },
 
         editVideo(state, action: PayloadAction<{ id: VideoId; partial: Partial<Video> }>) {
