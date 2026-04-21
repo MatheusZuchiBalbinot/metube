@@ -62,6 +62,57 @@
     background: var(--surface-3);
 }
 
+/* ─── Preview strip ───────────────────────────────────────────────────────── */
+
+.upload-modal__preview-strip {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+}
+
+.upload-modal__preview-strip::-webkit-scrollbar {
+    height: 4px;
+}
+
+.upload-modal__preview-strip::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 2px;
+}
+
+.upload-modal__preview-strip::-webkit-scrollbar-thumb {
+    background: var(--border-2);
+    border-radius: 2px;
+}
+
+.upload-modal__preview-item {
+    flex: 0 0 300px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.upload-modal__preview-caption {
+    font-size: 0.6875rem;
+    color: var(--text-3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.upload-modal__preview-media {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    display: block;
+}
+
 /* ─── Status preview ──────────────────────────────────────────────────────── */
 
 .upload-modal__status-preview {
@@ -76,15 +127,33 @@
     color: var(--text-3);
 }
 
-/* ─── Thumbnail preview ───────────────────────────────────────────────────── */
+/* ─── Progress bar ────────────────────────────────────────────────────────── */
 
-.upload-modal__thumb-preview {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin-top: 4px;
+.upload-modal__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.upload-modal__progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-3);
+    overflow: hidden;
+}
+
+.upload-modal__progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.2s ease;
+}
+
+.upload-modal__progress-info {
+    display: flex;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--text-3);
 }
 
 /* ─── Footer ──────────────────────────────────────────────────────────────── */
@@ -94,4 +163,3 @@
     justify-content: flex-end;
     gap: 10px;
 }
-
