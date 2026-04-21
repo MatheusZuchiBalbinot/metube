@@ -17,6 +17,7 @@ export default defineConfig({
             '@hooks': resolve(__dirname, 'src/hooks'),
             '@store': resolve(__dirname, 'src/store'),
             '@models': resolve(__dirname, 'src/types'),
+            '@validation': resolve(__dirname, 'src/validation'),
         },
     },
     plugins: [
@@ -63,6 +64,7 @@ export default defineConfig({
             '@styles': resolve(__dirname, 'src/styles'),
             '@ui': resolve(__dirname, 'src/components/ui'),
             '@utils': resolve(__dirname, 'src/utils'),
+            '@validation': resolve(__dirname, 'src/validation'),
         },
     },
     server: {

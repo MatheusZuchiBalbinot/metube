@@ -6,6 +6,7 @@ export type VideoId = string & { readonly _brand: 'VideoId' };
 export const VideoStatus = {
     PUBLISHED: 'published',
     SCHEDULED: 'scheduled',
+    PROCESSING: 'processing',
 } as const;
 export type VideoStatus = typeof VideoStatus[keyof typeof VideoStatus];
 
