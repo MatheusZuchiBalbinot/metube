@@ -10,6 +10,7 @@ namespace App\Enums;
  * - SCHEDULED: Video will be published at scheduled_at time
  * - PROCESSING: Video is being processed (transcoding, thumbnail generation)
  * - DRAFT: Video is a draft, not yet published
+ * - FAILED: Video processing failed permanently
  */
 enum VideoStatus: string
 {
@@ -17,6 +18,7 @@ enum VideoStatus: string
     case SCHEDULED = 'scheduled';
     case PROCESSING = 'processing';
     case DRAFT = 'draft';
+    case FAILED = 'failed';
 
     /**
      * Get all available values as array.

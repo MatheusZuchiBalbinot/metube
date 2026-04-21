@@ -23,7 +23,7 @@ class StoreVideoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->is_verified;
+        return auth()->check();
     }
 
     /**
@@ -40,7 +40,7 @@ class StoreVideoRequest extends FormRequest
             'tags.*' => ['string', 'max:50'],
             'status' => ['required', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
-            'video_file' => ['required', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:5242880'],
+            'video_file' => ['required', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
         ];
     }
