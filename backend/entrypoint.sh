@@ -25,6 +25,10 @@ php artisan migrate --force
 echo "Seeding database..."
 php artisan db:seed --force
 
+if [ "$#" -gt 0 ]; then
+    exec "$@"
+fi
+
 echo "Starting Octane..."
 exec php artisan octane:start \
   --server=frankenphp \
