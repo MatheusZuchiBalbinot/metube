@@ -31,7 +31,7 @@ class VideoController extends Controller
     {
         $videos = $this->videoService->listVideos($request->all());
 
-        return $this->json(VideoResource::collection($videos->load('channel')));
+        return $this->json(VideoResource::collection($videos));
     }
 
     /**
