@@ -385,6 +385,15 @@
     .profile-page__pinned-card { max-width: 100%; }
 }
 
+/* ─── Loading state ─────────────────────────────────────────────────────────── */
+
+.profile-page__loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 280px;
+}
+
 /* ─── Empty state ──────────────────────────────────────────────────────────── */
 
 .profile-page__empty {

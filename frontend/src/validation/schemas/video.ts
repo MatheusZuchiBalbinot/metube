@@ -41,10 +41,19 @@ export const VideoListApiSchema = z.object({
     data: z.array(VideoApiSchema),
     meta: z.object({
         total: z.number().int().nonnegative(),
-        page: z.number().int().positive(),
-        perPage: z.number().int().positive(),
+        current_page: z.number().int().positive(),
+        per_page: z.number().int().positive(),
+        last_page: z.number().int().positive(),
     }),
-});
+}).transform(raw => ({
+    data: raw.data,
+    meta: {
+        total: raw.meta.total,
+        page: raw.meta.current_page,
+        perPage: raw.meta.per_page,
+        lastPage: raw.meta.last_page,
+    },
+}));
 
 export type VideoApiInput = z.input<typeof VideoApiSchema>;
 export type VideoApiOutput = z.output<typeof VideoApiSchema>;

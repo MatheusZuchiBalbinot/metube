@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { Heart, HeartOff } from 'lucide-react';
@@ -8,21 +8,28 @@ import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
-import type { Video } from '@data/mockVideos';
-import type { VideoId } from '@models/video';
+import { interactions } from '@api/interactions';
+import Spinner from '@ui/spinner/spinner';
+import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
 
 export default function LikedPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { likedVideos, videos, likeVideo } = useVideo();
+    const { likeVideo } = useVideo();
 
+    const [likedVideoList, setLikedVideoList] = useState<Video[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
-    const likedVideoList = useMemo(() => {
-        return videos.filter((v: Video) => likedVideos.has(v.id));
-    }, [likedVideos, videos]);
+    useEffect(() => {
+        interactions.liked().then(result => {
+            if (result) {
+                setLikedVideoList(result.data);
+            }
+        }).finally(() => setLoading(false));
+    }, []);
 
     const allTags = useMemo(() => {
         const tagSet = new Set<string>();
@@ -45,7 +52,16 @@ export default function LikedPage() {
 
     function handleUnlike(videoId: string) {
         likeVideo(videoId as unknown as VideoId);
+        setLikedVideoList(prev => prev.filter(v => v.id !== videoId));
         dispatch(toastActions.addToast({ message: t('toast.unliked'), type: 'info' }));
+    }
+
+    if (loading) {
+        return (
+            <div className="liked-page">
+                <Spinner />
+            </div>
+        );
     }
 
     return (

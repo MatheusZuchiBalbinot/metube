@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\VideoResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class UserController extends Controller
     {
         $videos = $this->userService->getUserLikes(auth()->user());
 
-        return $this->json($videos);
+        return $this->json(VideoResource::collection($videos));
     }
 
     /**
@@ -37,7 +38,7 @@ class UserController extends Controller
     {
         $videos = $this->userService->getUserSaved(auth()->user());
 
-        return $this->json($videos);
+        return $this->json(VideoResource::collection($videos));
     }
 
     /**

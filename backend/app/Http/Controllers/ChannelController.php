@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\VideoResource;
 use App\Models\User;
 use App\Services\ChannelService;
 use Illuminate\Http\JsonResponse;
@@ -42,9 +43,9 @@ class ChannelController extends Controller
     public function videos(string $uuid): JsonResponse
     {
         $user = User::byUuid($uuid)->firstOrFail();
-        $videos = $user->videos()->published()->latest()->paginate(15);
+        $videos = $user->videos()->with('channel')->published()->latest()->paginate(15);
 
-        return response()->resource($videos);
+        return $this->json(VideoResource::collection($videos));
     }
 
     /**

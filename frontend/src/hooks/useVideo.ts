@@ -10,6 +10,7 @@ import {
     selectSavedSet,
     selectRecommendations,
 } from '@store/videoSlice';
+import { video as videoApi, type Vuid } from '@api/videos';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { TagView, MiniPlayerState, WatchEvent } from '@store/videoSlice';
@@ -54,18 +55,24 @@ export function useVideo() {
         (id: VideoId) => dispatch(videoActions.deleteVideo(id)),
         [dispatch],
     );
-    const likeVideo = useCallback(
-        (id: VideoId) => dispatch(videoActions.likeVideo(id)),
-        [dispatch],
-    );
-    const dislikeVideo = useCallback(
-        (id: VideoId) => dispatch(videoActions.dislikeVideo(id)),
-        [dispatch],
-    );
-    const saveVideo = useCallback(
-        (id: VideoId) => dispatch(videoActions.saveVideo(id)),
-        [dispatch],
-    );
+    const likeVideo = useCallback((id: VideoId) => {
+        dispatch(videoActions.likeVideo(id));
+        videoApi.toggleLike(id as unknown as Vuid).catch(() => {
+            dispatch(videoActions.likeVideo(id));
+        });
+    }, [dispatch]);
+    const dislikeVideo = useCallback((id: VideoId) => {
+        dispatch(videoActions.dislikeVideo(id));
+        videoApi.toggleDislike(id as unknown as Vuid).catch(() => {
+            dispatch(videoActions.dislikeVideo(id));
+        });
+    }, [dispatch]);
+    const saveVideo = useCallback((id: VideoId) => {
+        dispatch(videoActions.saveVideo(id));
+        videoApi.toggleSave(id as unknown as Vuid).catch(() => {
+            dispatch(videoActions.saveVideo(id));
+        });
+    }, [dispatch]);
     const watchVideo = useCallback(
         (videoId: VideoId) => dispatch(videoActions.watchVideo(videoId)),
         [dispatch],

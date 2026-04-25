@@ -21,7 +21,7 @@ class UserService
      */
     public function getUserLikes(User $user): LengthAwarePaginator
     {
-        return $user->likes()->paginate(15);
+        return $user->likes()->with('channel')->paginate(15);
     }
 
     /**
@@ -29,7 +29,7 @@ class UserService
      */
     public function getUserSaved(User $user): LengthAwarePaginator
     {
-        return $user->getWatchLaterPlaylist()->videos()->paginate(15);
+        return $user->getWatchLaterPlaylist()->videos()->with('channel')->paginate(15);
     }
 
     /**
