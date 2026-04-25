@@ -114,8 +114,6 @@ class VideoService
      */
     private function deleteVideoFiles(Video $video): void
     {
-        $publicBase = rtrim(Storage::disk('public')->url(''), '/');
-
         foreach (['video_url', 'thumbnail_url'] as $field) {
             $url = $video->$field;
 
@@ -123,7 +121,8 @@ class VideoService
                 continue;
             }
 
-            $path = ltrim(str_replace($publicBase, '', $url), '/');
+            // Stored as root-relative path: /storage/videos/{file}
+            $path = ltrim(str_replace('/storage/', '', $url), '/');
             Storage::disk('public')->delete($path);
         }
     }

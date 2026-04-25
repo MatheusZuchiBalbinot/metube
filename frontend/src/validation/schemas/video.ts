@@ -14,7 +14,7 @@ export const VideoApiSchema = z.object({
     status: VideoStatusSchema,
     views: z.number().int().nonnegative().nullable().optional(),
     duration: z.number().nonnegative().nullable().optional(),
-    video_url: z.string().url().nullable().optional(),
+    video_url: z.string().min(1).nullable().optional(),
     thumbnail_url: z.string().nullable().optional(),
     published_at: z.string().datetime({ offset: true }).nullable().optional(),
     scheduled_at: z.string().datetime({ offset: true }).nullable().optional(),
