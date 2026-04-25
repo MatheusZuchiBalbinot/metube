@@ -120,7 +120,7 @@ class ApiClient {
 
             return data;
         } catch (error) {
-            const isAborted = error instanceof Error && error.name === 'AbortError';
+            const isAborted = axios.isCancel(error);
             if (!isAborted) {
                 this.logError(url, 'GET', error);
             }
