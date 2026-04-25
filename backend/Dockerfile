@@ -7,7 +7,8 @@ COPY . .
 RUN composer install \
     --no-interaction \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --ignore-platform-reqs
 
 FROM dunglas/frankenphp:latest
 
@@ -25,7 +26,8 @@ RUN install-php-extensions \
     bcmath \
     sockets \
     opcache \
-    redis
+    redis \
+    gd
 
 COPY --from=vendor /app /app
 

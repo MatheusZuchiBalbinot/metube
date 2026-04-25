@@ -9,6 +9,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 /**
  * ProcessVideoUpload — Moves an uploaded video from temporary to public storage.
@@ -59,19 +61,21 @@ class ProcessVideoUpload implements ShouldQueue
         );
         Storage::disk('local')->delete($this->tmpPath);
 
-        $updates = ['video_url' => Storage::disk('public')->url($finalPath)];
+        $updates = ['video_url' => '/storage/' . $finalPath];
 
         if ($this->tmpThumbnailPath !== null) {
-            $thumbExt = pathinfo($this->tmpThumbnailPath, PATHINFO_EXTENSION);
-            $thumbPath = "thumbnails/{$video->vuid}.{$thumbExt}";
+            $thumbPath = "thumbnails/{$video->vuid}.webp";
+            $tmpFullPath = Storage::disk('local')->path($this->tmpThumbnailPath);
 
-            Storage::disk('public')->put(
-                $thumbPath,
-                Storage::disk('local')->readStream($this->tmpThumbnailPath),
-            );
+            $webp = (new ImageManager(new Driver()))
+                ->read($tmpFullPath)
+                ->scaleDown(width: 1280, height: 720)
+                ->toWebp(quality: 80);
+
+            Storage::disk('public')->put($thumbPath, (string) $webp);
             Storage::disk('local')->delete($this->tmpThumbnailPath);
 
-            $updates['thumbnail_url'] = Storage::disk('public')->url($thumbPath);
+            $updates['thumbnail_url'] = '/storage/' . $thumbPath;
         }
 
         $updates['status'] = $video->scheduled_at?->isFuture()
