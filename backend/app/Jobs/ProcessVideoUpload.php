@@ -4,21 +4,12 @@ namespace App\Jobs;
 
 use App\Enums\VideoStatus;
 use App\Models\Video;
+use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
-/**
- * ProcessVideoUpload — Moves an uploaded video from temporary to public storage.
- *
- * Dispatched immediately after the HTTP upload completes. The video record
- * starts with status=PROCESSING and is updated to PUBLISHED/SCHEDULED on success
- * or FAILED on exhausted retries.
- */
 class ProcessVideoUpload implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
@@ -30,8 +21,8 @@ class ProcessVideoUpload implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * @param  Video  $video  The freshly created video record
-     * @param  string  $tmpPath  Path relative to the 'local' disk (e.g. uploads/tmp/{vuid}.mp4)
+     * @param  Video        $video             Freshly created video record (status=PROCESSING)
+     * @param  string       $tmpPath           Path relative to the 'local' disk
      * @param  string|null  $tmpThumbnailPath  Path relative to the 'local' disk, or null
      */
     public function __construct(
@@ -43,46 +34,24 @@ class ProcessVideoUpload implements ShouldQueue
     /**
      * Move files from temp storage to public storage and update the video record.
      */
-    public function handle(): void
+    public function handle(VideoStorageService $storage): void
     {
         $video = Video::find($this->video->id);
 
         if ($video === null) {
-            $this->cleanupTmp();
+            $storage->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
             return;
         }
 
-        $ext = pathinfo($this->tmpPath, PATHINFO_EXTENSION);
-        $finalPath = "videos/{$video->vuid}.{$ext}";
+        $thumbnailUrl = $this->tmpThumbnailPath !== null
+            ? $storage->publishThumbnail($this->tmpThumbnailPath, $video->vuid)
+            : null;
 
-        Storage::disk('public')->put(
-            $finalPath,
-            Storage::disk('local')->readStream($this->tmpPath),
-        );
-        Storage::disk('local')->delete($this->tmpPath);
-
-        $updates = ['video_url' => '/storage/' . $finalPath];
-
-        if ($this->tmpThumbnailPath !== null) {
-            $thumbPath = "thumbnails/{$video->vuid}.webp";
-            $tmpFullPath = Storage::disk('local')->path($this->tmpThumbnailPath);
-
-            $webp = (new ImageManager(new Driver()))
-                ->read($tmpFullPath)
-                ->scaleDown(width: 1280, height: 720)
-                ->toWebp(quality: 80);
-
-            Storage::disk('public')->put($thumbPath, (string) $webp);
-            Storage::disk('local')->delete($this->tmpThumbnailPath);
-
-            $updates['thumbnail_url'] = '/storage/' . $thumbPath;
-        }
-
-        $updates['status'] = $video->scheduled_at?->isFuture()
-            ? VideoStatus::SCHEDULED
-            : VideoStatus::PUBLISHED;
-
-        $video->update($updates);
+        $video->update([
+            'thumbnail_url' => $thumbnailUrl,
+            'video_url' => $storage->publishVideo($this->tmpPath, $video->vuid),
+            'status' => $this->resolveStatus($video),
+        ]);
     }
 
     /**
@@ -90,16 +59,18 @@ class ProcessVideoUpload implements ShouldQueue
      */
     public function failed(\Throwable $e): void
     {
-        $this->cleanupTmp();
+        app(VideoStorageService::class)->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
         Video::find($this->video->id)?->update(['status' => VideoStatus::FAILED]);
     }
 
-    private function cleanupTmp(): void
+    /**
+     * Determine the final status after processing.
+     *
+     * A video with a future scheduled_at becomes SCHEDULED so it stays hidden
+     * until the scheduler publishes it. Otherwise it goes live immediately.
+     */
+    private function resolveStatus(Video $video): VideoStatus
     {
-        Storage::disk('local')->delete($this->tmpPath);
-
-        if ($this->tmpThumbnailPath !== null) {
-            Storage::disk('local')->delete($this->tmpThumbnailPath);
-        }
+        return $video->scheduled_at?->isFuture() ? VideoStatus::SCHEDULED : VideoStatus::PUBLISHED;
     }
 }

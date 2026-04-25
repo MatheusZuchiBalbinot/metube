@@ -1,10 +1,14 @@
 <?php
 
 use App\Enums\VideoStatus;
+use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\VideoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -13,30 +17,34 @@ describe('VideoService', function () {
 
     beforeEach(function () use (&$service) {
         $service = new VideoService();
+
+        Queue::fake();
+        Storage::fake('local');
     });
 
-    test('create video stores data correctly', function () use (&$service) {
+    test('create video stores data correctly and dispatches upload job', function () use (&$service) {
         $faker = \Faker\Factory::create();
         $user = User::factory()->create();
         $title = $faker->unique()->sentence(3);
         $description = $faker->paragraph();
         $tags = array_slice($faker->words(5), 0, rand(1, 3));
-        $status = $faker->randomElement(VideoStatus::cases());
 
         $data = [
-            'title' => $title,
+            'title'       => $title,
             'description' => $description,
-            'tags' => $tags,
-            'status' => $status,
+            'tags'        => $tags,
+            'video_file'  => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
         ];
 
         $video = $service->createVideo($user, $data);
 
-        expect($video->id)->not->toBeNull();
-        expect($video->title)->toBe($title);
-        expect($video->description)->toBe($description);
-        expect($video->channel_id)->toBe($user->id);
-        expect($video->status)->toBe($status);
+        expect($video->id)->not->toBeNull()
+            ->and($video->title)->toBe($title)
+            ->and($video->description)->toBe($description)
+            ->and($video->channel_id)->toBe($user->id)
+            ->and($video->status)->toBe(VideoStatus::PROCESSING);
+
+        Queue::assertPushed(ProcessVideoUpload::class);
     });
 
     test('list videos returns paginated results', function () use (&$service) {
