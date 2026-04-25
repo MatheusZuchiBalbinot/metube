@@ -578,7 +578,7 @@ export default function ProfilePage() {
                             {activeTab === TAB.HISTORY && t('video.no_results')}
                         </p>
                     </div>
-                )}
+                ) : null}
             </main>
 
             {/* ─── Edit video modal ─── */}
