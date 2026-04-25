@@ -1,5 +1,4 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
-import { MOCK_VIDEOS } from '@data/mockVideos';
 import { VideoStatus, type Video, type VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import { STORAGE_KEYS } from '@utils/storageKeys';
@@ -42,30 +41,19 @@ interface VideoState {
     error: string | null
 }
 
-const SEED_HISTORY = ['v003', 'v001', 'v008', 'v005', 'v007'] as VideoId[];
-const SEED_PROGRESS: Record<string, number> = { v001: 67, v005: 38, v008: 82 };
-
-function buildSeedEvents(): WatchEvent[] {
-    const now = Date.now();
-    return (['v003', 'v001', 'v008', 'v005', 'v007'] as VideoId[]).map((videoId, i) => ({
-        videoId,
-        date: new Date(now - i * 24 * 60 * 60 * 1000).toISOString(),
-    }));
-}
-
 const initialState: VideoState = {
-    videos: MOCK_VIDEOS,
-    watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, SEED_HISTORY, isArray),
+    videos: [],
+    watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, [], isArray),
     likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
     savedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.SAVED_VIDEOS, [], isArray),
-    videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, SEED_PROGRESS, isObject),
+    videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
     uploadModalOpen: false,
     activeTagView: null,
     miniPlayer: null,
     pendingVideoSeek: null,
-    watchEvents: loadFromStorage<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, buildSeedEvents(), isArray),
+    watchEvents: loadFromStorage<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, [], isArray),
     pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
     theaterMode: false,
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
@@ -78,6 +66,18 @@ const videoSlice = createSlice({
     name: 'video',
     initialState,
     reducers: {
+        setVideos(state, action: PayloadAction<Video[]>) {
+            state.videos = action.payload;
+        },
+
+        setLikedVideos(state, action: PayloadAction<VideoId[]>) {
+            state.likedVideos = action.payload;
+        },
+
+        setSavedVideos(state, action: PayloadAction<VideoId[]>) {
+            state.savedVideos = action.payload;
+        },
+
         addVideo(state, action: PayloadAction<Video>) {
             state.videos.unshift(action.payload);
         },

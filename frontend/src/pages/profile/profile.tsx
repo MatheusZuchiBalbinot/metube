@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Clock, Heart, Tag as TagIcon, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
@@ -7,12 +7,13 @@ import FilterPanel from '@components/filter/panel';
 import { VideoFilter } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
 import type { FilterState } from '@utils/applyFilters';
-import type { Video } from '@data/mockVideos';
+import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
-import type { VideoId } from '@models/video';
+import type { Uuid } from '@api';
+import { channel as channelApi } from '@api';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
-import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
+import { Avatar, Button, Input, Modal, Spinner, Tooltip } from '@ui';
 import TagInput from '@components/tag/input';
 import './profile.css';
 
@@ -74,10 +75,17 @@ export default function ProfilePage() {
     // VISUAL-12: heatmap days toggle
     const [heatmapDays, setHeatmapDays] = useState(HEATMAP_SHORT);
 
-    const ownVideos = useMemo(
-        () => videos.filter((v: Video) => v.channelId === channelId),
-        [videos, channelId],
-    );
+    const [ownVideos, setOwnVideos] = useState<Video[]>([]);
+    const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
+
+    useEffect(() => {
+        setLoadingOwnVideos(true);
+        channelApi.videos(channelId as unknown as Uuid).then(result => {
+            if (result) {
+                setOwnVideos(result.data);
+            }
+        }).finally(() => setLoadingOwnVideos(false));
+    }, [channelId]);
 
     const likedVideoList = useMemo(
         () => videos.filter((v: Video) => likedVideos.has(v.id)),
@@ -266,11 +274,13 @@ export default function ProfilePage() {
         if (hasTitleEmpty) {
             return;
         }
-        editVideo(editingVideo!.id, {
+        const partial = {
             title: editTitle.trim(),
             description: editDescription.trim(),
             tags: editTags,
-        });
+        };
+        editVideo(editingVideo!.id, partial);
+        setOwnVideos(prev => prev.map(v => v.id === editingVideo!.id ? { ...v, ...partial } : v));
         handleEditClose();
     }
 
@@ -301,6 +311,7 @@ export default function ProfilePage() {
             return;
         }
         deleteVideo(videoToDelete.id);
+        setOwnVideos(prev => prev.filter(v => v.id !== videoToDelete.id));
         setVideoToDelete(null);
     }
 
@@ -499,7 +510,12 @@ export default function ProfilePage() {
             </div>
 
             <main className="profile-page__main">
-                {pinnedVideo && (
+                {loadingOwnVideos && activeTab === TAB.VIDEOS && (
+                    <div className="profile-page__loading">
+                        <Spinner />
+                    </div>
+                )}
+                {!loadingOwnVideos && pinnedVideo && (
                     <div className="profile-page__pinned">
                         <div className="profile-page__pinned-header">
                             <Pin size={13} />
@@ -511,7 +527,7 @@ export default function ProfilePage() {
                                 showActions={true}
                                 onEdit={handleEditOpen}
                                 onDelete={(id: VideoId) => {
-                                    const video = videos.find((v: Video) => v.id === id);
+                                    const video = ownVideos.find((v: Video) => v.id === id);
                                     const hasVideo = video !== undefined;
                                     if (hasVideo) {
                                         handleDeleteClick(video);
@@ -522,7 +538,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {hasVideos ? (
+                {!loadingOwnVideos && hasVideos ? (
                     <div className="profile-page__grid">
                         {filteredVideos.map((video, i) => {
                             const isPinned = video.id === pinnedVideoId;
@@ -542,7 +558,7 @@ export default function ProfilePage() {
                                         showActions={isVideosTabOwn}
                                         onEdit={handleEditOpen}
                                         onDelete={(id: VideoId) => {
-                                            const found = videos.find((v: Video) => v.id === id);
+                                            const found = ownVideos.find((v: Video) => v.id === id);
                                             const hasFound = found !== undefined;
                                             if (hasFound) {
                                                 handleDeleteClick(found);
@@ -553,7 +569,7 @@ export default function ProfilePage() {
                             );
                         })}
                     </div>
-                ) : (
+                ) : !loadingOwnVideos ? (
                     <div className="profile-page__empty">
                         <EmptyIcon size={36} strokeWidth={1.5} className="profile-page__empty-icon" />
                         <p className="profile-page__empty-text">

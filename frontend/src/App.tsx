@@ -13,6 +13,7 @@ import AppLayout from '@components/layout/layout';
 import Spinner from '@components/ui/spinner/spinner';
 import ErrorBoundary from '@components/error/boundary';
 import { useTranslation } from 'react-i18next';
+import { useBootstrap } from '@hooks/useBootstrap';
 
 const LoginPage = React.lazy(() => import('@pages/login/login'));
 const UploadModal = React.lazy(() => import('@components/upload/modal'));
@@ -52,6 +53,7 @@ function PageSpinner() {
 function AppInit({ children }: { children: React.ReactNode }) {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
+    useBootstrap();
 
     useEffect(() => {
         dispatch(fetchMe());

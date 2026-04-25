@@ -1,8 +1,8 @@
 import { apiClient } from './client';
-import type { Video } from '@models/video';
 import type { User } from '@models/user';
-import { UserApiSchema } from '@validation';
+import { UserApiSchema, VideoListApiSchema } from '@validation';
 import { z } from 'zod';
+import type { VideoListResponse } from './videos';
 
 export type Uuid = string & { readonly _brand: 'Uuid' };
 
@@ -14,8 +14,8 @@ class ChannelApi {
         return apiClient.getValidated(`${this.baseUrl}/${uuid}`, UserApiSchema);
     }
 
-    async videos(uuid: Uuid): Promise<Video[] | null> {
-        return apiClient.get<Video[]>(`${this.baseUrl}/${uuid}/videos`);
+    async videos(uuid: Uuid): Promise<VideoListResponse | null> {
+        return apiClient.getValidated(`${this.baseUrl}/${uuid}/videos`, VideoListApiSchema);
     }
 
     async toggleSubscription(uuid: Uuid): Promise<void> {

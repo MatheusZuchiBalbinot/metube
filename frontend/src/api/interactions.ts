@@ -1,15 +1,16 @@
 import { apiClient } from './client';
-import type { Video } from '@models/video';
+import { VideoListApiSchema } from '@validation';
+import type { VideoListResponse } from './videos';
 
 class InteractionsApi {
     private readonly userMeUrl = '/users/me';
 
-    async liked(): Promise<Video[] | null> {
-        return apiClient.get<Video[]>(`${this.userMeUrl}/likes`);
+    async liked(): Promise<VideoListResponse | null> {
+        return apiClient.getValidated(`${this.userMeUrl}/likes`, VideoListApiSchema);
     }
 
-    async saved(): Promise<Video[] | null> {
-        return apiClient.get<Video[]>(`${this.userMeUrl}/saved`);
+    async saved(): Promise<VideoListResponse | null> {
+        return apiClient.getValidated(`${this.userMeUrl}/saved`, VideoListApiSchema);
     }
 }
 
