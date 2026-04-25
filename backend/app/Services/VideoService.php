@@ -65,7 +65,7 @@ class VideoService
      */
     public function listVideos(array $filters): LengthAwarePaginator
     {
-        return Video::filter($filters)->paginate(15);
+        return Video::filter($filters)->with('channel')->paginate(15);
     }
 
     /**
