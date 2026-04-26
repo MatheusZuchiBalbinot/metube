@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
-import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, X, Check } from 'lucide-react';
-import type { Video } from '@data/mockVideos';
-import type { Playlist } from '@data/mockPlaylists';
-import { ROUTES } from '@utils/routes';
+import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from 'lucide-react';
+import type { Video } from '@models/video';
+import type { Playlist } from '@models/playlist';
+import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { usePlaylist } from '@hooks/usePlaylist';
 import { useAppDispatch } from '@store';
@@ -24,16 +24,17 @@ interface PlaylistCardProps {
 interface PlaylistVideoRowProps {
     video: Video
     playlistId: string
+    position: number
 }
 
-function PlaylistVideoRow({ video, playlistId }: PlaylistVideoRowProps) {
+function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { removeVideoFromPlaylist } = usePlaylist();
     const dispatch = useAppDispatch();
 
     function handleRowClick() {
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleRemove(e: React.MouseEvent) {
@@ -46,6 +47,9 @@ function PlaylistVideoRow({ video, playlistId }: PlaylistVideoRowProps) {
         <div className="playlist-video-row" onClick={handleRowClick}>
             <span className="playlist-video-row__drag-handle" aria-hidden="true">
                 <GripVertical size={14} />
+            </span>
+            <span className="playlist-video-row__position" aria-hidden="true">
+                {position}
             </span>
             <img
                 className="playlist-video-row__thumb"
@@ -86,7 +90,17 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     const videoCount = playlist.videoIds.length;
+    const isEmpty = videoCount === 0;
+    const hasMultipleVideos = videoCount > 1;
     const countKey = videoCount === 1 ? 'playlist.videos_count_one' : 'playlist.videos_count_other';
+
+    const latestVideo = videos.length > 0 ? videos[videos.length - 1] : null;
+
+    const totalDurationSec = useMemo(() => {
+        return videos.reduce((sum: number, v: Video) => sum + (v.duration ?? 0), 0);
+    }, [videos]);
+    const hasTotalDuration = totalDurationSec > 0;
+    const displayName = playlist.name === 'Watch Later' ? t('playlist.watch_later_row') : playlist.name;
 
     function handleToggleExpand() {
         setExpanded(prev => !prev);
@@ -143,17 +157,28 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
     }
 
     return (
-        <div className="playlist-card">
+        <div className={['playlist-card', isEmpty ? 'playlist-card--empty' : ''].filter(Boolean).join(' ')}>
             <div className="playlist-card__header" onClick={handleToggleExpand}>
-                <button
-                    type="button"
-                    className="playlist-card__chevron"
-                    aria-label={expanded ? 'Collapse' : 'Expand'}
-                    tabIndex={-1}
-                    aria-hidden="true"
-                >
-                    {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </button>
+                <div className={['playlist-card__cover', hasMultipleVideos ? 'playlist-card__cover--stacked' : ''].filter(Boolean).join(' ')} aria-hidden="true">
+                    {latestVideo ? (
+                        <img
+                            className="playlist-card__cover-img"
+                            src={latestVideo.thumbnail}
+                            alt=""
+                            loading="lazy"
+                        />
+                    ) : (
+                        <div className="playlist-card__cover-placeholder">
+                            <ListVideo size={24} strokeWidth={1.5} />
+                        </div>
+                    )}
+                    {!isEmpty && (
+                        <div className="playlist-card__cover-badge">
+                            <ListVideo size={11} strokeWidth={2} />
+                            <span>{videoCount}</span>
+                        </div>
+                    )}
+                </div>
 
                 {renaming ? (
                     <div className="playlist-card__rename-form" onClick={e => e.stopPropagation()}>
@@ -177,8 +202,28 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                 ) : (
                     <>
                         <div className="playlist-card__info">
-                            <span className="playlist-card__name">{playlist.name}</span>
-                            <span className="playlist-card__count">{t(countKey, { count: videoCount })}</span>
+                            <span className="playlist-card__name">{displayName}</span>
+                            <div className="playlist-card__stats">
+                                {isEmpty ? (
+                                    <span className="playlist-card__stats-empty">{t('playlist.empty_short')}</span>
+                                ) : (
+                                    <>
+                                        <span>{t(countKey, { count: videoCount })}</span>
+                                        {hasTotalDuration && (
+                                            <>
+                                                <span className="playlist-card__stats-dot" aria-hidden="true">·</span>
+                                                <span>{Format.durationCompact(totalDurationSec)}</span>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                            {latestVideo && (
+                                <div className="playlist-card__latest">
+                                    <span className="playlist-card__latest-label">{t('playlist.latest_added')}:</span>
+                                    <span className="playlist-card__latest-title">{latestVideo.title}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="playlist-card__actions">
                             <Tooltip content={t('playlist.rename')} side="top">
@@ -201,6 +246,15 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                                     <Trash2 size={13} />
                                 </Button>
                             </Tooltip>
+                            <button
+                                type="button"
+                                className="playlist-card__chevron"
+                                aria-label={expanded ? 'Collapse' : 'Expand'}
+                                tabIndex={-1}
+                                aria-hidden="true"
+                            >
+                                {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                            </button>
                         </div>
                     </>
                 )}
@@ -217,13 +271,13 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                             onReorder={handleReorder}
                             className="playlist-card__reorder-group"
                         >
-                            {videos.map(video => (
+                            {videos.map((video, idx) => (
                                 <Reorder.Item
                                     key={video.id}
                                     value={video.id}
                                     className="playlist-card__reorder-item"
                                 >
-                                    <PlaylistVideoRow video={video} playlistId={playlist.id} />
+                                    <PlaylistVideoRow video={video} playlistId={playlist.id} position={idx + 1} />
                                 </Reorder.Item>
                             ))}
                         </Reorder.Group>
