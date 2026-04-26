@@ -25,19 +25,49 @@
 /* ─── Icon ─────────────────────────────────────────────────────────────────── */
 
 .empty-state__icon {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-3);
-    width: 48px;
-    height: 48px;
-    margin-bottom: 4px;
+    color: var(--accent);
+    width: 88px;
+    height: 88px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 72%);
+}
+
+.empty-state__icon::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+    animation: empty-state-rotate 22s linear infinite;
+}
+
+.empty-state__icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 30px var(--accent-glow);
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .empty-state__icon > svg {
-    width: 48px;
-    height: 48px;
+    position: relative;
+    z-index: 1;
+    width: 40px;
+    height: 40px;
     stroke-width: 1.5;
+    color: var(--accent);
+}
+
+@keyframes empty-state-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* ─── Text ─────────────────────────────────────────────────────────────────── */
