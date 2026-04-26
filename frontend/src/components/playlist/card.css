@@ -2,14 +2,16 @@
 
 .playlist-card {
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface);
-    transition: border-color var(--duration-slow);
+    transition: border-color var(--duration-slow), transform var(--duration-slow), box-shadow var(--duration-slow);
 }
 
 .playlist-card:hover {
-    border-color: var(--text-3);
+    border-color: var(--border-2);
+    transform: translateY(-1px);
+    box-shadow: var(--elevation-1);
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -17,8 +19,8 @@
 .playlist-card__header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
+    gap: 14px;
+    padding: 12px 14px;
     cursor: pointer;
     user-select: none;
     transition: background var(--duration-default);
@@ -26,6 +28,159 @@
 
 .playlist-card__header:hover {
     background: var(--surface-2);
+}
+
+/* ─── Cover (stacked thumbnail) ───────────────────────────────────────────── */
+
+.playlist-card__cover {
+    position: relative;
+    width: 132px;
+    aspect-ratio: 16 / 9;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    overflow: visible;
+    transition: transform var(--duration-slow);
+}
+
+.playlist-card:hover .playlist-card__cover {
+    transform: translateX(-1px);
+}
+
+/* Stack effect — pseudo-element layer behind the cover for "deck" feel */
+.playlist-card__cover--stacked::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transform: translate(4px, -4px);
+    z-index: 0;
+    transition: transform var(--duration-slow);
+}
+
+.playlist-card:hover .playlist-card__cover--stacked::before {
+    transform: translate(6px, -6px);
+}
+
+.playlist-card__cover-img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+}
+
+.playlist-card__cover-placeholder {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-3);
+}
+
+.playlist-card__cover-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    border-radius: var(--radius-xs);
+    padding: 2px 6px 2px 5px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* ─── Info column ─────────────────────────────────────────────────────────── */
+
+.playlist-card__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.playlist-card__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-card__stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.playlist-card__stats-dot {
+    color: var(--text-3);
+    opacity: 0.5;
+}
+
+.playlist-card__stats-empty {
+    font-style: italic;
+    color: var(--text-3);
+}
+
+.playlist-card__latest {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    min-width: 0;
+    color: var(--text-3);
+}
+
+.playlist-card__latest-label {
+    flex-shrink: 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+    opacity: 0.65;
+    font-size: 0.6875rem;
+}
+
+.playlist-card__latest-title {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Actions ─────────────────────────────────────────────────────────────── */
+
+.playlist-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
 .playlist-card__chevron {
@@ -38,40 +193,12 @@
     padding: 0;
     cursor: pointer;
     flex-shrink: 0;
+    margin-left: 4px;
+    transition: color var(--duration-default);
 }
 
-.playlist-card__info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.playlist-card__name {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.playlist-card__count {
-    font-size: 0.8125rem;
-    color: var(--text-3);
-}
-
-.playlist-card__actions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity var(--duration-default);
-    flex-shrink: 0;
-}
-
-.playlist-card__header:hover .playlist-card__actions {
-    opacity: 1;
+.playlist-card:hover .playlist-card__chevron {
+    color: var(--text-2);
 }
 
 .playlist-card__rename-form {
@@ -137,6 +264,21 @@
     opacity: 1;
 }
 
+.playlist-video-row__position {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-3);
+    transition: color var(--duration-default);
+}
+
+.playlist-video-row:hover .playlist-video-row__position {
+    color: var(--accent);
+}
+
 .playlist-video-row__thumb {
     width: 80px;
     aspect-ratio: 16 / 9;
@@ -181,4 +323,29 @@
 
 .playlist-video-row:hover .playlist-video-row__remove {
     opacity: 1;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+    .playlist-card__header {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .playlist-card__cover {
+        width: 96px;
+    }
+
+    .playlist-card__cover--stacked::before {
+        transform: translate(3px, -3px);
+    }
+
+    .playlist-card__name {
+        font-size: 0.9375rem;
+    }
+
+    .playlist-card__latest {
+        display: none;
+    }
 }
