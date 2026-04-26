@@ -71,6 +71,10 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .dnd-filesize {

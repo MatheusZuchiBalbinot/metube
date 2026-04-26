@@ -9,7 +9,6 @@ type ApiResponse<T> = T | null;
 class ApiClient {
     private axiosInstance: AxiosInstance;
     private readonly pendingGets = new Map<string, AbortController>();
-    private lastErrorStatus: number | null = null;
 
     constructor() {
         this.axiosInstance = axios.create({
@@ -24,7 +23,6 @@ class ApiClient {
         this.axiosInstance.interceptors.response.use(
             (response) => response,
             (error: AxiosError) => {
-                this.lastErrorStatus = error.response?.status ?? null;
                 const url = error.config?.url ?? '';
                 const status = error.response?.status;
 

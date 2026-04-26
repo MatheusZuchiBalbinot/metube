@@ -8,7 +8,11 @@ export const ROUTES = {
     LIKED:       '/liked',
     PROFILE:     '/profile',
     USER:        '/user/:id',
-    VIDEO:       '/video/:id',
+    VIDEO:       '/watch',
     SEARCH:      '/search',
     CHANNEL:     '/channel/:id',
 } as const;
+
+export function videoUrl(vuid: string): string {
+    return `/watch?v=${vuid}`;
+}

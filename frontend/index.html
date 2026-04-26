@@ -8,7 +8,7 @@
 	<title>Vidsum</title>
 	<meta http-equiv="Content-Security-Policy" content="
 		default-src 'self';
-		script-src 'self';
+		script-src 'self' 'sha256-vvLNQ6pnk60W4wpART5s87ynQkG1tu8o7BOaOS+Cqek=' 'sha256-QvTVRSm+5eQmQsQDlAImX5kVlQj9wJPO5Zwfo/xMLPM=';
 		style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 		font-src 'self' https://fonts.gstatic.com;
 		img-src 'self' data: https: blob:;
@@ -21,9 +21,9 @@
 	<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
-	<!-- Prevent flash of unstyled content: apply stored theme before React mounts -->
-	<script src="/theme-init.js"></script>
+	<script>var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';document.head.appendChild(l);</script>
+	<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+	<script>(function(){var m=localStorage.getItem('theme-mode')||'dark';var c=localStorage.getItem('theme-color')||'violet';document.documentElement.dataset.mode=m;document.documentElement.dataset.color=c;})();</script>
 </head>
 
 <body>

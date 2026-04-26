@@ -4,7 +4,7 @@ type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 type LogContext = Record<string, unknown>;
 
 class Logger {
-    private readonly prefix = '[VideoSummarizer]';
+    private readonly prefix = '[Vidsum]';
 
     private format(level: LogLevel, message: string, context?: LogContext): string {
         const timestamp = new Date().toISOString();

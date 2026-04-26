@@ -1,4 +1,4 @@
-name: video-summarizer
+name: vidsum
 
 services:
   postgres:

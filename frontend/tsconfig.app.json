@@ -29,6 +29,9 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
+      "@api": [
+        "src/api/index.ts"
+      ],
       "@api/*": [
         "src/api/*"
       ],

@@ -312,8 +312,8 @@ export default function UploadModal() {
                         </div>
                         <div className="upload-modal__progress-info">
                             <span>{Format.percent(progress.percent)}</span>
-                            <span>{Format.speed(progress.bytesPerSec)}</span>
-                            <span>{Format.eta(progress.eta)}</span>
+                            <span>{Format.speed(progress.speed)}</span>
+                            <span>{Format.eta(progress.remaining)}</span>
                         </div>
                     </div>
                 )}
