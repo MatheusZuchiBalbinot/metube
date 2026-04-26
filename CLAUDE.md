@@ -1,4 +1,4 @@
-# Video Summarizer
+# Vidsum
 
 ## Resumo da aplicacao
 

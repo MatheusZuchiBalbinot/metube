@@ -6,7 +6,7 @@
     "src/context/index.ts"
   ],
   "out": "docs",
-  "name": "Video Summarizer — Frontend Documentation",
+  "name": "Vidsum — Frontend Documentation",
   "readme": "DOCS.md",
   "theme": "default",
   "includeVersion": true,

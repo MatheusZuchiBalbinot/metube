@@ -88,4 +88,23 @@ export default defineConfig({
             },
         },
     },
+    preview: {
+        host: '0.0.0.0',
+        port: 4173,
+        strictPort: true,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:80',
+                changeOrigin: true,
+            },
+            '/sanctum': {
+                target: 'http://localhost:80',
+                changeOrigin: true,
+            },
+            '/storage': {
+                target: 'http://localhost:80',
+                changeOrigin: true,
+            },
+        },
+    },
 });

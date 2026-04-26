@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@utils/routes';
+import { videoUrl } from '@utils/routes';
 import type { Video } from '@data/mockVideos';
 
 const AUTOPLAY_COUNTDOWN = 5;
@@ -53,7 +53,7 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
                     autoplayTimerRef.current = null;
                     const nextVideo = relatedVideos[0];
                     if (nextVideo) {
-                        navigate(ROUTES.VIDEO.replace(':id', nextVideo.id));
+                        navigate(videoUrl(nextVideo.id));
                     }
                     return null;
                 }

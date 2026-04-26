@@ -64,7 +64,7 @@ class Video extends Model
         parent::boot();
 
         static::creating(function (Video $video): void {
-            $video->vuid ??= (string) Str::ulid();
+            $video->vuid ??= Str::random(11);
         });
     }
 

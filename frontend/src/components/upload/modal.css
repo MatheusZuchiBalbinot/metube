@@ -24,9 +24,13 @@
 /* ─── Two-column layout ───────────────────────────────────────────────────── */
 
 .upload-modal__row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 16px;
+}
+
+.upload-modal__row > .upload-modal__field {
+    width: 50%;
+    min-width: 0;
 }
 
 /* ─── Textarea ────────────────────────────────────────────────────────────── */

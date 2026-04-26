@@ -4,5 +4,6 @@ export function isTypingInInput(target: EventTarget | null): boolean {
     if (!el) {
         return false;
     }
+
     return ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable;
 }

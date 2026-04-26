@@ -37,6 +37,28 @@ export class Format {
         return `${minutes}:${String(secs).padStart(2, '0')}`;
     }
 
+    static durationCompact(seconds: number): string {
+        const isInvalid = !Number.isFinite(seconds) || seconds <= 0;
+        if (isInvalid) {
+            return '0m';
+        }
+        const totalSeconds = Math.floor(seconds);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        const hasHours = hours > 0;
+        if (hasHours) {
+            return `${hours}h ${minutes}m`;
+        }
+
+        const hasMinutes = minutes > 0;
+        if (hasMinutes) {
+            return `${minutes}m`;
+        }
+
+        return '<1m';
+    }
+
     static views(views: number): string {
         const isMillion = views >= 1_000_000;
         if (isMillion) {
