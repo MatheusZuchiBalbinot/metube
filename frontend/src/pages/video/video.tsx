@@ -1,14 +1,16 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
-import VideoCard from '@components/video/card';
+import VideoRow from '@components/video/row';
 import FilterPanel from '@components/filter/panel';
 import ReactionBtn from '@components/video/reactionBtn';
+import SavePopover from '@components/video/savePopover';
 import ReadingMode from '@components/video/readingMode';
 import type { FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
+import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
@@ -20,7 +22,7 @@ import { getVideoSummary } from '@data/mockSummaries';
 import { TagColors } from '@utils/tagColors';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
-import { Button, Tooltip, Badge } from '@ui';
+import { Avatar, Button, Tooltip, Badge } from '@ui';
 import type { Video } from '@data/mockVideos';
 import type { VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
@@ -40,7 +42,8 @@ function parseTimestamp(ts: string): number {
 // eslint-disable-next-line complexity
 export default function VideoPage() {
     const { t, i18n } = useTranslation();
-    const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const id = searchParams.get('v') ?? undefined;
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {
@@ -50,7 +53,9 @@ export default function VideoPage() {
         consumePendingVideoSeek,
     } = useVideo();
 
+    const { isSubscribed, toggleSubscription } = useSubscription();
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
+    const [descExpanded, setDescExpanded] = useState(false);
 
     const video = videos.find((v: Video) => v.id === (id as unknown as VideoId));
     const hasVideo = video !== undefined;
@@ -60,7 +65,7 @@ export default function VideoPage() {
 
     const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
-    const [saveAnimating, triggerSaveAnimation] = useBurstAnimation();
+    const [_saveAnimating, triggerSaveAnimation] = useBurstAnimation();
     const [isCopied, triggerCopied] = useBurstAnimation(2000);
     const [sidebarTab, setSidebarTab] = useState<SidebarTab>('related');
     const [readingMode, setReadingMode] = useState(false);
@@ -223,6 +228,8 @@ export default function VideoPage() {
     const isLiked = likedVideos.has(video.id);
     const isSaved = savedVideos.has(video.id);
     const isDisliked = dislikedVideos.has(video.id);
+    const isChannelSubscribed = isSubscribed(video.channel);
+    const hasLongDesc = (video.description ?? '').length > 220;
 
     const hasVideoFile = video.videoUrl !== undefined && video.videoUrl !== '';
     const isAutoplayActive = autoplayCountdown !== null;
@@ -247,15 +254,6 @@ export default function VideoPage() {
     function handleDislike() {
         dislikeVideo(videoId);
         triggerDislikeAnimation();
-    }
-
-    function handleSave() {
-        dispatch(toastActions.addToast({
-            message: t(isSaved ? 'toast.unsaved' : 'toast.saved'),
-            type: 'success',
-        }));
-        saveVideo(videoId);
-        triggerSaveAnimation();
     }
 
     function handleShareCopyLink() {
@@ -384,13 +382,18 @@ export default function VideoPage() {
                     <div className="video-page__meta">
                         <h1 className="video-page__title">{video.title}</h1>
 
-                        <div className="video-page__stats-row">
-                            <div className="video-page__stats">
-                                <span>{Format.views(video.views)} {t('video.views')}</span>
-                                <span className="video-page__stats-sep">·</span>
-                                <span>{Format.relativeDate(video.publishedAt, i18n.language)}</span>
-                                <span className="video-page__stats-sep">·</span>
-                                <span className="video-page__channel">{video.channel}</span>
+                        <div className="video-page__channel-row">
+                            <div className="video-page__channel-info">
+                                <Avatar name={video.channel} size="sm" />
+                                <span className="video-page__channel-name">{video.channel}</span>
+                                <button
+                                    type="button"
+                                    className={['video-page__subscribe-btn', isChannelSubscribed ? 'video-page__subscribe-btn--active' : ''].filter(Boolean).join(' ')}
+                                    onClick={() => toggleSubscription(video.channel)}
+                                    aria-pressed={isChannelSubscribed}
+                                >
+                                    {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
+                                </button>
                             </div>
 
                             <div className="video-page__actions">
@@ -418,27 +421,29 @@ export default function VideoPage() {
                                     onClick={handleDislike}
                                 />
 
-                                <ReactionBtn
-                                    isActive={isSaved}
-                                    isAnimating={saveAnimating}
-                                    icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}
-                                    iconActive={<Bookmark size={20} strokeWidth={1.75} fill="currentColor" />}
-                                    label={t('video.save')}
-                                    activeLabel={t('video.saved')}
-                                    className="video-page__reaction-btn"
-                                    activeClass="video-page__reaction-btn--saved"
-                                    onClick={handleSave}
-                                />
+                                <SavePopover videoId={videoId as unknown as string}>
+                                    <ReactionBtn
+                                        isActive={isSaved}
+                                        icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}
+                                        iconActive={<Bookmark size={20} strokeWidth={1.75} fill="currentColor" />}
+                                        label={t('video.save')}
+                                        activeLabel={t('video.saved')}
+                                        className="video-page__reaction-btn"
+                                        activeClass="video-page__reaction-btn--saved"
+                                        onClick={() => { }}
+                                    />
+                                </SavePopover>
 
                                 <Popover.Root open={isShareDropdownOpen} onOpenChange={setIsShareDropdownOpen}>
                                     <Popover.Trigger asChild>
                                         <button
+                                            type="button"
                                             className={shareBtnClass}
                                             aria-label={t('video.share')}
                                             aria-expanded={isShareDropdownOpen}
-                                            aria-haspopup="dialog"
+                                            aria-haspopup="true"
                                         >
-                                            <span className="video-page__reaction-icon">
+                                            <span className="rbtn__icon">
                                                 {isShareCopied ? (
                                                     <Check size={20} strokeWidth={1.75} />
                                                 ) : (
@@ -448,7 +453,7 @@ export default function VideoPage() {
                                                     </>
                                                 )}
                                             </span>
-                                            <span className="video-page__reaction-label">{isShareCopied ? t('video.copied') : t('video.share')}</span>
+                                            <span className="rbtn__label">{isShareCopied ? t('video.copied') : t('video.share')}</span>
                                         </button>
                                     </Popover.Trigger>
                                     <Popover.Portal>
@@ -481,28 +486,42 @@ export default function VideoPage() {
                             </div>
                         </div>
 
-                        {video.description && (
-                            <p className="video-page__description">{video.description}</p>
-                        )}
-
-                        {video.tags.length > 0 && (
-                            <div className="video-page__tags">
-                                {video.tags.map(tag => (
-                                    <span key={tag} className="video-page__tag">{tag}</span>
-                                ))}
+                        <div className="video-page__description-card">
+                            <div className="video-page__description-meta">
+                                <span>{Format.views(video.views)} {t('video.views')}</span>
+                                <span className="video-page__description-sep">·</span>
+                                <span>{Format.relativeDate(video.publishedAt, i18n.language)}</span>
                             </div>
-                        )}
+
+                            {video.description && (
+                                <>
+                                    <p className={['video-page__description', !descExpanded && hasLongDesc ? 'video-page__description--clamped' : ''].filter(Boolean).join(' ')}>
+                                        {video.description}
+                                    </p>
+                                    {hasLongDesc && (
+                                        <button
+                                            type="button"
+                                            className="video-page__description-toggle"
+                                            onClick={() => setDescExpanded(v => !v)}
+                                        >
+                                            {descExpanded ? t('video.show_less') : t('video.show_more')}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
+                            {video.tags.length > 0 && (
+                                <div className="video-page__tags">
+                                    {video.tags.map(tag => (
+                                        <span key={tag} className="video-page__tag">{tag}</span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </main>
 
                 <aside className="video-page__sidebar">
-                    {sidebarTab === 'related' && (
-                        <FilterPanel
-                            allTags={allRelatedTags}
-                            value={filterState}
-                            onChange={setFilterState}
-                        />
-                    )}
                     <div className="video-page__sidebar-tabs" role="tablist">
                         <button
                             role="tab"
@@ -527,14 +546,27 @@ export default function VideoPage() {
                                 )}
                             </button>
                         )}
+                        {sidebarTab === 'related' && (
+                            <div className="video-page__sidebar-filter-slot">
+                                <FilterPanel
+                                    allTags={allRelatedTags}
+                                    value={filterState}
+                                    onChange={setFilterState}
+                                />
+                            </div>
+                        )}
                     </div>
 
-                    {sidebarTab === 'related' && filteredRelated.length > 0 && (
-                        <div className="video-page__sidebar-list">
-                            {filteredRelated.map((v, i) => (
-                                <VideoCard key={v.id} video={v} index={i} />
-                            ))}
-                        </div>
+                    {sidebarTab === 'related' && (
+                        <>
+                            {filteredRelated.length > 0 && (
+                                <div className="video-page__sidebar-list">
+                                    {filteredRelated.map((v) => (
+                                        <VideoRow key={v.id} video={v} />
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {sidebarTab === 'summary' && summary && (
