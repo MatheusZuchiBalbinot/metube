@@ -25,7 +25,7 @@
     display: flex;
     align-items: flex-start;
     gap: 18px;
-    padding: 0 24px 24px;
+    padding: 0 var(--page-padding-x) var(--page-padding-y);
     border-bottom: 1px solid var(--border);
 }
 
@@ -271,7 +271,7 @@
 .profile-page__tabs {
     display: flex;
     gap: 0;
-    padding: 0 24px;
+    padding: 0 var(--page-padding-x);
     border-bottom: 1px solid var(--border);
 }
 
@@ -309,14 +309,14 @@
 /* ─── Filters bar ───────────────────────────────────────────────────────────── */
 
 .profile-page__filters {
-    padding: 0 24px;
+    padding: 0 var(--page-padding-x);
 }
 
 /* ─── Main content ──────────────────────────────────────────────────────────── */
 
 .profile-page__main {
     flex: 1;
-    padding: 24px;
+    padding: var(--page-padding-y) var(--page-padding-x);
 }
 
 /* ─── Pinned video ──────────────────────────────────────────────────────────── */

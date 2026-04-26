@@ -9,7 +9,7 @@ import FilterPanel from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
 import { useFilterState } from '@hooks/useFilterState';
 import { VideoFilter } from '@utils/applyFilters';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
 import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
@@ -156,7 +156,7 @@ export default function HomePage() {
         const idx = Math.floor(Math.random() * publishedVideos.length);
         const video = publishedVideos[idx];
         if (video) {
-            navigate(ROUTES.VIDEO.replace(':id', video.id));
+            navigate(videoUrl(video.id));
         }
     }
 
@@ -193,15 +193,14 @@ export default function HomePage() {
                 </motion.section>
             )}
 
-            <div className="home-page__filters">
-                <FilterPanel allTags={allTags} value={filterState} onChange={setFilterState} />
-            </div>
-
-            <div className="home-page__surprise">
-                <Button variant="ghost" size="sm" onClick={handleSurpriseMe}>
+            <div className="home-page__toolbar">
+                <Button variant="ghost" size="sm" onClick={handleSurpriseMe} className="home-page__surprise-btn">
                     <Shuffle size={14} strokeWidth={2} aria-hidden="true" />
                     {t('home.surprise_me')}
                 </Button>
+                <div className="home-page__filters">
+                    <FilterPanel allTags={allTags} value={filterState} onChange={setFilterState} />
+                </div>
             </div>
 
             {isCompletelyEmpty && (

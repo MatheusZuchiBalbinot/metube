@@ -92,22 +92,7 @@
 }
 
 /* ─── Create button ───────────────────────────────────────────────────────── */
-
-.btn.app-header__create-btn {
-    color: #fff;
-    background: var(--gradient-accent);
-    border-color: transparent;
-    box-shadow: 0 2px 12px var(--accent-glow);
-}
-
-.btn.app-header__create-btn:hover:not(:disabled) {
-    color: #fff;
-    background: var(--gradient-accent);
-    border-color: transparent;
-    opacity: 0.88;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 18px var(--accent-glow);
-}
+/* Usa variant="primary" do Button — layout/cor/sombra já vêm de lá */
 
 /* ─── Icon button (menu, bell) ────────────────────────────────────────────── */
 
@@ -357,4 +342,24 @@
 .app-header__recent-remove:hover {
     color: var(--text);
     background: var(--surface-2) !important;
+}
+
+/* ─── Mobile header compression ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 12px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-header__brand-name {
+        display: none;
+    }
+
+    .app-header__create-btn {
+        font-size: 0;
+        padding: 0 10px;
+    }
 }

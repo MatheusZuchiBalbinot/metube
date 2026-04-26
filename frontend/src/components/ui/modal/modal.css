@@ -31,9 +31,37 @@
     animation: modal-in 0.18s var(--ease-out) both;
 }
 
-.modal-box--sm { max-width: 360px; }
-.modal-box--md { max-width: 480px; }
-.modal-box--lg { max-width: 640px; }
+.modal-box--sm { max-width: min(360px, calc(100vw - 32px)); }
+.modal-box--md { max-width: min(480px, calc(100vw - 32px)); }
+.modal-box--lg { max-width: min(640px, calc(100vw - 32px)); }
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal-box {
+        max-height: calc(100dvh - 24px);
+    }
+
+    .modal-box--sm,
+    .modal-box--md,
+    .modal-box--lg {
+        max-width: calc(100vw - 24px);
+    }
+
+    .modal-header {
+        padding: 16px 18px 0;
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+    }
+
+    .modal-footer {
+        padding: 0 18px 16px;
+    }
+}
 
 .modal-header {
     display: flex;

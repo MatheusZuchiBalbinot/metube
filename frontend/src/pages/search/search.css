@@ -3,7 +3,7 @@
 .search-page {
     display: flex;
     flex-direction: column;
-    padding: 24px;
+    padding: var(--page-padding-y) var(--page-padding-x);
     gap: 24px;
 }
 
