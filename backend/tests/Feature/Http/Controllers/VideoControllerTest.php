@@ -4,6 +4,9 @@ use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 describe('VideoController', function () {
@@ -28,15 +31,19 @@ describe('VideoController', function () {
     });
 
     test('store creates new video when authorized', function () {
+        Queue::fake();
+        Storage::fake('local');
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/videos', [
-            'title' => 'New Video',
+            'title'       => 'New Video',
             'description' => 'Test Description',
-            'status' => VideoStatus::PUBLISHED->value,
+            'status'      => 'draft',
+            'video_file'  => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
         ]);
 
-        $response->assertCreated();
+        $response->assertStatus(202);
         $this->assertDatabaseHas('videos', ['title' => 'New Video']);
     });
 

@@ -16,7 +16,7 @@ describe('ChannelController', function () {
         $response = $this->actingAs($user)->getJson("/api/channels/{$channel->uuid}");
 
         $response->assertOk();
-        $response->assertJsonPath('id', $channel->uuid);
+        $response->assertJsonPath('uuid', $channel->uuid);
     });
 
     test('videos returns published videos from channel', function () {
@@ -35,7 +35,7 @@ describe('ChannelController', function () {
         $subscriber = User::factory()->create();
         $channel = User::factory()->create();
 
-        $response = $this->actingAs($subscriber)->postJson("/api/channels/{$channel->uuid}/subscribe");
+        $response = $this->actingAs($subscriber)->postJson("/api/channels/{$channel->uuid}/subscription");
 
         $response->assertNoContent();
         expect($subscriber->subscriptions()->where('channel_id', $channel->id)->exists())->toBeTrue();
@@ -46,7 +46,7 @@ describe('ChannelController', function () {
         $channel = User::factory()->create();
         $subscriber->subscriptions()->attach($channel->id);
 
-        $response = $this->actingAs($subscriber)->postJson("/api/channels/{$channel->uuid}/subscribe");
+        $response = $this->actingAs($subscriber)->postJson("/api/channels/{$channel->uuid}/subscription");
 
         $response->assertNoContent();
         expect($subscriber->subscriptions()->where('channel_id', $channel->id)->exists())->toBeFalse();

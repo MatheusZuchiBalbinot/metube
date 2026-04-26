@@ -33,7 +33,7 @@ describe('Video Model', function () {
         $published = Video::published()->get();
 
         expect($published)->toHaveCount($publishedCount);
-        $published->each(fn ($video) => expect($video->status)->toBe(VideoStatus::PUBLISHED->value));
+        $published->each(fn ($video) => expect($video->status)->toBe(VideoStatus::PUBLISHED));
     });
 
     test('scope filter searches by title', function () {
