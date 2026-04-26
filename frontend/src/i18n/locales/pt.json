@@ -135,7 +135,9 @@
         "preview": "Pré-visualização",
         "pin": "Fixar vídeo",
         "unpin": "Desfixar vídeo",
-        "pinned": "Fixado"
+        "pinned": "Fixado",
+        "show_more": "Mostrar mais",
+        "show_less": "Mostrar menos"
     },
     "nav": {
         "aria_label": "Navegação principal",
@@ -303,7 +305,9 @@
         "videos_count_other": "{{count}} vídeos",
         "empty_playlist": "Nenhum vídeo nesta playlist",
         "remove_video": "Remover da playlist",
-        "new_playlist_inline": "Nova playlist"
+        "new_playlist_inline": "Nova playlist",
+        "latest_added": "Mais recente",
+        "empty_short": "Vazia"
     },
     "player": {
         "play": "Reproduzir",

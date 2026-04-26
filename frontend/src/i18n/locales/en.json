@@ -135,7 +135,9 @@
         "preview": "Preview",
         "pin": "Pin video",
         "unpin": "Unpin video",
-        "pinned": "Pinned"
+        "pinned": "Pinned",
+        "show_more": "Show more",
+        "show_less": "Show less"
     },
     "nav": {
         "aria_label": "Main navigation",
@@ -303,7 +305,9 @@
         "videos_count_other": "{{count}} videos",
         "empty_playlist": "No videos in this playlist",
         "remove_video": "Remove from playlist",
-        "new_playlist_inline": "New playlist"
+        "new_playlist_inline": "New playlist",
+        "latest_added": "Latest",
+        "empty_short": "Empty"
     },
     "player": {
         "play": "Play",
