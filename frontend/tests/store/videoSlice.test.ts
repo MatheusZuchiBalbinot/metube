@@ -230,33 +230,15 @@ describe('videoSlice — updateProgress', () => {
 describe('videoSlice — addVideo', () => {
     it('prepends a new video to the list', () => {
         const state = makeState();
-        const next = reducer(state, videoActions.addVideo({
-            title: 'New',
-            description: '',
-            tags: [],
-            thumbnail: '',
-            publishedAt: '2024-01-01T00:00:00Z',
-            channel: 'Ch',
-            channelId: chId('ch_1'),
-            status: 'published',
-        }));
+        const next = reducer(state, videoActions.addVideo(makeVideo({ id: vid('v-new'), title: 'New' })));
         expect(next.videos).toHaveLength(state.videos.length + 1);
         expect(next.videos[0].title).toBe('New');
     });
 
-    it('assigns a non-empty id to the new video', () => {
+    it('places the new video at index 0', () => {
         const state = makeState();
-        const next = reducer(state, videoActions.addVideo({
-            title: 'New',
-            description: '',
-            tags: [],
-            thumbnail: '',
-            publishedAt: '2024-01-01T00:00:00Z',
-            channel: 'Ch',
-            channelId: chId('ch_1'),
-            status: 'published',
-        }));
-        expect(next.videos[0].id).toBeTruthy();
+        const next = reducer(state, videoActions.addVideo(makeVideo({ id: vid('v-new'), title: 'New' })));
+        expect(next.videos[0].id).toBe(vid('v-new'));
     });
 });
 

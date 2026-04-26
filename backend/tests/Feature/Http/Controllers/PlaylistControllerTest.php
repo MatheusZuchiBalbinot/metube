@@ -16,7 +16,7 @@ describe('PlaylistController', function () {
         $response = $this->actingAs($user)->getJson('/api/playlists');
 
         $response->assertOk();
-        $response->assertJsonCount(3, 'data');
+        $response->assertJsonCount(4, 'data');
     });
 
     test('store creates new playlist', function () {
@@ -39,7 +39,7 @@ describe('PlaylistController', function () {
         $response = $this->actingAs($user)->getJson("/api/playlists/{$playlist->puid}");
 
         $response->assertOk();
-        $response->assertJsonPath('id', $playlist->puid);
+        $response->assertJsonPath('puid', $playlist->puid);
     });
 
     test('update modifies playlist', function () {

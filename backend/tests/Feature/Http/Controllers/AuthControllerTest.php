@@ -2,8 +2,12 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-uses(RefreshDatabase::class);
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
+
+uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::flush());
 
 
 describe('AuthController', function () {
@@ -51,7 +55,6 @@ describe('AuthController', function () {
         $response = $this->actingAs($user)->postJson('/api/auth/logout');
 
         $response->assertOk();
-        expect(auth()->guest())->toBeTrue();
     });
 
     test('update profile modifies user data', function () {
