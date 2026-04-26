@@ -6,7 +6,7 @@ import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useAppDispatch, useAppSelector } from '@store';
@@ -36,10 +36,11 @@ function buildVideoCardClass(showActions: boolean) {
 const VideoCard = memo(function VideoCard({
     video,
     showActions = false,
-    index: _index,
+    index = -1,
     onEdit,
     onDelete,
 }: VideoCardProps) {
+    const isPriority = index === 0;
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const dispatch = useAppDispatch();
@@ -74,7 +75,7 @@ const VideoCard = memo(function VideoCard({
     }
 
     function handleCardClick() {
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleCardKeyDown(e: React.KeyboardEvent) {
@@ -82,8 +83,9 @@ const VideoCard = memo(function VideoCard({
         if (!isActivationKey) {
             return;
         }
+
         e.preventDefault();
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleChannelClick(e: React.MouseEvent) {
@@ -129,10 +131,11 @@ const VideoCard = memo(function VideoCard({
                     className="video-card__thumb-img"
                     src={video.thumbnail}
                     alt={video.title}
-                    loading="lazy"
-                    decoding="async"
+                    loading={isPriority ? 'eager' : 'lazy'}
+                    fetchPriority={isPriority ? 'high' : 'auto'}
+                    decoding={isPriority ? 'sync' : 'async'}
                     onLoad={() => setThumbLoaded(true)}
-                    style={{ opacity: thumbLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
+                    style={{ opacity: isPriority || thumbLoaded ? 1 : 0, transition: isPriority ? undefined : 'opacity 0.3s ease' }}
                 />
                 <div className="video-card__play-overlay" aria-hidden="true">
                     <svg className="video-card__play-icon" viewBox="0 0 24 24" fill="white">
@@ -160,7 +163,10 @@ const VideoCard = memo(function VideoCard({
                         {Format.duration(video.duration)}
                     </div>
                 )}
-                <div className={['video-card__save-trigger', isTouchDevice ? 'video-card__save-trigger--touch' : ''].filter(Boolean).join(' ')}>
+                <div
+                    className={['video-card__save-trigger', isTouchDevice ? 'video-card__save-trigger--touch' : ''].filter(Boolean).join(' ')}
+                    onClick={e => e.stopPropagation()}
+                >
                     <SavePopover videoId={video.id}>
                         <Tooltip content={t('video.save')} side="top">
                             <Button

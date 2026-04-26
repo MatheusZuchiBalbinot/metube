@@ -1,15 +1,16 @@
-import { useState, useMemo } from 'react';
-import * as Popover from '@radix-ui/react-popover';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Plus, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
-import { videoActions, selectSavedSet } from '@store/videoSlice';
+import { selectSavedSet } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
-import type { Playlist } from '@data/mockPlaylists';
+import { useVideo } from '@hooks/useVideo';
+import type { Playlist } from '@models/playlist';
 import type { VideoId } from '@models/video';
 import Button from '@ui/button/button';
 import Input from '@ui/input/input';
+import Modal from '@ui/modal/modal';
 import './savePopover.css';
 
 interface SavePopoverProps {
@@ -23,6 +24,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const savedSet = useAppSelector(selectSavedSet);
     const isSaved = savedSet.has(videoId as unknown as VideoId);
 
+    const { saveVideo } = useVideo();
     const {
         playlists,
         createPlaylist,
@@ -34,28 +36,31 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [open, setOpen] = useState(false);
     const [newPlaylistOpen, setNewPlaylistOpen] = useState(false);
     const [newPlaylistName, setNewPlaylistName] = useState('');
-    const [pendingPlaylists, setPendingPlaylists] = useState<{ id: string; name: string }[]>([]);
-
-    const visiblePlaylists = useMemo(() => {
-        const existingIds = new Set(playlists.map((p: Playlist) => p.id as string));
-        const extras = pendingPlaylists.filter(p => !existingIds.has(p.id));
-        return [...playlists, ...extras];
-    }, [playlists, pendingPlaylists]);
+    const [creating, setCreating] = useState(false);
 
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
+    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== 'Watch Later');
 
-    function handleWatchLaterToggle(e: React.MouseEvent) {
+    function handleTriggerClick(e: React.MouseEvent) {
         e.stopPropagation();
-        dispatch(videoActions.saveVideo(videoId as unknown as VideoId));
-        const isNowSaved = !isSaved;
+        setOpen(true);
+    }
+
+    function handleClose() {
+        setOpen(false);
+        setNewPlaylistOpen(false);
+        setNewPlaylistName('');
+    }
+
+    function handleWatchLaterChange() {
+        saveVideo(videoId as unknown as VideoId);
         dispatch(toastActions.addToast({
-            message: t(isNowSaved ? 'toast.saved' : 'toast.unsaved'),
+            message: t(isSaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
     }
 
-    function handlePlaylistToggle(e: React.MouseEvent, playlistId: string, playlistName: string) {
-        e.stopPropagation();
+    function handlePlaylistChange(playlistId: string, playlistName: string) {
         const isInPlaylist = videoPlaylistIds.includes(playlistId);
         if (isInPlaylist) {
             removeVideoFromPlaylist(playlistId, videoId);
@@ -72,28 +77,26 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         }
     }
 
-    function handleShowNewPlaylist(e: React.MouseEvent) {
-        e.stopPropagation();
-        setNewPlaylistOpen(true);
-    }
-
-    function handleCreatePlaylist(e: React.MouseEvent) {
-        e.stopPropagation();
+    async function handleCreatePlaylist() {
         const trimmedName = newPlaylistName.trim();
         const isNameEmpty = trimmedName === '';
-        if (isNameEmpty) {
+        if (isNameEmpty || creating) {
             return;
         }
 
-        const newId = crypto.randomUUID();
-        createPlaylist(newId, trimmedName);
-        addVideoToPlaylist(newId, videoId);
-        setPendingPlaylists(prev => [...prev, { id: newId, name: trimmedName }]);
+        setCreating(true);
+        const newId = await createPlaylist(trimmedName);
+        setCreating(false);
+
+        if (!newId) {
+            return;
+        }
+
+        addVideoToPlaylist(newId as string, videoId);
         dispatch(toastActions.addToast({
             message: t('toast.playlist_created'),
             type: 'success',
         }));
-
         setNewPlaylistName('');
         setNewPlaylistOpen(false);
     }
@@ -102,7 +105,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         const isEnter = e.key === 'Enter';
         const isEscape = e.key === 'Escape';
         if (isEnter) {
-            handleCreatePlaylist(e as unknown as React.MouseEvent);
+            handleCreatePlaylist();
         }
 
         if (isEscape) {
@@ -111,68 +114,52 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         }
     }
 
-    function handleOpenChange(isOpen: boolean) {
-        setOpen(isOpen);
-        const isClosed = !isOpen;
-        if (isClosed) {
-            setNewPlaylistOpen(false);
-            setNewPlaylistName('');
-            setPendingPlaylists([]);
-        }
-    }
-
     return (
-        <Popover.Root open={open} onOpenChange={handleOpenChange}>
-            <Popover.Trigger asChild onClick={e => e.stopPropagation()}>
+        <>
+            <div className="save-popover__trigger" onClick={handleTriggerClick}>
                 {children}
-            </Popover.Trigger>
-            <Popover.Portal>
-                <Popover.Content
-                    className="save-popover__content"
-                    side="top"
-                    align="start"
-                    sideOffset={6}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <p className="save-popover__title">{t('playlist.save_to')}</p>
+            </div>
 
-                    <button
-                        type="button"
-                        className="save-popover__row"
-                        onClick={handleWatchLaterToggle}
-                    >
-                        <span className="save-popover__row-check">
-                            {isSaved ? <Check size={13} /> : null}
-                        </span>
-                        {isSaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-                        <span className="save-popover__row-label">{t('playlist.watch_later_row')}</span>
-                    </button>
+            <Modal
+                isOpen={open}
+                onClose={handleClose}
+                title={t('playlist.save_to')}
+                size="sm"
+            >
+                <div className="save-modal__list">
+                    <label className="save-modal__row">
+                        <input
+                            type="checkbox"
+                            className="save-modal__checkbox"
+                            checked={isSaved}
+                            onChange={handleWatchLaterChange}
+                        />
+                        <span className="save-modal__label">{t('playlist.watch_later_row')}</span>
+                    </label>
 
                     {visiblePlaylists.length > 0 && (
-                        <div className="save-popover__divider" aria-hidden="true" />
+                        <div className="save-modal__divider" aria-hidden="true" />
                     )}
 
-                    {visiblePlaylists.map(playlist => {
-                        const isInPlaylist = videoPlaylistIds.includes(playlist.id);
+                    {visiblePlaylists.map((pl: Playlist) => {
+                        const isInPlaylist = videoPlaylistIds.includes(pl.id as string);
                         return (
-                            <button
-                                key={playlist.id}
-                                type="button"
-                                className="save-popover__row"
-                                onClick={e => handlePlaylistToggle(e, playlist.id, playlist.name)}
-                            >
-                                <span className="save-popover__row-check">
-                                    {isInPlaylist ? <Check size={13} /> : null}
-                                </span>
-                                <span className="save-popover__row-label">{playlist.name}</span>
-                            </button>
+                            <label key={pl.id as string} className="save-modal__row">
+                                <input
+                                    type="checkbox"
+                                    className="save-modal__checkbox"
+                                    checked={isInPlaylist}
+                                    onChange={() => handlePlaylistChange(pl.id as string, pl.name)}
+                                />
+                                <span className="save-modal__label">{pl.name}</span>
+                            </label>
                         );
                     })}
 
-                    <div className="save-popover__divider" aria-hidden="true" />
+                    <div className="save-modal__divider" aria-hidden="true" />
 
                     {newPlaylistOpen ? (
-                        <div className="save-popover__new-form" onClick={e => e.stopPropagation()}>
+                        <div className="save-modal__new-form">
                             <Input
                                 autoFocus
                                 value={newPlaylistName}
@@ -184,6 +171,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                                 variant="primary"
                                 size="sm"
                                 onClick={handleCreatePlaylist}
+                                disabled={creating}
                             >
                                 {t('playlist.create')}
                             </Button>
@@ -191,16 +179,15 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                     ) : (
                         <button
                             type="button"
-                            className="save-popover__row save-popover__row--new"
-                            onClick={handleShowNewPlaylist}
+                            className="save-modal__new-btn"
+                            onClick={() => setNewPlaylistOpen(true)}
                         >
-                            <span className="save-popover__row-check" aria-hidden="true" />
                             <Plus size={14} />
-                            <span className="save-popover__row-label">{t('playlist.new_playlist_inline')}</span>
+                            <span>{t('playlist.new_playlist_inline')}</span>
                         </button>
                     )}
-                </Popover.Content>
-            </Popover.Portal>
-        </Popover.Root>
+                </div>
+            </Modal>
+        </>
     );
 }

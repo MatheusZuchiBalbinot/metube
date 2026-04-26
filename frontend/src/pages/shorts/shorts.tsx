@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX, ChevronDown, Info, X } from 'lucide-react';
 import ReactionBtn from '@components/video/reactionBtn';
+import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';
 import { useVideo } from '@hooks/useVideo';
 import { Avatar, Tooltip } from '@ui';
@@ -139,7 +140,7 @@ const ShortItem = memo(function ShortItem({
 }: ShortItemProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { likedVideos, dislikedVideos, savedVideos, likeVideo, dislikeVideo, saveVideo, openTagView } = useVideo();
+    const { likedVideos, dislikedVideos, savedVideos, likeVideo, dislikeVideo, openTagView } = useVideo();
 
     const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
@@ -175,7 +176,7 @@ const ShortItem = memo(function ShortItem({
         onMuteChange(nextMuted);
     }
 
-    function handleReaction(action: 'like' | 'dislike' | 'save') {
+    function handleReaction(action: 'like' | 'dislike') {
         switch (action) {
             case 'like':
                 likeVideo(video.id);
@@ -184,9 +185,6 @@ const ShortItem = memo(function ShortItem({
             case 'dislike':
                 dislikeVideo(video.id);
                 triggerDislikeAnimation();
-                break;
-            case 'save':
-                saveVideo(video.id);
                 break;
         }
     }
@@ -333,17 +331,19 @@ const ShortItem = memo(function ShortItem({
                     onClick={() => handleReaction('dislike')}
                 />
 
-                <ReactionBtn
-                    isActive={isSaved}
-                    icon={<Bookmark size={22} strokeWidth={1.75} fill="none" />}
-                    iconActive={<Bookmark size={22} strokeWidth={1.75} fill="currentColor" />}
-                    label={t('video.save')}
-                    activeLabel={t('video.saved')}
-                    className="shorts-page__action"
-                    activeClass="shorts-page__action--saved"
-                    tooltipSide="right"
-                    onClick={() => handleReaction('save')}
-                />
+                <SavePopover videoId={video.id as unknown as string}>
+                    <ReactionBtn
+                        isActive={isSaved}
+                        icon={<Bookmark size={22} strokeWidth={1.75} fill="none" />}
+                        iconActive={<Bookmark size={22} strokeWidth={1.75} fill="currentColor" />}
+                        label={t('video.save')}
+                        activeLabel={t('video.saved')}
+                        className="shorts-page__action"
+                        activeClass="shorts-page__action--saved"
+                        tooltipSide="right"
+                        onClick={() => { }}
+                    />
+                </SavePopover>
 
                 {/* Description button */}
                 <Tooltip content={t('shorts.description')} side="right">

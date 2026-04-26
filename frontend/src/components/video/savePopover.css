@@ -1,99 +1,88 @@
-/* ─── SavePopover ─────────────────────────────────────────────────────────── */
+/* ─── SavePopover trigger wrapper ─────────────────────────────────────────── */
 
-.save-popover__content {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 6px;
-    min-width: 220px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 100;
-    animation: save-popover-in var(--duration-default) ease;
+.save-popover__trigger {
+    display: contents;
 }
 
-@keyframes save-popover-in {
-    from {
-        opacity: 0;
-        transform: translateY(4px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+/* ─── Save modal list ─────────────────────────────────────────────────────── */
+
+.save-modal__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.save-popover__title {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--text-3);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 4px 8px 6px;
-}
+/* ─── Checkbox row ────────────────────────────────────────────────────────── */
 
-.save-popover__row {
+.save-modal__row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 7px 8px;
-    border: none;
-    background: transparent;
-    color: var(--text);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    gap: 10px;
+    padding: 9px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    text-align: left;
     transition: background var(--duration-fast);
 }
 
-.save-popover__row:hover {
+.save-modal__row:hover {
     background: var(--surface-3);
 }
 
-.save-popover__row--new {
-    color: var(--text-2);
-}
-
-.save-popover__row-check {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.save-modal__checkbox {
     width: 16px;
     height: 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 3px;
     flex-shrink: 0;
-    color: var(--accent);
-    background: transparent;
-    transition: border-color var(--duration-fast), background var(--duration-fast);
+    accent-color: var(--accent);
+    cursor: pointer;
 }
 
-.save-popover__row:hover .save-popover__row-check {
-    border-color: var(--text-3);
-}
-
-.save-popover__row-label {
+.save-modal__label {
     flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.save-popover__divider {
+/* ─── Divider ─────────────────────────────────────────────────────────────── */
+
+.save-modal__divider {
     height: 1px;
     background: var(--border);
     margin: 4px 0;
 }
 
-.save-popover__new-form {
+/* ─── New playlist button ─────────────────────────────────────────────────── */
+
+.save-modal__new-btn {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 4px 2px 2px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--duration-fast), color var(--duration-fast);
 }
 
-:root[data-mode='light'] .save-popover__content {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+.save-modal__new-btn:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+/* ─── New playlist form ───────────────────────────────────────────────────── */
+
+.save-modal__new-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 2px 2px;
 }
