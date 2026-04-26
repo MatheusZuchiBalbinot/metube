@@ -21,7 +21,7 @@
     border-radius: var(--radius-lg);
     box-shadow: 0 12px 48px var(--shadow-lg);
     overflow: hidden;
-    width: 360px;
+    width: min(360px, calc(100vw - 24px));
     animation: mini-player-slide-in 0.28s var(--ease-bounce) forwards;
 }
 

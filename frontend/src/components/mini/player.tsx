@@ -3,19 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Maximize2 } from 'lucide-react';
 import { useVideo } from '@hooks/useVideo';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import VideoPlayer from '@components/player/player';
 import type { Video } from '@data/mockVideos';
 import './player.css';
-
-function defaultPos() {
-    return {
-        x: window.innerWidth - 360 - 24,
-        y: window.innerHeight - 254 - 24,
-    };
-}
 
 // eslint-disable-next-line complexity
 export default function MiniPlayer() {
@@ -25,7 +18,7 @@ export default function MiniPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const playerRef = useRef<HTMLDivElement>(null);
     const pendingMiniSeekRef = useRef<number | null>(null);
-    const [pos, setPos] = useState(defaultPos);
+    const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const isDraggingRef = useRef(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -40,8 +33,7 @@ export default function MiniPlayer() {
             return;
         }
 
-        setPos(defaultPos());
-
+        setPos(null);
         pendingMiniSeekRef.current = miniPlayer.currentTime;
         el.load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,11 +85,19 @@ export default function MiniPlayer() {
             return;
         }
 
+        const rect = playerRef.current?.getBoundingClientRect();
+        const currentX = rect?.left ?? pos?.x ?? 0;
+        const currentY = rect?.top ?? pos?.y ?? 0;
+
+        if (pos === null) {
+            setPos({ x: currentX, y: currentY });
+        }
+
         isDraggingRef.current = true;
         setIsDragging(true);
         dragOffsetRef.current = {
-            x: e.clientX - pos.x,
-            y: e.clientY - pos.y,
+            x: e.clientX - currentX,
+            y: e.clientY - currentY,
         };
 
         e.preventDefault();
@@ -124,17 +124,17 @@ export default function MiniPlayer() {
 
         const el = playerRef.current;
         const playerW = el?.offsetWidth ?? 360;
-        const playerH = el?.offsetHeight ?? 254;
+        const playerH = el?.offsetHeight ?? 0;
+        const rect = el?.getBoundingClientRect();
+        const baseX = pos?.x ?? rect?.left ?? 0;
+        const baseY = pos?.y ?? rect?.top ?? 0;
 
-        setPos(prev => {
-            const rawX = prev.x + delta.x;
-            const rawY = prev.y + delta.y;
+        const rawX = baseX + delta.x;
+        const rawY = baseY + delta.y;
+        const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - playerW));
+        const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - playerH));
 
-            const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - playerW));
-            const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - playerH));
-
-            return { x: clampedX, y: clampedY };
-        });
+        setPos({ x: clampedX, y: clampedY });
     }
 
     function handleExpand() {
@@ -149,7 +149,7 @@ export default function MiniPlayer() {
 
         closeMiniPlayer();
         if (miniPlayer) {
-            navigate(ROUTES.VIDEO.replace(':id', miniPlayer.videoId));
+            navigate(videoUrl(miniPlayer.videoId));
         }
     }
 
@@ -170,12 +170,15 @@ export default function MiniPlayer() {
     }
 
     const outerClass = ['mini-player', isDragging ? 'mini-player--dragging' : ''].filter(Boolean).join(' ');
+    const positionStyle = pos !== null
+        ? { left: pos.x, top: pos.y }
+        : { right: 24, bottom: 24 };
 
     return (
         <div
             ref={playerRef}
             className={outerClass}
-            style={{ left: pos.x, top: pos.y }}
+            style={positionStyle}
             role="region"
             aria-label={t('mini_player.label')}
         >
