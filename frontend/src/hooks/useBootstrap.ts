@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { playlistActions } from '@store/playlistSlice';
 import { useAuth } from '@hooks/useAuth';
 import { video } from '@api/videos';
 import { interactions } from '@api/interactions';
+import { playlist } from '@api/playlists';
 import { VideoStatus } from '@models/video';
 
 export function useBootstrap(): void {
@@ -30,6 +32,12 @@ export function useBootstrap(): void {
         interactions.saved().then(result => {
             if (result) {
                 dispatch(videoActions.setSavedVideos(result.data.map(v => v.id)));
+            }
+        });
+
+        playlist.list().then(result => {
+            if (result) {
+                dispatch(playlistActions.setPlaylists(result));
             }
         });
     // Re-fetch whenever the authenticated user changes (logout → login)

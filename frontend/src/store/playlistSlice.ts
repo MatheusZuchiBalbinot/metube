@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray } from '@utils/loadFromStorage';
-import { MOCK_PLAYLISTS } from '@data/mockPlaylists';
 import type { Playlist, PlaylistId } from '@models/playlist';
 import type { VideoId } from '@models/video';
 import { videoActions } from './videoSlice';
@@ -17,11 +16,15 @@ interface PlaylistState {
 const playlistSlice = createSlice({
     name: 'playlist',
     initialState: (): PlaylistState => ({
-        playlists: loadFromStorage<Playlist[]>(STORAGE_KEYS.PLAYLISTS, MOCK_PLAYLISTS, isArray),
+        playlists: loadFromStorage<Playlist[]>(STORAGE_KEYS.PLAYLISTS, [], isArray),
         loading: false,
         error: null,
     }),
     reducers: {
+        setPlaylists(state, action: PayloadAction<Playlist[]>) {
+            state.playlists = action.payload;
+        },
+
         createPlaylist(state, action: PayloadAction<{ id: PlaylistId; name: string }>) {
             const { id, name } = action.payload;
             state.playlists.push({ id, name, videoIds: [], createdAt: new Date().toISOString() });

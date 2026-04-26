@@ -8,8 +8,8 @@ import EmptyState from '@ui/empty/empty';
 import Button from '@ui/button/button';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
-import type { Playlist } from '@data/mockPlaylists';
-import type { Video } from '@data/mockVideos';
+import type { Playlist } from '@models/playlist';
+import type { Video } from '@models/video';
 import './playlists.css';
 
 export default function PlaylistsPage() {
@@ -27,13 +27,15 @@ export default function PlaylistsPage() {
     }, [videos]);
 
     const playlistsWithVideos = useMemo(() => {
-        return playlists.map((playlist: Playlist) => ({
-            playlist,
-            videos: resolvePlaylistVideos(playlist.videoIds ?? []),
-        }));
+        return playlists
+            .filter((p: Playlist) => p.name !== 'Watch Later')
+            .map((playlist: Playlist) => ({
+                playlist,
+                videos: resolvePlaylistVideos(playlist.videoIds ?? []),
+            }));
     }, [playlists, resolvePlaylistVideos]);
 
-    const hasPlaylists = playlists.length > 0;
+    const hasPlaylists = playlistsWithVideos.length > 0;
 
     function handleOpenNewModal() {
         setNewName('');
@@ -51,7 +53,7 @@ export default function PlaylistsPage() {
         if (isEmpty) {
             return;
         }
-        createPlaylist(crypto.randomUUID(), trimmed);
+        createPlaylist(trimmed);
         handleCloseNewModal();
     }
 

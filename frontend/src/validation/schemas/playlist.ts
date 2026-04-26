@@ -14,7 +14,9 @@ export const PlaylistApiSchema = z.object({
     createdAt: raw.created_at,
 }));
 
-export const PlaylistListApiSchema = z.array(PlaylistApiSchema);
+export const PlaylistListApiSchema = z.object({
+    data: z.array(PlaylistApiSchema),
+}).transform(raw => raw.data);
 
 export type PlaylistApiInput = z.input<typeof PlaylistApiSchema>;
 export type PlaylistApiOutput = z.output<typeof PlaylistApiSchema>;
