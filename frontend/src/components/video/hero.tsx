@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@hooks/useVideo';
@@ -30,7 +30,7 @@ export default function VideoHero({ video }: VideoHeroProps) {
         new Date(video.scheduledAt) > now;
 
     function handleClick() {
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleTagClick(e: React.MouseEvent, tag: Tag) {

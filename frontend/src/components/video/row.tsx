@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@hooks/useVideo';
@@ -40,7 +40,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
         .join(' ');
 
     function handleRowClick() {
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleRowKeyDown(e: React.KeyboardEvent) {
@@ -49,7 +49,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
             return;
         }
         e.preventDefault();
-        navigate(ROUTES.VIDEO.replace(':id', video.id));
+        navigate(videoUrl(video.id));
     }
 
     function handleChannelClick(e: React.MouseEvent) {
@@ -99,6 +99,8 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
                     isScheduledAndFuture={isScheduledAndFuture}
                     isNew={isNew}
                     isWatched={isWatched}
+                    isProcessing={video.status === VideoStatus.PROCESSING}
+                    isFailed={video.status === VideoStatus.FAILED}
                     classPrefix="video-row"
                 />
             </div>
