@@ -1,7 +1,8 @@
 /* ─── Page shell ──────────────────────────────────────────────────────────── */
 
 .shorts-page {
-    height: calc(100dvh - 58px); /* 58px = header height */
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
     background: transparent;
 }

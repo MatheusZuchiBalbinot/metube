@@ -26,6 +26,8 @@
 .app-layout__content--full {
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* ─── Unified parallax background ───────────────────────────────────────── */
@@ -59,4 +61,28 @@
 
 :root[data-mode='light'] .app-layout__bg-orb {
     opacity: 0.4;
+}
+
+/* ─── Sidebar backdrop (mobile only) ──────────────────────────────────────── */
+
+.app-layout__sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .app-layout__sidebar-backdrop {
+        display: block;
+        position: fixed;
+        top: 58px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: calc(var(--z-modal) - 1);
+        background: var(--overlay-md);
+        backdrop-filter: var(--glass-blur-xs);
+        -webkit-backdrop-filter: var(--glass-blur-xs);
+        border: none;
+        cursor: pointer;
+        animation: overlay-in var(--duration-default) ease both;
+    }
 }

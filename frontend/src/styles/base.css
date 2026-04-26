@@ -217,9 +217,9 @@
     -webkit-font-smoothing: antialiased;
 
     /* ─── Border radius ──────────────────────────────────────────────────── */
-    --radius-xs:   4px;
+    --radius-xs: 4px;
     --radius-sm: 8px;
-    --radius-md:   6px;
+    --radius-md: 6px;
     --radius: 12px;
     --radius-lg: 16px;
     --radius-xl: 20px;
@@ -273,17 +273,27 @@
     --space-6: 24px;
     --space-8: 32px;
 
+    /* ─── Breakpoints (referência; CSS vars não são usáveis em @media) ───── */
+    --bp-sm: 480px;
+    --bp-md: 768px;
+    --bp-lg: 1024px;
+    --bp-xl: 1200px;
+
+    /* ─── Page-level padding (responsivo via media queries abaixo) ───────── */
+    --page-padding-x: 24px;
+    --page-padding-y: 16px;
+
     /* ─── Icon button sizes ──────────────────────────────────────────────── */
     --icon-sm: 32px;
-    --icon-md: 36px;
+    --icon-md: 24px;
     --icon-lg: 44px;
 
     /* ─── Transition timing ──────────────────────────────────────────────────── */
-    --duration-fast:    0.12s;
+    --duration-fast: 0.12s;
     --duration-default: 0.15s;
-    --duration-slow:    0.20s;
+    --duration-slow: 0.20s;
     --duration-loading: 0.70s;
-    --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* ─── Elevation & focus ──────────────────────────────────────────────────── */
@@ -292,11 +302,24 @@
     --elevation-3: 0 12px 48px var(--shadow-lg);
     --elevation-4: 0 24px 64px var(--shadow-lg);
     --glow-accent: 0 4px 20px var(--accent-glow);
-    --focus-ring:  0 0 0 3px var(--accent-subtle);
+    --focus-ring: 0 0 0 3px var(--accent-subtle);
 
     /* ─── Interactive opacity ────────────────────────────────────────────────── */
     --opacity-disabled: 0.45;
-    --opacity-ghost:    0.40;
+    --opacity-ghost: 0.40;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --page-padding-x: 16px;
+        --page-padding-y: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --page-padding-x: 12px;
+    }
 }
 
 body {

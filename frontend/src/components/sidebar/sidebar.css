@@ -181,29 +181,24 @@
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-    .app-sidebar {
-        width: 60px;
+    /* Quando aberta em mobile: vira overlay sobre o conteúdo (não empurra) */
+    .app-sidebar:not(.app-sidebar--collapsed) {
+        position: fixed;
+        top: 58px;
+        left: 0;
+        height: calc(100dvh - 58px);
+        z-index: var(--z-modal);
+        background: var(--surface);
+        box-shadow: var(--elevation-3);
+        border-right: 1px solid var(--border);
     }
 
-    .app-sidebar__label,
-    .app-sidebar__section-label {
-        display: none;
-    }
-
-    .app-sidebar__item {
-        justify-content: center;
-        padding: 6px;
-        gap: 0;
-    }
-
-    .app-sidebar__item:not(.app-sidebar__item--active):hover {
-        transform: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .app-sidebar {
-        display: none;
+    /* Quando colapsada em mobile: some completamente para liberar espaço */
+    .app-sidebar--collapsed {
+        width: 0;
+        padding: 0;
+        border-right: none;
+        overflow: hidden;
     }
 }
 

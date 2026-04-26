@@ -1,5 +1,5 @@
 .playlists-page {
-    padding: 32px 32px 64px;
+    padding: var(--page-padding-y) var(--page-padding-x) 48px;
     max-width: 860px;
     margin: 0 auto;
 }

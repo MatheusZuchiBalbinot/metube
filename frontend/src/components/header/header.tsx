@@ -172,7 +172,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             <div className="app-header__right">
                 <Tooltip content={t('header.create')} side="bottom">
                     <Button
-                        variant="ghost"
+                        variant="primary"
                         size="sm"
                         className="app-header__create-btn"
                         leftIcon={<Plus size={14} strokeWidth={2.5} />}

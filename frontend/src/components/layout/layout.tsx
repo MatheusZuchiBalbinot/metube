@@ -18,16 +18,19 @@ import './layout.css';
 
 export default function AppLayout() {
     const { t } = useTranslation();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+        return isMobile;
+    });
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.video.activeTagView);
     const theaterMode = useAppSelector(s => s.video.theaterMode);
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
-    const isVideoPage = pathname.startsWith('/video/');
+    const isVideoPage = pathname === ROUTES.VIDEO;
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 
         const isTagViewOpen = activeTagView !== null;
         if (isTagViewOpen) {
@@ -63,6 +66,14 @@ export default function AppLayout() {
             <AppHeader onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
             <div className="app-layout__body">
                 <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
+                {!sidebarCollapsed && (
+                    <button
+                        type="button"
+                        className="app-layout__sidebar-backdrop"
+                        aria-label={t('nav.close_sidebar', 'Close menu')}
+                        onClick={() => setSidebarCollapsed(true)}
+                    />
+                )}
                 <main id="main-content" className={['app-layout__content', isFullHeightPage ? 'app-layout__content--full' : ''].filter(Boolean).join(' ')}>
                     <Suspense fallback={<PageSkeleton pathname={pathname} />}>
                         {activeTagView ? <TagView /> : <Outlet />}
