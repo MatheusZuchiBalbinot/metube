@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import type { Vuid } from './videos';
 import type { Playlist } from '@models/playlist';
+export type { Playlist };
 import { PlaylistApiSchema, PlaylistListApiSchema } from '@validation';
 
 export type Puid = string & { readonly _brand: 'Puid' };
