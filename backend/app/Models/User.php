@@ -49,10 +49,7 @@ class User extends Authenticatable
         });
 
         static::created(function (User $user): void {
-            Playlist::create([
-                'user_id' => $user->id,
-                'name' => 'Watch Later',
-            ]);
+            $user->playlists()->firstOrCreate(['name' => 'Watch Later']);
         });
     }
 

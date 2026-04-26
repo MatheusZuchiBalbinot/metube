@@ -25,7 +25,7 @@ class PlaylistService
      */
     public function getUserPlaylists(User $user): Collection
     {
-        return $user->playlists()->get();
+        return $user->playlists()->with('videos')->get();
     }
 
     /**
