@@ -79,6 +79,7 @@ export default function ProfilePage() {
     const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoadingOwnVideos(true);
         channelApi.videos(channelId as unknown as Uuid).then(result => {
             if (result) {
@@ -538,7 +539,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {!loadingOwnVideos && hasVideos ? (
+                {!loadingOwnVideos && hasVideos && (
                     <div className="profile-page__grid">
                         {filteredVideos.map((video, i) => {
                             const isPinned = video.id === pinnedVideoId;
@@ -569,7 +570,8 @@ export default function ProfilePage() {
                             );
                         })}
                     </div>
-                ) : !loadingOwnVideos ? (
+                )}
+                {!loadingOwnVideos && !hasVideos && (
                     <div className="profile-page__empty">
                         <EmptyIcon size={36} strokeWidth={1.5} className="profile-page__empty-icon" />
                         <p className="profile-page__empty-text">
@@ -578,7 +580,7 @@ export default function ProfilePage() {
                             {activeTab === TAB.HISTORY && t('video.no_results')}
                         </p>
                     </div>
-                ) : null}
+                )}
             </main>
 
             {/* ─── Edit video modal ─── */}

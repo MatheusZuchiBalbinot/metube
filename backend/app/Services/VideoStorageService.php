@@ -20,7 +20,13 @@ class VideoStorageService
         $ext = pathinfo($tmpPath, PATHINFO_EXTENSION);
         $finalPath = "videos/{$vuid}.{$ext}";
 
-        Storage::disk('public')->put($finalPath, Storage::disk('local')->readStream($tmpPath));
+        $stream = Storage::disk('local')->readStream($tmpPath);
+
+        if ($stream === null) {
+            throw new \RuntimeException("Could not open upload stream: {$tmpPath}");
+        }
+
+        Storage::disk('public')->put($finalPath, $stream);
         Storage::disk('local')->delete($tmpPath);
 
         return '/storage/' . $finalPath;

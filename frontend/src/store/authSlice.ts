@@ -25,7 +25,9 @@ export const signInThunk = createAsyncThunk(
     async (payload: { email: string; password: string }) => {
         await auth.getCsrfCookie();
         const response = await auth.login(payload);
-        if (!response) throw new Error('Login failed');
+        if (!response) {
+            throw new Error('Login failed');
+        }
         return response.user;
     },
 );

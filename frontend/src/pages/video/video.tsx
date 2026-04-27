@@ -495,7 +495,10 @@ export default function VideoPage() {
 
                             {video.description && (
                                 <>
-                                    <p className={['video-page__description', !descExpanded && hasLongDesc ? 'video-page__description--clamped' : ''].filter(Boolean).join(' ')}>
+                                    <p className={[
+                                        'video-page__description',
+                                        !descExpanded && hasLongDesc ? 'video-page__description--clamped' : '',
+                                    ].filter(Boolean).join(' ')}>
                                         {video.description}
                                     </p>
                                     {hasLongDesc && (

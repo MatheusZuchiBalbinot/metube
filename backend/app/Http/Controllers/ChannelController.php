@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Http\Resources\VideoResource;
 use App\Models\User;
 use App\Services\ChannelService;
@@ -29,7 +30,7 @@ class ChannelController extends Controller
     {
         $user = User::byUuid($uuid)->firstOrFail();
 
-        return $this->json($user);
+        return $this->json(new UserResource($user));
     }
 
     /**
