@@ -98,6 +98,14 @@ const videoSlice = createSlice({
             }
         },
 
+        incrementViews(state, action: PayloadAction<VideoId>) {
+            const idx = state.videos.findIndex(v => v.id === action.payload);
+            const isFound = idx !== -1;
+            if (isFound) {
+                state.videos[idx].views += 1;
+            }
+        },
+
         deleteVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
             state.videos = state.videos.filter(v => v.id !== id);

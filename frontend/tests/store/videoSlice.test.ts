@@ -421,3 +421,20 @@ describe('videoSlice — shorts audio', () => {
         expect(next.shortsVolume).toBe(0.2);
     });
 });
+
+// ─── incrementViews ───────────────────────────────────────────────────────────
+
+describe('videoSlice — incrementViews', () => {
+    it('increments views by 1 for the matching video', () => {
+        const state = makeState({ videos: [makeVideo({ id: vid('v1'), views: 10 })] });
+        const next = reducer(state, videoActions.incrementViews(vid('v1')));
+        expect(next.videos[0].views).toBe(11);
+    });
+
+    it('does nothing when video id is not found', () => {
+        const state = makeState();
+        const next = reducer(state, videoActions.incrementViews(vid('nonexistent')));
+        expect(next.videos[0].views).toBe(0);
+        expect(next.videos[1].views).toBe(0);
+    });
+});

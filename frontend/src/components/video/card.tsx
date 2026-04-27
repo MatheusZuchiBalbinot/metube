@@ -7,7 +7,7 @@ import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
 import { ROUTES, videoUrl } from '@utils/routes';
-import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
+import { Format, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions, selectSavedSet } from '@store/videoSlice';
@@ -62,7 +62,6 @@ const VideoCard = memo(function VideoCard({
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 
-    const isNew = !isScheduledAndFuture && now.getTime() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
     const isProcessing = video.status === VideoStatus.PROCESSING;
     const isFailed = video.status === VideoStatus.FAILED;
 
@@ -144,7 +143,6 @@ const VideoCard = memo(function VideoCard({
                 </div>
                 <VideoStatusBadges
                     isScheduledAndFuture={isScheduledAndFuture}
-                    isNew={isNew}
                     isWatched={isWatched}
                     isProcessing={isProcessing}
                     isFailed={isFailed}

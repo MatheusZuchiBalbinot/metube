@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
 import { ROUTES, videoUrl } from '@utils/routes';
-import { Format, ONE_WEEK_MS, getVisibleTags } from '@utils/format';
+import { Format, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@hooks/useVideo';
 import TagBadge from '@components/tag/badge';
@@ -32,8 +32,6 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
 
     const progress = videoProgress[video.id] ?? 0;
     const isWatched = progress >= 95;
-
-    const isNew = !isScheduledAndFuture && now.getTime() - new Date(video.publishedAt).getTime() < ONE_WEEK_MS;
 
     const rowClass = ['video-row', highlighted ? 'video-row--highlighted' : '']
         .filter(Boolean)
@@ -97,7 +95,6 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
                 </div>
                 <VideoStatusBadges
                     isScheduledAndFuture={isScheduledAndFuture}
-                    isNew={isNew}
                     isWatched={isWatched}
                     isProcessing={video.status === VideoStatus.PROCESSING}
                     isFailed={video.status === VideoStatus.FAILED}

@@ -12,6 +12,9 @@ import TagBadge from '@components/tag/badge';
 import { ROUTES } from '@utils/routes';
 import { useBurstAnimation } from '@hooks/useBurstAnimation';
 import type { Tag } from '@models/tag';
+import { useAppDispatch } from '@store';
+import { videoActions } from '@store/videoSlice';
+import { video as videoApi, type Vuid } from '@api';
 import './shorts.css';
 
 const MAX_TAGS = 3;
@@ -411,6 +414,7 @@ const ShortItem = memo(function ShortItem({
 
 export default function ShortsPage() {
     const { t } = useTranslation();
+    const dispatch = useAppDispatch();
     const {
         publishedVideos, watchVideo, closeMiniPlayer,
         shortsMuted: muted, shortsVolume: volume,
@@ -473,6 +477,8 @@ export default function ShortsPage() {
         const hasId = shortId !== undefined;
         if (hasId) {
             watchVideo(shortId);
+            videoApi.recordView(shortId as unknown as Vuid);
+            dispatch(videoActions.incrementViews(shortId));
         }
 
         setActiveIndex(newIndex);

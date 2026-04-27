@@ -80,6 +80,17 @@ describe('VideoController', function () {
         expect($user->likes()->where('video_id', $video->id)->exists())->toBeTrue();
     });
 
+    test('record view increments view count and creates history entry', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->create(['views' => 0]);
+
+        $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
+
+        $response->assertNoContent();
+        $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
+        $this->assertDatabaseHas('watch_histories', ['user_id' => $user->id, 'video_id' => $video->id]);
+    });
+
     test('update progress saves watch progress', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
