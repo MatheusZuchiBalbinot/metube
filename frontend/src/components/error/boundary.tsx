@@ -44,8 +44,13 @@ export default class ErrorBoundary extends Component<Props, State> {
         const { hasError, error } = this.state;
         const { children, fallback, level = 'page' } = this.props;
 
-        if (!hasError) return children;
-        if (fallback) return fallback;
+        if (!hasError) {
+            return children;
+        }
+
+        if (fallback) {
+            return fallback;
+        }
 
         const isPage = level === 'page';
         const isSection = level === 'section';

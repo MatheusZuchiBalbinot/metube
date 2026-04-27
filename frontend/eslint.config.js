@@ -7,8 +7,8 @@ import stylistic from '@stylistic/eslint-plugin';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-    // Ignore build output
-    globalIgnores(['dist']),
+    // Ignore build output and generated docs
+    globalIgnores(['dist', 'docs']),
 
     // Browser globals for plain JS files in public/
     {

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
-import { ROUTES, videoUrl } from '@utils/routes';
+import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@hooks/useVideo';

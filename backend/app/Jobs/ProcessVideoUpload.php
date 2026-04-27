@@ -71,6 +71,7 @@ class ProcessVideoUpload implements ShouldQueue
      */
     private function resolveStatus(Video $video): VideoStatus
     {
-        return $video->scheduled_at?->isFuture() ? VideoStatus::SCHEDULED : VideoStatus::PUBLISHED;
+        $isScheduled = $video->scheduled_at !== null && $video->scheduled_at->isFuture();
+        return $isScheduled ? VideoStatus::SCHEDULED : VideoStatus::PUBLISHED;
     }
 }

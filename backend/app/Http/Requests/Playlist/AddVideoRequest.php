@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * AddVideoRequest — Validates adding video to playlist.
  *
- * @property string $vuid Video UUID to add
+ * @property string $vuid Video identifier to add
  */
 class AddVideoRequest extends FormRequest
 {
@@ -27,7 +27,7 @@ class AddVideoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vuid' => ['required', 'uuid'],
+            'vuid' => ['required', 'string', 'exists:videos,vuid'],
         ];
     }
 
@@ -39,8 +39,8 @@ class AddVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'vuid.required' => 'Video UUID é obrigatório',
-            'vuid.uuid' => 'Video UUID deve ser um UUID válido',
+            'vuid.required' => 'Video é obrigatório',
+            'vuid.exists'   => 'Vídeo não encontrado',
         ];
     }
 }

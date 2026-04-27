@@ -23,8 +23,8 @@ use Illuminate\Support\Str;
  * @property int $views
  * @property string|null $video_url
  * @property string|null $thumbnail_url
- * @property string|null $published_at
- * @property string|null $scheduled_at
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property \Illuminate\Support\Carbon|null $scheduled_at
  * @property \App\Models\VideoSummary|null $summary
  */
 class Video extends Model
@@ -154,6 +154,7 @@ class Video extends Model
      */
     public function scopeLatest(Builder $query): Builder
     {
-        return $query->orderByDesc('published_at');
+        $query->orderByDesc('published_at');
+        return $query;
     }
 }

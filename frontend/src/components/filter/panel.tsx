@@ -43,6 +43,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
 
     useLayoutEffect(() => {
         if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setDropdownPos(null);
             return;
         }
@@ -146,79 +147,79 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
             aria-label={t('video.filters')}
             style={{ top: dropdownPos.top, right: dropdownPos.right }}
         >
-                    {hasTags && (
-                        <div className="filter-panel__dropdown-section">
-                            <span className="filter-panel__dropdown-label">{t('video.filter_by_tags')}</span>
-                            <div className="filter-panel__dropdown-tags">
-                                {allTags.map(tag => <TagChip key={tag} tag={tag} />)}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="filter-panel__dropdown-section">
-                        <span className="filter-panel__dropdown-label">{t('video.filter_sort_by')}</span>
-                        <div className="filter-panel__sort-group">
-                            {SORT_OPTIONS.map(opt => {
-                                const isActive = value.sortBy === opt.value;
-                                return (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        className={`filter-panel__sort-btn${isActive ? ' filter-panel__sort-btn--active' : ''}`}
-                                        onClick={() => onChange({ ...value, sortBy: opt.value })}
-                                        aria-pressed={isActive}
-                                    >
-                                        {t(opt.labelKey)}
-                                    </button>
-                                );
-                            })}
-                        </div>
+            {hasTags && (
+                <div className="filter-panel__dropdown-section">
+                    <span className="filter-panel__dropdown-label">{t('video.filter_by_tags')}</span>
+                    <div className="filter-panel__dropdown-tags">
+                        {allTags.map(tag => <TagChip key={tag} tag={tag} />)}
                     </div>
+                </div>
+            )}
 
-                    <div className="filter-panel__dropdown-section">
-                        <label className="filter-panel__dropdown-label" htmlFor="fp-year">
-                            {t('video.filter_year')}
+            <div className="filter-panel__dropdown-section">
+                <span className="filter-panel__dropdown-label">{t('video.filter_sort_by')}</span>
+                <div className="filter-panel__sort-group">
+                    {SORT_OPTIONS.map(opt => {
+                        const isActive = value.sortBy === opt.value;
+                        return (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                className={`filter-panel__sort-btn${isActive ? ' filter-panel__sort-btn--active' : ''}`}
+                                onClick={() => onChange({ ...value, sortBy: opt.value })}
+                                aria-pressed={isActive}
+                            >
+                                {t(opt.labelKey)}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="filter-panel__dropdown-section">
+                <label className="filter-panel__dropdown-label" htmlFor="fp-year">
+                    {t('video.filter_year')}
+                </label>
+                <select
+                    id="fp-year"
+                    className="filter-panel__year-select"
+                    value={value.year ?? ''}
+                    onChange={e => onChange({ ...value, year: e.target.value === '' ? null : Number(e.target.value) })}
+                >
+                    <option value="">{t('video.filter_all_years')}</option>
+                    {YEAR_OPTIONS.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="filter-panel__dropdown-section">
+                <span className="filter-panel__dropdown-label">{t('video.filter_date_range')}</span>
+                <div className="filter-panel__date-row">
+                    <div className="filter-panel__date-field">
+                        <label className="filter-panel__date-label" htmlFor="fp-date-from">
+                            {t('video.filter_date_from')}
                         </label>
-                        <select
-                            id="fp-year"
-                            className="filter-panel__year-select"
-                            value={value.year ?? ''}
-                            onChange={e => onChange({ ...value, year: e.target.value === '' ? null : Number(e.target.value) })}
-                        >
-                            <option value="">{t('video.filter_all_years')}</option>
-                            {YEAR_OPTIONS.map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
+                        <DatePicker
+                            id="fp-date-from"
+                            value={value.dateFrom}
+                            onChange={v => onChange({ ...value, dateFrom: v })}
+                            placeholder={t('video.filter_date_from')}
+                        />
                     </div>
-
-                    <div className="filter-panel__dropdown-section">
-                        <span className="filter-panel__dropdown-label">{t('video.filter_date_range')}</span>
-                        <div className="filter-panel__date-row">
-                            <div className="filter-panel__date-field">
-                                <label className="filter-panel__date-label" htmlFor="fp-date-from">
-                                    {t('video.filter_date_from')}
-                                </label>
-                                <DatePicker
-                                    id="fp-date-from"
-                                    value={value.dateFrom}
-                                    onChange={v => onChange({ ...value, dateFrom: v })}
-                                    placeholder={t('video.filter_date_from')}
-                                />
-                            </div>
-                            <div className="filter-panel__date-field">
-                                <label className="filter-panel__date-label" htmlFor="fp-date-to">
-                                    {t('video.filter_date_to')}
-                                </label>
-                                <DatePicker
-                                    id="fp-date-to"
-                                    value={value.dateTo}
-                                    onChange={v => onChange({ ...value, dateTo: v })}
-                                    placeholder={t('video.filter_date_to')}
-                                />
-                            </div>
-                        </div>
+                    <div className="filter-panel__date-field">
+                        <label className="filter-panel__date-label" htmlFor="fp-date-to">
+                            {t('video.filter_date_to')}
+                        </label>
+                        <DatePicker
+                            id="fp-date-to"
+                            value={value.dateTo}
+                            onChange={v => onChange({ ...value, dateTo: v })}
+                            placeholder={t('video.filter_date_to')}
+                        />
                     </div>
+                </div>
+            </div>
 
             {hasActiveFilters && (
                 <div className="filter-panel__dropdown-footer">

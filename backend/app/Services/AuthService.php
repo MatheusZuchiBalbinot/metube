@@ -55,4 +55,18 @@ class AuthService
 
         return $user;
     }
+
+    /**
+     * Update the authenticated user's profile fields.
+     *
+     * @param  array<string, mixed>  $data  Validated: name?, bio?
+     */
+    public function updateProfile(array $data): User
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $user->update($data);
+
+        return $user;
+    }
 }
