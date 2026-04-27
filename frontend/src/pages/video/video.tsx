@@ -12,7 +12,9 @@ import type { FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
 import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch } from '@store';
+import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
+import { video as videoApi, type Vuid } from '@api';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
 import { useBurstAnimation } from '@hooks/useBurstAnimation';
@@ -178,6 +180,8 @@ export default function VideoPage() {
         }
         registeredRef.current = true;
         watchVideo(id as unknown as VideoId);
+        videoApi.recordView(id as unknown as Vuid);
+        dispatch(videoActions.incrementViews(id as unknown as VideoId));
     }, [id, hasVideo, watchVideo]);
 
     // ─── Stable keyboard shortcut handlers (safe before early return) ──────────

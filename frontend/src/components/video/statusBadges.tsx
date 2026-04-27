@@ -4,7 +4,6 @@ import Badge from '@ui/badge/badge';
 
 interface VideoStatusBadgesProps {
     isScheduledAndFuture: boolean
-    isNew: boolean
     isWatched: boolean
     isProcessing: boolean
     isFailed: boolean
@@ -13,7 +12,6 @@ interface VideoStatusBadgesProps {
 
 export default function VideoStatusBadges({
     isScheduledAndFuture,
-    isNew,
     isWatched,
     isProcessing,
     isFailed,
@@ -42,11 +40,6 @@ export default function VideoStatusBadges({
             {isScheduledAndFuture && !isProcessing && !isFailed && (
                 <div className={`${classPrefix}__badge-overlay`}>
                     <Badge variant="warning">{t('video.scheduled')}</Badge>
-                </div>
-            )}
-            {isNew && !isScheduledAndFuture && !isProcessing && !isFailed && (
-                <div className={`${classPrefix}__new-overlay`}>
-                    <Badge variant="success">{t('video.new')}</Badge>
                 </div>
             )}
             {isWatched && !isProcessing && !isFailed && (

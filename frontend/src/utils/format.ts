@@ -1,8 +1,6 @@
 import type { Video } from '@models/video';
 import type { Tag } from '@models/tag';
 
-export const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
 /** Returns the first `count` tags and the number of remaining extras. */
 export function getVisibleTags(tags: Tag[], count = 3): { visible: Tag[]; extra: number } {
     return { visible: tags.slice(0, count), extra: Math.max(0, tags.length - count) };

@@ -240,15 +240,6 @@
     z-index: 1;
 }
 
-/* ─── New badge overlay ───────────────────────────────────────────────────── */
-
-.video-card__new-overlay {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 1;
-}
-
 /* ─── Channel link ────────────────────────────────────────────────────────── */
 
 .video-card__meta-channel[role="button"] {
