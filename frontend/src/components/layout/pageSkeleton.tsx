@@ -298,7 +298,7 @@ function getSkeletonComponent(pathname: string): React.FC {
         [p => p.startsWith('/channel/'), ChannelPageSkeleton],
         [p => p === ROUTES.HISTORY, HistoryPageSkeleton],
         [p => p === ROUTES.SEARCH || p.startsWith('/search'), SearchPageSkeleton],
-        [p => p === ROUTES.LIKED || p === ROUTES.WATCH_LATER, CollectionPageSkeleton],
+        [p => p === ROUTES.LIKED, CollectionPageSkeleton],
     ];
 
     for (const [test, component] of matchers) {
