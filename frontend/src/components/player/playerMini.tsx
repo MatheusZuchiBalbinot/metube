@@ -1,7 +1,7 @@
 import { Play, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
-import { useHls } from '@hooks/useHls';
+import { useShaka } from '@hooks/useShaka';
 import type { VideoPlayerProps } from './player';
 
 export function MiniVideoPlayer({
@@ -22,7 +22,7 @@ export function MiniVideoPlayer({
         callbacks: { onTimeUpdate, onEnded, onLoadedMetadata },
     });
 
-    useHls(videoRef, src);
+    useShaka(videoRef, src);
 
     function handleTogglePlayBtn(e: React.MouseEvent) {
         e.stopPropagation();
