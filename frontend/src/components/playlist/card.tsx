@@ -100,7 +100,8 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         return videos.reduce((sum: number, v: Video) => sum + (v.duration ?? 0), 0);
     }, [videos]);
     const hasTotalDuration = totalDurationSec > 0;
-    const displayName = playlist.name === 'Watch Later' ? t('playlist.watch_later_row') : playlist.name;
+    const isWatchLater = playlist.name === 'Watch Later';
+    const displayName = isWatchLater ? t('playlist.watch_later_row') : playlist.name;
 
     function handleToggleExpand() {
         setExpanded(prev => !prev);
@@ -226,26 +227,30 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                             )}
                         </div>
                         <div className="playlist-card__actions">
-                            <Tooltip content={t('playlist.rename')} side="top">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    aria-label={t('playlist.rename')}
-                                    onClick={handleRenameStart}
-                                >
-                                    <Pencil size={13} />
-                                </Button>
-                            </Tooltip>
-                            <Tooltip content={t('playlist.delete')} side="top">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    aria-label={t('playlist.delete')}
-                                    onClick={handleDeleteRequest}
-                                >
-                                    <Trash2 size={13} />
-                                </Button>
-                            </Tooltip>
+                            {!isWatchLater && (
+                                <>
+                                    <Tooltip content={t('playlist.rename')} side="top">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            aria-label={t('playlist.rename')}
+                                            onClick={handleRenameStart}
+                                        >
+                                            <Pencil size={13} />
+                                        </Button>
+                                    </Tooltip>
+                                    <Tooltip content={t('playlist.delete')} side="top">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            aria-label={t('playlist.delete')}
+                                            onClick={handleDeleteRequest}
+                                        >
+                                            <Trash2 size={13} />
+                                        </Button>
+                                    </Tooltip>
+                                </>
+                            )}
                             <button
                                 type="button"
                                 className="playlist-card__chevron"

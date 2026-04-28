@@ -28,7 +28,6 @@ export default function PlaylistsPage() {
 
     const playlistsWithVideos = useMemo(() => {
         return playlists
-            .filter((p: Playlist) => p.name !== 'Watch Later')
             .map((playlist: Playlist) => ({
                 playlist,
                 videos: resolvePlaylistVideos(playlist.videoIds ?? []),
