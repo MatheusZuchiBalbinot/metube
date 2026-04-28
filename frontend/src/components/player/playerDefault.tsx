@@ -4,7 +4,7 @@ import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'luci
 import { usePlayerControls } from '@hooks/usePlayerControls';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
-import { useHls } from '@hooks/useHls';
+import { useShaka } from '@hooks/useShaka';
 import { usePopIcon } from '@hooks/usePopIcon';
 import { useSkipIndicator } from '@hooks/useSkipIndicator';
 import { useFullscreen } from '@hooks/useFullscreen';
@@ -62,7 +62,7 @@ export function DefaultVideoPlayer({
     const { skipIndicator, showSkipIndicator, resetSkipIndicator } = useSkipIndicator();
     const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
-    useHls(videoRef, src);
+    useShaka(videoRef, src);
     useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
     useOutsideClick(settingsRef, () => setShowSettings(false));
 

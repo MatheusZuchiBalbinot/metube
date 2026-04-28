@@ -6,7 +6,7 @@ export { useClickOutside } from './useClickOutside';
 export { useDebounce } from './useDebounce';
 export { useFilterState } from './useFilterState';
 export { useFullscreen } from './useFullscreen';
-export { useHls } from './useHls';
+export { useShaka } from './useShaka';
 export { useInView } from './useInView';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useMediaQuery } from './useMediaQuery';

@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
-import { useHls } from '@hooks/useHls';
+import { useShaka } from '@hooks/useShaka';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
 import { usePopIcon } from '@hooks/usePopIcon';
@@ -65,7 +65,7 @@ export default function ShortPlayer({
     const { popIcon, showPopIcon, resetPopIcon } = usePopIcon();
     const { skipIndicator, showSkipIndicator, resetSkipIndicator } = useSkipIndicator();
 
-    useHls(videoRef, src);
+    useShaka(videoRef, src);
 
     // ─── Register video element with parent (ShortsPage) ──────────────────────
     useLayoutEffect(() => {
