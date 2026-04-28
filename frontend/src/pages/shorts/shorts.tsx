@@ -15,6 +15,7 @@ import type { Tag } from '@models/tag';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { video as videoApi, type Vuid } from '@api';
+import { hasViewed, markViewed } from '@utils/viewedVideos';
 import './shorts.css';
 
 const MAX_TAGS = 3;
@@ -477,8 +478,11 @@ export default function ShortsPage() {
         const hasId = shortId !== undefined;
         if (hasId) {
             watchVideo(shortId);
-            videoApi.recordView(shortId as unknown as Vuid);
-            dispatch(videoActions.incrementViews(shortId));
+            if (!hasViewed(shortId)) {
+                markViewed(shortId);
+                videoApi.recordView(shortId as unknown as Vuid);
+                dispatch(videoActions.incrementViews(shortId));
+            }
         }
 
         setActiveIndex(newIndex);

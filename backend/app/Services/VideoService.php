@@ -135,6 +135,15 @@ class VideoService
      */
     public function recordView(User $user, Video $video): void
     {
+        $alreadyWatchedRecently = $user->history()
+            ->where('video_id', $video->id)
+            ->where('watched_at', '>=', now()->subHour())
+            ->exists();
+
+        if ($alreadyWatchedRecently) {
+            return;
+        }
+
         DB::transaction(function () use ($user, $video) {
             $video->increment('views');
             $user->history()->create(['video_id' => $video->id]);
