@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Home, Clapperboard, History, Clock, ThumbsUp, User, ListVideo } from 'lucide-react';
+import { Home, Clapperboard, History, ThumbsUp, User, ListVideo } from 'lucide-react';
 import { ROUTES } from '@utils/routes';
 import { useAppSelector } from '@store';
 import { useSubscription } from '@hooks/useSubscription';
@@ -41,7 +41,6 @@ const MAIN_NAV = [
 const YOU_NAV = [
     { to: ROUTES.HISTORY, icon: History, labelKey: 'nav.history', end: false },
     { to: ROUTES.PLAYLISTS, icon: ListVideo, labelKey: 'nav.playlists', end: false },
-    { to: ROUTES.WATCH_LATER, icon: Clock, labelKey: 'nav.watch_later', end: false },
     { to: ROUTES.LIKED, icon: ThumbsUp, labelKey: 'nav.liked_videos', end: false },
     { to: ROUTES.PROFILE, icon: User, labelKey: 'nav.your_videos', end: false },
 ] as const;

@@ -23,7 +23,6 @@ import { TooltipProvider } from '@ui';
 const HomePage = React.lazy(() => import('@pages/home/home'));
 const HistoryPage = React.lazy(() => import('@pages/history/history'));
 const PlaylistsPage = React.lazy(() => import('@pages/playlists/playlists'));
-const WatchLaterPage = React.lazy(() => import('@pages/watch/later'));
 const LikedPage = React.lazy(() => import('@pages/liked/liked'));
 const ProfilePage = React.lazy(() => import('@pages/profile/profile'));
 const VideoPage = React.lazy(() => import('@pages/video/video'));
@@ -37,7 +36,6 @@ const PROTECTED_ROUTES: { path: string; Page: React.LazyExoticComponent<() => Re
     { path: ROUTES.SHORTS, Page: ShortsPage },
     { path: ROUTES.HISTORY, Page: HistoryPage },
     { path: ROUTES.PLAYLISTS, Page: PlaylistsPage },
-    { path: ROUTES.WATCH_LATER, Page: WatchLaterPage },
     { path: ROUTES.LIKED, Page: LikedPage },
     { path: ROUTES.PROFILE, Page: ProfilePage },
     { path: ROUTES.USER, Page: ProfilePage },

@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@store';
-import { selectSavedSet } from '@store/videoSlice';
+import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
-import { useVideo } from '@hooks/useVideo';
 import type { Playlist } from '@models/playlist';
-import type { VideoId } from '@models/video';
 import Button from '@ui/button/button';
 import Input from '@ui/input/input';
 import Modal from '@ui/modal/modal';
@@ -21,10 +18,6 @@ interface SavePopoverProps {
 export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const savedSet = useAppSelector(selectSavedSet);
-    const isSaved = savedSet.has(videoId as unknown as VideoId);
-
-    const { saveVideo } = useVideo();
     const {
         playlists,
         createPlaylist,
@@ -38,7 +31,9 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const [creating, setCreating] = useState(false);
 
+    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === 'Watch Later');
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
+    const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id as string);
     const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== 'Watch Later');
 
     function handleTriggerClick(e: React.MouseEvent) {
@@ -53,11 +48,17 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     }
 
     function handleWatchLaterChange() {
-        saveVideo(videoId as unknown as VideoId);
-        dispatch(toastActions.addToast({
-            message: t(isSaved ? 'toast.unsaved' : 'toast.saved'),
-            type: 'success',
-        }));
+        if (!watchLaterPlaylist) {
+            return;
+        }
+
+        if (isInWatchLater) {
+            removeVideoFromPlaylist(watchLaterPlaylist.id as string, videoId);
+            dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: 'info' }));
+        } else {
+            addVideoToPlaylist(watchLaterPlaylist.id as string, videoId);
+            dispatch(toastActions.addToast({ message: t('toast.saved'), type: 'success' }));
+        }
     }
 
     function handlePlaylistChange(playlistId: string, playlistName: string) {
@@ -131,7 +132,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                         <input
                             type="checkbox"
                             className="save-modal__checkbox"
-                            checked={isSaved}
+                            checked={isInWatchLater}
                             onChange={handleWatchLaterChange}
                         />
                         <span className="save-modal__label">{t('playlist.watch_later_row')}</span>
