@@ -91,6 +91,17 @@ describe('VideoController', function () {
         $this->assertDatabaseHas('watch_histories', ['user_id' => $user->id, 'video_id' => $video->id]);
     });
 
+    test('record view is ignored within one hour for the same user and video', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->create(['views' => 0]);
+
+        $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
+        $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
+
+        $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
+        expect($user->history()->where('video_id', $video->id)->count())->toBe(1);
+    });
+
     test('update progress saves watch progress', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();

@@ -15,6 +15,7 @@ import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, type Vuid } from '@api';
+import { hasViewed, markViewed } from '@utils/viewedVideos';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
 import { useBurstAnimation } from '@hooks/useBurstAnimation';
@@ -62,7 +63,6 @@ export default function VideoPage() {
     const video = videos.find((v: Video) => v.id === (id as unknown as VideoId));
     const hasVideo = video !== undefined;
 
-    const registeredRef = useRef(false);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
@@ -169,16 +169,11 @@ export default function VideoPage() {
     }, [id]);
 
     useEffect(() => {
-        // Reset registration flag when navigating to a new video
-        registeredRef.current = false;
-    }, [id]);
-
-    useEffect(() => {
-        const shouldRegister = hasVideo && !registeredRef.current && id !== undefined;
+        const shouldRegister = hasVideo && id !== undefined && !hasViewed(id);
         if (!shouldRegister) {
             return;
         }
-        registeredRef.current = true;
+        markViewed(id);
         watchVideo(id as unknown as VideoId);
         videoApi.recordView(id as unknown as Vuid);
         dispatch(videoActions.incrementViews(id as unknown as VideoId));
