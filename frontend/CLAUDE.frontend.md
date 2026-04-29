@@ -191,6 +191,7 @@ Respostas validadas com Zod antes de chegar ao store.
 | Componente    | Uso                                                                          |
 |---------------|------------------------------------------------------------------------------|
 | `Button`      | Todo `<button>`. Nunca use `<button>` raw. Variants: primary/secondary/ghost/danger. Sizes: sm/md/lg/icon |
+| `Checkbox`    | Checkbox customizado com design token. Props: `checked`, `onChange`, `disabled` |
 | `Input`       | Campos de texto. Suporta `icon`, `label`, `error`, `helper`                  |
 | `Modal`       | Dialogs. Suporta `isOpen`, `onClose`, `title`, `size` (sm/md/lg), focus trap |
 | `Dropdown`    | Selects customizados. Recebe `options`, `value`, `onChange`                  |

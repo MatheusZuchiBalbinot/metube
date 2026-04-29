@@ -1,4 +1,5 @@
 export { default as Button } from './button/button';
+export { default as Checkbox } from './checkbox/checkbox';
 export { default as Tooltip, TooltipProvider } from './tooltip/tooltip';
 export { default as DatePicker } from './date/picker';
 export { default as Input } from './input/input';

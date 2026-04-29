@@ -6,6 +6,7 @@ import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
 import type { Playlist } from '@models/playlist';
 import Button from '@ui/button/button';
+import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
 import Modal from '@ui/modal/modal';
 import './savePopover.css';
@@ -129,12 +130,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
             >
                 <div className="save-modal__list">
                     <label className="save-modal__row">
-                        <input
-                            type="checkbox"
-                            className="save-modal__checkbox"
-                            checked={isInWatchLater}
-                            onChange={handleWatchLaterChange}
-                        />
+                        <Checkbox checked={isInWatchLater} onChange={handleWatchLaterChange} />
                         <span className="save-modal__label">{t('playlist.watch_later_row')}</span>
                     </label>
 
@@ -146,9 +142,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                         const isInPlaylist = videoPlaylistIds.includes(pl.id as string);
                         return (
                             <label key={pl.id as string} className="save-modal__row">
-                                <input
-                                    type="checkbox"
-                                    className="save-modal__checkbox"
+                                <Checkbox
                                     checked={isInPlaylist}
                                     onChange={() => handlePlaylistChange(pl.id as string, pl.name)}
                                 />
@@ -178,14 +172,16 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                             </Button>
                         </div>
                     ) : (
-                        <button
-                            type="button"
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
                             className="save-modal__new-btn"
+                            leftIcon={<Plus size={14} />}
                             onClick={() => setNewPlaylistOpen(true)}
                         >
-                            <Plus size={14} />
-                            <span>{t('playlist.new_playlist_inline')}</span>
-                        </button>
+                            {t('playlist.new_playlist_inline')}
+                        </Button>
                     )}
                 </div>
             </Modal>
