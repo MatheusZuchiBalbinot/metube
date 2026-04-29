@@ -37,7 +37,6 @@ function makeState(overrides: object = {}) {
         watchHistory: [] as VideoId[],
         likedVideos: [] as VideoId[],
         dislikedVideos: [] as VideoId[],
-        savedVideos: [] as VideoId[],
         videoProgress: {} as Record<string, number>,
         autoplay: true,
         uploadModalOpen: false,
@@ -65,18 +64,16 @@ describe('videoSlice — deleteVideo', () => {
         expect(next.videos.find(v => v.id === 'v2')).toBeDefined();
     });
 
-    it('cleans up from watchHistory, liked, disliked, saved', () => {
+    it('cleans up from watchHistory, liked, disliked', () => {
         const state = makeState({
             watchHistory: [vid('v1'), vid('v2')],
             likedVideos: [vid('v1')],
             dislikedVideos: [vid('v1')],
-            savedVideos: [vid('v1')],
         });
         const next = reducer(state, videoActions.deleteVideo(vid('v1')));
         expect(next.watchHistory).toEqual([vid('v2')]);
         expect(next.likedVideos).toEqual([]);
         expect(next.dislikedVideos).toEqual([]);
-        expect(next.savedVideos).toEqual([]);
     });
 
     it('clears pinnedVideoId when deleting pinned video', () => {
@@ -133,22 +130,6 @@ describe('videoSlice — dislikeVideo', () => {
         const state = makeState({ dislikedVideos: [vid('v1')] });
         const next = reducer(state, videoActions.dislikeVideo(vid('v1')));
         expect(next.dislikedVideos).not.toContain(vid('v1'));
-    });
-});
-
-// ─── saveVideo ────────────────────────────────────────────────────────────────
-
-describe('videoSlice — saveVideo', () => {
-    it('adds video to savedVideos', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.saveVideo(vid('v1')));
-        expect(next.savedVideos).toContain(vid('v1'));
-    });
-
-    it('removes video from savedVideos when already saved', () => {
-        const state = makeState({ savedVideos: [vid('v1')] });
-        const next = reducer(state, videoActions.saveVideo(vid('v1')));
-        expect(next.savedVideos).not.toContain(vid('v1'));
     });
 });
 

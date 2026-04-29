@@ -10,7 +10,8 @@ import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useAppDispatch, useAppSelector } from '@store';
-import { videoActions, selectSavedSet } from '@store/videoSlice';
+import { videoActions } from '@store/videoSlice';
+import { selectWatchLaterIds } from '@store/playlistSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import SavePopover from './savePopover';
@@ -46,8 +47,8 @@ const VideoCard = memo(function VideoCard({
     const dispatch = useAppDispatch();
     const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
     const isPinned = useAppSelector(s => s.video.pinnedVideoId === video.id);
-    const savedSet = useAppSelector(selectSavedSet);
-    const isSaved = savedSet.has(video.id);
+    const watchLaterIds = useAppSelector(selectWatchLaterIds);
+    const isSaved = watchLaterIds.has(video.id as string);
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
     const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags);

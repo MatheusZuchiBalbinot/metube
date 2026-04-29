@@ -25,7 +25,6 @@ interface VideoState {
     watchHistory: VideoId[]
     likedVideos: VideoId[]
     dislikedVideos: VideoId[]
-    savedVideos: VideoId[]
     videoProgress: Record<string, number>
     autoplay: boolean
     uploadModalOpen: boolean
@@ -46,7 +45,6 @@ const initialState: VideoState = {
     watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, [], isArray),
     likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
-    savedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.SAVED_VIDEOS, [], isArray),
     videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
     uploadModalOpen: false,
@@ -72,10 +70,6 @@ const videoSlice = createSlice({
 
         setLikedVideos(state, action: PayloadAction<VideoId[]>) {
             state.likedVideos = action.payload;
-        },
-
-        setSavedVideos(state, action: PayloadAction<VideoId[]>) {
-            state.savedVideos = action.payload;
         },
 
         addVideo(state, action: PayloadAction<Video>) {
@@ -113,7 +107,6 @@ const videoSlice = createSlice({
             state.watchEvents = state.watchEvents.filter(e => e.videoId !== id);
             state.likedVideos = state.likedVideos.filter(vid => vid !== id);
             state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
-            state.savedVideos = state.savedVideos.filter(vid => vid !== id);
             const isPinned = state.pinnedVideoId === id;
             if (isPinned) {
                 state.pinnedVideoId = null;
@@ -141,17 +134,6 @@ const videoSlice = createSlice({
             } else {
                 state.dislikedVideos.push(id);
                 state.likedVideos = state.likedVideos.filter(vid => vid !== id);
-            }
-        },
-
-        saveVideo(state, action: PayloadAction<VideoId>) {
-            const id = action.payload;
-            const idx = state.savedVideos.indexOf(id);
-            const isAlreadySaved = idx !== -1;
-            if (isAlreadySaved) {
-                state.savedVideos.splice(idx, 1);
-            } else {
-                state.savedVideos.push(id);
             }
         },
 
@@ -250,9 +232,6 @@ const videoSlice = createSlice({
         xTabSetDislikedVideos(state, action: PayloadAction<VideoId[]>) {
             state.dislikedVideos = action.payload;
         },
-        xTabSetSavedVideos(state, action: PayloadAction<VideoId[]>) {
-            state.savedVideos = action.payload;
-        },
         xTabSetPinnedVideoId(state, action: PayloadAction<VideoId | null>) {
             state.pinnedVideoId = action.payload;
         },
@@ -306,11 +285,6 @@ export const selectLikedSet = createSelector(
 
 export const selectDislikedSet = createSelector(
     [(s: WithVideo) => s.video.dislikedVideos],
-    (ids) => new Set(ids),
-);
-
-export const selectSavedSet = createSelector(
-    [(s: WithVideo) => s.video.savedVideos],
     (ids) => new Set(ids),
 );
 

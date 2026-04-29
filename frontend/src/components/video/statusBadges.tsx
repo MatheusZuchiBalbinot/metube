@@ -10,6 +10,7 @@ interface VideoStatusBadgesProps {
     classPrefix: string
 }
 
+// eslint-disable-next-line complexity
 export default function VideoStatusBadges({
     isScheduledAndFuture,
     isWatched,

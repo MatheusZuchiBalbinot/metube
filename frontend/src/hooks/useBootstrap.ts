@@ -29,12 +29,6 @@ export function useBootstrap(): void {
             }
         });
 
-        interactions.saved().then(result => {
-            if (result) {
-                dispatch(videoActions.setSavedVideos(result.data.map(v => v.id)));
-            }
-        });
-
         playlist.list().then(result => {
             if (result) {
                 dispatch(playlistActions.setPlaylists(result));

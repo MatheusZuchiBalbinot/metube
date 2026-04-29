@@ -14,6 +14,7 @@ import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
 
+// eslint-disable-next-line complexity
 export default function LikedPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
