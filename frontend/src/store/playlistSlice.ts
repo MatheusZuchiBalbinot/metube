@@ -1,9 +1,10 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray } from '@utils/loadFromStorage';
 import type { Playlist, PlaylistId } from '@models/playlist';
 import type { VideoId } from '@models/video';
 import { videoActions } from './videoSlice';
+import type { RootState } from './types';
 
 export type { Playlist, PlaylistId };
 
@@ -96,3 +97,13 @@ const playlistSlice = createSlice({
 
 export const playlistActions = playlistSlice.actions;
 export default playlistSlice;
+
+// ─── Selectors ────────────────────────────────────────────────────────────────
+
+export const selectWatchLaterIds = createSelector(
+    (state: RootState) => state.playlist.playlists,
+    (playlists) => {
+        const wl = playlists.find(p => p.name === 'Watch Later');
+        return new Set((wl?.videoIds ?? []) as string[]);
+    },
+);

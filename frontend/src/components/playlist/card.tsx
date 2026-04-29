@@ -79,6 +79,7 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
     );
 }
 
+// eslint-disable-next-line complexity
 export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
     const { t } = useTranslation();
     const { renamePlaylist, deletePlaylist, reorderVideosInPlaylist } = usePlaylist();

@@ -10,9 +10,11 @@ import SavePopover from '@components/video/savePopover';
 import ReadingMode from '@components/video/readingMode';
 import type { FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
+import { usePlaylist } from '@hooks/usePlaylist';
 import { useSubscription } from '@hooks/useSubscription';
-import { useAppDispatch } from '@store';
+import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { selectWatchLaterIds } from '@store/playlistSlice';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
@@ -50,11 +52,14 @@ export default function VideoPage() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {
-        videos, likedVideos, dislikedVideos, savedVideos,
-        likeVideo, dislikeVideo, saveVideo, watchVideo,
+        videos, likedVideos, dislikedVideos,
+        likeVideo, dislikeVideo, watchVideo,
         updateProgress, videoProgress, autoplay, closeMiniPlayer,
         consumePendingVideoSeek,
     } = useVideo();
+
+    const { playlists, addVideoToPlaylist, removeVideoFromPlaylist } = usePlaylist();
+    const watchLaterIds = useAppSelector(selectWatchLaterIds);
 
     const { isSubscribed, toggleSubscription } = useSubscription();
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
@@ -177,7 +182,7 @@ export default function VideoPage() {
         watchVideo(id as unknown as VideoId);
         videoApi.recordView(id as unknown as Vuid);
         dispatch(videoActions.incrementViews(id as unknown as VideoId));
-    }, [id, hasVideo, watchVideo]);
+    }, [id, hasVideo, watchVideo, dispatch]);
 
     // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
 
@@ -194,16 +199,22 @@ export default function VideoPage() {
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
-        const isCurrentlySaved = video?.id ? savedVideos.has(video.id) : false;
+        const watchLater = playlists.find(p => p.name === 'Watch Later');
+        if (!watchLater || !video?.id) {
+            return;
+        }
+        const isCurrentlySaved = watchLaterIds.has(video.id as string);
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: 'success',
         }));
-        if (video?.id) {
-            saveVideo(video.id);
+        if (isCurrentlySaved) {
+            removeVideoFromPlaylist(watchLater.id as string, video.id as string);
+        } else {
+            addVideoToPlaylist(watchLater.id as string, video.id as string);
         }
         triggerSaveAnimation();
-    }, [video?.id, savedVideos, saveVideo, dispatch, t, triggerSaveAnimation]);
+    }, [video?.id, watchLaterIds, playlists, addVideoToPlaylist, removeVideoFromPlaylist, dispatch, t, triggerSaveAnimation]);
 
     useKeyboardShortcuts({
         onOpenUpload: () => { },
@@ -225,7 +236,7 @@ export default function VideoPage() {
     }
 
     const isLiked = likedVideos.has(video.id);
-    const isSaved = savedVideos.has(video.id);
+    const isSaved = watchLaterIds.has(video.id as string);
     const isDisliked = dislikedVideos.has(video.id);
     const isChannelSubscribed = isSubscribed(video.channel);
     const hasLongDesc = (video.description ?? '').length > 220;

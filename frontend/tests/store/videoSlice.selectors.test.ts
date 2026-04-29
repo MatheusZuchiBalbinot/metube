@@ -5,7 +5,6 @@ import {
     selectPublishedVideos,
     selectLikedSet,
     selectDislikedSet,
-    selectSavedSet,
     makeSelectRecommendations,
 } from '@store/videoSlice';
 import type { Video, VideoId } from '@data/mockVideos';
@@ -40,7 +39,6 @@ function makeState(overrides: object = {}) {
             watchHistory: [] as VideoId[],
             likedVideos: [] as VideoId[],
             dislikedVideos: [] as VideoId[],
-            savedVideos: [] as VideoId[],
             videoProgress: {} as Record<string, number>,
             autoplay: true,
             uploadModalOpen: false,
@@ -176,13 +174,6 @@ describe('selectDislikedSet', () => {
     it('returns a Set of disliked video ids', () => {
         const state = makeState({ dislikedVideos: [vid('v1')] });
         expect(selectDislikedSet(state).has(vid('v1'))).toBe(true);
-    });
-});
-
-describe('selectSavedSet', () => {
-    it('returns a Set of saved video ids', () => {
-        const state = makeState({ savedVideos: [vid('v1')] });
-        expect(selectSavedSet(state).has(vid('v1'))).toBe(true);
     });
 });
 

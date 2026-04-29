@@ -49,6 +49,7 @@ function computeStatus(publishAt: string | null): VideoStatus {
     return isInFuture ? VideoStatus.SCHEDULED : VideoStatus.PUBLISHED;
 }
 
+// eslint-disable-next-line complexity
 export default function UploadModal() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();

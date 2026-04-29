@@ -79,6 +79,7 @@ export default function MiniPlayer() {
         };
     }, [isDragging]);
 
+    // eslint-disable-next-line complexity
     function handleDragStart(e: React.MouseEvent<HTMLDivElement>) {
         const isButton = (e.target as HTMLElement).closest('button');
         if (isButton) {
@@ -114,6 +115,7 @@ export default function MiniPlayer() {
         return deltas[e.key] ?? null;
     }
 
+    // eslint-disable-next-line complexity
     function handleDragKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
         const delta = getArrowKeyDelta(e);
         if (!delta) {

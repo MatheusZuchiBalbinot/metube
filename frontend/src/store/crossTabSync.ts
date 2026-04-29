@@ -61,13 +61,6 @@ export function initCrossTabSync(dispatch: AppDispatch): () => void {
                 dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
             }
         },
-        [STORAGE_KEYS.SAVED_VIDEOS]: (value: string) => {
-            const data = parseJSON<string[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(videoActions.xTabSetSavedVideos(data as VideoId[]));
-            }
-        },
         [STORAGE_KEYS.PINNED_VIDEO]: (value: string) => {
             dispatch(videoActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
         },

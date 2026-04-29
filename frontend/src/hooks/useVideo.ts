@@ -7,7 +7,6 @@ import {
     selectPublishedVideos,
     selectLikedSet,
     selectDislikedSet,
-    selectSavedSet,
     selectRecommendations,
 } from '@store/videoSlice';
 import { video as videoApi, type Vuid } from '@api/videos';
@@ -38,7 +37,6 @@ export function useVideo() {
     const publishedVideos = useAppSelector(selectPublishedVideos);
     const likedVideos = useAppSelector(selectLikedSet);
     const dislikedVideos = useAppSelector(selectDislikedSet);
-    const savedVideos = useAppSelector(selectSavedSet);
 
     const recommendations = useAppSelector(selectRecommendations);
 
@@ -65,12 +63,6 @@ export function useVideo() {
         dispatch(videoActions.dislikeVideo(id));
         videoApi.toggleDislike(id as unknown as Vuid).catch(() => {
             dispatch(videoActions.dislikeVideo(id));
-        });
-    }, [dispatch]);
-    const saveVideo = useCallback((id: VideoId) => {
-        dispatch(videoActions.saveVideo(id));
-        videoApi.toggleSave(id as unknown as Vuid).catch(() => {
-            dispatch(videoActions.saveVideo(id));
         });
     }, [dispatch]);
     const watchVideo = useCallback(
@@ -153,7 +145,6 @@ export function useVideo() {
         pinnedVideoId,
         likedVideos,
         dislikedVideos,
-        savedVideos,
         videoProgress,
         autoplay,
         uploadModalOpen,
@@ -171,7 +162,6 @@ export function useVideo() {
         deleteVideo,
         likeVideo,
         dislikeVideo,
-        saveVideo,
         watchVideo,
         removeFromHistory,
         clearHistory,
