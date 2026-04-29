@@ -445,26 +445,23 @@ export default function VideoPage() {
                                 </SavePopover>
 
                                 <Popover.Root open={isShareDropdownOpen} onOpenChange={setIsShareDropdownOpen}>
-                                    <Popover.Trigger asChild>
-                                        <button
-                                            type="button"
-                                            className={shareBtnClass}
-                                            aria-label={t('video.share')}
-                                            aria-expanded={isShareDropdownOpen}
-                                            aria-haspopup="true"
-                                        >
-                                            <span className="rbtn__icon">
-                                                {isShareCopied ? (
-                                                    <Check size={20} strokeWidth={1.75} />
-                                                ) : (
-                                                    <>
-                                                        <Link2 size={16} strokeWidth={1.75} />
-                                                        <ChevronDown size={10} strokeWidth={2} className="video-page__share-chevron" />
-                                                    </>
-                                                )}
-                                            </span>
-                                            <span className="rbtn__label">{isShareCopied ? t('video.copied') : t('video.share')}</span>
-                                        </button>
+                                    <Popover.Trigger
+                                        className={shareBtnClass}
+                                        aria-label={t('video.share')}
+                                    >
+                                        <span className="rbtn__icon">
+                                            {isShareCopied ? (
+                                                <Check size={20} strokeWidth={1.75} />
+                                            ) : (
+                                                <Link2 size={16} strokeWidth={1.75} />
+                                            )}
+                                        </span>
+                                        <span className="rbtn__label">
+                                            {isShareCopied ? t('video.copied') : t('video.share')}
+                                            {!isShareCopied && (
+                                                <ChevronDown size={9} strokeWidth={2} className="video-page__share-chevron" aria-hidden />
+                                            )}
+                                        </span>
                                     </Popover.Trigger>
                                     <Popover.Portal>
                                         <Popover.Content
@@ -474,22 +471,26 @@ export default function VideoPage() {
                                             sideOffset={6}
                                             role="menu"
                                         >
-                                            <button
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="video-page__share-option"
                                                 role="menuitem"
+                                                leftIcon={<Link2 size={14} strokeWidth={1.75} />}
                                                 onClick={handleShareCopyLink}
                                             >
-                                                <Link2 size={14} strokeWidth={1.75} />
-                                                {t('video.share_copy_link', 'Copy link')}
-                                            </button>
-                                            <button
+                                                {t('video.share_copy_link')}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="video-page__share-option"
                                                 role="menuitem"
+                                                leftIcon={<Clock size={14} strokeWidth={1.75} />}
                                                 onClick={handleShareCopyAtTime}
                                             >
-                                                <Clock size={14} strokeWidth={1.75} />
-                                                {t('video.share_copy_at_time', 'Copy link at current time')}
-                                            </button>
+                                                {t('video.share_copy_at_time')}
+                                            </Button>
                                         </Popover.Content>
                                     </Popover.Portal>
                                 </Popover.Root>
