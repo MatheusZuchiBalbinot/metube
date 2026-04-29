@@ -168,7 +168,7 @@ Respostas validadas com Zod antes de chegar ao store.
 | `useBootstrap`           | popula Redux do backend após login                     |
 | `usePlaylist`            | CRUD de playlists (sincroniza com API)                 |
 | `useSubscription`        | toggle de inscrição em canal                           |
-| `useHls`                 | setup de HLS streaming com fallback                    |
+| `useShaka`               | setup de streaming via Shaka Player (HLS, DASH, MP4)   |
 | `usePlayerKeyboard`      | atalhos de teclado do player                           |
 | `usePlayerControls`      | visibilidade dos controles do player                   |
 | `usePlayerPlayback`      | estado de play/pause/seek/volume                       |

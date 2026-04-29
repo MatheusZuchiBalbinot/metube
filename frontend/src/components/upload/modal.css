@@ -1,5 +1,217 @@
 /* ─── UploadModal ─────────────────────────────────────────────────────────── */
 
+/* ─── Mode tabs ───────────────────────────────────────────────────────────── */
+
+.upload-modal__tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 3px;
+    margin-bottom: 18px;
+}
+
+.upload-modal__tab {
+    flex: 1;
+    padding: 6px 12px;
+    border: none;
+    border-radius: calc(var(--radius) - 2px);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--duration-default), color var(--duration-default);
+}
+
+.upload-modal__tab:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.upload-modal__tab--active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Batch mode container ────────────────────────────────────────────────── */
+
+.upload-modal__batch {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ─── Batch drop zone ─────────────────────────────────────────────────────── */
+
+.upload-modal__batch-drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 28px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    cursor: pointer;
+    transition: border-color var(--duration-default), background var(--duration-default);
+}
+
+.upload-modal__batch-drop:hover,
+.upload-modal__batch-drop--dragging {
+    border-color: var(--accent);
+    background: var(--surface-3);
+}
+
+.upload-modal__batch-drop-label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.upload-modal__batch-drop-sub {
+    font-size: 0.8125rem;
+    color: var(--text-3);
+}
+
+/* ─── Batch item list ─────────────────────────────────────────────────────── */
+
+.upload-modal__batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.upload-modal__batch-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    transition: border-color var(--duration-default);
+}
+
+.upload-modal__batch-item--done {
+    border-color: var(--success, #22c55e);
+    opacity: 0.85;
+}
+
+.upload-modal__batch-item--error {
+    border-color: var(--danger, #ef4444);
+}
+
+.upload-modal__batch-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.upload-modal__batch-title {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0;
+    font-family: inherit;
+}
+
+.upload-modal__batch-title:focus {
+    border-bottom: 1px solid var(--accent);
+}
+
+.upload-modal__batch-title:disabled {
+    color: var(--text-2);
+    cursor: default;
+}
+
+.upload-modal__batch-filename {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upload-modal__batch-progress {
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.upload-modal__batch-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.2s ease;
+}
+
+.upload-modal__batch-item-side {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.upload-modal__batch-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm, 4px);
+    transition: color var(--duration-default), background var(--duration-default);
+}
+
+.upload-modal__batch-remove:hover {
+    color: var(--danger, #ef4444);
+    background: var(--surface-3);
+}
+
+.upload-modal__batch-pct {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    min-width: 32px;
+    text-align: right;
+}
+
+.upload-modal__batch-done {
+    color: var(--success, #22c55e);
+}
+
+.upload-modal__batch-error {
+    color: var(--danger, #ef4444);
+}
+
+/* ─── Batch title Input override ─────────────────────────────────────────── */
+
+.upload-modal__batch-item-body .input-field-wrap {
+    gap: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.upload-modal__batch-item-body .input-inner {
+    min-width: 0;
+}
+
+/* ─── Single form ─────────────────────────────────────────────────────────── */
+
 .upload-modal__form {
     display: flex;
     flex-direction: column;
