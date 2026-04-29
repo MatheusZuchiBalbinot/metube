@@ -87,10 +87,15 @@ export default function VideoPage() {
         if (!video) {
             return [];
         }
-        const videoTagSet = new Set(video.tags);
+        const videoTagSet = new Set(video.tags as string[]);
         return videos
-            .filter((v: Video) => v.id !== video.id && v.tags.some((t: Tag) => videoTagSet.has(t)))
-            .sort((a: Video, b: Video) => b.views - a.views)
+            .filter((v: Video) => v.id !== video.id)
+            .map((v: Video) => ({
+                v,
+                score: (v.tags as string[]).filter(t => videoTagSet.has(t)).length,
+            }))
+            .sort((a, b) => b.score - a.score || b.v.views - a.v.views)
+            .map(({ v }) => v)
             .slice(0, 10);
     }, [video, videos]);
 
