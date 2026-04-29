@@ -4,12 +4,14 @@ Plataforma de video com resumos gerados por IA, inspirada no YouTube.
 
 ---
 
-## IMPORTANTE — Antes de qualquer mudança
+## REGRA OBRIGATÓRIA — Primeira ação de qualquer tarefa
 
-> **Frontend** (`frontend/`): leia `frontend/CLAUDE.frontend.md` antes de alterar qualquer arquivo.
-> **Backend** (`backend/`): leia `backend/CLAUDE.backend.md` antes de alterar qualquer arquivo.
+Antes de escrever qualquer código, leia o guia da área:
 
-Os arquivos acima contêm todas as regras de código, convenções, estrutura e workflow de verificação obrigatórios para cada área.
+- **Frontend** (`frontend/`): leia `frontend/CLAUDE.frontend.md` **completo**
+- **Backend** (`backend/`): leia `backend/CLAUDE.backend.md` **completo**
+
+Não comece a codificar antes de ter lido o guia. Esses arquivos contêm todas as regras de código, convenções, estrutura e workflow de verificação obrigatórios para cada área.
 
 ---
 
