@@ -13,6 +13,7 @@ import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import type { Video } from '@data/mockVideos';
 import type { VideoId } from '@models/video';
+import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/history';
 import './history.css';
 
 // Estimated heights for virtualizer — group headers are shorter than rows.
@@ -28,18 +29,11 @@ interface HistoryGroup {
     ids: string[]
 }
 
-const PERIOD_ALL = 'all';
-const PERIOD_TODAY = 'today';
-const PERIOD_WEEK = 'week';
-const PERIOD_MONTH = 'month';
-
-type Period = typeof PERIOD_ALL | typeof PERIOD_TODAY | typeof PERIOD_WEEK | typeof PERIOD_MONTH;
-
-const PERIODS: { value: Period; labelKey: string }[] = [
-    { value: PERIOD_ALL, labelKey: 'history.period_all' },
-    { value: PERIOD_TODAY, labelKey: 'history.period_today' },
-    { value: PERIOD_WEEK, labelKey: 'history.period_week' },
-    { value: PERIOD_MONTH, labelKey: 'history.period_month' },
+const PERIODS: { value: HistoryPeriodType; labelKey: string }[] = [
+    { value: HistoryPeriod.ALL, labelKey: 'history.period_all' },
+    { value: HistoryPeriod.TODAY, labelKey: 'history.period_today' },
+    { value: HistoryPeriod.WEEK, labelKey: 'history.period_week' },
+    { value: HistoryPeriod.MONTH, labelKey: 'history.period_month' },
 ];
 
 function getGroupLabel(dateStr: string, t: (k: string) => string): string {
@@ -70,7 +64,7 @@ function getGroupLabel(dateStr: string, t: (k: string) => string): string {
 }
 
 function isWithinPeriod(dateStr: string, period: Period): boolean {
-    const isAllPeriod = period === PERIOD_ALL;
+    const isAllPeriod = period === HistoryPeriod.ALL;
     if (isAllPeriod) {
         return true;
     }
@@ -79,11 +73,11 @@ function isWithinPeriod(dateStr: string, period: Period): boolean {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    if (period === PERIOD_TODAY) {
+    if (period === HistoryPeriod.TODAY) {
         return date >= todayStart;
     }
 
-    if (period === PERIOD_WEEK) {
+    if (period === HistoryPeriod.WEEK) {
         const weekStart = new Date(todayStart);
         weekStart.setDate(weekStart.getDate() - 6);
         return date >= weekStart;
@@ -101,7 +95,7 @@ export default function HistoryPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 250);
-    const [selectedPeriod, setSelectedPeriod] = useState<Period>(PERIOD_ALL);
+    const [selectedPeriod, setSelectedPeriod] = useState<Period>(HistoryPeriod.ALL);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const videoMap = useMemo(() => {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\HistoryPeriod;
 use App\Http\Resources\VideoResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -63,11 +64,10 @@ class UserController extends Controller
      */
     public function history(Request $request): JsonResponse
     {
-        $period = $request->query('period', 'all');
-        if (! is_string($period)) {
-            $period = 'all';
-        }
-        $events = $this->userService->getUserHistory(auth()->user(), $period);
+        $periodValue = $request->query('period', 'all');
+        $periodValue = is_string($periodValue) ? $periodValue : 'all';
+        $period = HistoryPeriod::tryFrom($periodValue) ?? HistoryPeriod::ALL;
+        $events = $this->userService->getUserHistory(auth()->user(), $period->value);
 
         return $this->json($events);
     }

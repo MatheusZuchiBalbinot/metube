@@ -5,6 +5,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
 import type { Playlist } from '@models/playlist';
+import { PlaylistName } from '@models/playlist';
 import Button from '@ui/button/button';
 import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
@@ -32,10 +33,10 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const [creating, setCreating] = useState(false);
 
-    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === 'Watch Later');
+    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PlaylistName.WATCH_LATER);
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
     const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id as string);
-    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== 'Watch Later');
+    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PlaylistName.WATCH_LATER);
 
     function handleTriggerClick(e: React.MouseEvent) {
         e.stopPropagation();

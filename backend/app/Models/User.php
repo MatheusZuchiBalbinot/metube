@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PlaylistName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -49,7 +50,7 @@ class User extends Authenticatable
         });
 
         static::created(function (User $user): void {
-            $user->playlists()->firstOrCreate(['name' => 'Watch Later']);
+            $user->playlists()->firstOrCreate(['name' => PlaylistName::WATCH_LATER->value]);
         });
     }
 
@@ -160,7 +161,7 @@ class User extends Authenticatable
      */
     public function getWatchLaterPlaylist(): Playlist
     {
-        return $this->playlists()->where('name', 'Watch Later')->firstOrFail();
+        return $this->playlists()->where('name', PlaylistName::WATCH_LATER->value)->firstOrFail();
     }
 
     /**

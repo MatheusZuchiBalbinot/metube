@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ReactionType;
 use App\Enums\VideoStatus;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
@@ -162,7 +163,7 @@ class VideoService
             $user->reactions()->detach($video->id);
         } else {
             $user->dislikes()->detach($video->id);
-            $user->reactions()->attach($video->id, ['type' => 'like']);
+            $user->reactions()->attach($video->id, ['type' => ReactionType::LIKE->value]);
         }
     }
 
@@ -178,7 +179,7 @@ class VideoService
             $user->reactions()->detach($video->id);
         } else {
             $user->likes()->detach($video->id);
-            $user->reactions()->attach($video->id, ['type' => 'dislike']);
+            $user->reactions()->attach($video->id, ['type' => ReactionType::DISLIKE->value]);
         }
     }
 
