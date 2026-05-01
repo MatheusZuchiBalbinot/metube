@@ -71,8 +71,9 @@ export class Format {
         return String(views);
     }
 
-    static relativeDate(isoDate: string, locale = 'en'): string {
-        const diffMs = Date.now() - new Date(isoDate).getTime();
+    static relativeDate(isoDate: string | null | undefined, locale = 'en'): string {
+        const dateToUse = isoDate ?? new Date().toISOString();
+        const diffMs = Date.now() - new Date(dateToUse).getTime();
         const diffSec = Math.round(diffMs / 1_000);
         const diffMin = Math.round(diffSec / 60);
         const diffH = Math.round(diffMin / 60);

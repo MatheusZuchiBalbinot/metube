@@ -21,6 +21,7 @@ class VideoResource extends JsonResource
             'thumbnail_url' => $this->thumbnail_url,
             'published_at'  => $this->published_at?->toIso8601String(),
             'scheduled_at'  => $this->scheduled_at?->toIso8601String(),
+            'created_at'    => $this->created_at->toIso8601String(),
             'tags'          => $this->tags ?? [],
             'channel'       => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
             'channel_id'    => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),

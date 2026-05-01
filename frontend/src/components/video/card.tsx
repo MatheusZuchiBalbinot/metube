@@ -198,7 +198,7 @@ const VideoCard = memo(function VideoCard({
                     <div className="video-card__meta-sub">
                         <span className="video-card__meta-views">{Format.views(video.views)} {t('video.views')}</span>
                         <span className="video-card__meta-dot" aria-hidden="true">·</span>
-                        <span className="video-card__meta-date">{Format.relativeDate(video.publishedAt, i18n.language)}</span>
+                        <span className="video-card__meta-date">{Format.relativeDate(video.publishedAt ?? video.createdAt, i18n.language)}</span>
                     </div>
                 </div>
 
