@@ -49,10 +49,10 @@ class UpdateVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.max' => 'Título não pode exceder 255 caracteres',
-            'description.max' => 'Descrição não pode exceder 5000 caracteres',
-            'tags.max' => 'Máximo de 20 tags permitidas',
-            'status.in' => 'Status inválido',
+            'title.max'       => 'Title cannot exceed 255 characters.',
+            'description.max' => 'Description cannot exceed 5000 characters.',
+            'tags.max'        => 'A maximum of 20 tags is allowed.',
+            'status.in'       => 'Invalid status value.',
         ];
     }
 
@@ -68,7 +68,7 @@ class UpdateVideoRequest extends FormRequest
             $scheduledAt = $this->get('scheduled_at');
 
             if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
-                $validator->errors()->add('scheduled_at', 'Data de agendamento é obrigatória quando status é scheduled');
+                $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
             }
         });
     }

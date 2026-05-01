@@ -40,10 +40,10 @@ class ReorderVideosRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'vuids.required' => 'Lista de UUIDs é obrigatória',
-            'vuids.array' => 'Vuids deve ser um array',
-            'vuids.min' => 'Pelo menos um vídeo deve ser fornecido',
-            'vuids.*.exists' => 'Each VUID must reference an existing video',
+            'vuids.required' => 'The list of video identifiers is required.',
+            'vuids.array'    => 'Video identifiers must be an array.',
+            'vuids.min'      => 'At least one video must be provided.',
+            'vuids.*.exists' => 'Each video identifier must reference an existing video.',
         ];
     }
 }

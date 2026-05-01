@@ -41,8 +41,8 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.max' => 'Nome não pode exceder 255 caracteres',
-            'bio.max' => 'Bio não pode exceder 1000 caracteres',
+            'name.max' => 'Name cannot exceed 255 characters.',
+            'bio.max'  => 'Bio cannot exceed 1000 characters.',
         ];
     }
 }

@@ -53,11 +53,11 @@ class StoreVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Título do vídeo é obrigatório',
-            'video_file.required' => 'Arquivo de vídeo é obrigatório',
-            'video_file.mimes' => 'Formato de vídeo inválido (mp4, webm, ogg, quicktime, avi)',
-            'status.required' => 'Status é obrigatório',
-            'status.in' => 'Status inválido',
+            'title.required'      => 'Video title is required.',
+            'video_file.required' => 'Video file is required.',
+            'video_file.mimes'    => 'Invalid video format. Accepted: mp4, webm, ogg, quicktime, avi.',
+            'status.required'     => 'Status is required.',
+            'status.in'           => 'Invalid status value.',
         ];
     }
 
@@ -73,7 +73,7 @@ class StoreVideoRequest extends FormRequest
             $scheduledAt = $this->get('scheduled_at');
 
             if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
-                $validator->errors()->add('scheduled_at', 'Data de agendamento é obrigatória quando status é scheduled');
+                $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
             }
         });
     }

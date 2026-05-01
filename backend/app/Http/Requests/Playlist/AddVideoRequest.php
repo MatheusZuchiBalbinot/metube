@@ -39,8 +39,8 @@ class AddVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'vuid.required' => 'Video é obrigatório',
-            'vuid.exists'   => 'Vídeo não encontrado',
+            'vuid.required' => 'Video identifier is required.',
+            'vuid.exists'   => 'Video not found.',
         ];
     }
 }
