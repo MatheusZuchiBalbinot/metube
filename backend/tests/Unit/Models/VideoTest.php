@@ -37,13 +37,12 @@ describe('Video Model', function () {
     });
 
     test('scope filter searches by title', function () {
-        $faker = \Faker\Factory::create();
-        $searchTerm = $faker->word();
+        $searchTerm = 'xyzuniquetermnever';
         $matchingTitle = "$searchTerm Tutorial";
-        $nonMatchingTitle = $faker->sentence();
+        $nonMatchingTitle = 'Some random video about things';
 
-        Video::factory()->create(['title' => $matchingTitle]);
-        Video::factory(rand(2, 4))->create(['title' => $nonMatchingTitle]);
+        Video::factory()->create(['title' => $matchingTitle, 'description' => 'No match here', 'tags' => ['random', 'tags']]);
+        Video::factory(rand(2, 4))->create(['title' => $nonMatchingTitle, 'description' => 'Different content', 'tags' => ['other', 'labels']]);
 
         $filtered = Video::filter(['search' => $searchTerm])->get();
 
