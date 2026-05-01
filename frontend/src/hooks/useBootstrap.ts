@@ -8,6 +8,7 @@ import { interactions } from '@api/interactions';
 import { playlist } from '@api/playlists';
 import { history } from '@api/history';
 import { VideoStatus } from '@models/video';
+import { mergeProgress } from '@utils/mergeProgress';
 
 export function useBootstrap(): void {
     const dispatch = useAppDispatch();
@@ -41,18 +42,7 @@ export function useBootstrap(): void {
             if (!backendProgress) {
                 return;
             }
-            // Backend is the fallback: local wins if it has a higher (more recent) value
-            const merged: Record<string, number> = { ...backendProgress };
-
-            for (const [vuid, localPct] of Object.entries(localProgress)) {
-                const backendPct = backendProgress[vuid] ?? 0;
-                const isLocalAhead = localPct > backendPct;
-                if (isLocalAhead) {
-                    merged[vuid] = localPct;
-                }
-            }
-
-            dispatch(videoActions.setVideoProgress(merged));
+            dispatch(videoActions.setVideoProgress(mergeProgress(localProgress, backendProgress)));
         });
     // Re-fetch whenever the authenticated user changes (logout → login)
     // eslint-disable-next-line react-hooks/exhaustive-deps
