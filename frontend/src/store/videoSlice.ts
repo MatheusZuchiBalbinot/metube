@@ -162,6 +162,10 @@ const videoSlice = createSlice({
             state.videoProgress[action.payload.videoId] = action.payload.percent;
         },
 
+        setVideoProgress(state, action: PayloadAction<Record<string, number>>) {
+            state.videoProgress = action.payload;
+        },
+
         videoFinished(state, action: PayloadAction<VideoId>) {
             const videoId = action.payload;
             state.videoProgress[videoId] = 100;

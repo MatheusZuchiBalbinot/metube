@@ -48,6 +48,7 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/likes', [UserController::class, 'likes']);
         Route::get('/saved', [UserController::class, 'saved']);
         Route::get('/subscriptions', [UserController::class, 'subscriptions']);
+        Route::get('/progress', [UserController::class, 'progress']);
 
         Route::prefix('history')->group(function (): void {
             Route::get('/', [UserController::class, 'history']);

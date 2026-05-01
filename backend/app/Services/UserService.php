@@ -81,6 +81,21 @@ class UserService
      *
      * @return array<string, array{date: string, count: int, videos: list}>
      */
+    /**
+     * Get watch progress for all videos the user has started.
+     *
+     * @return array<string, int> Map of vuid => percent
+     */
+    public function getUserProgress(User $user): array
+    {
+        return $user->progress()
+            ->join('videos', 'video_progress.video_id', '=', 'videos.id')
+            ->select('videos.vuid', 'video_progress.percent')
+            ->get()
+            ->pluck('percent', 'vuid')
+            ->toArray();
+    }
+
     public function getHistoryEvents(User $user): array
     {
         $events = $user->history()
