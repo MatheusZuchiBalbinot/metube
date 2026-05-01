@@ -9,7 +9,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import { interactions } from '@api/interactions';
-import Spinner from '@ui/spinner/spinner';
+import VideoCardSkeleton from '@components/video/cardSkeleton';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
@@ -60,7 +60,11 @@ export default function LikedPage() {
     if (loading) {
         return (
             <div className="liked-page">
-                <Spinner />
+                <div className="liked-page__grid">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <VideoCardSkeleton key={i} />
+                    ))}
+                </div>
             </div>
         );
     }
