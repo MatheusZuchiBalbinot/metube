@@ -47,10 +47,14 @@ class ProcessVideoUpload implements ShouldQueue
             ? $storage->publishThumbnail($this->tmpThumbnailPath, $video->vuid)
             : null;
 
+        $newStatus = $this->resolveStatus($video);
+        $publishedAt = $newStatus === VideoStatus::PUBLISHED ? now() : $video->scheduled_at;
+
         $video->update([
             'thumbnail_url' => $thumbnailUrl,
             'video_url' => $storage->publishVideo($this->tmpPath, $video->vuid),
-            'status' => $this->resolveStatus($video),
+            'status' => $newStatus,
+            'published_at' => $publishedAt,
         ]);
     }
 
