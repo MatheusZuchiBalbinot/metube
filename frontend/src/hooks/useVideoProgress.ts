@@ -5,6 +5,7 @@ import type { Video } from '@data/mockVideos';
 import type { VideoId } from '@models/video';
 
 const PROGRESS_THROTTLE_MS = 3000;
+const BACKEND_SYNC_INTERVAL_MS = 5000;
 const SIMULATE_DURATION_S = 60;
 const SIMULATE_TICK_MS = 2000;
 
@@ -14,6 +15,7 @@ interface UseVideoProgressOptions {
     video: Video | undefined
     videoProgress: Record<string, number>
     updateProgress: (id: string, pct: number) => void
+    onBackendSync?: (id: string, percent: number) => void
     consumePendingVideoSeek: (id: string) => number | null
     onCompleted: () => void
     onFinished?: (id: string) => void
@@ -25,6 +27,7 @@ export function useVideoProgress({
     video,
     videoProgress,
     updateProgress,
+    onBackendSync,
     consumePendingVideoSeek,
     onCompleted,
     onFinished,
@@ -35,12 +38,15 @@ export function useVideoProgress({
     const pendingSeekRef = useRef<number | null>(null);
     const simulatedSecondsRef = useRef<number>(0);
     const simulateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const backendSyncTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const currentTimeRef = useRef<number>(0);
     const durationRef = useRef<number>(0);
     const hasCompletedRef = useRef(false);
 
     const onCompletedRef = useRef(onCompleted);
     onCompletedRef.current = onCompleted;
+    const onBackendSyncRef = useRef(onBackendSync);
+    onBackendSyncRef.current = onBackendSync;
 
     const [currentTime, setCurrentTime] = useState(0);
     const [showCompletion, setShowCompletion] = useState(false);
@@ -116,6 +122,36 @@ export function useVideoProgress({
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, !!video]);
+
+    // Sync progress to backend every 5 seconds, independent of the local throttle
+    useEffect(() => {
+        if (!id) {
+            return;
+        }
+
+        backendSyncTimerRef.current = setInterval(() => {
+            const hasDuration = durationRef.current > 0;
+            const hasCurrentTime = currentTimeRef.current > 0;
+
+            const percent = hasDuration && hasCurrentTime
+                ? (currentTimeRef.current / durationRef.current) * 100
+                : simulatedSecondsRef.current > 0
+                    ? (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100
+                    : null;
+
+            const shouldSync = percent !== null && percent > 0;
+            if (shouldSync) {
+                onBackendSyncRef.current?.(id, Math.round(percent));
+            }
+        }, BACKEND_SYNC_INTERVAL_MS);
+
+        return () => {
+            if (backendSyncTimerRef.current) {
+                clearInterval(backendSyncTimerRef.current);
+                backendSyncTimerRef.current = null;
+            }
+        };
+    }, [id]);
 
     // Persist progress and open mini player on unmount / id change
     function updateProgressDispatch(videoId: VideoId) {
