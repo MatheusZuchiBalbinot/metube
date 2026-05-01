@@ -75,13 +75,6 @@ class UserService
     }
 
     /**
-     * Get watch history events grouped by date.
-     *
-     * Useful for activity heatmap on user profile.
-     *
-     * @return array<string, array{date: string, count: int, videos: list}>
-     */
-    /**
      * Get watch progress for all videos the user has started.
      *
      * @return array<string, int> Map of vuid => percent
@@ -89,10 +82,9 @@ class UserService
     public function getUserProgress(User $user): array
     {
         return $user->progress()
-            ->join('videos', 'video_progress.video_id', '=', 'videos.id')
-            ->select('videos.vuid', 'video_progress.percent')
+            ->with('video:id,vuid')
             ->get()
-            ->pluck('percent', 'vuid')
+            ->mapWithKeys(fn ($p) => [$p->video->vuid => $p->percent])
             ->toArray();
     }
 

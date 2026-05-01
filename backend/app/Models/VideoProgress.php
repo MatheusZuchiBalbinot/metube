@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int $video_id
  * @property int $percent
+ * @property \App\Models\Video $video
  */
 class VideoProgress extends Model
 {
