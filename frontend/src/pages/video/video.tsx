@@ -15,7 +15,7 @@ import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { PlaylistName } from '@models/playlist';
+import { Playlist } from '@models/playlist';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
@@ -205,7 +205,7 @@ export default function VideoPage() {
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
-        const watchLater = playlists.find(p => p.name === PlaylistName.WATCH_LATER);
+        const watchLater = playlists.find(p => p.name === Playlist.WATCH_LATER);
         if (!watchLater || !video?.id) {
             return;
         }

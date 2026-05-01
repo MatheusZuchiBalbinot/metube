@@ -9,7 +9,7 @@ import { usePlaylist } from '@hooks/usePlaylist';
 import { useAppDispatch, useAppSelector } from '@store';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { PlaylistName } from '@models/playlist';
+import { Playlist } from '@models/playlist';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import type { Video } from '@data/mockVideos';
@@ -52,7 +52,7 @@ export default function WatchLaterPage() {
     const isTouchDevice = useMediaQuery('(hover: none)');
 
     function handleRemove(videoId: string) {
-        const watchLater = playlists.find(p => p.name === PlaylistName.WATCH_LATER);
+        const watchLater = playlists.find(p => p.name === Playlist.WATCH_LATER);
         const hasWatchLater = watchLater !== undefined;
 
         if (!hasWatchLater) {

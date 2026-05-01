@@ -5,7 +5,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
 import type { Playlist } from '@models/playlist';
-import { PlaylistName } from '@models/playlist';
+import { Playlist as PlaylistConsts } from '@models/playlist';
 import Button from '@ui/button/button';
 import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
@@ -30,13 +30,13 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
     const [open, setOpen] = useState(false);
     const [newPlaylistOpen, setNewPlaylistOpen] = useState(false);
-    const [newPlaylistName, setNewPlaylistName] = useState('');
+    const [newPlaylist, setNewPlaylist] = useState('');
     const [creating, setCreating] = useState(false);
 
-    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PlaylistName.WATCH_LATER);
+    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PlaylistConsts.WATCH_LATER);
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
     const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id as string);
-    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PlaylistName.WATCH_LATER);
+    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PlaylistConsts.WATCH_LATER);
 
     function handleTriggerClick(e: React.MouseEvent) {
         e.stopPropagation();
@@ -46,7 +46,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     function handleClose() {
         setOpen(false);
         setNewPlaylistOpen(false);
-        setNewPlaylistName('');
+        setNewPlaylist('');
     }
 
     function handleWatchLaterChange() {
@@ -81,7 +81,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     }
 
     async function handleCreatePlaylist() {
-        const trimmedName = newPlaylistName.trim();
+        const trimmedName = newPlaylist.trim();
         const isNameEmpty = trimmedName === '';
         if (isNameEmpty || creating) {
             return;
@@ -100,7 +100,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
             message: t('toast.playlist_created'),
             type: 'success',
         }));
-        setNewPlaylistName('');
+        setNewPlaylist('');
         setNewPlaylistOpen(false);
     }
 
@@ -113,7 +113,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
         if (isEscape) {
             setNewPlaylistOpen(false);
-            setNewPlaylistName('');
+            setNewPlaylist('');
         }
     }
 
@@ -158,8 +158,8 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                         <div className="save-modal__new-form">
                             <Input
                                 autoFocus
-                                value={newPlaylistName}
-                                onChange={e => setNewPlaylistName(e.target.value)}
+                                value={newPlaylist}
+                                onChange={e => setNewPlaylist(e.target.value)}
                                 onKeyDown={handleInputKeyDown}
                                 placeholder={t('playlist.name_placeholder')}
                             />
