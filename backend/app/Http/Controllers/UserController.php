@@ -109,4 +109,16 @@ class UserController extends Controller
     {
         return $this->userService->getHistoryEvents(auth()->user());
     }
+
+    /**
+     * Get watch progress for all videos the user has started.
+     *
+     * @return JsonResponse array{data: array<string, int>} Map of vuid => percent
+     */
+    public function progress(): JsonResponse
+    {
+        $progress = $this->userService->getUserProgress(auth()->user());
+
+        return $this->json(['data' => $progress]);
+    }
 }
