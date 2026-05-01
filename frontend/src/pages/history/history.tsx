@@ -63,7 +63,7 @@ function getGroupLabel(dateStr: string, t: (k: string) => string): string {
     return t('history.group_older');
 }
 
-function isWithinPeriod(dateStr: string, period: Period): boolean {
+function isWithinPeriod(dateStr: string, period: HistoryPeriodType): boolean {
     const isAllPeriod = period === HistoryPeriod.ALL;
     if (isAllPeriod) {
         return true;
@@ -95,7 +95,7 @@ export default function HistoryPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 250);
-    const [selectedPeriod, setSelectedPeriod] = useState<Period>(HistoryPeriod.ALL);
+    const [selectedPeriod, setSelectedPeriod] = useState<HistoryPeriodType>(HistoryPeriod.ALL);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const videoMap = useMemo(() => {

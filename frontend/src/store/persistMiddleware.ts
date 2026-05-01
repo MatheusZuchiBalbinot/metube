@@ -19,7 +19,6 @@ persistMiddleware.startListening({
         localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(sv.watchHistory));
         localStorage.setItem(STORAGE_KEYS.LIKED_VIDEOS, JSON.stringify(sv.likedVideos));
         localStorage.setItem(STORAGE_KEYS.DISLIKED_VIDEOS, JSON.stringify(sv.dislikedVideos));
-        localStorage.setItem(STORAGE_KEYS.SAVED_VIDEOS, JSON.stringify(sv.savedVideos));
         localStorage.setItem(STORAGE_KEYS.VIDEO_PROGRESS, JSON.stringify(sv.videoProgress));
         localStorage.setItem(STORAGE_KEYS.AUTOPLAY, JSON.stringify(sv.autoplay));
         localStorage.setItem(STORAGE_KEYS.WATCH_EVENTS, JSON.stringify(sv.watchEvents));

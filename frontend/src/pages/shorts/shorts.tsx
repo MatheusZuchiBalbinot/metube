@@ -12,8 +12,9 @@ import TagBadge from '@components/tag/badge';
 import { ROUTES } from '@utils/routes';
 import { useBurstAnimation } from '@hooks/useBurstAnimation';
 import type { Tag } from '@models/tag';
-import { useAppDispatch } from '@store';
+import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { selectWatchLaterIds } from '@store/playlistSlice';
 import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
 import './shorts.css';
@@ -32,6 +33,7 @@ interface ShortItemProps {
     // Lifted volume/mute state — persists across short items
     muted: boolean;
     volume: number;
+    watchLaterIds: Set<string>;
     onMuteChange: (muted: boolean) => void;
     onVolumeChange: (volume: number) => void;
 }
@@ -140,11 +142,11 @@ function ShortDescription({ video, visibleTags, isOpen, onClose, onTagClick, onC
 const ShortItem = memo(function ShortItem({
     video, index, total, isActive, videoRef, onVideoMounted,
     onEnded, onScrollNext,
-    muted, volume, onMuteChange, onVolumeChange,
+    muted, volume, onMuteChange, onVolumeChange, watchLaterIds,
 }: ShortItemProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { likedVideos, dislikedVideos, savedVideos, likeVideo, dislikeVideo, openTagView } = useVideo();
+    const { likedVideos, dislikedVideos, likeVideo, dislikeVideo, openTagView } = useVideo();
 
     const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
@@ -154,7 +156,7 @@ const ShortItem = memo(function ShortItem({
     // Derived state
     const isLiked = likedVideos.has(video.id);
     const isDisliked = dislikedVideos.has(video.id);
-    const isSaved = savedVideos.has(video.id);
+    const isSaved = watchLaterIds.has(video.id);
     const isLast = index === total - 1;
     const effectiveVolume = muted ? 0 : volume;
 
@@ -421,6 +423,7 @@ export default function ShortsPage() {
         shortsMuted: muted, shortsVolume: volume,
         setShortsMuted: setMuted, setShortsVolume: setVolume,
     } = useVideo();
+    const watchLaterIds = useAppSelector(selectWatchLaterIds);
     const feedRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
     const videoRefsMap = useRef<Map<number, HTMLVideoElement>>(new Map());
@@ -580,6 +583,7 @@ export default function ShortsPage() {
                                     volume={volume}
                                     onMuteChange={setMuted}
                                     onVolumeChange={setVolume}
+                                    watchLaterIds={watchLaterIds}
                                 />
                             )}
                         </div>
