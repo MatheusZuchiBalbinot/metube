@@ -38,6 +38,8 @@ function v(
     scheduledAt?: string,
     duration?: number,
 ): Video {
+    const createdDate = new Date(publishedAt);
+    createdDate.setHours(createdDate.getHours() - 1);
     return {
         id: id as VideoId,
         title,
@@ -45,6 +47,7 @@ function v(
         tags: tags as Tag[],
         thumbnail: `https://picsum.photos/seed/${id}/320/180`,
         publishedAt,
+        createdAt: createdDate.toISOString(),
         scheduledAt,
         channel: CHANNELS[channelId],
         channelId: channelId as ChannelId,
