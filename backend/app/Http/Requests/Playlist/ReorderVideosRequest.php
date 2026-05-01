@@ -28,7 +28,7 @@ class ReorderVideosRequest extends FormRequest
     {
         return [
             'vuids' => ['required', 'array', 'min:1'],
-            'vuids.*' => ['uuid'],
+            'vuids.*' => ['string', 'exists:videos,vuid'],
         ];
     }
 
@@ -43,7 +43,7 @@ class ReorderVideosRequest extends FormRequest
             'vuids.required' => 'Lista de UUIDs é obrigatória',
             'vuids.array' => 'Vuids deve ser um array',
             'vuids.min' => 'Pelo menos um vídeo deve ser fornecido',
-            'vuids.*.uuid' => 'Cada VUID deve ser um UUID válido',
+            'vuids.*.exists' => 'Each VUID must reference an existing video',
         ];
     }
 }
