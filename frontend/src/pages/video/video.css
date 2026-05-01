@@ -415,11 +415,6 @@
     flex-direction: column;
     position: sticky;
     top: 12px;
-    max-height: calc(100vh - 80px);
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
 }
 
 .video-page__sidebar-list {
@@ -453,18 +448,6 @@
     min-height: 400px;
     color: var(--text-2);
     font-size: 1rem;
-}
-
-.video-page__back-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: var(--page-padding-y) var(--page-padding-x) 0;
-}
-
-.video-page__back-btn {
-    border-radius: var(--radius-full) !important;
-    width: fit-content;
 }
 
 .video-page__reading-mode-btn {
