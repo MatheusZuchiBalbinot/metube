@@ -5,24 +5,28 @@ import { Clock, X } from 'lucide-react';
 import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
-import { useAppDispatch } from '@store';
+import { usePlaylist } from '@hooks/usePlaylist';
+import { useAppDispatch, useAppSelector } from '@store';
+import { selectWatchLaterIds } from '@store/playlistSlice';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import type { Video } from '@data/mockVideos';
-import type { VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './later.css';
 
 export default function WatchLaterPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { savedVideos, videos, saveVideo } = useVideo();
+    const { videos } = useVideo();
+    const { playlists, removeVideoFromPlaylist } = usePlaylist();
+    const watchLaterIds = useAppSelector(selectWatchLaterIds);
 
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
-    const watchLaterList = useMemo(() => {
-        return videos.filter((v: Video) => savedVideos.has(v.id));
-    }, [savedVideos, videos]);
+    const watchLaterList = useMemo(
+        () => videos.filter((v: Video) => watchLaterIds.has(v.id as string)),
+        [videos, watchLaterIds],
+    );
 
     const allTags = useMemo(() => {
         const tagSet = new Set<string>();
@@ -44,12 +48,15 @@ export default function WatchLaterPage() {
     const isTouchDevice = useMediaQuery('(hover: none)');
 
     function handleRemove(videoId: string) {
-        const isCurrentlySaved = savedVideos.has(videoId as unknown as VideoId);
-        dispatch(toastActions.addToast({
-            message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
-            type: 'success',
-        }));
-        saveVideo(videoId as unknown as VideoId);
+        const watchLater = playlists.find(p => p.name === 'Watch Later');
+        const hasWatchLater = watchLater !== undefined;
+
+        if (!hasWatchLater) {
+            return;
+        }
+
+        removeVideoFromPlaylist(watchLater.id as string, videoId);
+        dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: 'info' }));
     }
 
     return (
