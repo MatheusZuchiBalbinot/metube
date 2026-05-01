@@ -16,6 +16,7 @@ interface UseVideoProgressOptions {
     updateProgress: (id: string, pct: number) => void
     consumePendingVideoSeek: (id: string) => number | null
     onCompleted: () => void
+    onFinished?: (id: string) => void
 }
 
 export function useVideoProgress({
@@ -26,6 +27,7 @@ export function useVideoProgress({
     updateProgress,
     consumePendingVideoSeek,
     onCompleted,
+    onFinished,
 }: UseVideoProgressOptions) {
     const dispatch = useAppDispatch();
 
@@ -210,11 +212,12 @@ export function useVideoProgress({
         if (id) {
             updateProgress(id, 100);
             dispatch(videoActions.videoFinished(id as unknown as VideoId));
+            onFinished?.(id);
         }
         triggerCompletion();
         onCompletedRef.current();
 
-    }, [id, updateProgress, dispatch]);
+    }, [id, updateProgress, dispatch, onFinished]);
 
     // Returns the best-known current playback position (real or simulated)
     function getCurrentTime(): number {
