@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
@@ -50,7 +50,6 @@ export default function VideoPage() {
     const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
     const id = searchParams.get('v') ?? undefined;
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {
         videos, likedVideos, dislikedVideos,
@@ -116,10 +115,8 @@ export default function VideoPage() {
         videoRef,
         video,
         videoProgress,
-        updateProgress: (id: string, pct: number) => {
-            updateProgress(id as unknown as VideoId, pct);
-            videoApi.updateProgress(id as unknown as Vuid, Math.round(pct)).catch(() => {});
-        },
+        updateProgress: (id: string, pct: number) => updateProgress(id as unknown as VideoId, pct),
+        onBackendSync: (id: string, pct: number) => videoApi.updateProgress(id as unknown as Vuid, pct).catch(() => {}),
         consumePendingVideoSeek: (id: string) => consumePendingVideoSeek(id as unknown as VideoId),
         onCompleted: startAutoplayCountdown,
         onFinished: (vuid: string) => videoApi.recordView(vuid as unknown as Vuid),
