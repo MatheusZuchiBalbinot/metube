@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, ArrowLeft, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
 import VideoRow from '@components/video/row';
 import FilterPanel from '@components/filter/panel';
@@ -311,27 +311,6 @@ export default function VideoPage() {
 
     return (
         <div className="video-page">
-            <div className="video-page__back-header">
-                <Button variant="ghost" size="sm" className="video-page__back-btn" onClick={() => navigate(-1)}>
-                    <ArrowLeft size={14} strokeWidth={2} />
-                    {t('common.back')}
-                </Button>
-                {hasSummary && (
-                    <Tooltip content={readingMode ? t('video.exit_reading_mode') : t('video.reading_mode')} side="bottom">
-                        <Button
-                            variant={readingMode ? 'primary' : 'ghost'}
-                            size="sm"
-                            className="video-page__reading-mode-btn"
-                            onClick={() => setReadingMode(v => !v)}
-                            aria-pressed={readingMode}
-                            aria-label={t('video.reading_mode')}
-                        >
-                            <BookOpen size={14} strokeWidth={2} />
-                            {t('video.reading_mode')}
-                        </Button>
-                    </Tooltip>
-                )}
-            </div>
             <div className="video-page__layout">
                 <main className="video-page__main">
                     {readingMode && summary ? (
@@ -573,6 +552,22 @@ export default function VideoPage() {
                                     value={filterState}
                                     onChange={setFilterState}
                                 />
+                            </div>
+                        )}
+                        {hasSummary && (
+                            <div className="video-page__sidebar-filter-slot">
+                                <Tooltip content={readingMode ? t('video.exit_reading_mode') : t('video.reading_mode')} side="bottom">
+                                    <Button
+                                        variant={readingMode ? 'primary' : 'ghost'}
+                                        size="sm"
+                                        className="video-page__reading-mode-btn"
+                                        onClick={() => setReadingMode(v => !v)}
+                                        aria-pressed={readingMode}
+                                        aria-label={t('video.reading_mode')}
+                                    >
+                                        <BookOpen size={14} strokeWidth={2} />
+                                    </Button>
+                                </Tooltip>
                             </div>
                         )}
                     </div>
