@@ -111,6 +111,8 @@ class Video extends Model
     /**
      * Filter videos by search, tags, and status.
      *
+     * Search matches title, description, and tags (case-insensitive).
+     *
      * @param  Builder<Video>  $query
      * @param  array<string, mixed>  $filters
      * @return Builder<Video>
@@ -118,8 +120,15 @@ class Video extends Model
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         if (isset($filters['search'])) {
-            $operator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
-            $query = $query->where('title', $operator, "%{$filters['search']}%");
+            $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
+            $operator = $isPgsql ? 'ilike' : 'like';
+            $term = "%{$filters['search']}%";
+
+            $query = $query->where(function (Builder $q) use ($operator, $term): void {
+                $q->where('title', $operator, $term)
+                    ->orWhere('description', $operator, $term)
+                    ->orWhere('tags', $operator, $term);
+            });
         }
 
         if (isset($filters['tags'])) {

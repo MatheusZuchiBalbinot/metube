@@ -117,4 +117,50 @@ describe('VideoController', function () {
             'percent' => 50,
         ]);
     });
+
+    test('index filters videos by search term on title', function () {
+        $user = User::factory()->create();
+        Video::factory()->create(['title' => 'Laravel Tutorial', 'description' => 'intro', 'tags' => []]);
+        Video::factory()->create(['title' => 'Vue Guide', 'description' => 'intro', 'tags' => []]);
+
+        $response = $this->actingAs($user)->getJson('/api/videos?search=laravel');
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.title', 'Laravel Tutorial');
+    });
+
+    test('index filters videos by search term on description', function () {
+        $user = User::factory()->create();
+        Video::factory()->create(['title' => 'Video A', 'description' => 'deep dive into testing', 'tags' => []]);
+        Video::factory()->create(['title' => 'Video B', 'description' => 'unrelated content', 'tags' => []]);
+
+        $response = $this->actingAs($user)->getJson('/api/videos?search=testing');
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.title', 'Video A');
+    });
+
+    test('index filters videos by search term on tags', function () {
+        $user = User::factory()->create();
+        Video::factory()->create(['title' => 'Video A', 'description' => '', 'tags' => ['php', 'backend']]);
+        Video::factory()->create(['title' => 'Video B', 'description' => '', 'tags' => ['javascript']]);
+
+        $response = $this->actingAs($user)->getJson('/api/videos?search=php');
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.title', 'Video A');
+    });
+
+    test('index returns all videos when no search term provided', function () {
+        $user = User::factory()->create();
+        Video::factory(3)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/videos');
+
+        $response->assertOk();
+        $response->assertJsonCount(3, 'data');
+    });
 });
