@@ -39,9 +39,9 @@ class UpdatePlaylistRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Nome da playlist é obrigatório',
-            'name.min' => 'Nome não pode estar vazio',
-            'name.max' => 'Nome não pode exceder 255 caracteres',
+            'name.required' => 'Playlist name is required.',
+            'name.min' => 'Playlist name cannot be empty.',
+            'name.max' => 'Playlist name cannot exceed 255 characters.',
         ];
     }
 }

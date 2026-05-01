@@ -39,10 +39,10 @@ class UpdateProgressRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'percent.required' => 'Percentual de progresso é obrigatório',
-            'percent.integer' => 'Percentual deve ser um número inteiro',
-            'percent.min' => 'Percentual não pode ser menor que 0',
-            'percent.max' => 'Percentual não pode ser maior que 100',
+            'percent.required' => 'Progress percentage is required.',
+            'percent.integer'  => 'Progress percentage must be an integer.',
+            'percent.min'      => 'Progress percentage cannot be less than 0.',
+            'percent.max'      => 'Progress percentage cannot be greater than 100.',
         ];
     }
 }
