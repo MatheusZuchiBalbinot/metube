@@ -116,9 +116,13 @@ export default function VideoPage() {
         videoRef,
         video,
         videoProgress,
-        updateProgress: (id: string, pct: number) => updateProgress(id as unknown as VideoId, pct),
+        updateProgress: (id: string, pct: number) => {
+            updateProgress(id as unknown as VideoId, pct);
+            videoApi.updateProgress(id as unknown as Vuid, Math.round(pct)).catch(() => {});
+        },
         consumePendingVideoSeek: (id: string) => consumePendingVideoSeek(id as unknown as VideoId),
         onCompleted: startAutoplayCountdown,
+        onFinished: (vuid: string) => videoApi.recordView(vuid as unknown as Vuid),
     });
 
     // ─── Derived state that depends on hook output ────────────────────────────
