@@ -162,6 +162,15 @@ const videoSlice = createSlice({
             state.videoProgress[action.payload.videoId] = action.payload.percent;
         },
 
+        videoFinished(state, action: PayloadAction<VideoId>) {
+            const videoId = action.payload;
+            state.videoProgress[videoId] = 100;
+            const isAlreadyInHistory = state.watchHistory.includes(videoId);
+            if (!isAlreadyInHistory) {
+                state.watchHistory = [videoId, ...state.watchHistory];
+            }
+        },
+
         setAutoplay(state, action: PayloadAction<boolean>) {
             state.autoplay = action.payload;
         },

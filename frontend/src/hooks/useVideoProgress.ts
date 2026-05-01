@@ -209,11 +209,12 @@ export function useVideoProgress({
     const handleVideoEnded = useCallback(() => {
         if (id) {
             updateProgress(id, 100);
+            dispatch(videoActions.videoFinished(id as unknown as VideoId));
         }
         triggerCompletion();
         onCompletedRef.current();
 
-    }, [id, updateProgress]);
+    }, [id, updateProgress, dispatch]);
 
     // Returns the best-known current playback position (real or simulated)
     function getCurrentTime(): number {
