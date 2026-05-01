@@ -16,6 +16,7 @@ import subscriptionSlice from '@store/subscriptionSlice';
 import playlistSlice from '@store/playlistSlice';
 import searchSlice from '@store/searchSlice';
 import { SearchProvider } from '@context/searchContext';
+import { TooltipProvider } from '@ui';
 import type { RootState } from '@store';
 import { makeRootState } from './factories';
 
@@ -49,7 +50,9 @@ export function renderWithProviders(
         return (
             <Provider store={store}>
                 <MemoryRouter initialEntries={[route]}>
-                    <SearchProvider>{children}</SearchProvider>
+                    <TooltipProvider delayDuration={0}>
+                        <SearchProvider>{children}</SearchProvider>
+                    </TooltipProvider>
                 </MemoryRouter>
             </Provider>
         );

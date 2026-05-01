@@ -7,6 +7,7 @@ import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
 import { usePlaylist } from '@hooks/usePlaylist';
 import { useAppDispatch, useAppSelector } from '@store';
+import VideoCardSkeleton from '@components/video/cardSkeleton';
 import { selectWatchLaterIds } from '@store/playlistSlice';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
@@ -14,6 +15,7 @@ import type { Video } from '@data/mockVideos';
 import type { Tag } from '@models/tag';
 import './later.css';
 
+// eslint-disable-next-line complexity
 export default function WatchLaterPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
@@ -43,6 +45,7 @@ export default function WatchLaterPage() {
         [watchLaterList, filters],
     );
 
+    const isBootstrapping = videos.length === 0;
     const hasVideos = watchLaterList.length > 0;
     const hasResults = filteredVideos.length > 0;
     const isTouchDevice = useMediaQuery('(hover: none)');
@@ -57,6 +60,18 @@ export default function WatchLaterPage() {
 
         removeVideoFromPlaylist(watchLater.id as string, videoId);
         dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: 'info' }));
+    }
+
+    if (isBootstrapping) {
+        return (
+            <div className="watch-later-page">
+                <div className="watch-later-page__grid">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <VideoCardSkeleton key={i} />
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     return (
