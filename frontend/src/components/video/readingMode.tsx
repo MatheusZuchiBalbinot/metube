@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import type { VideoSummary } from '@data/mockSummaries';
+import type { VideoSummary } from '@api/videos';
 
 interface ReadingModeProps {
     summary: VideoSummary

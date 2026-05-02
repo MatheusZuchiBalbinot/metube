@@ -14,7 +14,7 @@ import Button from '@ui/button/button';
 import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
 import type { Tag } from '@models/tag';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 import './home.css';
 
 // 2 years: long enough to include recent uploads but short enough to filter

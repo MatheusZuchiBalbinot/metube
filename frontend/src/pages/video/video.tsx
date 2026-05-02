@@ -15,7 +15,7 @@ import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { Playlist } from '@models/playlist';
+import { PLAYLIST_CONSTANTS } from '@models/playlist';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
@@ -24,13 +24,12 @@ import { Format } from '@utils/format';
 import { useBurstAnimation } from '@hooks/useBurstAnimation';
 import { useVideoProgress } from '@hooks/useVideoProgress';
 import { useAutoplay } from '@hooks/useAutoplay';
-import { getVideoSummary } from '@data/mockSummaries';
 import { TagColors } from '@utils/tagColors';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
 import { Avatar, Button, Tooltip, Badge } from '@ui';
-import type { Video } from '@data/mockVideos';
-import type { VideoId } from '@models/video';
+import type { Video, VideoId } from '@models/video';
+import type { VideoSummary } from '@api/videos';
 import type { Tag } from '@models/tag';
 import './video.css';
 
@@ -139,12 +138,18 @@ export default function VideoPage() {
         [relatedVideos, filterState],
     );
 
-    const summary = useMemo(() => {
-        if (!video) {
-            return null;
+    const [summary, setSummary] = useState<VideoSummary | null>(null);
+
+    useEffect(() => {
+        const isVideoReady = video !== undefined;
+        if (!isVideoReady) {
+            return;
         }
-        return getVideoSummary(video.id);
-    }, [video]);
+        videoApi.getSummary(video.id as unknown as Vuid).then(result => {
+            setSummary(result);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [video?.id]); // intentional: re-fetch only when the video id changes, not on every reference update
 
     const hasSummary = summary !== null;
 
@@ -206,7 +211,7 @@ export default function VideoPage() {
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
-        const watchLater = playlists.find(p => p.name === Playlist.WATCH_LATER);
+        const watchLater = playlists.find(p => p.name === PLAYLIST_CONSTANTS.WATCH_LATER);
         if (!watchLater || !video?.id) {
             return;
         }

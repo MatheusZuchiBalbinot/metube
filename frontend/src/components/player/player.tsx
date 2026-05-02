@@ -1,4 +1,4 @@
-import type { VideoChapter } from '@data/mockSummaries';
+import type { VideoChapter } from '@api/videos';
 import { DefaultVideoPlayer } from './playerDefault';
 import { MiniVideoPlayer } from './playerMini';
 import './player.css';

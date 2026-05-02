@@ -33,6 +33,8 @@ export interface VideoSummary {
     readingMode: string
 }
 
+export type VideoChapter = VideoSummary['chapters'][number];
+
 class VideoApi {
     private readonly baseUrl = '/videos';
 
