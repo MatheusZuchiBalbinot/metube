@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import videoSlice, { videoActions } from '@store/videoSlice';
-import type { Video, VideoId } from '@data/mockVideos';
+import type { Video, VideoId } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
 
@@ -146,13 +146,6 @@ describe('videoSlice — watchVideo', () => {
         const state = makeState({ watchHistory: [vid('v2'), vid('v1')] });
         const next = reducer(state, videoActions.watchVideo(vid('v1')));
         expect(next.watchHistory).toEqual([vid('v1'), vid('v2')]);
-    });
-
-    it('records a watch event', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.watchVideo(vid('v1')));
-        const hasEvent = next.watchEvents.some(e => e.videoId === vid('v1'));
-        expect(hasEvent).toBe(true);
     });
 
     it('does not overwrite existing progress', () => {

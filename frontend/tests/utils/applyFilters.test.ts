@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { VideoFilter, SortBy } from '@utils/applyFilters';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
