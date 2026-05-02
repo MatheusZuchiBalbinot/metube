@@ -300,6 +300,57 @@ export default function UploadModal() {
         }
     }
 
+    // ─── Form field handlers ──────────────────────────────────────────────────
+
+    function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setForm(prev => ({ ...prev, title: e.target.value, titleError: null }));
+    }
+
+    function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+        setForm(prev => ({ ...prev, description: e.target.value }));
+    }
+
+    function handleTagsChange(tags: Tag[]) {
+        setForm(prev => ({ ...prev, tags }));
+    }
+
+    function handlePublishAtChange(v: string | null) {
+        setForm(prev => ({ ...prev, publishAt: v }));
+    }
+
+    function handleModeToSingle() {
+        handleModeChange('single');
+    }
+
+    function handleModeToBatch() {
+        handleModeChange('batch');
+    }
+
+    function handleBatchDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        setBatchDragging(true);
+    }
+
+    function handleBatchDragLeave() {
+        setBatchDragging(false);
+    }
+
+    function handleBatchZoneClick() {
+        const canClick = !isBatchUploading;
+
+        if (canClick) {
+            batchInputRef.current?.click();
+        }
+    }
+
+    function handleBatchInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+        if (e.target.files) {
+            addBatchFiles(e.target.files);
+        }
+
+        e.target.value = '';
+    }
+
     // ─── Common handlers ──────────────────────────────────────────────────────
 
     function handleClose() {
@@ -367,7 +418,7 @@ export default function UploadModal() {
                     role="tab"
                     aria-selected={mode === 'single'}
                     className={['upload-modal__tab', mode === 'single' ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
-                    onClick={() => handleModeChange('single')}
+                    onClick={handleModeToSingle}
                 >
                     {t('video.upload_mode_single')}
                 </Button>
@@ -377,7 +428,7 @@ export default function UploadModal() {
                     role="tab"
                     aria-selected={mode === 'batch'}
                     className={['upload-modal__tab', mode === 'batch' ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
-                    onClick={() => handleModeChange('batch')}
+                    onClick={handleModeToBatch}
                 >
                     {t('video.upload_mode_batch')}
                 </Button>
@@ -393,7 +444,7 @@ export default function UploadModal() {
                             placeholder={t('video.upload_title')}
                             value={form.title}
                             error={form.titleError ?? undefined}
-                            onChange={e => setForm(prev => ({ ...prev, title: e.target.value, titleError: null }))}
+                            onChange={handleTitleChange}
                             disabled={isUploading}
                         />
                     </div>
@@ -406,7 +457,7 @@ export default function UploadModal() {
                             placeholder={t('video.describe_placeholder')}
                             rows={3}
                             value={form.description}
-                            onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+                            onChange={handleDescriptionChange}
                             disabled={isUploading}
                         />
                     </div>
@@ -415,7 +466,7 @@ export default function UploadModal() {
                         <label className="upload-modal__label">{t('video.upload_tags')}</label>
                         <TagInput
                             value={form.tags}
-                            onChange={tags => setForm(prev => ({ ...prev, tags }))}
+                            onChange={handleTagsChange}
                             placeholder={t('video.tags_placeholder')}
                         />
                     </div>
@@ -503,7 +554,7 @@ export default function UploadModal() {
                         <DatePicker
                             id="um-publish-at"
                             value={form.publishAt}
-                            onChange={v => setForm(prev => ({ ...prev, publishAt: v }))}
+                            onChange={handlePublishAtChange}
                         />
                         <div className="upload-modal__status-preview">
                             <span className="upload-modal__status-label">{t('video.status_label')}:</span>
@@ -521,13 +572,10 @@ export default function UploadModal() {
                     {/* Multi-file drop zone */}
                     <div
                         className={['upload-modal__batch-drop', batchDragging ? 'upload-modal__batch-drop--dragging' : ''].filter(Boolean).join(' ')}
-                        onDragOver={e => {
-                            e.preventDefault();
-                            setBatchDragging(true);
-                        }}
-                        onDragLeave={() => setBatchDragging(false)}
+                        onDragOver={handleBatchDragOver}
+                        onDragLeave={handleBatchDragLeave}
                         onDrop={handleBatchDrop}
-                        onClick={() => !isBatchUploading && batchInputRef.current?.click()}
+                        onClick={handleBatchZoneClick}
                     >
                         <input
                             ref={batchInputRef}
@@ -535,12 +583,7 @@ export default function UploadModal() {
                             accept="video/*"
                             multiple
                             className="dnd-input"
-                            onChange={e => {
-                                if (e.target.files) {
-                                    addBatchFiles(e.target.files);
-                                }
-                                e.target.value = '';
-                            }}
+                            onChange={handleBatchInputChange}
                         />
                         <p className="upload-modal__batch-drop-label">{t('video.batch_drop')}</p>
                         <p className="upload-modal__batch-drop-sub">{t('video.batch_drop_sub')}</p>

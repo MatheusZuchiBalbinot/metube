@@ -5,7 +5,7 @@ import { Reorder } from 'framer-motion';
 import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from 'lucide-react';
 import type { Video } from '@models/video';
 import type { Playlist } from '@models/playlist';
-import { Playlist as PlaylistConsts } from '@models/playlist';
+import { PLAYLIST_CONSTANTS } from '@models/playlist';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { usePlaylist } from '@hooks/usePlaylist';
@@ -102,7 +102,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         return videos.reduce((sum: number, v: Video) => sum + (v.duration ?? 0), 0);
     }, [videos]);
     const hasTotalDuration = totalDurationSec > 0;
-    const isWatchLater = playlist.name === PlaylistConsts.WATCH_LATER;
+    const isWatchLater = playlist.name === PLAYLIST_CONSTANTS.WATCH_LATER;
     const displayName = isWatchLater ? t('playlist.watch_later_row') : playlist.name;
 
     function handleToggleExpand() {
@@ -115,11 +115,24 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         setRenaming(true);
     }
 
+    function handleDeleteCancel() {
+        setDeleteConfirmOpen(false);
+    }
+
+    function handleRenameFormClick(e: React.MouseEvent) {
+        e.stopPropagation();
+    }
+
+    function handleRenameNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setRenameName(e.target.value);
+    }
+
     function handleRenameConfirm(e: React.MouseEvent) {
         e.stopPropagation();
         const trimmed = renameName.trim();
-        const isEmpty = trimmed === '';
-        if (isEmpty) {
+        const isTitleEmpty = trimmed === '';
+
+        if (isTitleEmpty) {
             return;
         }
         renamePlaylist(playlist.id, trimmed);
@@ -184,11 +197,11 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                 </div>
 
                 {renaming ? (
-                    <div className="playlist-card__rename-form" onClick={e => e.stopPropagation()}>
+                    <div className="playlist-card__rename-form" onClick={handleRenameFormClick}>
                         <Input
                             autoFocus
                             value={renameName}
-                            onChange={e => setRenameName(e.target.value)}
+                            onChange={handleRenameNameChange}
                             onKeyDown={handleRenameKeyDown}
                         />
                         <Tooltip content={t('common.save')} side="top">
@@ -294,12 +307,12 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
 
             <Modal
                 isOpen={deleteConfirmOpen}
-                onClose={() => setDeleteConfirmOpen(false)}
+                onClose={handleDeleteCancel}
                 title={t('playlist.delete')}
                 size="sm"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)}>
+                        <Button variant="ghost" onClick={handleDeleteCancel}>
                             {t('common.cancel')}
                         </Button>
                         <Button variant="danger" onClick={handleDeleteConfirm}>

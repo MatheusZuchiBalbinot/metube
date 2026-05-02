@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VideoStatus, type Video } from '@data/mockVideos';
+import { VideoStatus, type Video } from '@models/video';
 import type { Tag } from '@models/tag';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
@@ -38,6 +38,17 @@ export default function VideoHero({ video }: VideoHeroProps) {
         openTagView(tag, video.id);
     }
 
+    function handleArticleKeyDown(e: React.KeyboardEvent) {
+        const isActivationKey = e.key === 'Enter' || e.key === ' ';
+
+        if (!isActivationKey) {
+            return;
+        }
+
+        e.preventDefault();
+        handleClick();
+    }
+
     function handleTagKeyDown(e: React.KeyboardEvent, tag: Tag) {
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
         if (!isActivationKey) {
@@ -53,14 +64,7 @@ export default function VideoHero({ video }: VideoHeroProps) {
             className="video-hero"
             tabIndex={0}
             onClick={handleClick}
-            onKeyDown={(e) => {
-                const isActivationKey = e.key === 'Enter' || e.key === ' ';
-                if (!isActivationKey) {
-                    return;
-                }
-                e.preventDefault();
-                handleClick();
-            }}
+            onKeyDown={handleArticleKeyDown}
             style={{ '--vh-color': palette.color, '--vh-bg': palette.bg } as React.CSSProperties}
         >
             <div className="video-hero__thumb">

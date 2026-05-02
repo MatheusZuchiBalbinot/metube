@@ -7,7 +7,7 @@ import { videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import VideoPlayer from '@components/player/player';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 import './player.css';
 
 // eslint-disable-next-line complexity
@@ -42,9 +42,9 @@ export default function MiniPlayer() {
     function handleLoadedMetadata() {
         const el = videoRef.current;
         const seekTo = pendingMiniSeekRef.current;
-        const hasSeek = el !== null && seekTo !== null && seekTo > 0;
-        if (hasSeek) {
-            el!.currentTime = seekTo!;
+
+        if (el !== null && seekTo !== null && seekTo > 0) {
+            el.currentTime = seekTo;
             pendingMiniSeekRef.current = null;
         }
 
@@ -165,9 +165,7 @@ export default function MiniPlayer() {
         closeMiniPlayer();
     }
 
-    const isVisible = miniPlayer !== null && video !== null;
-
-    if (!isVisible) {
+    if (miniPlayer === null || video === null) {
         return null;
     }
 
@@ -189,14 +187,14 @@ export default function MiniPlayer() {
                     <VideoPlayer
                         mode="mini"
                         videoRef={videoRef}
-                        src={video!.videoUrl!}
+                        src={video.videoUrl!}
                         captureKeyboard
                         onLoadedMetadata={handleLoadedMetadata}
                     />
                 ) : (
                     <img
-                        src={video!.thumbnail}
-                        alt={video!.title}
+                        src={video.thumbnail}
+                        alt={video.title}
                         className="mini-player__thumbnail"
                     />
                 )}
@@ -211,8 +209,8 @@ export default function MiniPlayer() {
                 aria-label={t('mini_player.drag')}
             >
                 <div className="mini-player__info">
-                    <p className="mini-player__title">{video!.title}</p>
-                    <p className="mini-player__channel">{video!.channel}</p>
+                    <p className="mini-player__title">{video.title}</p>
+                    <p className="mini-player__channel">{video.channel}</p>
                 </div>
 
                 <div className="mini-player__controls">

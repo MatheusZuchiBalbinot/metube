@@ -22,6 +22,45 @@ const YEAR_OPTIONS = Array.from(
     (_, i) => new Date().getFullYear() - i,
 );
 
+interface TagChipProps {
+    tag: string
+    value: FilterState
+    onToggle: (tag: string) => void
+}
+
+function buildTagChipStyle(tag: string, isActive: boolean): React.CSSProperties | undefined {
+    if (!isActive) {
+        return undefined;
+    }
+    const palette = TagColors.palette(tag);
+    return {
+        background: palette.bg,
+        color: palette.color,
+        borderColor: `${palette.color}55`,
+    };
+}
+
+function TagChip({ tag, value, onToggle }: TagChipProps) {
+    const isActive = value.tags.includes(tag as unknown as Tag);
+
+    function handleClick() {
+        onToggle(tag);
+    }
+
+    return (
+        <button
+            type="button"
+            className={`filter-panel__tag-chip${isActive ? ' filter-panel__tag-chip--active' : ''}`}
+            style={buildTagChipStyle(tag, isActive)}
+            onClick={handleClick}
+            aria-pressed={isActive}
+            aria-label={tag}
+        >
+            {tag}
+        </button>
+    );
+}
+
 // eslint-disable-next-line complexity
 export default function FilterPanel({ allTags, value, onChange }: FilterPanelProps) {
     const { t } = useTranslation();
@@ -111,32 +150,20 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
         onChange({ tags: [], year: null, dateFrom: null, dateTo: null, sortBy: SortBy.RECENT });
     }
 
-    function buildTagChipStyle(tag: string, isActive: boolean): React.CSSProperties | undefined {
-        if (!isActive) {
-            return undefined;
-        }
-        const palette = TagColors.palette(tag);
-        return {
-            background: palette.bg,
-            color: palette.color,
-            borderColor: `${palette.color}55`,
-        };
+    function handleYearChange(e: React.ChangeEvent<HTMLSelectElement>) {
+        onChange({ ...value, year: e.target.value === '' ? null : Number(e.target.value) });
     }
 
-    function TagChip({ tag }: { tag: string }) {
-        const isActive = value.tags.includes(tag as unknown as Tag);
-        return (
-            <button
-                type="button"
-                className={`filter-panel__tag-chip${isActive ? ' filter-panel__tag-chip--active' : ''}`}
-                style={buildTagChipStyle(tag, isActive)}
-                onClick={() => toggleTag(tag)}
-                aria-pressed={isActive}
-                aria-label={tag}
-            >
-                {tag}
-            </button>
-        );
+    function handleDateFromChange(v: string | null) {
+        onChange({ ...value, dateFrom: v });
+    }
+
+    function handleDateToChange(v: string | null) {
+        onChange({ ...value, dateTo: v });
+    }
+
+    function handleToggleTrigger() {
+        setOpen(v => !v);
     }
 
     const dropdown = open && dropdownPos !== null ? (
@@ -151,7 +178,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                 <div className="filter-panel__dropdown-section">
                     <span className="filter-panel__dropdown-label">{t('video.filter_by_tags')}</span>
                     <div className="filter-panel__dropdown-tags">
-                        {allTags.map(tag => <TagChip key={tag} tag={tag} />)}
+                        {allTags.map(tag => <TagChip key={tag} tag={tag} value={value} onToggle={toggleTag} />)}
                     </div>
                 </div>
             )}
@@ -184,7 +211,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                     id="fp-year"
                     className="filter-panel__year-select"
                     value={value.year ?? ''}
-                    onChange={e => onChange({ ...value, year: e.target.value === '' ? null : Number(e.target.value) })}
+                    onChange={handleYearChange}
                 >
                     <option value="">{t('video.filter_all_years')}</option>
                     {YEAR_OPTIONS.map(y => (
@@ -203,7 +230,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                         <DatePicker
                             id="fp-date-from"
                             value={value.dateFrom}
-                            onChange={v => onChange({ ...value, dateFrom: v })}
+                            onChange={handleDateFromChange}
                             placeholder={t('video.filter_date_from')}
                         />
                     </div>
@@ -214,7 +241,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                         <DatePicker
                             id="fp-date-to"
                             value={value.dateTo}
-                            onChange={v => onChange({ ...value, dateTo: v })}
+                            onChange={handleDateToChange}
                             placeholder={t('video.filter_date_to')}
                         />
                     </div>
@@ -241,7 +268,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                     open ? 'filter-panel__trigger--open' : '',
                     hasActiveFilters ? 'filter-panel__trigger--active' : '',
                 ].filter(Boolean).join(' ')}
-                onClick={() => setOpen(v => !v)}
+                onClick={handleToggleTrigger}
                 aria-expanded={open}
                 aria-haspopup="true"
                 aria-label={t('video.filters')}

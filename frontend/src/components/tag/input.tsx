@@ -59,6 +59,17 @@ export default function TagInput({
         }
     }
 
+    function handleInputBlur(e: React.FocusEvent<HTMLInputElement>) {
+        const hasValue = e.target.value.trim() !== '';
+
+        if (!hasValue) {
+            return;
+        }
+
+        addTag(e.target.value);
+        e.target.value = '';
+    }
+
     function handleWrapClick() {
         inputRef.current?.focus();
     }
@@ -76,7 +87,8 @@ export default function TagInput({
                                 variant="ghost"
                                 className="tag-input__chip-remove"
                                 onClick={e => {
-                                    e.stopPropagation(); removeTag(tag);
+                                    e.stopPropagation();
+                                    removeTag(tag);
                                 }}
                                 aria-label={t('tag.remove_tag', { tag })}
                             >
@@ -92,14 +104,7 @@ export default function TagInput({
                     aria-label={t('tag.add_placeholder')}
                     placeholder={value.length === 0 ? resolvedPlaceholder : ''}
                     onKeyDown={handleKeyDown}
-                    onBlur={e => {
-                        const hasValue = e.target.value.trim() !== '';
-                        if (!hasValue) {
-                            return;
-                        }
-                        addTag(e.target.value);
-                        e.target.value = '';
-                    }}
+                    onBlur={handleInputBlur}
                 />
             </div>
         </div>

@@ -110,16 +110,33 @@ export default function ShortPlayer({
         handleTogglePlayWithFeedback();
     }
 
+    function handleSeekStopPropagation(e: React.MouseEvent) {
+        e.stopPropagation();
+    }
+
+    function handleWaiting() {
+        setIsBuffering(true);
+    }
+
+    function handleCanPlay() {
+        setIsBuffering(false);
+    }
+
+    function handlePlaying() {
+        setIsBuffering(false);
+    }
+
     function handleShortSeek(e: React.ChangeEvent<HTMLInputElement>) {
         e.stopPropagation();
         const el = videoRef.current;
         const val = parseFloat(e.target.value);
-        const hasDuration = el !== null && el.duration > 0;
-        if (!hasDuration) {
+
+        if (el === null || el.duration === 0) {
             return;
         }
+
         setShortDragPct(val);
-        el!.currentTime = (val / 100) * el!.duration;
+        el.currentTime = (val / 100) * el.duration;
     }
 
     const displayPct = shortDragPct !== null ? shortDragPct : progressPct;
@@ -140,7 +157,7 @@ export default function ShortPlayer({
                 step={0.1}
                 value={displayPct}
                 onChange={handleShortSeek}
-                onClick={e => e.stopPropagation()}
+                onClick={handleSeekStopPropagation}
                 aria-label={t('player.skip')}
             />
 
@@ -154,9 +171,9 @@ export default function ShortPlayer({
                 onTimeUpdate={handleVideoTimeUpdate}
                 onLoadedMetadata={handleVideoLoadedMetadata}
                 onEnded={handleVideoEnded}
-                onWaiting={() => setIsBuffering(true)}
-                onCanPlay={() => setIsBuffering(false)}
-                onPlaying={() => setIsBuffering(false)}
+                onWaiting={handleWaiting}
+                onCanPlay={handleCanPlay}
+                onPlaying={handlePlaying}
             />
 
             <button

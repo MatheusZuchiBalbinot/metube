@@ -40,6 +40,10 @@ export default class ErrorBoundary extends Component<Props, State> {
         this.setState({ hasError: false, error: null });
     };
 
+    private handleReload = (): void => {
+        window.location.reload();
+    };
+
     render(): ReactNode {
         const { hasError, error } = this.state;
         const { children, fallback, level = 'page' } = this.props;
@@ -59,7 +63,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="error-boundary error-boundary--page">
                     <p>{error?.message ?? 'Something went wrong.'}</p>
-                    <button onClick={() => window.location.reload()}>
+                    <button onClick={this.handleReload}>
                         Reload
                     </button>
                 </div>

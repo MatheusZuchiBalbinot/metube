@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import type { VideoChapter } from '@data/mockSummaries';
+import type { VideoChapter } from '@api/videos';
 import { Format } from '@utils/format';
 
 // Width of the scrubber thumbnail preview (px).
@@ -79,11 +79,12 @@ export default function PlayerSeekBar({
     // Seek the hidden preview video to the cursor hover position
     useEffect(() => {
         const pv = previewVideoRef.current;
-        const hasHover = hoverSeekPct !== null && duration > 0;
-        if (!pv || !hasHover) {
+
+        if (!pv || hoverSeekPct === null || duration === 0) {
             return;
         }
-        pv.currentTime = hoverSeekPct! * duration;
+
+        pv.currentTime = hoverSeekPct * duration;
     }, [hoverSeekPct, duration]);
 
     // Attach document-level mousemove/mouseup while dragging
@@ -154,31 +155,39 @@ export default function PlayerSeekBar({
         return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     }
 
+    function handleChapterClick(e: React.MouseEvent, timestamp: string) {
+        e.stopPropagation();
+        const el = videoRef.current;
+
+        if (!el) {
+            return;
+        }
+
+        el.currentTime = parseChapterTimestamp(timestamp);
+    }
+
     function renderChapters() {
-        const hasChapters = !!chapters && chapters.length > 0 && duration > 0;
+        const hasChapters = chapters !== undefined && chapters.length > 0 && duration > 0;
+
         if (!hasChapters) {
             return null;
         }
-        return chapters!.map((ch, i) => {
+
+        return chapters.map((ch, i) => {
             const chPct = (parseChapterTimestamp(ch.timestamp) / duration) * 100;
             const isVisible = chPct > 0.5 && chPct < 99.5;
+
             if (!isVisible) {
                 return null;
             }
+
             return (
                 <div
                     key={i}
                     className="vp__chapter-dot"
                     style={{ left: `${chPct}%` }}
                     title={ch.title}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        const el = videoRef.current;
-                        if (!el) {
-                            return;
-                        }
-                        el.currentTime = parseChapterTimestamp(ch.timestamp);
-                    }}
+                    onClick={e => handleChapterClick(e, ch.timestamp)}
                 />
             );
         });
@@ -213,7 +222,8 @@ export default function PlayerSeekBar({
     function handleSeekClick(e: React.MouseEvent<HTMLDivElement>) {
         e.stopPropagation();
         if (wasDraggingRef.current) {
-            wasDraggingRef.current = false; return;
+            wasDraggingRef.current = false;
+            return;
         }
         const el = videoRef.current;
         const hasDuration = duration > 0;
