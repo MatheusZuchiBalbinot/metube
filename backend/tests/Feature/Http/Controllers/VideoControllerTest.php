@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+
 uses(RefreshDatabase::class);
 
 describe('VideoController', function () {
@@ -37,10 +38,10 @@ describe('VideoController', function () {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/videos', [
-            'title'       => 'New Video',
+            'title' => 'New Video',
             'description' => 'Test Description',
-            'status'      => 'draft',
-            'video_file'  => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
+            'status' => 'draft',
+            'video_file' => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
         ]);
 
         $response->assertStatus(202);
@@ -88,7 +89,7 @@ describe('VideoController', function () {
 
         $response->assertNoContent();
         $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
-        $this->assertDatabaseHas('watch_histories', ['user_id' => $user->id, 'video_id' => $video->id]);
+        $this->assertDatabaseHas('watch_history', ['user_id' => $user->id, 'video_id' => $video->id]);
     });
 
     test('record view is ignored within one hour for the same user and video', function () {

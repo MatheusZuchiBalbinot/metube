@@ -7,7 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-
 describe('ChannelController', function () {
     test('show returns channel profile', function () {
         $channel = User::factory()->create();

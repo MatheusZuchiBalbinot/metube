@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 describe('VideoService', function () {
-    $service = new VideoService();
+    $service = new VideoService;
 
     beforeEach(function () use (&$service) {
-        $service = new VideoService();
+        $service = new VideoService;
 
         Queue::fake();
         Storage::fake('local');
@@ -30,10 +30,10 @@ describe('VideoService', function () {
         $tags = array_slice($faker->words(5), 0, rand(1, 3));
 
         $data = [
-            'title'       => $title,
+            'title' => $title,
             'description' => $description,
-            'tags'        => $tags,
-            'video_file'  => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
+            'tags' => $tags,
+            'video_file' => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
         ];
 
         $video = $service->createVideo($user, $data);

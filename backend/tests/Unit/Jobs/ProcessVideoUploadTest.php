@@ -2,7 +2,6 @@
 
 use App\Enums\VideoStatus;
 use App\Jobs\ProcessVideoUpload;
-use App\Models\User;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,7 +12,7 @@ uses(RefreshDatabase::class);
 /**
  * Return a mock VideoStorageService that stubs all methods with sensible defaults.
  *
- * @param  string       $videoUrl      URL returned by publishVideo
+ * @param  string  $videoUrl  URL returned by publishVideo
  * @param  string|null  $thumbnailUrl  URL returned by publishThumbnail
  */
 function mockStorage(string $videoUrl = '/storage/videos/test.mp4', ?string $thumbnailUrl = '/storage/thumbnails/test.webp'): VideoStorageService
@@ -35,12 +34,12 @@ describe('ProcessVideoUpload', function () {
         test('publishes the video and sets status to PUBLISHED when not scheduled', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => null]);
 
-            $storage = mockStorage('/storage/videos/' . $video->vuid . '.mp4');
+            $storage = mockStorage('/storage/videos/'.$video->vuid.'.mp4');
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
 
             $video->refresh();
             expect($video->status)->toBe(VideoStatus::PUBLISHED)
-                ->and($video->video_url)->toBe('/storage/videos/' . $video->vuid . '.mp4');
+                ->and($video->video_url)->toBe('/storage/videos/'.$video->vuid.'.mp4');
         });
 
         test('sets status to SCHEDULED when scheduled_at is in the future', function () {
@@ -133,7 +132,7 @@ describe('ProcessVideoUpload', function () {
 
             // should not throw
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))
-                ->failed(new RuntimeException());
+                ->failed(new RuntimeException);
         });
     });
 });

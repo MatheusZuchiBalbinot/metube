@@ -23,14 +23,14 @@ describe('UserController', function () {
         $videoB = Video::factory()->create();
 
         VideoProgress::factory()->create([
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'video_id' => $videoA->id,
-            'percent'  => 45,
+            'percent' => 45,
         ]);
         VideoProgress::factory()->create([
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'video_id' => $videoB->id,
-            'percent'  => 100,
+            'percent' => 100,
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/users/me/progress');
@@ -50,9 +50,9 @@ describe('UserController', function () {
         $video = Video::factory()->create();
 
         VideoProgress::factory()->create([
-            'user_id'  => $other->id,
+            'user_id' => $other->id,
             'video_id' => $video->id,
-            'percent'  => 70,
+            'percent' => 70,
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/users/me/progress');
