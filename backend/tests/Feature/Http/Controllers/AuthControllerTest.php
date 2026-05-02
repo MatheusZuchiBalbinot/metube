@@ -3,12 +3,10 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
-
 
 describe('AuthController', function () {
     test('login authenticates user', function () {

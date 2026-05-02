@@ -7,10 +7,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 describe('ChannelService', function () {
-    $service = new ChannelService();
+    $service = new ChannelService;
 
     beforeEach(function () use (&$service) {
-        $service = new ChannelService();
+        $service = new ChannelService;
     });
 
     test('toggle subscription subscribes user to channel', function () use (&$service) {
