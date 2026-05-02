@@ -6,9 +6,8 @@ import {
     selectLikedSet,
     selectDislikedSet,
     makeSelectRecommendations,
-} from '@store/videoSlice';
-import type { Video, VideoId } from '@data/mockVideos';
-import { VideoStatus } from '@data/mockVideos';
+} from '@store/videoSelectors';
+import { VideoStatus, type Video, type VideoId } from '@models/video';
 
 // ─── Brand cast helpers ───────────────────────────────────────────────────────
 
@@ -45,7 +44,6 @@ function makeState(overrides: object = {}) {
             activeTagView: null,
             miniPlayer: null,
             pendingVideoSeek: null,
-            watchEvents: [],
             pinnedVideoId: null as VideoId | null,
             theaterMode: false,
             shortsMuted: true,

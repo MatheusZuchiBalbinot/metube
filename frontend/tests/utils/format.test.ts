@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getVisibleTags, countTagFrequency, Format } from '@utils/format';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
