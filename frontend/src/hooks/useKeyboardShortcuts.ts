@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@utils/routes';
+import { isTypingInInput } from '@utils/dom';
 
 interface KeyboardShortcutsOptions {
     onOpenUpload: () => void
@@ -28,12 +29,7 @@ export function useKeyboardShortcuts({
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            const isTyping =
-                e.target instanceof HTMLInputElement ||
-                e.target instanceof HTMLTextAreaElement ||
-                (e.target instanceof HTMLElement && e.target.isContentEditable);
-
-            if (isTyping) {
+            if (isTypingInInput(e.target)) {
                 return;
             }
 

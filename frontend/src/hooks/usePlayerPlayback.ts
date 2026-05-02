@@ -142,7 +142,8 @@ export function usePlayerPlayback(
         const shouldMute = newVol === 0;
         setIsMuted(shouldMute);
         if (el) {
-            el.volume = newVol; el.muted = shouldMute;
+            el.volume = newVol;
+            el.muted = shouldMute;
         }
     }
 

@@ -34,57 +34,64 @@ export function usePlayerKeyboard({
         }
 
         function handleKeyPress(el: HTMLVideoElement, e: KeyboardEvent) {
+            // Normalize single-char keys to lowercase so 'm'/'M', 'f'/'F', 't'/'T'
+            // collapse to a single handler entry. Multi-char keys (Arrow*) are kept as-is.
+            const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+
+            function togglePlay() {
+                cbRef.current.onTogglePlay();
+            }
+            function skipForward() {
+                el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
+                cbRef.current.onSkip('fwd');
+            }
+            function skipBackward() {
+                el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
+                cbRef.current.onSkip('bwd');
+            }
+            function muteToggle() {
+                cbRef.current.onMuteToggle();
+            }
+
             const keyHandlers: Record<string, () => void> = {
-                ' ': () => {
-                    cbRef.current.onTogglePlay();
-                },
-                'ArrowRight': () => {
-                    el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
-                    cbRef.current.onSkip('fwd');
-                },
-                'ArrowLeft': () => {
-                    el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
-                    cbRef.current.onSkip('bwd');
-                },
-                'm': () => {
-                    cbRef.current.onMuteToggle();
-                },
-                'M': () => {
-                    cbRef.current.onMuteToggle();
-                },
+                ' ': togglePlay,
+                'ArrowRight': skipForward,
+                'ArrowLeft': skipBackward,
+                'm': muteToggle,
             };
 
-            const handler = keyHandlers[e.key];
+            const handler = keyHandlers[key];
             if (handler) {
                 e.preventDefault();
                 handler();
-            } else if (isDefault) {
-                const defaultHandlers: Record<string, () => void> = {
-                    'ArrowUp': () => {
-                        cbRef.current.onVolumeChange(Math.min(el.volume + 0.1, 1));
-                    },
-                    'ArrowDown': () => {
-                        cbRef.current.onVolumeChange(Math.max(el.volume - 0.1, 0));
-                    },
-                    'f': () => {
-                        cbRef.current.onFullscreenToggle();
-                    },
-                    'F': () => {
-                        cbRef.current.onFullscreenToggle();
-                    },
-                    't': () => {
-                        cbRef.current.onFullscreenToggle();
-                    },
-                    'T': () => {
-                        cbRef.current.onFullscreenToggle();
-                    },
-                };
+                return;
+            }
 
-                const defaultHandler = defaultHandlers[e.key];
-                if (defaultHandler) {
-                    e.preventDefault();
-                    defaultHandler();
-                }
+            if (!isDefault) {
+                return;
+            }
+
+            function volumeUp() {
+                cbRef.current.onVolumeChange(Math.min(el.volume + 0.1, 1));
+            }
+            function volumeDown() {
+                cbRef.current.onVolumeChange(Math.max(el.volume - 0.1, 0));
+            }
+            function fullscreenToggle() {
+                cbRef.current.onFullscreenToggle();
+            }
+
+            const defaultHandlers: Record<string, () => void> = {
+                'ArrowUp': volumeUp,
+                'ArrowDown': volumeDown,
+                'f': fullscreenToggle,
+                't': fullscreenToggle,
+            };
+
+            const defaultHandler = defaultHandlers[key];
+            if (defaultHandler) {
+                e.preventDefault();
+                defaultHandler();
             }
         }
 

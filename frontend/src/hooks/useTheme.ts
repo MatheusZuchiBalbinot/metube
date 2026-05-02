@@ -8,10 +8,13 @@ export function useTheme() {
     const dispatch = useAppDispatch();
     const { mode, color } = useAppSelector(s => s.theme);
 
-    return {
-        mode,
-        color,
-        setMode: (next: ThemeMode) => dispatch(themeActions.setMode(next)),
-        setColor: (next: ThemeColor) => dispatch(themeActions.setColor(next)),
-    };
+    function setMode(next: ThemeMode): void {
+        dispatch(themeActions.setMode(next));
+    }
+
+    function setColor(next: ThemeColor): void {
+        dispatch(themeActions.setColor(next));
+    }
+
+    return { mode, color, setMode, setColor };
 }

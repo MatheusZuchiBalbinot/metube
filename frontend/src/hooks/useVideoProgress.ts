@@ -1,8 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
-import type { Video } from '@data/mockVideos';
-import type { VideoId } from '@models/video';
+import type { Video, VideoId } from '@models/video';
 
 const PROGRESS_THROTTLE_MS = 3000;
 const BACKEND_SYNC_INTERVAL_MS = 5000;
@@ -133,14 +132,15 @@ export function useVideoProgress({
             const hasDuration = durationRef.current > 0;
             const hasCurrentTime = currentTimeRef.current > 0;
 
-            const percent = hasDuration && hasCurrentTime
-                ? (currentTimeRef.current / durationRef.current) * 100
-                : simulatedSecondsRef.current > 0
-                    ? (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100
-                    : null;
+            let percent: number | null = null;
 
-            const shouldSync = percent !== null && percent > 0;
-            if (shouldSync) {
+            if (hasDuration && hasCurrentTime) {
+                percent = (currentTimeRef.current / durationRef.current) * 100;
+            } else if (simulatedSecondsRef.current > 0) {
+                percent = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
+            }
+
+            if (percent !== null && percent > 0) {
                 onBackendSyncRef.current?.(id, Math.round(percent));
             }
         }, BACKEND_SYNC_INTERVAL_MS);

@@ -1,20 +1,20 @@
 import { useCallback } from 'react';
 import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@store';
+import { videoActions } from '@store/videoSlice';
 import {
-    videoActions,
     selectHistoryTags,
     selectPublishedVideos,
     selectLikedSet,
     selectDislikedSet,
     selectRecommendations,
-} from '@store/videoSlice';
+} from '@store/videoSelectors';
 import { video as videoApi, type Vuid } from '@api/videos';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
-import type { TagView, MiniPlayerState, WatchEvent } from '@store/videoSlice';
+import type { TagView, MiniPlayerState } from '@store/videoSlice';
 
-export type { TagView, MiniPlayerState, WatchEvent };
+export type { TagView, MiniPlayerState };
 
 export function useVideo() {
     const dispatch = useAppDispatch();
@@ -22,7 +22,6 @@ export function useVideo() {
     // Granular selectors — each re-renders only when its specific value changes
     const videos = useAppSelector(s => s.video.videos);
     const watchHistory = useAppSelector(s => s.video.watchHistory);
-    const watchEvents = useAppSelector(s => s.video.watchEvents);
     const pinnedVideoId = useAppSelector(s => s.video.pinnedVideoId);
     const videoProgress = useAppSelector(s => s.video.videoProgress, shallowEqual);
     const autoplay = useAppSelector(s => s.video.autoplay);
@@ -114,12 +113,11 @@ export function useVideo() {
         [dispatch],
     );
     const consumePendingVideoSeek = useCallback((videoId: VideoId): number | null => {
-        const isMatchingVideo = pendingVideoSeek?.videoId === videoId;
-        if (!isMatchingVideo) {
+        if (pendingVideoSeek?.videoId !== videoId) {
             return null;
         }
         dispatch(videoActions.clearPendingVideoSeek());
-        return pendingVideoSeek!.time;
+        return pendingVideoSeek.time;
     }, [dispatch, pendingVideoSeek]);
     const pinVideo = useCallback(
         (id: VideoId) => dispatch(videoActions.pinVideo(id)),
@@ -141,7 +139,6 @@ export function useVideo() {
     return {
         videos,
         watchHistory,
-        watchEvents,
         pinnedVideoId,
         likedVideos,
         dislikedVideos,
