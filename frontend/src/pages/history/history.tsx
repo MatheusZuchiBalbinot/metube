@@ -11,8 +11,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
-import type { Video } from '@data/mockVideos';
-import type { VideoId } from '@models/video';
+import type { Video, VideoId } from '@models/video';
 import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/history';
 import './history.css';
 
@@ -110,7 +109,7 @@ export default function HistoryPage() {
 
         for (const id of watchHistory) {
             const video = videoMap.get(id);
-            if (!video) {
+            if (!video || !video.publishedAt) {
                 continue;
             }
 

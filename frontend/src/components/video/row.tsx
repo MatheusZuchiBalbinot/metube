@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VideoStatus, type Video } from '@data/mockVideos';
+import { VideoStatus, type Video } from '@models/video';
 import type { Tag } from '@models/tag';
 import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, getVisibleTags } from '@utils/format';
