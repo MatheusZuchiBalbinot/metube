@@ -40,15 +40,12 @@ const searchSlice = createSlice({
                 s => s.toLowerCase() !== trimmed.toLowerCase(),
             );
             state.recentSearches = [trimmed, ...deduped].slice(0, MAX_RECENT_SEARCHES);
-            localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(state.recentSearches));
         },
         removeRecentSearch(state, action: PayloadAction<string>) {
             state.recentSearches = state.recentSearches.filter(s => s !== action.payload);
-            localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(state.recentSearches));
         },
         clearRecentSearches(state) {
             state.recentSearches = [];
-            localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(state.recentSearches));
         },
     },
 });

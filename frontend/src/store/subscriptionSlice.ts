@@ -8,12 +8,10 @@ interface SubscriptionState {
     subscribedChannelIds: ChannelId[]
 }
 
-const SEED_SUBSCRIPTIONS = ['ch_1', 'ch_3', 'ch_5'] as ChannelId[];
-
 const subscriptionSlice = createSlice({
     name: 'subscription',
     initialState: (): SubscriptionState => ({
-        subscribedChannelIds: loadFromStorage<ChannelId[]>(STORAGE_KEYS.SUBSCRIPTIONS, SEED_SUBSCRIPTIONS, isArray),
+        subscribedChannelIds: loadFromStorage<ChannelId[]>(STORAGE_KEYS.SUBSCRIPTIONS, [], isArray),
     }),
     reducers: {
         toggleSubscription(state, action: PayloadAction<ChannelId>) {
@@ -34,10 +32,12 @@ const subscriptionSlice = createSlice({
     },
 });
 
+export const subscriptionActions = subscriptionSlice.actions;
+export default subscriptionSlice;
+
+// ─── Selectors ────────────────────────────────────────────────────────────────
+
 export const selectSubscribedSet = createSelector(
     (state: RootState) => state.subscription.subscribedChannelIds,
     (ids) => new Set(ids),
 );
-
-export const subscriptionActions = subscriptionSlice.actions;
-export default subscriptionSlice;

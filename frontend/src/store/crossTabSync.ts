@@ -18,7 +18,7 @@ import { playlistActions } from './playlistSlice';
 import { subscriptionActions } from './subscriptionSlice';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import type { ThemeColor, ThemeMode } from '@utils/themes';
-import type { Playlist } from '@data/mockPlaylists';
+import type { Playlist } from '@models/playlist';
 
 function parseJSON<T>(raw: string): T | null {
     try {
@@ -30,68 +30,96 @@ function parseJSON<T>(raw: string): T | null {
 
 type SyncHandler = (value: string) => void;
 
-export function initCrossTabSync(dispatch: AppDispatch): () => void {
-    const SYNC_HANDLERS: Record<string, SyncHandler> = {
-        [STORAGE_KEYS.THEME_MODE]: (value: string) => {
-            dispatch(themeActions.setMode(value as ThemeMode));
-            document.documentElement.dataset.mode = value;
-        },
-        [STORAGE_KEYS.THEME_COLOR]: (value: string) => {
-            dispatch(themeActions.setColor(value as ThemeColor));
-            document.documentElement.dataset.color = value;
-        },
-        [STORAGE_KEYS.WATCH_HISTORY]: (value: string) => {
-            const data = parseJSON<string[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(videoActions.xTabSetWatchHistory(data as VideoId[]));
-            }
-        },
-        [STORAGE_KEYS.LIKED_VIDEOS]: (value: string) => {
-            const data = parseJSON<string[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(videoActions.xTabSetLikedVideos(data as VideoId[]));
-            }
-        },
-        [STORAGE_KEYS.DISLIKED_VIDEOS]: (value: string) => {
-            const data = parseJSON<string[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
-            }
-        },
-        [STORAGE_KEYS.PINNED_VIDEO]: (value: string) => {
-            dispatch(videoActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
-        },
-        [STORAGE_KEYS.PLAYLISTS]: (value: string) => {
-            const data = parseJSON<Playlist[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(playlistActions.xTabSetPlaylists(data));
-            }
-        },
-        [STORAGE_KEYS.SUBSCRIPTIONS]: (value: string) => {
-            const data = parseJSON<string[]>(value);
-            const isValid = Array.isArray(data);
-            if (isValid) {
-                dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[]));
-            }
-        },
+class CrossTabSyncer {
+    private readonly dispatch: AppDispatch;
+
+    constructor(dispatch: AppDispatch) {
+        this.dispatch = dispatch;
+    }
+
+    private readonly _onThemeMode: SyncHandler = (value) => {
+        this.dispatch(themeActions.setMode(value as ThemeMode));
+        document.documentElement.dataset.mode = value;
     };
 
-    function handleStorageChange(event: StorageEvent) {
+    private readonly _onThemeColor: SyncHandler = (value) => {
+        this.dispatch(themeActions.setColor(value as ThemeColor));
+        document.documentElement.dataset.color = value;
+    };
+
+    private readonly _onWatchHistory: SyncHandler = (value) => {
+        const data = parseJSON<string[]>(value);
+        const isValid = Array.isArray(data);
+        if (isValid) {
+            this.dispatch(videoActions.xTabSetWatchHistory(data as VideoId[]));
+        }
+    };
+
+    private readonly _onLikedVideos: SyncHandler = (value) => {
+        const data = parseJSON<string[]>(value);
+        const isValid = Array.isArray(data);
+        if (isValid) {
+            this.dispatch(videoActions.xTabSetLikedVideos(data as VideoId[]));
+        }
+    };
+
+    private readonly _onDislikedVideos: SyncHandler = (value) => {
+        const data = parseJSON<string[]>(value);
+        const isValid = Array.isArray(data);
+        if (isValid) {
+            this.dispatch(videoActions.xTabSetDislikedVideos(data as VideoId[]));
+        }
+    };
+
+    private readonly _onPinnedVideo: SyncHandler = (value) => {
+        this.dispatch(videoActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
+    };
+
+    private readonly _onPlaylists: SyncHandler = (value) => {
+        const data = parseJSON<Playlist[]>(value);
+        const isValid = Array.isArray(data);
+        if (isValid) {
+            this.dispatch(playlistActions.xTabSetPlaylists(data));
+        }
+    };
+
+    private readonly _onSubscriptions: SyncHandler = (value) => {
+        const data = parseJSON<string[]>(value);
+        const isValid = Array.isArray(data);
+        if (isValid) {
+            this.dispatch(subscriptionActions.xTabSetSubscriptions(data as ChannelId[]));
+        }
+    };
+
+    private readonly _handlers: Record<string, SyncHandler> = {
+        [STORAGE_KEYS.THEME_MODE]: this._onThemeMode,
+        [STORAGE_KEYS.THEME_COLOR]: this._onThemeColor,
+        [STORAGE_KEYS.WATCH_HISTORY]: this._onWatchHistory,
+        [STORAGE_KEYS.LIKED_VIDEOS]: this._onLikedVideos,
+        [STORAGE_KEYS.DISLIKED_VIDEOS]: this._onDislikedVideos,
+        [STORAGE_KEYS.PINNED_VIDEO]: this._onPinnedVideo,
+        [STORAGE_KEYS.PLAYLISTS]: this._onPlaylists,
+        [STORAGE_KEYS.SUBSCRIPTIONS]: this._onSubscriptions,
+    };
+
+    private readonly _onStorageChange = (event: StorageEvent) => {
         const hasNewValue = event.newValue !== null;
         if (!hasNewValue) {
             return;
         }
 
-        const handler = SYNC_HANDLERS[event.key ?? ''];
+        const handler = this._handlers[event.key ?? ''];
         if (handler) {
             handler(event.newValue);
         }
-    }
+    };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    start(): () => void {
+        window.addEventListener('storage', this._onStorageChange);
+        return () => window.removeEventListener('storage', this._onStorageChange);
+    }
+}
+
+export function initCrossTabSync(dispatch: AppDispatch): () => void {
+    return new CrossTabSyncer(dispatch).start();
 }

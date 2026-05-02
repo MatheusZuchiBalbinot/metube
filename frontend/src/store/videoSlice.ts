@@ -1,13 +1,8 @@
-import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
-import { VideoStatus, type Video, type VideoId } from '@models/video';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { type Video, type VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
-
-export interface WatchEvent {
-    videoId: VideoId
-    date: string
-}
 
 export interface TagView {
     tag: Tag
@@ -20,7 +15,7 @@ export interface MiniPlayerState {
     seekSession: number
 }
 
-interface VideoState {
+export interface VideoState {
     videos: Video[]
     watchHistory: VideoId[]
     likedVideos: VideoId[]
@@ -31,7 +26,6 @@ interface VideoState {
     activeTagView: TagView | null
     miniPlayer: MiniPlayerState | null
     pendingVideoSeek: { videoId: VideoId; time: number } | null
-    watchEvents: WatchEvent[]
     pinnedVideoId: VideoId | null
     theaterMode: boolean
     shortsMuted: boolean
@@ -51,7 +45,6 @@ const initialState: VideoState = {
     activeTagView: null,
     miniPlayer: null,
     pendingVideoSeek: null,
-    watchEvents: loadFromStorage<WatchEvent[]>(STORAGE_KEYS.WATCH_EVENTS, [], isArray),
     pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
     theaterMode: false,
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
@@ -104,7 +97,6 @@ const videoSlice = createSlice({
             const id = action.payload;
             state.videos = state.videos.filter(v => v.id !== id);
             state.watchHistory = state.watchHistory.filter(vid => vid !== id);
-            state.watchEvents = state.watchEvents.filter(e => e.videoId !== id);
             state.likedVideos = state.likedVideos.filter(vid => vid !== id);
             state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
             const isPinned = state.pinnedVideoId === id;
@@ -147,7 +139,6 @@ const videoSlice = createSlice({
             if (!hasProgress) {
                 state.videoProgress[videoId] = 10;
             }
-            state.watchEvents.push({ videoId, date: new Date().toISOString() });
         },
 
         removeFromHistory(state, action: PayloadAction<VideoId>) {
@@ -254,82 +245,3 @@ const videoSlice = createSlice({
 export const videoActions = videoSlice.actions;
 export default videoSlice;
 
-// ─── Selectors ────────────────────────────────────────────────────────────────
-
-interface WithVideo { video: VideoState }
-
-export const selectHistoryTags = createSelector(
-    [(s: WithVideo) => s.video.watchHistory, (s: WithVideo) => s.video.videos],
-    (watchHistory, videos) => {
-        const watchedIds = new Set(watchHistory);
-        const tagSet = new Set<string>();
-        for (const video of videos) {
-            const isWatched = watchedIds.has(video.id);
-            if (!isWatched) {
-                continue;
-            }
-            for (const tag of video.tags) {
-                tagSet.add(tag);
-            }
-        }
-        return Array.from(tagSet);
-    },
-);
-
-export const selectPublishedVideos = createSelector(
-    [(s: WithVideo) => s.video.videos],
-    (videos) => {
-        const now = new Date();
-        return videos.filter(v => {
-            const isPublished = v.status === VideoStatus.PUBLISHED;
-            const isScheduledAndPast =
-                v.status === VideoStatus.SCHEDULED &&
-                v.scheduledAt !== undefined &&
-                new Date(v.scheduledAt) <= now;
-            return isPublished || isScheduledAndPast;
-        });
-    },
-);
-
-export const selectLikedSet = createSelector(
-    [(s: WithVideo) => s.video.likedVideos],
-    (ids) => new Set(ids),
-);
-
-export const selectDislikedSet = createSelector(
-    [(s: WithVideo) => s.video.dislikedVideos],
-    (ids) => new Set(ids),
-);
-
-export function makeSelectRecommendations(limit: number) {
-    return createSelector(
-        [selectPublishedVideos, selectHistoryTags],
-        (publishedVideos, historyTags) => {
-            const hasHistory = historyTags.length > 0;
-            if (!hasHistory) {
-                return [...publishedVideos].sort((a, b) => b.views - a.views).slice(0, limit);
-            }
-
-            const historyTagSet = new Set(historyTags);
-            const maxViews = Math.max(...publishedVideos.map(v => v.views), 1);
-
-            function scoreVideo(video: Video): number {
-                const matchingTagCount = video.tags.filter(t => historyTagSet.has(t)).length;
-                const hasAnyTag = video.tags.length > 0;
-                const tagScore = hasAnyTag ? matchingTagCount / video.tags.length : 0;
-                const viewsBoost = Math.log1p(video.views) / Math.log1p(maxViews);
-                return tagScore * 0.85 + viewsBoost * 0.15;
-            }
-
-            return [...publishedVideos]
-                .map(v => ({ video: v, score: scoreVideo(v) }))
-                .sort((a, b) => b.score - a.score)
-                .map(({ video }) => video)
-                .slice(0, limit);
-        },
-    );
-}
-
-// Singleton for the common 200-item use-case — one shared memoised instance
-// instead of a new one per component call to useVideo().
-export const selectRecommendations = makeSelectRecommendations(200);

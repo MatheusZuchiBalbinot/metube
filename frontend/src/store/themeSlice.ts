@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@utils/storageKeys';
-import type { ThemeMode, ThemeColor } from '@utils/themes';
+import { THEME_MODES, THEME_COLORS, type ThemeMode, type ThemeColor } from '@utils/themes';
 
 interface ThemeState {
     mode: ThemeMode
@@ -8,8 +8,10 @@ interface ThemeState {
 }
 
 function getInitialThemeState(): ThemeState {
-    const mode = (localStorage.getItem(STORAGE_KEYS.THEME_MODE) as ThemeMode) ?? 'dark';
-    const color = (localStorage.getItem(STORAGE_KEYS.THEME_COLOR) as ThemeColor) ?? 'violet';
+    const rawMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE) ?? 'dark';
+    const rawColor = localStorage.getItem(STORAGE_KEYS.THEME_COLOR) ?? 'violet';
+    const mode = (THEME_MODES as readonly string[]).includes(rawMode) ? rawMode as ThemeMode : 'dark';
+    const color = (THEME_COLORS as readonly string[]).includes(rawColor) ? rawColor as ThemeColor : 'violet';
     return { mode, color };
 }
 

@@ -46,19 +46,17 @@ const authSlice = createSlice({
         },
 
         updateProfile(state, action: PayloadAction<{ name?: string; bio?: string }>) {
-            const hasNoUser = state.user === null;
-            if (hasNoUser) {
+            const user = state.user;
+            if (user === null) {
                 return;
             }
 
-            const hasName = action.payload.name !== undefined;
-            const hasBio = action.payload.bio !== undefined;
-            if (hasName) {
-                state.user!.name = action.payload.name!;
+            if (action.payload.name !== undefined) {
+                user.name = action.payload.name;
             }
 
-            if (hasBio) {
-                state.user!.bio = action.payload.bio;
+            if (action.payload.bio !== undefined) {
+                user.bio = action.payload.bio;
             }
         },
     },
