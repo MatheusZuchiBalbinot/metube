@@ -167,15 +167,6 @@ function ProfilePageSkeleton() {
                             <Skeleton key={i} className="ps-profile__stat" width={w} />
                         ))}
                     </div>
-                    <div className="ps-profile__heatmap-controls">
-                        <Skeleton className="ps-profile__heatmap-btn" />
-                        <Skeleton className="ps-profile__heatmap-btn" />
-                    </div>
-                    <div className="ps-profile__heatmap">
-                        {Array.from({ length: 30 }, (_, i) => (
-                            <Skeleton key={i} className="ps-profile__heatmap-bar" />
-                        ))}
-                    </div>
                 </div>
             </div>
 

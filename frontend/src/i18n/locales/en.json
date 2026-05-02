@@ -276,20 +276,12 @@
         "liked_count": "Liked",
         "saved_count": "Saved",
         "top_tags": "Top tags",
-        "streak": "Streak",
-        "day_streak": "day streak",
-        "activity": "Activity",
         "edit_profile": "Edit profile",
         "bio_placeholder": "A short bio about yourself...",
         "name_label": "Name",
         "bio_label": "Bio",
         "pinned_video": "Pinned",
-        "delete_confirm": "Delete '{{title}}'? This cannot be undone.",
-        "heatmap_14d": "14d",
-        "heatmap_30d": "30d",
-        "heatmap_videos": "videos",
-        "heatmap_less": "Less",
-        "heatmap_more": "More"
+        "delete_confirm": "Delete '{{title}}'? This cannot be undone."
     },
     "mini_player": {
         "label": "Mini player",
