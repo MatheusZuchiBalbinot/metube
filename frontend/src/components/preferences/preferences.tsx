@@ -20,6 +20,18 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
 
     const currentLang = i18n.language.split('-')[0];
 
+    function handleAutoplayToggle() {
+        setAutoplay(!autoplay);
+    }
+
+    function handleClose() {
+        setOpen(false);
+    }
+
+    function handleToggleOpen() {
+        setOpen(!open);
+    }
+
     function changeLanguage(code: string) {
         i18n.changeLanguage(code);
         localStorage.setItem(STORAGE_KEYS.LANGUAGE, code);
@@ -95,7 +107,7 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                         role="switch"
                         aria-checked={autoplay}
                         className={['prefs-autoplay-toggle', autoplay ? 'prefs-autoplay-toggle--on' : ''].filter(Boolean).join(' ')}
-                        onClick={() => setAutoplay(!autoplay)}
+                        onClick={handleAutoplayToggle}
                         aria-label={t('preferences.autoplay')}
                     >
                         <span className="prefs-autoplay-thumb" />
@@ -113,12 +125,12 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
         <div className="prefs-wrap">
             {open && (
                 <>
-                    <div className="prefs-backdrop" onClick={() => setOpen(false)} />
+                    <div className="prefs-backdrop" onClick={handleClose} />
                     <div className="prefs-panel">
                         <div className="prefs-header">
                             <span className="prefs-title">{t('preferences.title')}</span>
                             <Tooltip content={t('common.close')} side="bottom">
-                                <Button variant="ghost" size="icon" className="prefs-close" onClick={() => setOpen(false)} aria-label={t('common.close')}>
+                                <Button variant="ghost" size="icon" className="prefs-close" onClick={handleClose} aria-label={t('common.close')}>
                                     <X size={12} strokeWidth={2.5} />
                                 </Button>
                             </Tooltip>
@@ -133,7 +145,7 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                     size="icon"
                     variant="ghost"
                     className={`prefs-trigger${open ? ' open' : ''}`}
-                    onClick={() => setOpen(!open)}
+                    onClick={handleToggleOpen}
                     aria-label={t('preferences.title')}
                 >
                     <SlidersHorizontal size={17} strokeWidth={1.8} />

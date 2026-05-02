@@ -41,7 +41,6 @@ export default function AppLayout() {
     }, [pathname]);
 
     const { focusSearch } = useSearch();
-    const handleFocusSearch = useCallback(() => focusSearch(), [focusSearch]);
 
     const handleOpenShortcuts = useCallback(() => {
         setShortcutsOpen(true);
@@ -54,7 +53,7 @@ export default function AppLayout() {
     useKeyboardShortcuts({
         onOpenUpload: handleOpenUpload,
         onOpenShortcuts: handleOpenShortcuts,
-        onFocusSearch: handleFocusSearch,
+        onFocusSearch: focusSearch,
     });
 
     return (

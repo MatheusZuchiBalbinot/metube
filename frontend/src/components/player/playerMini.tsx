@@ -34,12 +34,12 @@ export function MiniVideoPlayer({
         const el = videoRef.current;
         const rect = e.currentTarget.getBoundingClientRect();
         const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        const hasDuration = el !== null && el.duration > 0;
-        if (!hasDuration) {
+
+        if (el === null || el.duration === 0) {
             return;
         }
 
-        el!.currentTime = pct * el!.duration;
+        el.currentTime = pct * el.duration;
     }
 
     return (

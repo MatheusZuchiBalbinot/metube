@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
-import { VideoStatus, type Video } from '@data/mockVideos';
+import { VideoStatus, type Video } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
 import { ROUTES, videoUrl } from '@utils/routes';
@@ -113,6 +113,14 @@ const VideoCard = memo(function VideoCard({
         onDelete?.(video.id);
     }
 
+    function handleThumbLoad() {
+        setThumbLoaded(true);
+    }
+
+    function handleSaveTriggerClick(e: React.MouseEvent) {
+        e.stopPropagation();
+    }
+
     function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
         dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }));
@@ -134,7 +142,7 @@ const VideoCard = memo(function VideoCard({
                     loading={isPriority ? 'eager' : 'lazy'}
                     fetchPriority={isPriority ? 'high' : 'auto'}
                     decoding={isPriority ? 'sync' : 'async'}
-                    onLoad={() => setThumbLoaded(true)}
+                    onLoad={handleThumbLoad}
                     style={{ opacity: isPriority || thumbLoaded ? 1 : 0, transition: isPriority ? undefined : 'opacity 0.3s ease' }}
                 />
                 <div className="video-card__play-overlay" aria-hidden="true">
@@ -164,7 +172,7 @@ const VideoCard = memo(function VideoCard({
                 )}
                 <div
                     className={['video-card__save-trigger', isTouchDevice ? 'video-card__save-trigger--touch' : ''].filter(Boolean).join(' ')}
-                    onClick={e => e.stopPropagation()}
+                    onClick={handleSaveTriggerClick}
                 >
                     <SavePopover videoId={video.id}>
                         <Tooltip content={t('video.save')} side="top">

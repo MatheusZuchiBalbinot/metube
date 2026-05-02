@@ -5,7 +5,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
 import type { Playlist } from '@models/playlist';
-import { Playlist as PlaylistConsts } from '@models/playlist';
+import { PLAYLIST_CONSTANTS } from '@models/playlist';
 import Button from '@ui/button/button';
 import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
@@ -33,10 +33,10 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [newPlaylist, setNewPlaylist] = useState('');
     const [creating, setCreating] = useState(false);
 
-    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PlaylistConsts.WATCH_LATER);
+    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PLAYLIST_CONSTANTS.WATCH_LATER);
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
     const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id as string);
-    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PlaylistConsts.WATCH_LATER);
+    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PLAYLIST_CONSTANTS.WATCH_LATER);
 
     function handleTriggerClick(e: React.MouseEvent) {
         e.stopPropagation();
@@ -104,6 +104,14 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         setNewPlaylistOpen(false);
     }
 
+    function handleOpenNewPlaylist() {
+        setNewPlaylistOpen(true);
+    }
+
+    function handleNewPlaylistChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setNewPlaylist(e.target.value);
+    }
+
     function handleInputKeyDown(e: React.KeyboardEvent) {
         const isEnter = e.key === 'Enter';
         const isEscape = e.key === 'Escape';
@@ -159,7 +167,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                             <Input
                                 autoFocus
                                 value={newPlaylist}
-                                onChange={e => setNewPlaylist(e.target.value)}
+                                onChange={handleNewPlaylistChange}
                                 onKeyDown={handleInputKeyDown}
                                 placeholder={t('playlist.name_placeholder')}
                             />
@@ -179,7 +187,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                             fullWidth
                             className="save-modal__new-btn"
                             leftIcon={<Plus size={14} />}
-                            onClick={() => setNewPlaylistOpen(true)}
+                            onClick={handleOpenNewPlaylist}
                         >
                             {t('playlist.new_playlist_inline')}
                         </Button>

@@ -50,6 +50,14 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
     useClickOutside(searchWrapRef, () => setRecentDropdownOpen(false), recentDropdownOpen);
 
+    function handleBrandClick() {
+        navigate(ROUTES.HOME);
+    }
+
+    function handleAvatarClick() {
+        setDropdownOpen(v => !v);
+    }
+
     async function handleLogout() {
         await signOut();
         navigate(ROUTES.LOGIN, { replace: true });
@@ -112,7 +120,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     </Button>
                 </Tooltip>
 
-                <div className="app-header__brand" onClick={() => navigate(ROUTES.HOME)} style={{ cursor: 'pointer' }}>
+                <div className="app-header__brand" onClick={handleBrandClick} style={{ cursor: 'pointer' }}>
                     <div className="app-header__brand-icon">
                         <Play size={15} fill="white" strokeWidth={0} />
                     </div>
@@ -198,7 +206,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                         <Button
                             variant="ghost"
                             className={`app-header__avatar-btn${dropdownOpen ? ' open' : ''}`}
-                            onClick={() => setDropdownOpen((v) => !v)}
+                            onClick={handleAvatarClick}
                             aria-label={user?.name}
                             aria-expanded={dropdownOpen}
                             aria-haspopup="true"

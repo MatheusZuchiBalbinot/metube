@@ -6,19 +6,23 @@ import { TagColors } from '@utils/tagColors';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 import './view.css';
 
 export default function TagView() {
     const { t } = useTranslation();
     const { videos, activeTagView, closeTagView } = useVideo();
 
-    const tag = activeTagView!.tag;
-    const fromVideoId = activeTagView!.fromVideoId;
+    const tag = activeTagView?.tag ?? '';
+    const fromVideoId = activeTagView?.fromVideoId ?? null;
     const lowerTag = tag.toLowerCase();
     const tagPalette = TagColors.palette(tag);
 
     const taggedVideos = useMemo(() => {
+        if (activeTagView === null) {
+            return [];
+        }
+
         const matched = videos.filter((v: Video) =>
             v.tags.some((vt: string) => vt.toLowerCase() === lowerTag),
         );
@@ -42,7 +46,11 @@ export default function TagView() {
         );
         const fromVideo = sorted.splice(sorted.findIndex((v: Video) => v.id === fromVideoId), 1)[0];
         return [fromVideo, ...sorted];
-    }, [videos, lowerTag, fromVideoId]);
+    }, [videos, lowerTag, fromVideoId, activeTagView]);
+
+    if (activeTagView === null) {
+        return null;
+    }
 
     const hasFromVideo = fromVideoId !== null;
     const heroVideo = hasFromVideo ? taggedVideos[0] : null;

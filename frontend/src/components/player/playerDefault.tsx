@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { usePlayerControls } from '@hooks/usePlayerControls';
@@ -64,7 +64,36 @@ export function DefaultVideoPlayer({
 
     useShaka(videoRef, src);
     useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
-    useOutsideClick(settingsRef, () => setShowSettings(false));
+    useOutsideClick(settingsRef, handleCloseSettings);
+
+    function handleCloseSettings() {
+        setShowSettings(false);
+    }
+
+    function handleMouseLeave() {
+        const isVideoPaused = videoRef.current?.paused ?? true;
+        const shouldHide = !isVideoPaused && !isDragging;
+
+        if (shouldHide) {
+            setShowControls(false);
+        }
+    }
+
+    function handleWaiting() {
+        setIsBuffering(true);
+    }
+
+    function handleCanPlay() {
+        setIsBuffering(false);
+    }
+
+    function handlePlaying() {
+        setIsBuffering(false);
+    }
+
+    function handleBarClick(e: React.MouseEvent) {
+        e.stopPropagation();
+    }
 
     function handleTogglePlayWithFeedback() {
         const wasPaused = videoRef.current?.paused ?? true;
@@ -132,9 +161,10 @@ export function DefaultVideoPlayer({
         setShowSettings(v => !v);
     }
 
-    const getVolumeIcon = useCallback(() => {
+    function getVolumeIcon() {
         const isVolumeZero = isMuted || volume === 0;
         const isVolumeLow = !isVolumeZero && volume < 0.5;
+
         if (isVolumeZero) {
             return <VolumeX size={16} />;
         }
@@ -142,8 +172,9 @@ export function DefaultVideoPlayer({
         if (isVolumeLow) {
             return <Volume1 size={16} />;
         }
+
         return <Volume2 size={16} />;
-    }, [isMuted, volume]);
+    }
 
     // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -159,13 +190,7 @@ export function DefaultVideoPlayer({
             className={wrapClass}
             ref={containerRef}
             onMouseMove={revealControls}
-            onMouseLeave={() => {
-                const isVideoPaused = videoRef.current?.paused ?? true;
-                const shouldHide = !isVideoPaused && !isDragging;
-                if (shouldHide) {
-                    setShowControls(false);
-                }
-            }}
+            onMouseLeave={handleMouseLeave}
             style={ambientColor ? ({ '--vp-ambient': ambientColor } as React.CSSProperties) : undefined}
             onClick={handleContainerClick}
             onDoubleClick={handleContainerDoubleClick}
@@ -180,9 +205,9 @@ export function DefaultVideoPlayer({
                 onLoadedMetadata={handleVideoLoadedMetadata}
                 onEnded={handleVideoEnded}
                 onProgress={handleVideoProgress}
-                onWaiting={() => setIsBuffering(true)}
-                onCanPlay={() => setIsBuffering(false)}
-                onPlaying={() => setIsBuffering(false)}
+                onWaiting={handleWaiting}
+                onCanPlay={handleCanPlay}
+                onPlaying={handlePlaying}
             />
 
             <PlayerOverlays
@@ -206,7 +231,7 @@ export function DefaultVideoPlayer({
                     onDraggingChange={setIsDragging}
                 />
 
-                <div className="vp__bar" onClick={e => e.stopPropagation()}>
+                <div className="vp__bar" onClick={handleBarClick}>
                     <div className="vp__bar-left">
                         <button
                             className="vp__btn"
@@ -220,7 +245,7 @@ export function DefaultVideoPlayer({
                             }
                         </button>
 
-                        <div className="vp__volume" onClick={e => e.stopPropagation()}>
+                        <div className="vp__volume" onClick={handleBarClick}>
                             <button
                                 className="vp__btn"
                                 onClick={handleToggleMute}
