@@ -38,7 +38,7 @@ class StoreVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['required', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
+            'status' => ['required', 'in:'.implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
             'video_file' => ['required', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
@@ -53,11 +53,11 @@ class StoreVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required'      => 'Video title is required.',
+            'title.required' => 'Video title is required.',
             'video_file.required' => 'Video file is required.',
-            'video_file.mimes'    => 'Invalid video format. Accepted: mp4, webm, ogg, quicktime, avi.',
-            'status.required'     => 'Status is required.',
-            'status.in'           => 'Invalid status value.',
+            'video_file.mimes' => 'Invalid video format. Accepted: mp4, webm, ogg, quicktime, avi.',
+            'status.required' => 'Status is required.',
+            'status.in' => 'Invalid status value.',
         ];
     }
 

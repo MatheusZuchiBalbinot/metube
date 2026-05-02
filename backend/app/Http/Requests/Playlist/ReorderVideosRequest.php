@@ -41,8 +41,8 @@ class ReorderVideosRequest extends FormRequest
     {
         return [
             'vuids.required' => 'The list of video identifiers is required.',
-            'vuids.array'    => 'Video identifiers must be an array.',
-            'vuids.min'      => 'At least one video must be provided.',
+            'vuids.array' => 'Video identifiers must be an array.',
+            'vuids.min' => 'At least one video must be provided.',
             'vuids.*.exists' => 'Each video identifier must reference an existing video.',
         ];
     }

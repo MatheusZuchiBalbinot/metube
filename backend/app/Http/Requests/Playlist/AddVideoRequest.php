@@ -40,7 +40,7 @@ class AddVideoRequest extends FormRequest
     {
         return [
             'vuid.required' => 'Video identifier is required.',
-            'vuid.exists'   => 'Video not found.',
+            'vuid.exists' => 'Video not found.',
         ];
     }
 }

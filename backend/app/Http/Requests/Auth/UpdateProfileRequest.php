@@ -42,7 +42,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name.max' => 'Name cannot exceed 255 characters.',
-            'bio.max'  => 'Bio cannot exceed 1000 characters.',
+            'bio.max' => 'Bio cannot exceed 1000 characters.',
         ];
     }
 }
