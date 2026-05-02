@@ -21,8 +21,8 @@ class ProcessVideoUpload implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * @param  Video        $video             Freshly created video record (status=PROCESSING)
-     * @param  string       $tmpPath           Path relative to the 'local' disk
+     * @param  Video  $video  Freshly created video record (status=PROCESSING)
+     * @param  string  $tmpPath  Path relative to the 'local' disk
      * @param  string|null  $tmpThumbnailPath  Path relative to the 'local' disk, or null
      */
     public function __construct(
@@ -40,6 +40,7 @@ class ProcessVideoUpload implements ShouldQueue
 
         if ($video === null) {
             $storage->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
+
             return;
         }
 
@@ -76,6 +77,7 @@ class ProcessVideoUpload implements ShouldQueue
     private function resolveStatus(Video $video): VideoStatus
     {
         $isScheduled = $video->scheduled_at !== null && $video->scheduled_at->isFuture();
+
         return $isScheduled ? VideoStatus::SCHEDULED : VideoStatus::PUBLISHED;
     }
 }

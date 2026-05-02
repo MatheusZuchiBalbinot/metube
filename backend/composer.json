@@ -55,7 +55,7 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
-        "lint": "vendor/bin/phpstan analyse",
+        "lint": ["vendor/bin/pint --test", "vendor/bin/phpstan analyse"],
         "lint:fix": "vendor/bin/pint",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

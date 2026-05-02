@@ -3,7 +3,12 @@
 namespace App\Services;
 
 use App\Enums\ReactionType;
+use App\Enums\VideoEventType;
 use App\Enums\VideoStatus;
+use App\Events\VideoFinished;
+use App\Events\VideoReactionApplied;
+use App\Events\VideoSaved;
+use App\Events\VideoViewed;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
@@ -32,11 +37,11 @@ class VideoService
     {
         return DB::transaction(function () use ($user, $data) {
             $video = Video::create([
-                'channel_id'   => $user->id,
-                'title'        => $data['title'],
-                'description'  => $data['description'] ?? null,
-                'tags'         => $data['tags'] ?? [],
-                'status'       => VideoStatus::PROCESSING,
+                'channel_id' => $user->id,
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'tags' => $data['tags'] ?? [],
+                'status' => VideoStatus::PROCESSING,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
             ]);
 
@@ -110,9 +115,6 @@ class VideoService
         });
     }
 
-    /**
-     * @param  Video  $video
-     */
     private function deleteVideoFiles(Video $video): void
     {
         foreach (['video_url', 'thumbnail_url'] as $field) {
@@ -149,6 +151,8 @@ class VideoService
             $video->increment('views');
             $user->history()->create(['video_id' => $video->id]);
         });
+
+        event(new VideoViewed($user, $video));
     }
 
     /**
@@ -159,11 +163,14 @@ class VideoService
      */
     public function toggleLike(User $user, Video $video): void
     {
-        if ($user->likes()->where('video_id', $video->id)->exists()) {
+        $isAlreadyLiked = $user->likes()->where('video_id', $video->id)->exists();
+
+        if ($isAlreadyLiked) {
             $user->reactions()->detach($video->id);
         } else {
             $user->dislikes()->detach($video->id);
             $user->reactions()->attach($video->id, ['type' => ReactionType::LIKE->value]);
+            event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
         }
     }
 
@@ -175,11 +182,14 @@ class VideoService
      */
     public function toggleDislike(User $user, Video $video): void
     {
-        if ($user->dislikes()->where('video_id', $video->id)->exists()) {
+        $isAlreadyDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
+
+        if ($isAlreadyDisliked) {
             $user->reactions()->detach($video->id);
         } else {
             $user->likes()->detach($video->id);
             $user->reactions()->attach($video->id, ['type' => ReactionType::DISLIKE->value]);
+            event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
         }
     }
 
@@ -192,11 +202,13 @@ class VideoService
     public function toggleSave(User $user, Video $video): void
     {
         $playlist = $user->getWatchLaterPlaylist();
+        $isAlreadySaved = $playlist->videos()->where('video_id', $video->id)->exists();
 
-        if ($playlist->videos()->where('video_id', $video->id)->exists()) {
+        if ($isAlreadySaved) {
             $playlist->videos()->detach($video->id);
         } else {
             $playlist->videos()->attach($video->id, ['position' => 0]);
+            event(new VideoSaved($user, $video));
         }
     }
 
@@ -213,6 +225,12 @@ class VideoService
             ['video_id' => $video->id],
             ['percent' => $percent],
         );
+
+        $isFinished = $percent >= 95;
+
+        if ($isFinished) {
+            event(new VideoFinished($user, $video));
+        }
     }
 
     /**

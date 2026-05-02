@@ -36,7 +36,7 @@ class UpdateVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['nullable', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
+            'status' => ['nullable', 'in:'.implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
         ];
     }
@@ -49,10 +49,10 @@ class UpdateVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.max'       => 'Title cannot exceed 255 characters.',
+            'title.max' => 'Title cannot exceed 255 characters.',
             'description.max' => 'Description cannot exceed 5000 characters.',
-            'tags.max'        => 'A maximum of 20 tags is allowed.',
-            'status.in'       => 'Invalid status value.',
+            'tags.max' => 'A maximum of 20 tags is allowed.',
+            'status.in' => 'Invalid status value.',
         ];
     }
 

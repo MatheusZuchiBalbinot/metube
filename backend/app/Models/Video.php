@@ -164,6 +164,7 @@ class Video extends Model
     public function scopeLatest(Builder $query): Builder
     {
         $query->orderByDesc('published_at');
+
         return $query;
     }
 }
