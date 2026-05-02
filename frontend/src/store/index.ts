@@ -1,27 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import videoSlice from './videoSlice';
-import themeSlice from './themeSlice';
-import authSlice from './authSlice';
-import toastSlice from './toastSlice';
-import subscriptionSlice from './subscriptionSlice';
-import playlistSlice from './playlistSlice';
-import searchSlice from './searchSlice';
+import { rootReducer } from './reducers';
 import { persistMiddleware } from './persistMiddleware';
 
 export type { RootState, AppDispatch } from './types';
 import type { RootState, AppDispatch } from './types';
 
 export const store = configureStore({
-    reducer: {
-        video: videoSlice.reducer,
-        theme: themeSlice.reducer,
-        auth: authSlice.reducer,
-        toast: toastSlice.reducer,
-        subscription: subscriptionSlice.reducer,
-        playlist: playlistSlice.reducer,
-        search: searchSlice.reducer,
-    },
+    reducer: rootReducer,
     middleware: getDefault => getDefault().concat(persistMiddleware.middleware),
 });
 

@@ -5,7 +5,6 @@ export const STORAGE_KEYS = {
     SAVED_VIDEOS:     'vidsum:saved-videos',
     VIDEO_PROGRESS:   'vidsum:video-progress',
     AUTOPLAY:         'vidsum:autoplay',
-    WATCH_EVENTS:     'vidsum:watch-events',
     PINNED_VIDEO:     'vidsum:pinned-video',
     SHORTS_MUTED:     'vidsum:shorts-muted',
     SHORTS_VOLUME:    'vidsum:shorts-volume',

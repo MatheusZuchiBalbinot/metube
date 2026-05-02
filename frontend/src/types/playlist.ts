@@ -9,7 +9,7 @@ export interface Playlist {
     createdAt: string
 }
 
-export const Playlist = {
+export const PLAYLIST_CONSTANTS = {
     WATCH_LATER: 'Watch Later',
 } as const;
-export type PlaylistConst = typeof Playlist[keyof typeof Playlist];
+export type PlaylistConstant = typeof PLAYLIST_CONSTANTS[keyof typeof PLAYLIST_CONSTANTS];
