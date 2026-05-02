@@ -341,30 +341,6 @@
     border-radius: var(--radius-sm);
 }
 
-.ps-profile__heatmap-controls {
-    display: flex;
-    gap: 6px;
-}
-
-.ps-profile__heatmap-btn {
-    height: 22px;
-    width: 36px;
-    border-radius: var(--radius-sm);
-}
-
-.ps-profile__heatmap {
-    display: flex;
-    align-items: flex-end;
-    gap: 3px;
-    height: 28px;
-}
-
-.ps-profile__heatmap-bar {
-    flex: 1;
-    height: 3px;
-    border-radius: 2px;
-}
-
 .ps-profile__tabs {
     display: flex;
     gap: 0;

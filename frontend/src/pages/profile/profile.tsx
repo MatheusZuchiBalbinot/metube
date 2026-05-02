@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Clock, Heart, Tag as TagIcon, Flame, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
+import { Play, Clock, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { VideoFilter } from '@utils/applyFilters';
@@ -24,11 +24,6 @@ const TAB = {
 } as const;
 type Tab = typeof TAB[keyof typeof TAB];
 
-const HEATMAP_SHORT = 14;
-const HEATMAP_LONG = 30;
-
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 function formatWatchTime(seconds: number): string {
     const totalMinutes = Math.floor(seconds / 60);
     const isLessThanHour = totalMinutes < 60;
@@ -40,18 +35,13 @@ function formatWatchTime(seconds: number): string {
     return `${hours}h ${minutes}m`;
 }
 
-function formatHeatmapDate(dateStr: string): string {
-    const d = new Date(`${dateStr}T12:00:00Z`);
-    return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCDate()}`;
-}
-
 // eslint-disable-next-line complexity
 export default function ProfilePage() {
     const { t } = useTranslation();
     const { id: idParam } = useParams<{ id?: string }>();
     const { user, updateProfile } = useAuth();
     const {
-        videos, watchHistory, watchEvents, likedVideos, videoProgress,
+        videos, watchHistory, likedVideos, videoProgress,
         pinnedVideoId, editVideo, deleteVideo, openUploadModal,
     } = useVideo();
 
@@ -71,9 +61,6 @@ export default function ProfilePage() {
 
     // UX-11: delete confirmation state
     const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
-
-    // VISUAL-12: heatmap days toggle
-    const [heatmapDays, setHeatmapDays] = useState(HEATMAP_SHORT);
 
     const [ownVideos, setOwnVideos] = useState<Video[]>([]);
     const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
@@ -175,83 +162,6 @@ export default function ProfilePage() {
 
         return { videosWatched, watchTimeStr, topTags, likedCount };
     }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos]);
-
-    // ─── Streak ───────────────────────────────────────────────────────────────
-    const streak = useMemo(() => {
-        const isNotOwn = !isOwnProfile;
-        if (isNotOwn) {
-            return 0;
-        }
-
-        const daySet = new Set(watchEvents.map((e: { date: string }) => e.date.slice(0, 10)));
-        const today = new Date().toISOString().slice(0, 10);
-        const yesterdayDate = new Date();
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        const yesterday = yesterdayDate.toISOString().slice(0, 10);
-
-        const hasToday = daySet.has(today);
-        const hasYesterday = daySet.has(yesterday);
-        let startDay: string | null = null;
-        if (hasToday) {
-            startDay = today;
-        } else if (hasYesterday) {
-            startDay = yesterday;
-        }
-        const hasStartDay = startDay !== null;
-        if (!hasStartDay) {
-            return 0;
-        }
-
-        let count = 0;
-        let current = new Date(`${startDay}T12:00:00Z`);
-        while (daySet.has(current.toISOString().slice(0, 10))) {
-            count++;
-            current = new Date(current.getTime() - 86400000);
-        }
-        return count;
-    }, [isOwnProfile, watchEvents]);
-
-    // ─── Activity heatmap (configurable days) ─────────────────────────────────
-    const activityData = useMemo(() => {
-        const isNotOwn = !isOwnProfile;
-        if (isNotOwn) {
-            return null;
-        }
-
-        const eventsByDay = new Map<string, number>();
-        for (const event of watchEvents) {
-            const day = event.date.slice(0, 10);
-            eventsByDay.set(day, (eventsByDay.get(day) ?? 0) + 1);
-        }
-
-        const now = new Date();
-        const result: { key: string; dateLabel: string; count: number; pct: number }[] = [];
-        const counts: number[] = [];
-
-        for (let i = heatmapDays - 1; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().slice(0, 10);
-            counts.push(eventsByDay.get(key) ?? 0);
-        }
-
-        const maxCount = Math.max(...counts, 1);
-
-        for (let i = heatmapDays - 1; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().slice(0, 10);
-            const count = eventsByDay.get(key) ?? 0;
-            result.push({
-                key,
-                dateLabel: formatHeatmapDate(key),
-                count,
-                pct: Math.round((count / maxCount) * 100),
-            });
-        }
-
-        return result;
-    }, [isOwnProfile, watchEvents, heatmapDays]);
 
     function handleTabChange(tab: Tab) {
         setActiveTab(tab);
@@ -403,13 +313,6 @@ export default function ProfilePage() {
                                 <span className="profile-page__stat-value">{stats.likedCount}</span>
                                 <span className="profile-page__stat-label">{t('profile.liked_count')}</span>
                             </div>
-                            {streak > 0 && (
-                                <div className="profile-page__stat profile-page__stat--streak">
-                                    <Flame size={13} className="profile-page__stat-icon profile-page__stat-icon--flame" />
-                                    <span className="profile-page__stat-value">{streak}</span>
-                                    <span className="profile-page__stat-label">{t('profile.day_streak')}</span>
-                                </div>
-                            )}
                             {stats.topTags.length > 0 && (
                                 <div className="profile-page__stat profile-page__stat--tags">
                                     <TagIcon size={13} className="profile-page__stat-icon" />
@@ -432,57 +335,6 @@ export default function ProfilePage() {
                         </div>
                     )}
 
-                    {/* VISUAL-12: heatmap with toggle, tooltip, and legend */}
-                    {activityData && (
-                        <div className="profile-page__heatmap-section">
-                            <div className="profile-page__heatmap-controls" aria-label={t('profile.activity')}>
-                                <span className="profile-page__heatmap-title">{t('profile.activity')}</span>
-                                <div className="profile-page__heatmap-toggle" role="group">
-                                    <button
-                                        className={[
-                                            'profile-page__heatmap-toggle-btn',
-                                            heatmapDays === HEATMAP_SHORT ? 'profile-page__heatmap-toggle-btn--active' : '',
-                                        ].filter(Boolean).join(' ')}
-                                        onClick={() => setHeatmapDays(HEATMAP_SHORT)}
-                                        aria-pressed={heatmapDays === HEATMAP_SHORT}
-                                    >
-                                        {t('profile.heatmap_14d', '14d')}
-                                    </button>
-                                    <button
-                                        className={[
-                                            'profile-page__heatmap-toggle-btn',
-                                            heatmapDays === HEATMAP_LONG ? 'profile-page__heatmap-toggle-btn--active' : '',
-                                        ].filter(Boolean).join(' ')}
-                                        onClick={() => setHeatmapDays(HEATMAP_LONG)}
-                                        aria-pressed={heatmapDays === HEATMAP_LONG}
-                                    >
-                                        {t('profile.heatmap_30d', '30d')}
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="profile-page__activity" aria-label={t('profile.activity')}>
-                                {activityData.map(({ key, dateLabel, count, pct }) => (
-                                    <div
-                                        key={key}
-                                        className={['profile-page__activity-bar', pct > 0 ? 'profile-page__activity-bar--active' : ''].filter(Boolean).join(' ')}
-                                        style={{ '--bar-h': `${pct}%` } as React.CSSProperties}
-                                        title={`${dateLabel} · ${count} ${t('profile.heatmap_videos', 'videos')}`}
-                                        aria-label={`${dateLabel}: ${count} ${t('profile.heatmap_videos', 'videos')}`}
-                                        role="img"
-                                    />
-                                ))}
-                            </div>
-                            <div className="profile-page__heatmap-legend">
-                                <span className="profile-page__heatmap-legend-label">{t('profile.heatmap_less', 'Less')}</span>
-                                <div className="profile-page__heatmap-legend-swatches">
-                                    {[0, 1, 2, 3, 4].map(n => (
-                                        <span key={n} className={`profile-page__heatmap-swatch profile-page__heatmap-swatch--${n}`} />
-                                    ))}
-                                </div>
-                                <span className="profile-page__heatmap-legend-label">{t('profile.heatmap_more', 'More')}</span>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
