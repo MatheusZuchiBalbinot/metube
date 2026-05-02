@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { videoUrl } from '@utils/routes';
-import type { Video } from '@data/mockVideos';
+import type { Video } from '@models/video';
 
 const AUTOPLAY_COUNTDOWN = 5;
 
