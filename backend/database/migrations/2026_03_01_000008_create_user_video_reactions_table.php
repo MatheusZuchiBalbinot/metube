@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('user_reactions', function (Blueprint $table) {
+        Schema::create('user_video_reactions', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('video_id')->constrained()->cascadeOnDelete();
             $table->string('type', 10);
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('user_reactions');
+        Schema::dropIfExists('user_video_reactions');
     }
 };

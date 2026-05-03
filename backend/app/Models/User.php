@@ -91,7 +91,7 @@ class User extends Authenticatable
      */
     public function reactions(): BelongsToMany
     {
-        return $this->belongsToMany(Video::class, 'user_reactions')
+        return $this->belongsToMany(Video::class, 'user_video_reactions')
             ->using(UserVideoReaction::class)
             ->withPivot('type');
     }
@@ -103,7 +103,7 @@ class User extends Authenticatable
      */
     public function likes(): BelongsToMany
     {
-        return $this->belongsToMany(Video::class, 'user_reactions')
+        return $this->belongsToMany(Video::class, 'user_video_reactions')
             ->using(UserVideoReaction::class)
             ->withPivot('type')
             ->wherePivot('type', '=', 'like');
@@ -116,7 +116,7 @@ class User extends Authenticatable
      */
     public function dislikes(): BelongsToMany
     {
-        return $this->belongsToMany(Video::class, 'user_reactions')
+        return $this->belongsToMany(Video::class, 'user_video_reactions')
             ->using(UserVideoReaction::class)
             ->withPivot('type')
             ->wherePivot('type', '=', 'dislike');
