@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class UserVideoReaction extends Pivot
 {
     /** @var string */
-    public $table = 'user_reactions';
+    public $table = 'user_video_reactions';
 
     /** @var bool */
     public $incrementing = false;
