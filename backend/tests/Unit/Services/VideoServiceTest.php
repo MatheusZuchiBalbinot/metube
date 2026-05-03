@@ -1,12 +1,19 @@
 <?php
 
 use App\Enums\VideoStatus;
+use App\Events\VideoFinished;
+use App\Events\VideoReactionApplied;
+use App\Events\VideoSaved;
+use App\Events\VideoUndisliked;
+use App\Events\VideoUnliked;
+use App\Events\VideoUnsaved;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\VideoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -123,5 +130,108 @@ describe('VideoService', function () {
         $service->toggleLike($user, $video);
 
         expect($user->likes()->where('video_id', $video->id)->exists())->toBeFalse();
+    });
+
+    test('toggle like dispatches VideoUnliked when removing existing like', function () use (&$service) {
+        Event::fake([
+            VideoUnliked::class,
+            VideoUndisliked::class,
+            VideoUnsaved::class,
+            VideoSaved::class,
+            VideoFinished::class,
+            VideoReactionApplied::class,
+        ]);
+
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+        $user->reactions()->attach($video->id, ['type' => 'like']);
+
+        $service->toggleLike($user, $video);
+
+        Event::assertDispatched(VideoUnliked::class);
+        Event::assertNotDispatched(VideoReactionApplied::class);
+    });
+
+    test('toggle like dispatches VideoUndisliked then VideoReactionApplied when switching from dislike', function () use (&$service) {
+        Event::fake([
+            VideoUnliked::class,
+            VideoUndisliked::class,
+            VideoUnsaved::class,
+            VideoSaved::class,
+            VideoFinished::class,
+            VideoReactionApplied::class,
+        ]);
+
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+        $user->reactions()->attach($video->id, ['type' => 'dislike']);
+
+        $service->toggleLike($user, $video);
+
+        Event::assertDispatched(VideoUndisliked::class);
+        Event::assertDispatched(VideoReactionApplied::class);
+    });
+
+    test('toggle dislike dispatches VideoUnliked when switching from like', function () use (&$service) {
+        Event::fake([
+            VideoUnliked::class,
+            VideoUndisliked::class,
+            VideoUnsaved::class,
+            VideoSaved::class,
+            VideoFinished::class,
+            VideoReactionApplied::class,
+        ]);
+
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+        $user->reactions()->attach($video->id, ['type' => 'like']);
+
+        $service->toggleDislike($user, $video);
+
+        Event::assertDispatched(VideoUnliked::class);
+        Event::assertDispatched(VideoReactionApplied::class);
+    });
+
+    test('toggle save dispatches VideoSaved on add and VideoUnsaved on remove', function () use (&$service) {
+        Event::fake([
+            VideoUnliked::class,
+            VideoUndisliked::class,
+            VideoUnsaved::class,
+            VideoSaved::class,
+            VideoFinished::class,
+            VideoReactionApplied::class,
+        ]);
+
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+
+        $service->toggleSave($user, $video);
+        Event::assertDispatched(VideoSaved::class);
+
+        $service->toggleSave($user, $video);
+        Event::assertDispatched(VideoUnsaved::class);
+    });
+
+    test('updateProgress dispatches VideoFinished only on first crossing of 95 percent', function () use (&$service) {
+        Event::fake([
+            VideoUnliked::class,
+            VideoUndisliked::class,
+            VideoUnsaved::class,
+            VideoSaved::class,
+            VideoFinished::class,
+            VideoReactionApplied::class,
+        ]);
+
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+
+        $service->updateProgress($user, $video, 50);
+        Event::assertNotDispatched(VideoFinished::class);
+
+        $service->updateProgress($user, $video, 96);
+        Event::assertDispatchedTimes(VideoFinished::class, 1);
+
+        $service->updateProgress($user, $video, 99);
+        Event::assertDispatchedTimes(VideoFinished::class, 1);
     });
 });

@@ -1,6 +1,7 @@
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@hooks/useMediaQuery';
+import { useTrackImpression } from '@hooks/useTrackImpression';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import { VideoStatus, type Video } from '@models/video';
@@ -12,6 +13,8 @@ import { TagColors } from '@utils/tagColors';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
+import { analytics, AnalyticsSource, type Vuid } from '@api';
+import { getSessionId } from '@utils/sessionId';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import SavePopover from './savePopover';
@@ -23,6 +26,7 @@ interface VideoCardProps {
     video: Video
     showActions?: boolean
     index?: number
+    source?: AnalyticsSource
     onEdit?: (video: Video) => void
     onDelete?: (id: VideoId) => void
 }
@@ -38,11 +42,17 @@ const VideoCard = memo(function VideoCard({
     video,
     showActions = false,
     index = -1,
+    source = AnalyticsSource.HOME,
     onEdit,
     onDelete,
 }: VideoCardProps) {
     const isPriority = index === 0;
     const navigate = useNavigate();
+    const cardRef = useRef<HTMLElement>(null);
+    const vuid = video.id as unknown as Vuid;
+    const hasValidVuid = vuid !== undefined && (vuid as unknown as string) !== '';
+
+    useTrackImpression(cardRef, vuid, source, { enabled: hasValidVuid });
     const { t, i18n } = useTranslation();
     const dispatch = useAppDispatch();
     const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
@@ -74,7 +84,20 @@ const VideoCard = memo(function VideoCard({
         dispatch(videoActions.pinVideo(video.id));
     }
 
+    function trackClick() {
+        if (!hasValidVuid) {
+            return;
+        }
+        analytics.click({
+            vuid,
+            source,
+            position: index >= 0 ? index : undefined,
+            sessionId: getSessionId(),
+        }).catch(() => {});
+    }
+
     function handleCardClick() {
+        trackClick();
         navigate(videoUrl(video.id));
     }
 
@@ -85,6 +108,7 @@ const VideoCard = memo(function VideoCard({
         }
 
         e.preventDefault();
+        trackClick();
         navigate(videoUrl(video.id));
     }
 
@@ -128,6 +152,7 @@ const VideoCard = memo(function VideoCard({
 
     return (
         <article
+            ref={cardRef}
             className={buildVideoCardClass(showActions)}
             tabIndex={0}
             onClick={handleCardClick}

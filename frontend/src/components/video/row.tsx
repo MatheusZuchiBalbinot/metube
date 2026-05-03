@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { VideoStatus, type Video } from '@models/video';
@@ -7,6 +7,9 @@ import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
 import { useVideo } from '@hooks/useVideo';
+import { useTrackImpression } from '@hooks/useTrackImpression';
+import { analytics, AnalyticsSource, type Vuid } from '@api';
+import { getSessionId } from '@utils/sessionId';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './row.css';
@@ -14,13 +17,20 @@ import './row.css';
 interface VideoRowProps {
     video: Video
     highlighted?: boolean
+    source?: AnalyticsSource
+    position?: number
 }
 
 // eslint-disable-next-line complexity
-const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRowProps) {
+const VideoRow = memo(function VideoRow({ video, highlighted = false, source = AnalyticsSource.SEARCH, position }: VideoRowProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { openTagView, videoProgress } = useVideo();
+    const rowRef = useRef<HTMLElement>(null);
+    const vuid = video.id as unknown as Vuid;
+    const hasValidVuid = vuid !== undefined && (vuid as unknown as string) !== '';
+
+    useTrackImpression(rowRef, vuid, source, { enabled: hasValidVuid });
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
 
@@ -37,7 +47,20 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
         .filter(Boolean)
         .join(' ');
 
+    function trackClick() {
+        if (!hasValidVuid) {
+            return;
+        }
+        analytics.click({
+            vuid,
+            source,
+            position,
+            sessionId: getSessionId(),
+        }).catch(() => {});
+    }
+
     function handleRowClick() {
+        trackClick();
         navigate(videoUrl(video.id));
     }
 
@@ -47,6 +70,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
             return;
         }
         e.preventDefault();
+        trackClick();
         navigate(videoUrl(video.id));
     }
 
@@ -75,6 +99,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false }: VideoRow
 
     return (
         <article
+            ref={rowRef}
             className={rowClass}
             tabIndex={0}
             onClick={handleRowClick}
