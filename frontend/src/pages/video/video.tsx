@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
+import CommentSection from '@components/comment/section';
 import VideoRow from '@components/video/row';
 import FilterPanel from '@components/filter/panel';
 import ReactionBtn from '@components/video/reactionBtn';
@@ -17,7 +18,7 @@ import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
 import { PLAYLIST_CONSTANTS } from '@models/playlist';
 import { toastActions } from '@store/toastSlice';
-import { video as videoApi, type Vuid } from '@api';
+import { video as videoApi, analytics, AnalyticsSource, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
@@ -195,6 +196,44 @@ export default function VideoPage() {
         videoApi.recordView(id as unknown as Vuid);
         dispatch(videoActions.incrementViews(id as unknown as VideoId));
     }, [id, hasVideo, watchVideo, dispatch]);
+
+    // ─── Skip detection: reports an early abandon when leaving the page below 10% ─
+    const skipTrackerRef = useRef<{ vuid: Vuid; percent: number } | null>(null);
+
+    useEffect(() => {
+        if (id === undefined) {
+            return;
+        }
+
+        const vuid = id as unknown as Vuid;
+        skipTrackerRef.current = { vuid, percent: 0 };
+
+        return () => {
+            const tracker = skipTrackerRef.current;
+            skipTrackerRef.current = null;
+
+            if (tracker === null) {
+                return;
+            }
+
+            const isEarlyAbandon = tracker.percent > 0 && tracker.percent < 10;
+
+            if (!isEarlyAbandon) {
+                return;
+            }
+
+            analytics.skip({ vuid: tracker.vuid, percent: tracker.percent }).catch(() => {});
+        };
+    }, [id]);
+
+    useEffect(() => {
+        const tracker = skipTrackerRef.current;
+        if (tracker === null || video === undefined) {
+            return;
+        }
+        const livePercent = videoProgress[video.id] ?? 0;
+        tracker.percent = livePercent;
+    }, [videoProgress, video]);
 
     // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
 
@@ -524,6 +563,8 @@ export default function VideoPage() {
                             )}
                         </div>
                     </div>
+
+                    <CommentSection vuid={video.id as unknown as Vuid} />
                 </main>
 
                 <aside className="video-page__sidebar">
@@ -582,8 +623,8 @@ export default function VideoPage() {
                         <>
                             {filteredRelated.length > 0 && (
                                 <div className="video-page__sidebar-list">
-                                    {filteredRelated.map((v) => (
-                                        <VideoRow key={v.id} video={v} />
+                                    {filteredRelated.map((v, idx) => (
+                                        <VideoRow key={v.id} video={v} source={AnalyticsSource.RECOMMENDED} position={idx} />
                                     ))}
                                 </div>
                             )}

@@ -1,12 +1,16 @@
 export { auth } from './auth';
+export { comments } from './comments';
 export { video } from './videos';
 export { history } from './history';
 export { interactions } from './interactions';
 export { channel } from './channels';
 export { playlist } from './playlists';
+export { analytics, AnalyticsSource } from './analytics';
 
 export type { LoginPayload, LoginResponse, UpdateProfilePayload, User } from './auth';
+export type { Cuid, StoreCommentPayload, ToggleLikeResponse } from './comments';
 export type { VideoListResponse, VideoUploadPayload, VideoUpdatePayload, VideoSummary, Vuid } from './videos';
 export type { HistoryEvent } from './history';
 export type { Uuid } from './channels';
 export type { Puid, Playlist } from './playlists';
+export type { ImpressionsPayload, ClickPayload, SearchPayload, SkipPayload } from './analytics';

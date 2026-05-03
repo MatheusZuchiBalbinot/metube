@@ -322,5 +322,24 @@
         "exit_theater": "Sair do modo cinema",
         "fullscreen": "Tela cheia",
         "exit_fullscreen": "Sair da tela cheia"
+    },
+    "comments": {
+        "title_one": "{{count}} comentário",
+        "title_other": "{{count}} comentários",
+        "placeholder": "Escreva um comentário...",
+        "reply_placeholder": "Escreva uma resposta...",
+        "submit": "Comentar",
+        "edit": "Editar comentário",
+        "delete": "Excluir comentário",
+        "delete_confirm": "Excluir este comentário? Isso não pode ser desfeito.",
+        "reply": "Responder",
+        "view_replies_one": "Ver {{count}} resposta",
+        "view_replies_other": "Ver {{count}} respostas",
+        "hide_replies": "Ocultar respostas",
+        "load_more": "Carregar mais comentários",
+        "empty": "Seja o primeiro a comentar.",
+        "like": "Curtir comentário",
+        "unlike": "Descurtir comentário",
+        "edited": "(editado)"
     }
 }
