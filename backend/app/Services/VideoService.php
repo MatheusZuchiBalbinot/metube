@@ -8,6 +8,9 @@ use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
+use App\Events\VideoUndisliked;
+use App\Events\VideoUnliked;
+use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
@@ -135,8 +138,10 @@ class VideoService
      *
      * @param  User  $user  Who watched
      * @param  Video  $video  What was watched
+     * @param  string|null  $source  Surface origin (feed, search, channel, playlist, recommended)
+     * @param  string|null  $sessionId  Client session id
      */
-    public function recordView(User $user, Video $video): void
+    public function recordView(User $user, Video $video, ?string $source = null, ?string $sessionId = null): void
     {
         $alreadyWatchedRecently = $user->history()
             ->where('video_id', $video->id)
@@ -147,73 +152,111 @@ class VideoService
             return;
         }
 
-        DB::transaction(function () use ($user, $video) {
+        DB::transaction(function () use ($user, $video, $source, $sessionId) {
             $video->increment('views');
             $user->history()->create(['video_id' => $video->id]);
-        });
 
-        event(new VideoViewed($user, $video));
+            event(new VideoViewed($user, $video, $source, $sessionId));
+        });
     }
 
     /**
      * Toggle like status for a video.
+     *
+     * Emits VideoReactionApplied(LIKE) when adding, VideoUnliked when removing,
+     * and VideoUndisliked when switching from a previous dislike.
      *
      * @param  User  $user  Who's liking
      * @param  Video  $video  What to like
      */
     public function toggleLike(User $user, Video $video): void
     {
-        $isAlreadyLiked = $user->likes()->where('video_id', $video->id)->exists();
+        DB::transaction(function () use ($user, $video) {
+            $isAlreadyLiked = $user->likes()->where('video_id', $video->id)->exists();
 
-        if ($isAlreadyLiked) {
-            $user->reactions()->detach($video->id);
-        } else {
-            $user->dislikes()->detach($video->id);
+            if ($isAlreadyLiked) {
+                $user->reactions()->detach($video->id);
+                event(new VideoUnliked($user, $video));
+
+                return;
+            }
+
+            $wasDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
+
+            if ($wasDisliked) {
+                $user->dislikes()->detach($video->id);
+                event(new VideoUndisliked($user, $video));
+            }
+
             $user->reactions()->attach($video->id, ['type' => ReactionType::LIKE->value]);
             event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
-        }
+        });
     }
 
     /**
      * Toggle dislike status for a video.
+     *
+     * Emits VideoReactionApplied(DISLIKE) when adding, VideoUndisliked when
+     * removing, and VideoUnliked when switching from a previous like.
      *
      * @param  User  $user  Who's disliking
      * @param  Video  $video  What to dislike
      */
     public function toggleDislike(User $user, Video $video): void
     {
-        $isAlreadyDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
+        DB::transaction(function () use ($user, $video) {
+            $isAlreadyDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
 
-        if ($isAlreadyDisliked) {
-            $user->reactions()->detach($video->id);
-        } else {
-            $user->likes()->detach($video->id);
+            if ($isAlreadyDisliked) {
+                $user->reactions()->detach($video->id);
+                event(new VideoUndisliked($user, $video));
+
+                return;
+            }
+
+            $wasLiked = $user->likes()->where('video_id', $video->id)->exists();
+
+            if ($wasLiked) {
+                $user->likes()->detach($video->id);
+                event(new VideoUnliked($user, $video));
+            }
+
             $user->reactions()->attach($video->id, ['type' => ReactionType::DISLIKE->value]);
             event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
-        }
+        });
     }
 
     /**
      * Toggle save status for a video (add/remove from Watch Later playlist).
+     *
+     * Emits VideoSaved when adding, VideoUnsaved when removing.
      *
      * @param  User  $user  Who's saving
      * @param  Video  $video  What to save
      */
     public function toggleSave(User $user, Video $video): void
     {
-        $playlist = $user->getWatchLaterPlaylist();
-        $isAlreadySaved = $playlist->videos()->where('video_id', $video->id)->exists();
+        DB::transaction(function () use ($user, $video) {
+            $playlist = $user->getWatchLaterPlaylist();
+            $isAlreadySaved = $playlist->videos()->where('video_id', $video->id)->exists();
 
-        if ($isAlreadySaved) {
-            $playlist->videos()->detach($video->id);
-        } else {
+            if ($isAlreadySaved) {
+                $playlist->videos()->detach($video->id);
+                event(new VideoUnsaved($user, $video));
+
+                return;
+            }
+
             $playlist->videos()->attach($video->id, ['position' => 0]);
             event(new VideoSaved($user, $video));
-        }
+        });
     }
 
     /**
      * Update user's watch progress for a video.
+     *
+     * Emits VideoFinished only on the FIRST crossing of the 95% threshold,
+     * to avoid duplicate finish events when the user re-watches the tail.
      *
      * @param  User  $user  Who's watching
      * @param  Video  $video  What's being watched
@@ -221,16 +264,21 @@ class VideoService
      */
     public function updateProgress(User $user, Video $video, int $percent): void
     {
-        $user->progress()->updateOrCreate(
-            ['video_id' => $video->id],
-            ['percent' => $percent],
-        );
+        DB::transaction(function () use ($user, $video, $percent) {
+            $existing = $user->progress()->where('video_id', $video->id)->first();
+            $previousPercent = $existing !== null ? $existing->percent : 0;
 
-        $isFinished = $percent >= 95;
+            $user->progress()->updateOrCreate(
+                ['video_id' => $video->id],
+                ['percent' => $percent],
+            );
 
-        if ($isFinished) {
-            event(new VideoFinished($user, $video));
-        }
+            $isFirstFinish = $previousPercent < 95 && $percent >= 95;
+
+            if ($isFirstFinish) {
+                event(new VideoFinished($user, $video));
+            }
+        });
     }
 
     /**

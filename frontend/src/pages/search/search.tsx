@@ -6,6 +6,8 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
 import { useVideo } from '@hooks/useVideo';
 import { Button } from '@ui';
+import { analytics, AnalyticsSource } from '@api';
+import { getSessionId } from '@utils/sessionId';
 import './search.css';
 
 // Estimated height of a VideoRow (px). The virtualizer uses this as a first
@@ -65,6 +67,17 @@ export default function SearchPage() {
 
     const hasResults = results.length > 0;
     const hasQuery = query.trim() !== '';
+
+    useEffect(() => {
+        if (!hasQuery) {
+            return;
+        }
+        analytics.search({
+            query,
+            resultCount: results.length,
+            sessionId: getSessionId(),
+        }).catch(() => {});
+    }, [query, hasQuery, results.length]);
 
     const listRef = useRef<HTMLDivElement>(null);
 
@@ -160,7 +173,7 @@ export default function SearchPage() {
                                         transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
                                     }}
                                 >
-                                    <VideoRow video={video} />
+                                    <VideoRow video={video} source={AnalyticsSource.SEARCH} position={virtualItem.index} />
                                 </div>
                             );
                         })}

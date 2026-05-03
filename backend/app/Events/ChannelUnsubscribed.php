@@ -5,13 +5,12 @@ namespace App\Events;
 use App\Contracts\LoggableUserEvent;
 use App\Enums\VideoEventType;
 use App\Models\User;
-use App\Models\Video;
 
-class VideoSaved implements LoggableUserEvent
+class ChannelUnsubscribed implements LoggableUserEvent
 {
     public function __construct(
-        public readonly User $user,
-        public readonly Video $video,
+        public readonly User $subscriber,
+        public readonly User $channel,
     ) {}
 
     /**
@@ -20,9 +19,9 @@ class VideoSaved implements LoggableUserEvent
     public function toAnalyticRow(): array
     {
         return [
-            'user_id' => $this->user->id,
-            'video_id' => $this->video->id,
-            'event_type' => VideoEventType::SAVE->value,
+            'user_id' => $this->subscriber->id,
+            'channel_id' => $this->channel->id,
+            'event_type' => VideoEventType::UNSUBSCRIBE->value,
         ];
     }
 }

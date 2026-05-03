@@ -104,16 +104,25 @@ class VideoController extends Controller
     /**
      * Record that a user viewed a video.
      *
+     * @param  Request  $request  Optional body: source, session_id
      * @param  string  $vuid  Video UUID (v4)
      * @return Response HTTP 204 No Content
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function recordView(string $vuid): Response
+    public function recordView(Request $request, string $vuid): Response
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $this->videoService->recordView(auth()->user(), $video);
+        $source = $request->input('source');
+        $sessionId = $request->input('session_id');
+
+        $this->videoService->recordView(
+            auth()->user(),
+            $video,
+            is_string($source) ? $source : null,
+            is_string($sessionId) ? $sessionId : null,
+        );
 
         return $this->noContent();
     }
