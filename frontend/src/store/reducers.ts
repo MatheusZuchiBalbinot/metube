@@ -1,3 +1,4 @@
+import commentSlice from './commentSlice';
 import videoSlice from './videoSlice';
 import themeSlice from './themeSlice';
 import authSlice from './authSlice';
@@ -7,6 +8,7 @@ import playlistSlice from './playlistSlice';
 import searchSlice from './searchSlice';
 
 export const rootReducer = {
+    comment: commentSlice.reducer,
     video: videoSlice.reducer,
     theme: themeSlice.reducer,
     auth: authSlice.reducer,

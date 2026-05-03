@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
@@ -63,6 +65,27 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/', [ChannelController::class, 'show']);
         Route::get('/videos', [ChannelController::class, 'videos']);
         Route::post('/subscription', [ChannelController::class, 'toggleSubscription']);
+    });
+
+    // Analytics (client-reported events for the recommender)
+    Route::prefix('analytics')->group(function (): void {
+        Route::post('/impressions', [AnalyticsController::class, 'impressions']);
+        Route::post('/clicks', [AnalyticsController::class, 'click']);
+        Route::post('/searches', [AnalyticsController::class, 'search']);
+        Route::post('/skips', [AnalyticsController::class, 'skip']);
+    });
+
+    // Comments
+    Route::prefix('videos/{vuid}/comments')->group(function (): void {
+        Route::get('/', [CommentController::class, 'index']);
+        Route::post('/', [CommentController::class, 'store']);
+    });
+
+    Route::prefix('comments/{cuid}')->group(function (): void {
+        Route::patch('/', [CommentController::class, 'update']);
+        Route::delete('/', [CommentController::class, 'destroy']);
+        Route::post('/like', [CommentController::class, 'toggleLike']);
+        Route::get('/replies', [CommentController::class, 'replies']);
     });
 
     // Playlists

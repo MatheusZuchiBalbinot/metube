@@ -322,5 +322,24 @@
         "exit_theater": "Exit theater mode",
         "fullscreen": "Fullscreen",
         "exit_fullscreen": "Exit fullscreen"
+    },
+    "comments": {
+        "title_one": "{{count}} comment",
+        "title_other": "{{count}} comments",
+        "placeholder": "Write a comment...",
+        "reply_placeholder": "Write a reply...",
+        "submit": "Comment",
+        "edit": "Edit comment",
+        "delete": "Delete comment",
+        "delete_confirm": "Delete this comment? This cannot be undone.",
+        "reply": "Reply",
+        "view_replies_one": "View {{count}} reply",
+        "view_replies_other": "View {{count}} replies",
+        "hide_replies": "Hide replies",
+        "load_more": "Load more comments",
+        "empty": "Be the first to comment.",
+        "like": "Like comment",
+        "unlike": "Unlike comment",
+        "edited": "(edited)"
     }
 }

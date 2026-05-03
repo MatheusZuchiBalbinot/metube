@@ -1,4 +1,5 @@
 // Response schemas (with transform: snake_case → camelCase)
+export { CommentApiSchema, CommentListApiSchema, CommentRepliesApiSchema, ToggleLikeApiSchema } from './schemas/comment';
 export { UserApiSchema } from './schemas/user';
 export { VideoApiSchema, VideoListApiSchema } from './schemas/video';
 export { PlaylistApiSchema, PlaylistListApiSchema } from './schemas/playlist';
@@ -20,6 +21,7 @@ export {
 } from './schemas/requests/playlist';
 
 // Types
+export type { CommentApiInput, CommentApiOutput } from './schemas/comment';
 export type { UserApiInput, UserApiOutput } from './schemas/user';
 export type { VideoApiInput, VideoApiOutput } from './schemas/video';
 export type { PlaylistApiInput, PlaylistApiOutput } from './schemas/playlist';

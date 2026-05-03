@@ -1,0 +1,113 @@
+.comment-item {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.comment-item--reply {
+    padding-left: var(--space-2);
+}
+
+.comment-item__avatar {
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.comment-item__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.comment-item__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.comment-item__author {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.comment-item__time {
+    font-size: 0.75rem;
+    color: var(--text-3);
+}
+
+.comment-item__edited {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    font-style: italic;
+}
+
+.comment-item__content {
+    font-size: 0.875rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.comment-item__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+}
+
+.comment-item__like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: var(--text-3);
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s, background 0.15s;
+}
+
+.comment-item__like-btn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.comment-item__like-btn--active {
+    color: var(--accent);
+}
+
+.comment-item__like-count {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.comment-item__reply-form {
+    margin-top: var(--space-2);
+}
+
+.comment-item__replies-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+    margin-top: var(--space-1);
+}
+
+.comment-item__replies-toggle:hover {
+    background: var(--surface-2);
+}
