@@ -1,10 +1,10 @@
-import { useRef, useState, type DragEvent } from 'react';
+import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { useVideo } from '@hooks/useVideo';
 import { useUpload } from '@hooks/useUpload';
 import { useVideoProcessingPoll } from '@hooks/useVideoProcessingPoll';
-import { useAppDispatch } from '@store';
+import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
 import { VideoStatus } from '@models/video';
@@ -80,6 +80,19 @@ export default function UploadModal() {
     const dispatch = useAppDispatch();
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
     const { progress, status: uploadStatus, upload, reset: resetUpload } = useUpload();
+    const allVideos = useAppSelector(s => s.video.videos);
+
+    const existingTags = useMemo(() => {
+        const tagSet = new Set<string>();
+
+        for (const v of allVideos) {
+            for (const tag of v.tags) {
+                tagSet.add(tag as string);
+            }
+        }
+
+        return Array.from(tagSet).sort() as unknown as Tag[];
+    }, [allVideos]);
 
     const [mode, setMode] = useState<ModalMode>('single');
 
@@ -468,6 +481,7 @@ export default function UploadModal() {
                             value={form.tags}
                             onChange={handleTagsChange}
                             placeholder={t('video.tags_placeholder')}
+                            suggestions={existingTags}
                         />
                     </div>
 

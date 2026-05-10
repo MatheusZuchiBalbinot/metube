@@ -2,7 +2,8 @@ import { apiClient } from './client';
 import type { Comment } from '@models/comment';
 import type { PaginatedResponse } from '@models/common';
 import type { Vuid } from './videos';
-import { CommentListApiSchema, CommentRepliesApiSchema, CommentApiSchema, ToggleLikeApiSchema } from '@validation';
+import { CommentListApiSchema, CommentRepliesApiSchema, CommentApiSchema, ToggleLikeApiSchema, CommentVersionsApiSchema } from '@validation';
+import type { CommentVersion } from '@models/comment';
 
 export type { Cuid } from '@models/comment';
 
@@ -68,6 +69,13 @@ class CommentsApi {
         return apiClient.getValidated(
             `${this.commentsUrl}/${cuid}/replies`,
             CommentRepliesApiSchema,
+        );
+    }
+
+    async versions(cuid: string): Promise<CommentVersion[] | null> {
+        return apiClient.getValidated(
+            `${this.commentsUrl}/${cuid}/versions`,
+            CommentVersionsApiSchema,
         );
     }
 }

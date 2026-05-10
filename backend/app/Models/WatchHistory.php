@@ -19,7 +19,7 @@ class WatchHistory extends Model
     use HasFactory;
 
     /** @var string */
-    protected $table = 'watch_history';
+    protected $table = 'watch_histories';
 
     /** @var bool */
     public $timestamps = false;

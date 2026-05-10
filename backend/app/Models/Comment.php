@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,12 +19,15 @@ use Illuminate\Support\Str;
  * @property string $content
  * @property int $likes_count
  * @property int $replies_count
+ * @property int|null $current_version_id
+ * @property bool $is_edited Computed: true when current_version_id is not null
  * @property bool $is_liked Virtual attribute set at query time; not persisted
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \App\Models\User $user
  * @property \App\Models\Video $video
  * @property \App\Models\Comment|null $parent
+ * @property \App\Models\CommentVersion|null $currentVersion
  */
 class Comment extends Model
 {
@@ -43,7 +47,16 @@ class Comment extends Model
         return [
             'likes_count' => 'integer',
             'replies_count' => 'integer',
+            'current_version_id' => 'integer',
         ];
+    }
+
+    /**
+     * A comment is considered edited when it has a current_version_id set.
+     */
+    public function isEdited(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->current_version_id !== null);
     }
 
     protected static function boot(): void
@@ -103,5 +116,25 @@ class Comment extends Model
     public function likes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'comment_likes')->withTimestamps();
+    }
+
+    /**
+     * Get all saved versions of this comment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\CommentVersion, $this>
+     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(CommentVersion::class);
+    }
+
+    /**
+     * Get the version that was set as current on the last edit.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\CommentVersion, $this>
+     */
+    public function currentVersion(): BelongsTo
+    {
+        return $this->belongsTo(CommentVersion::class, 'current_version_id');
     }
 }

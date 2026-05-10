@@ -31,10 +31,6 @@ const TRENDING_COUNT = 8;
 const CONTINUE_WATCHING_MIN_PROGRESS = 4;
 const CONTINUE_WATCHING_MAX_PROGRESS = 96;
 
-// Number of grid cards before the "Continue Watching" interstitial section.
-// 8 cards ≈ 2 grid rows at typical viewport widths, creating a natural break.
-const GRID_ROWS_BEFORE_INTERSTITIAL = 8;
-
 const SECTION_VISIBLE = { opacity: 1, y: 0 };
 const SECTION_HIDDEN = { opacity: 0, y: 16 };
 const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1] };
@@ -90,15 +86,6 @@ export default function HomePage() {
             })
             .slice(0, 8);
     }, [watchHistory, videos, videoProgress]);
-
-    const firstBatchVideos = useMemo(
-        () => visibleVideos.slice(0, GRID_ROWS_BEFORE_INTERSTITIAL),
-        [visibleVideos],
-    );
-    const remainingVideos = useMemo(
-        () => visibleVideos.slice(GRID_ROWS_BEFORE_INTERSTITIAL),
-        [visibleVideos],
-    );
 
     const hasTrending = trendingVideos.length > 0;
     const hasContinueWatching = continueWatchingVideos.length > 0;
@@ -162,6 +149,34 @@ export default function HomePage() {
 
     return (
         <div className="home-page">
+            {hasContinueWatching && (
+                <motion.section
+                    ref={continueSectionRef as React.RefObject<HTMLElement>}
+                    className="home-page__section"
+                    initial={SECTION_HIDDEN}
+                    animate={continueVisible ? SECTION_VISIBLE : SECTION_HIDDEN}
+                    transition={SECTION_TRANSITION}
+                >
+                    <div className="home-page__section-header">
+                        <h2 className="home-page__section-title">{t('home.continue_watching')}</h2>
+                        <CarouselNav
+                            className="home-page__carousel-nav"
+                            onPrev={() => scrollCarousel(continueRef, 'left')}
+                            onNext={() => scrollCarousel(continueRef, 'right')}
+                            canScrollLeft={continueScroll.canScrollLeft}
+                            canScrollRight={continueScroll.canScrollRight}
+                        />
+                    </div>
+                    <div className="home-page__carousel" ref={continueRef}>
+                        {continueWatchingVideos.map((video: Video) => (
+                            <div key={video.id} className="home-page__carousel-item">
+                                <VideoCard video={video} />
+                            </div>
+                        ))}
+                    </div>
+                </motion.section>
+            )}
+
             {hasTrending && (
                 <motion.section
                     ref={trendingSectionRef as React.RefObject<HTMLElement>}
@@ -226,49 +241,11 @@ export default function HomePage() {
             )}
 
             {hasResults && (
-                <>
-                    <div className="home-page__main">
-                        <div className="home-page__grid">
-                            {firstBatchVideos.map((video, i) => (<VideoCard key={video.id} video={video} index={i} />))}
-                        </div>
+                <div className="home-page__main">
+                    <div className="home-page__grid">
+                        {visibleVideos.map((video, i) => (<VideoCard key={video.id} video={video} index={i} />))}
                     </div>
-
-                    {hasContinueWatching && (
-                        <motion.section
-                            ref={continueSectionRef as React.RefObject<HTMLElement>}
-                            className="home-page__section"
-                            initial={SECTION_HIDDEN}
-                            animate={continueVisible ? SECTION_VISIBLE : SECTION_HIDDEN}
-                            transition={SECTION_TRANSITION}
-                        >
-                            <div className="home-page__section-header">
-                                <h2 className="home-page__section-title">{t('home.continue_watching')}</h2>
-                                <CarouselNav
-                                    className="home-page__carousel-nav"
-                                    onPrev={() => scrollCarousel(continueRef, 'left')}
-                                    onNext={() => scrollCarousel(continueRef, 'right')}
-                                    canScrollLeft={continueScroll.canScrollLeft}
-                                    canScrollRight={continueScroll.canScrollRight}
-                                />
-                            </div>
-                            <div className="home-page__carousel" ref={continueRef}>
-                                {continueWatchingVideos.map((video: Video) => (
-                                    <div key={video.id} className="home-page__carousel-item">
-                                        <VideoCard video={video} />
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.section>
-                    )}
-
-                    {remainingVideos.length > 0 && (
-                        <div className="home-page__main">
-                            <div className="home-page__grid">
-                                {remainingVideos.map((video, i) => (<VideoCard key={video.id} video={video} index={firstBatchVideos.length + i} />))}
-                            </div>
-                        </div>
-                    )}
-                </>
+                </div>
             )}
 
             <button

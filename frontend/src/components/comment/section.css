@@ -1,20 +1,51 @@
 .comment-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
-    padding: var(--space-5) 0;
+    gap: var(--space-4);
+    padding: var(--space-6) 0;
 }
 
 .comment-section__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text);
     margin: 0;
 }
 
-.comment-section__form {
-    max-width: 640px;
+.comment-section__title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 1.1em;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, var(--color-success-fg), var(--color-success));
+    flex-shrink: 0;
 }
+
+/* ─── New comment row ────────────────────────────────────────────────────── */
+
+.comment-section__input-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.comment-section__input-row .comment-form {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────── */
+
+.comment-section__divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+}
+
+/* ─── Loading / empty ────────────────────────────────────────────────────── */
 
 .comment-section__loading {
     display: flex;
@@ -26,17 +57,36 @@
     font-size: 0.875rem;
     color: var(--text-3);
     text-align: center;
-    padding: var(--space-6) 0;
+    padding: var(--space-8) 0;
     margin: 0;
 }
+
+.comment-section__empty::before {
+    content: '💬';
+    display: block;
+    font-size: 1.75rem;
+    margin-bottom: var(--space-3);
+    opacity: 0.5;
+}
+
+/* ─── Comment list ───────────────────────────────────────────────────────── */
 
 .comment-section__list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: 0;
 }
+
+.comment-section__list > * + * {
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+/* ─── Load more ──────────────────────────────────────────────────────────── */
 
 .comment-section__more {
     display: flex;
     justify-content: center;
+    padding-top: var(--space-2);
 }

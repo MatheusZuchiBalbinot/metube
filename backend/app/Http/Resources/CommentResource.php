@@ -19,12 +19,12 @@ class CommentResource extends JsonResource
         return [
             'cuid' => $this->cuid,
             'content' => $this->content,
-            'likes_count' => $this->likes_count,
-            'replies_count' => $this->replies_count,
+            'likes_count' => $this->likes_count ?? 0,
+            'replies_count' => $this->replies_count ?? 0,
             'is_liked' => $this->is_liked ?? false,
+            'is_edited' => $this->current_version_id !== null,
             'parent_cuid' => $this->whenLoaded('parent', fn () => $this->parent?->cuid, null),
             'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
             'author' => $this->whenLoaded('user', fn () => [
                 'uuid' => $this->user->uuid,
                 'name' => $this->user->name,

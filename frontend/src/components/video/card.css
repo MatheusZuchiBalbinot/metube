@@ -132,6 +132,14 @@
 .video-card__meta-channel {
     color: var(--text-2);
     font-weight: var(--font-medium);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--duration-default);
+}
+
+.video-card__meta-channel:hover {
+    color: var(--accent);
+    text-decoration: underline;
 }
 
 .video-card__meta-sub {
@@ -242,18 +250,6 @@
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
     z-index: 1;
-}
-
-/* ─── Channel link ────────────────────────────────────────────────────────── */
-
-.video-card__meta-channel[role="button"] {
-    cursor: pointer;
-    transition: color var(--duration-default);
-}
-
-.video-card__meta-channel[role="button"]:hover {
-    color: var(--accent);
-    text-decoration: underline;
 }
 
 /* ─── Pin button active state ────────────────────────────────────────────── */

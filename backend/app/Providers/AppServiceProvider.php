@@ -45,7 +45,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)->by($request->ip());
+            return [
+                Limit::perMinute(5)->by($request->ip()),
+                Limit::perMinute(10)->by($request->input('email').'|login'),
+            ];
         });
 
         Gate::policy(Video::class, VideoPolicy::class);

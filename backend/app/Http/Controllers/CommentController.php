@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\CommentVersionResource;
 use App\Models\Comment;
 use App\Services\CommentService;
 use Illuminate\Http\JsonResponse;
@@ -55,7 +56,7 @@ class CommentController extends Controller
         $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $this->authorize('update', $comment);
 
-        $updated = $this->commentService->update($comment, $request);
+        $updated = $this->commentService->update($comment, $request, $request->user());
 
         return $this->json(new CommentResource($updated));
     }
@@ -104,5 +105,18 @@ class CommentController extends Controller
         $replies = $this->commentService->replies($comment, $user);
 
         return $this->json(CommentResource::collection($replies));
+    }
+
+    /**
+     * List all saved versions of a comment, newest first.
+     *
+     * @param  string  $cuid  Public comment identifier
+     */
+    public function versions(string $cuid): JsonResponse
+    {
+        $comment = Comment::where('cuid', $cuid)->firstOrFail();
+        $versions = $this->commentService->versions($comment);
+
+        return $this->json(CommentVersionResource::collection($versions));
     }
 }

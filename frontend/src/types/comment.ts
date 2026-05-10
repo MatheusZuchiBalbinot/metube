@@ -11,9 +11,15 @@ export interface Comment {
     content: string
     author: CommentAuthor
     createdAt: string
-    updatedAt?: string
+    isEdited: boolean
     likesCount: number
     isLiked: boolean
     replyCount: number
     parentCuid?: Cuid
+}
+
+export interface CommentVersion {
+    version: number
+    content: string
+    createdAt: string
 }

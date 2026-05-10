@@ -31,17 +31,25 @@ class ChannelService
         $channel = User::byUuid($uuid)->firstOrFail();
 
         DB::transaction(function () use ($subscriber, $channel) {
-            $isAlreadySubscribed = $subscriber->subscriptions()->where('channel_id', $channel->id)->exists();
+            $unsubscribed = DB::table('user_subscriptions')
+                ->where('user_id', $subscriber->id)
+                ->where('channel_id', $channel->id)
+                ->delete();
 
-            if ($isAlreadySubscribed) {
-                $subscriber->subscriptions()->detach($channel->id);
+            if ($unsubscribed > 0) {
                 event(new ChannelUnsubscribed($subscriber, $channel));
 
                 return;
             }
 
-            $subscriber->subscriptions()->attach($channel->id);
-            event(new ChannelSubscribed($subscriber, $channel));
+            $inserted = DB::table('user_subscriptions')->insertOrIgnore([
+                'user_id' => $subscriber->id,
+                'channel_id' => $channel->id,
+            ]);
+
+            if ($inserted > 0) {
+                event(new ChannelSubscribed($subscriber, $channel));
+            }
         });
     }
 }

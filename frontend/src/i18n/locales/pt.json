@@ -48,7 +48,8 @@
         "notifications": "Notificações",
         "searchPlaceholder": "Buscar vídeos, canais, tags...",
         "recentSearches": "Buscas recentes",
-        "removeRecent": "Remover"
+        "removeRecent": "Remover",
+        "suggestions": "Sugestões"
     },
     "dropdown": {
         "select_placeholder": "Selecione uma opção"
@@ -67,6 +68,11 @@
         "filter_sort_by": "Ordenar por",
         "filter_all_years": "Todos os anos",
         "filter_date_range": "Intervalo de datas",
+        "filter_quick_range": "Intervalo rápido",
+        "filter_last_7d": "Últimos 7 dias",
+        "filter_last_30d": "Últimos 30 dias",
+        "filter_last_90d": "Últimos 90 dias",
+        "filter_this_year": "Este ano",
         "sort_recent": "Recentes",
         "sort_views": "Vistos",
         "sort_az": "A–Z",
@@ -176,7 +182,8 @@
         "fromThisVideo": "Deste vídeo",
         "otherVideos": "Outros vídeos",
         "add_placeholder": "Adicionar tag...",
-        "remove_tag": "Remover tag {{tag}}"
+        "remove_tag": "Remover tag {{tag}}",
+        "suggestions": "Sugestões de tags"
     },
     "dnd": {
         "drop_file": "Arraste um arquivo aqui",
@@ -340,6 +347,14 @@
         "empty": "Seja o primeiro a comentar.",
         "like": "Curtir comentário",
         "unlike": "Descurtir comentário",
-        "edited": "(editado)"
+        "edited": "editado",
+        "view_history": "Ver histórico de edições",
+        "history_title": "Histórico de edições",
+        "history_empty": "Nenhum histórico encontrado.",
+        "history_current": "Versão atual",
+        "history_version": "Versão {{n}}",
+        "history_viewing": "Visualizando versão {{n}}",
+        "history_view_current": "Voltar para atual",
+        "submit_hint": "Ctrl+Enter"
     }
 }

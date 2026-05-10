@@ -14,6 +14,7 @@ import { channel as channelApi } from '@api';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { Avatar, Button, Input, Modal, Spinner, Tooltip } from '@ui';
+import EmptyState from '@ui/empty/empty';
 import TagInput from '@components/tag/input';
 import './profile.css';
 
@@ -251,6 +252,15 @@ export default function ProfilePage() {
         EmptyIcon = VideoOff;
     }
 
+    let emptyTitle: string;
+    if (activeTab === TAB.LIKED) {
+        emptyTitle = t('video.no_results');
+    } else if (activeTab === TAB.HISTORY) {
+        emptyTitle = t('video.no_results');
+    } else {
+        emptyTitle = t('video.no_own_videos');
+    }
+
     return (
         <div className="profile-page">
             <div className="profile-page__banner" aria-hidden="true" />
@@ -424,14 +434,10 @@ export default function ProfilePage() {
                     </div>
                 )}
                 {!loadingOwnVideos && !hasVideos && (
-                    <div className="profile-page__empty">
-                        <EmptyIcon size={36} strokeWidth={1.5} className="profile-page__empty-icon" />
-                        <p className="profile-page__empty-text">
-                            {activeTab === TAB.VIDEOS && t('video.no_own_videos')}
-                            {activeTab === TAB.LIKED && t('video.no_results')}
-                            {activeTab === TAB.HISTORY && t('video.no_results')}
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={<EmptyIcon size={36} strokeWidth={1.5} />}
+                        title={emptyTitle}
+                    />
                 )}
             </main>
 

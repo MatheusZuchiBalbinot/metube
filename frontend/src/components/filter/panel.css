@@ -208,6 +208,40 @@
     box-shadow: var(--focus-ring);
 }
 
+/* ─── Quick range chips ───────────────────────────────────────────────────── */
+
+.filter-panel__quick-range-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filter-panel__quick-range-chip {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-2);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--duration-fast);
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.filter-panel__quick-range-chip:hover {
+    border-color: var(--border-2);
+    color: var(--text);
+}
+
+.filter-panel__quick-range-chip--active {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 /* ─── Date inputs ─────────────────────────────────────────────────────────── */
 
 .filter-panel__date-row {

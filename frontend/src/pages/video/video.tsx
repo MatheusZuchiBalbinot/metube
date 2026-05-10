@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
@@ -26,6 +26,8 @@ import { useBurstAnimation } from '@hooks/useBurstAnimation';
 import { useVideoProgress } from '@hooks/useVideoProgress';
 import { useAutoplay } from '@hooks/useAutoplay';
 import { TagColors } from '@utils/tagColors';
+import { ROUTES } from '@utils/routes';
+import TagBadge from '@components/tag/badge';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
 import { Avatar, Button, Tooltip, Badge } from '@ui';
@@ -424,8 +426,13 @@ export default function VideoPage() {
 
                         <div className="video-page__channel-row">
                             <div className="video-page__channel-info">
-                                <Avatar name={video.channel} size="sm" />
-                                <span className="video-page__channel-name">{video.channel}</span>
+                                <Link
+                                    to={ROUTES.CHANNEL.replace(':id', video.channelId)}
+                                    className="video-page__channel-link"
+                                >
+                                    <Avatar name={video.channel} size="sm" />
+                                    <span className="video-page__channel-name">{video.channel}</span>
+                                </Link>
                                 <button
                                     type="button"
                                     className={['video-page__subscribe-btn', isChannelSubscribed ? 'video-page__subscribe-btn--active' : ''].filter(Boolean).join(' ')}
@@ -557,7 +564,12 @@ export default function VideoPage() {
                             {video.tags.length > 0 && (
                                 <div className="video-page__tags">
                                     {video.tags.map(tag => (
-                                        <span key={tag} className="video-page__tag">{tag}</span>
+                                        <TagBadge
+                                            key={tag}
+                                            tag={tag}
+                                            prefix="#"
+                                            onClick={() => dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }))}
+                                        />
                                     ))}
                                 </div>
                             )}

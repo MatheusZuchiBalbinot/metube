@@ -11,6 +11,7 @@ import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
+import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models/video';
 import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/history';
 import './history.css';
@@ -251,18 +252,18 @@ export default function HistoryPage() {
             )}
 
             {!hasHistory && (
-                <div className="history-page__empty">
-                    <History size={40} strokeWidth={1.25} className="history-page__empty-icon" />
-                    <p className="history-page__empty-title">{t('nav.history')}</p>
-                    <p className="history-page__empty-text">{t('video.no_history_title')}</p>
-                </div>
+                <EmptyState
+                    icon={<History size={40} strokeWidth={1.25} />}
+                    title={t('nav.history')}
+                    description={t('video.no_history_title')}
+                />
             )}
             {hasHistory && !hasResults && (
-                <div className="history-page__empty">
-                    <Search size={40} strokeWidth={1.25} className="history-page__empty-icon" />
-                    <p className="history-page__empty-title">{t('history.no_results_title')}</p>
-                    <p className="history-page__empty-text">{t('history.no_results_text')}</p>
-                </div>
+                <EmptyState
+                    icon={<Search size={40} strokeWidth={1.25} />}
+                    title={t('history.no_results_title')}
+                    description={t('history.no_results_text')}
+                />
             )}
             {hasHistory && hasResults && (
                 <div className="history-page__content" ref={listRef}>

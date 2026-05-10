@@ -48,7 +48,8 @@
         "notifications": "Notifications",
         "searchPlaceholder": "Search videos, channels, tags...",
         "recentSearches": "Recent searches",
-        "removeRecent": "Remove"
+        "removeRecent": "Remove",
+        "suggestions": "Suggestions"
     },
     "dropdown": {
         "select_placeholder": "Select an option"
@@ -67,6 +68,11 @@
         "filter_sort_by": "Sort by",
         "filter_all_years": "All years",
         "filter_date_range": "Date range",
+        "filter_quick_range": "Quick range",
+        "filter_last_7d": "Last 7 days",
+        "filter_last_30d": "Last 30 days",
+        "filter_last_90d": "Last 90 days",
+        "filter_this_year": "This year",
         "sort_recent": "Recent",
         "sort_views": "Views",
         "sort_az": "A–Z",
@@ -176,7 +182,8 @@
         "fromThisVideo": "From this video",
         "otherVideos": "Other videos",
         "add_placeholder": "Add tag...",
-        "remove_tag": "Remove tag {{tag}}"
+        "remove_tag": "Remove tag {{tag}}",
+        "suggestions": "Tag suggestions"
     },
     "dnd": {
         "drop_file": "Drop a file here",
@@ -340,6 +347,14 @@
         "empty": "Be the first to comment.",
         "like": "Like comment",
         "unlike": "Unlike comment",
-        "edited": "(edited)"
+        "edited": "edited",
+        "view_history": "View edit history",
+        "history_title": "Edit history",
+        "history_empty": "No history found.",
+        "history_current": "Current version",
+        "history_version": "Version {{n}}",
+        "history_viewing": "Viewing version {{n}}",
+        "history_view_current": "Back to current",
+        "submit_hint": "Ctrl+Enter"
     }
 }
