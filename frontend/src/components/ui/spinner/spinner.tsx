@@ -10,7 +10,7 @@ interface SpinnerProps {
 
 export default function Spinner({ size = 'md', fullPage = false, className = '' }: SpinnerProps) {
     const spinner = (
-        <div className={`spinner spinner--${size}${className ? ` ${className}` : ''}`} />
+        <div role="status" className={`spinner spinner--${size}${className ? ` ${className}` : ''}`} />
     );
 
     if (fullPage) {

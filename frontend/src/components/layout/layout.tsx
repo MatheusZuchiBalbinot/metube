@@ -14,14 +14,54 @@ import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import { useSearch } from '@context/search';
+import { STORAGE_KEYS } from '@utils/storageKeys';
 import './layout.css';
+
+function getInitialSidebarCollapsed(): boolean {
+    const hasWindow = typeof window !== 'undefined';
+
+    if (!hasWindow) {
+        return true;
+    }
+
+    const stored = window.localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
+    const hasStoredValue = stored !== null;
+
+    if (hasStoredValue) {
+        return stored === 'true';
+    }
+
+    return true;
+}
 
 export default function AppLayout() {
     const { t } = useTranslation();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-        return isMobile;
-    });
+    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => getInitialSidebarCollapsed());
+
+    const handleToggleSidebar = useCallback(() => {
+        setSidebarCollapsed(prev => {
+            const next = !prev;
+            const hasWindow = typeof window !== 'undefined';
+
+            if (hasWindow) {
+                window.localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
+            }
+
+            return next;
+        });
+    }, []);
+
+    const handleCloseSidebar = useCallback(() => {
+        setSidebarCollapsed(() => {
+            const hasWindow = typeof window !== 'undefined';
+
+            if (hasWindow) {
+                window.localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, 'true');
+            }
+
+            return true;
+        });
+    }, []);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.video.activeTagView);
@@ -62,7 +102,7 @@ export default function AppLayout() {
             <div className="app-layout__bg" aria-hidden="true">
                 <div className="app-layout__bg-orb" />
             </div>
-            <AppHeader onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
+            <AppHeader onToggleSidebar={handleToggleSidebar} />
             <div className="app-layout__body">
                 <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
                 {!sidebarCollapsed && (
@@ -70,7 +110,7 @@ export default function AppLayout() {
                         type="button"
                         className="app-layout__sidebar-backdrop"
                         aria-label={t('nav.close_sidebar', 'Close menu')}
-                        onClick={() => setSidebarCollapsed(true)}
+                        onClick={handleCloseSidebar}
                     />
                 )}
                 <main id="main-content" className={['app-layout__content', isFullHeightPage ? 'app-layout__content--full' : ''].filter(Boolean).join(' ')}>

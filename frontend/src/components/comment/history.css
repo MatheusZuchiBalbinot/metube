@@ -1,0 +1,104 @@
+.comment-history {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* ─── Trigger badge ──────────────────────────────────────────────────────── */
+
+.comment-history__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-3);
+    font-size: 0.6875rem;
+    font-family: inherit;
+    font-style: italic;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap;
+}
+
+.comment-history__trigger:hover,
+.comment-history__trigger--active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+/* ─── Dropdown ───────────────────────────────────────────────────────────── */
+
+.comment-history__dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px var(--shadow-lg);
+    z-index: 50;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-history__loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-4);
+}
+
+/* ─── Version options ────────────────────────────────────────────────────── */
+
+.comment-history__option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 10px var(--space-3);
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+}
+
+.comment-history__option:last-child {
+    border-bottom: none;
+}
+
+.comment-history__option:hover {
+    background: var(--surface-3);
+}
+
+.comment-history__option--selected {
+    background: var(--accent-subtle);
+}
+
+.comment-history__option--selected:hover {
+    background: var(--accent-subtle);
+}
+
+.comment-history__option-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+}
+
+.comment-history__option-date {
+    font-size: 0.6875rem;
+    color: var(--text-3);
+    white-space: nowrap;
+}
+
+.comment-history__option-check {
+    color: var(--accent);
+    flex-shrink: 0;
+}

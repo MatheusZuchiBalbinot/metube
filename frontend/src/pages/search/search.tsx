@@ -4,10 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
+import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
 import { Button } from '@ui';
+import EmptyState from '@ui/empty/empty';
+import { VideoFilter } from '@utils/applyFilters';
 import { analytics, AnalyticsSource } from '@api';
 import { getSessionId } from '@utils/sessionId';
+import type { Tag } from '@models/tag';
 import './search.css';
 
 // Estimated height of a VideoRow (px). The virtualizer uses this as a first
@@ -33,12 +37,14 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     );
 }
 
+// eslint-disable-next-line complexity
 export default function SearchPage() {
     const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
     const { publishedVideos } = useVideo();
     const query = searchParams.get('q') ?? '';
     const [localQuery, setLocalQuery] = useState(query);
+    const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -49,7 +55,7 @@ export default function SearchPage() {
         inputRef.current?.focus();
     }, []);
 
-    const results = useMemo(() => {
+    const baseResults = useMemo(() => {
         const isQueryEmpty = query.trim() === '';
         if (isQueryEmpty) {
             return publishedVideos;
@@ -64,6 +70,21 @@ export default function SearchPage() {
             return matchesTitle || matchesDesc || matchesChannel || matchesTags;
         });
     }, [publishedVideos, query]);
+
+    const allTags = useMemo(() => {
+        const tagSet = new Set<string>();
+        for (const v of baseResults) {
+            for (const tag of v.tags) {
+                tagSet.add(tag);
+            }
+        }
+        return Array.from(tagSet).sort() as unknown as Tag[];
+    }, [baseResults]);
+
+    const results = useMemo(
+        () => VideoFilter.apply(baseResults, filters),
+        [baseResults, filters],
+    );
 
     const hasResults = results.length > 0;
     const hasQuery = query.trim() !== '';
@@ -154,6 +175,12 @@ export default function SearchPage() {
                 )}
             </div>
 
+            {hasResults && (
+                <div className="search-page__filters">
+                    <FilterPanel allTags={allTags} value={filters} onChange={setFilters} />
+                </div>
+            )}
+
             {hasResults ? (
                 <div className="search-page__list" ref={listRef}>
                     <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
@@ -180,11 +207,11 @@ export default function SearchPage() {
                     </div>
                 </div>
             ) : (
-                <div className="search-page__empty">
-                    <Search size={40} strokeWidth={1.25} className="search-page__empty-icon" />
-                    <p className="search-page__empty-title">{t('video.no_results')}</p>
-                    <p className="search-page__empty-text">{t('search.try_different')}</p>
-                </div>
+                <EmptyState
+                    icon={<Search size={40} strokeWidth={1.25} />}
+                    title={t('video.no_results')}
+                    description={t('search.try_different')}
+                />
             )}
         </div>
     );

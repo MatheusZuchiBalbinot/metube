@@ -81,6 +81,10 @@ const commentSlice = createSlice({
 
             const existing = state.byVideo[vuidKey] ?? [];
             state.byVideo[vuidKey] = [cuidKey, ...existing];
+
+            if (state.pagination[vuidKey] !== undefined) {
+                state.pagination[vuidKey].total += 1;
+            }
         },
 
         addReply(state, action: PayloadAction<{ parentCuid: Cuid; comment: Comment }>) {
@@ -132,6 +136,10 @@ const commentSlice = createSlice({
             if (vuid !== undefined) {
                 const vuidKey = vuid as string;
                 state.byVideo[vuidKey] = (state.byVideo[vuidKey] ?? []).filter(id => id !== cuidKey);
+
+                if (state.pagination[vuidKey] !== undefined) {
+                    state.pagination[vuidKey].total = Math.max(0, state.pagination[vuidKey].total - 1);
+                }
             }
 
             if (parentCuid !== undefined) {

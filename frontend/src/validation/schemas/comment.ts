@@ -4,31 +4,31 @@ import type { Cuid } from '@models/comment';
 const commentAuthorSchema = z.object({
     uuid: z.string().min(1),
     name: z.string().min(1),
-    avatar: z.string(),
+    avatar: z.string().nullable().transform(v => v ?? ''),
 });
 
 export const CommentApiSchema = z.object({
     cuid: z.string().min(1),
     content: z.string(),
     author: commentAuthorSchema,
-    likes_count: z.number().int().nonnegative(),
-    replies_count: z.number().int().nonnegative(),
+    likes_count: z.number().int().nonnegative().nullable().transform(v => v ?? 0),
+    replies_count: z.number().int().nonnegative().nullable().transform(v => v ?? 0),
     is_liked: z.boolean(),
+    is_edited: z.boolean().default(false),
     parent_cuid: z.string().nullable().optional(),
     created_at: z.string().datetime({ offset: true }),
-    updated_at: z.string().datetime({ offset: true }).nullable().optional(),
 }).transform(raw => ({
     id: raw.cuid as unknown as Cuid,
     content: raw.content,
     author: raw.author,
     likesCount: raw.likes_count,
     isLiked: raw.is_liked,
+    isEdited: raw.is_edited,
     replyCount: raw.replies_count,
     parentCuid: raw.parent_cuid !== null && raw.parent_cuid !== undefined
         ? raw.parent_cuid as unknown as Cuid
         : undefined,
     createdAt: raw.created_at,
-    updatedAt: raw.updated_at ?? undefined,
 }));
 
 export const CommentListApiSchema = z.object({
@@ -60,6 +60,20 @@ export const ToggleLikeApiSchema = z.object({
     liked: raw.liked,
     likesCount: raw.likes_count,
 }));
+
+export const CommentVersionApiSchema = z.object({
+    version: z.number().int().positive(),
+    content: z.string(),
+    created_at: z.string().datetime({ offset: true }),
+}).transform(raw => ({
+    version: raw.version,
+    content: raw.content,
+    createdAt: raw.created_at,
+}));
+
+export const CommentVersionsApiSchema = z.object({
+    data: z.array(CommentVersionApiSchema),
+}).transform(raw => raw.data);
 
 export type CommentApiInput = z.input<typeof CommentApiSchema>;
 export type CommentApiOutput = z.output<typeof CommentApiSchema>;

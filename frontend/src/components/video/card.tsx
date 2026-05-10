@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { useTrackImpression } from '@hooks/useTrackImpression';
 import { useTranslation } from 'react-i18next';
@@ -112,19 +112,8 @@ const VideoCard = memo(function VideoCard({
         navigate(videoUrl(video.id));
     }
 
-    function handleChannelClick(e: React.MouseEvent) {
+    function handleChannelLinkClick(e: React.MouseEvent) {
         e.stopPropagation();
-        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
-    }
-
-    function handleChannelKeyDown(e: React.KeyboardEvent) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) {
-            return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
     }
 
     function handleEdit(e: React.MouseEvent) {
@@ -219,15 +208,13 @@ const VideoCard = memo(function VideoCard({
                 <p className="video-card__title">{video.title}</p>
 
                 <div className="video-card__meta">
-                    <span
+                    <Link
+                        to={ROUTES.CHANNEL.replace(':id', video.channelId)}
                         className="video-card__meta-channel"
-                        role="button"
-                        tabIndex={0}
-                        onClick={handleChannelClick}
-                        onKeyDown={handleChannelKeyDown}
+                        onClick={handleChannelLinkClick}
                     >
                         {video.channel}
-                    </span>
+                    </Link>
                     <div className="video-card__meta-sub">
                         <span className="video-card__meta-views">{Format.views(video.views)} {t('video.views')}</span>
                         <span className="video-card__meta-dot" aria-hidden="true">·</span>

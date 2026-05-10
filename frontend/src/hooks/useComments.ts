@@ -6,9 +6,11 @@ import type { Comment } from '@models/comment';
 import type { Cuid } from '@api/comments';
 import type { Vuid } from '@api/videos';
 
+const EMPTY_IDS: string[] = [];
+
 export function useComments(vuid: Vuid) {
     const dispatch = useAppDispatch();
-    const commentIds = useAppSelector(s => s.comment.byVideo[vuid as string] ?? []);
+    const commentIds = useAppSelector(s => s.comment.byVideo[vuid as string] ?? EMPTY_IDS);
     const byId = useAppSelector(s => s.comment.byId);
     const pagination = useAppSelector(s => s.comment.pagination[vuid as string]);
     const isLoading = useAppSelector(s => s.comment.loadingVideos[vuid as string] ?? false);
@@ -84,7 +86,8 @@ export function useComments(vuid: Vuid) {
 
     const remove = useCallback(async (cuid: Cuid, parentCuid?: Cuid) => {
         await commentsApi.delete(cuid as string);
-        dispatch(commentActions.removeComment({ cuid, vuid, parentCuid }));
+        const isTopLevel = parentCuid === undefined;
+        dispatch(commentActions.removeComment({ cuid, vuid: isTopLevel ? vuid : undefined, parentCuid }));
     }, [dispatch, vuid]);
 
     const toggleLike = useCallback(async (cuid: Cuid) => {
@@ -124,6 +127,8 @@ export function useComments(vuid: Vuid) {
             .filter((c): c is Comment => c !== undefined);
     }, [byId, repliesById]);
 
+    const loadingReplies = useAppSelector(s => s.comment.loadingReplies);
+
     return {
         comments: commentList,
         isLoading,
@@ -135,6 +140,7 @@ export function useComments(vuid: Vuid) {
         remove,
         toggleLike,
         loadReplies,
+        loadingReplies,
         getReplies,
         byId,
     };

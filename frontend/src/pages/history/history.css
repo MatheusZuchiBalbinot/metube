@@ -209,32 +209,3 @@
     color: #f87171 !important;
 }
 
-/* ─── Empty ───────────────────────────────────────────────────────────────── */
-
-.history-page__empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    min-height: 320px;
-    color: var(--text-3);
-}
-
-.history-page__empty-icon {
-    opacity: 0.5;
-}
-
-.history-page__empty-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-2);
-    margin: 0;
-}
-
-.history-page__empty-text {
-    font-size: 0.875rem;
-    color: var(--text-3);
-    margin: 0;
-}

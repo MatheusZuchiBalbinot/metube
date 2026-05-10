@@ -61,7 +61,7 @@ class VideoService
                 $tmpThumbPath = $thumbFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
             }
 
-            ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath);
+            ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
 
             return $video->load('channel');
         });
@@ -108,21 +108,27 @@ class VideoService
     /**
      * Delete a video permanently.
      *
+     * The DB record is deleted first inside the transaction. File cleanup runs
+     * after the commit so a transaction rollback can never leave the record
+     * alive with missing files.
+     *
      * @param  Video  $video  Video to delete
      */
     public function deleteVideo(Video $video): void
     {
+        $videoUrl = $video->video_url;
+        $thumbnailUrl = $video->thumbnail_url;
+
         DB::transaction(function () use ($video) {
-            $this->deleteVideoFiles($video);
             $video->delete();
         });
+
+        $this->deleteVideoFiles($videoUrl, $thumbnailUrl);
     }
 
-    private function deleteVideoFiles(Video $video): void
+    private function deleteVideoFiles(?string $videoUrl, ?string $thumbnailUrl): void
     {
-        foreach (['video_url', 'thumbnail_url'] as $field) {
-            $url = $video->$field;
-
+        foreach ([$videoUrl, $thumbnailUrl] as $url) {
             if ($url === null) {
                 continue;
             }
@@ -136,6 +142,12 @@ class VideoService
     /**
      * Record a user's view of a video.
      *
+     * Deduplicates within the same clock-hour using the unique constraint
+     * (user_id, video_id, watched_hour) added to watch_histories. The
+     * insertOrIgnore replaces the old SELECT+check pattern, eliminating the
+     * race condition where two simultaneous requests both passed the check and
+     * both incremented views.
+     *
      * @param  User  $user  Who watched
      * @param  Video  $video  What was watched
      * @param  string|null  $source  Surface origin (feed, search, channel, playlist, recommended)
@@ -143,18 +155,29 @@ class VideoService
      */
     public function recordView(User $user, Video $video, ?string $source = null, ?string $sessionId = null): void
     {
-        $alreadyWatchedRecently = $user->history()
-            ->where('video_id', $video->id)
-            ->where('watched_at', '>=', now()->subHour())
-            ->exists();
-
-        if ($alreadyWatchedRecently) {
-            return;
-        }
-
         DB::transaction(function () use ($user, $video, $source, $sessionId) {
+            $now = now();
+
+            $row = [
+                'user_id' => $user->id,
+                'video_id' => $video->id,
+                'watched_at' => $now,
+            ];
+
+            // On PostgreSQL, watched_hour is a GENERATED ALWAYS AS column and
+            // must not be set manually. On SQLite (tests), it is a plain nullable
+            // column that we populate so the unique constraint can deduplicate.
+            if (DB::connection()->getDriverName() !== 'pgsql') {
+                $row['watched_hour'] = $now->startOfHour();
+            }
+
+            $inserted = DB::table('watch_histories')->insertOrIgnore($row);
+
+            if ($inserted === 0) {
+                return;
+            }
+
             $video->increment('views');
-            $user->history()->create(['video_id' => $video->id]);
 
             event(new VideoViewed($user, $video, $source, $sessionId));
         });
@@ -162,6 +185,11 @@ class VideoService
 
     /**
      * Toggle like status for a video.
+     *
+     * Uses DELETE-first to avoid the read-then-write race condition. The PK
+     * (user_id, video_id) on user_video_reactions guarantees only one reaction
+     * row can exist per user+video pair, so concurrent requests serialise via
+     * the unique constraint rather than an explicit SELECT.
      *
      * Emits VideoReactionApplied(LIKE) when adding, VideoUnliked when removing,
      * and VideoUndisliked when switching from a previous dislike.
@@ -172,29 +200,45 @@ class VideoService
     public function toggleLike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $isAlreadyLiked = $user->likes()->where('video_id', $video->id)->exists();
+            $unliked = DB::table('user_video_reactions')
+                ->where('user_id', $user->id)
+                ->where('video_id', $video->id)
+                ->where('type', ReactionType::LIKE->value)
+                ->delete();
 
-            if ($isAlreadyLiked) {
-                $user->reactions()->detach($video->id);
+            if ($unliked > 0) {
                 event(new VideoUnliked($user, $video));
 
                 return;
             }
 
-            $wasDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
+            $wasDisliked = DB::table('user_video_reactions')
+                ->where('user_id', $user->id)
+                ->where('video_id', $video->id)
+                ->where('type', ReactionType::DISLIKE->value)
+                ->delete();
 
-            if ($wasDisliked) {
-                $user->dislikes()->detach($video->id);
+            if ($wasDisliked > 0) {
                 event(new VideoUndisliked($user, $video));
             }
 
-            $user->reactions()->attach($video->id, ['type' => ReactionType::LIKE->value]);
-            event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
+            $inserted = DB::table('user_video_reactions')->insertOrIgnore([
+                'user_id' => $user->id,
+                'video_id' => $video->id,
+                'type' => ReactionType::LIKE->value,
+            ]);
+
+            if ($inserted > 0) {
+                event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
+            }
         });
     }
 
     /**
      * Toggle dislike status for a video.
+     *
+     * Uses DELETE-first to avoid the read-then-write race condition. Symmetric
+     * with toggleLike — see that method for the concurrency rationale.
      *
      * Emits VideoReactionApplied(DISLIKE) when adding, VideoUndisliked when
      * removing, and VideoUnliked when switching from a previous like.
@@ -205,29 +249,46 @@ class VideoService
     public function toggleDislike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $isAlreadyDisliked = $user->dislikes()->where('video_id', $video->id)->exists();
+            $undisliked = DB::table('user_video_reactions')
+                ->where('user_id', $user->id)
+                ->where('video_id', $video->id)
+                ->where('type', ReactionType::DISLIKE->value)
+                ->delete();
 
-            if ($isAlreadyDisliked) {
-                $user->reactions()->detach($video->id);
+            if ($undisliked > 0) {
                 event(new VideoUndisliked($user, $video));
 
                 return;
             }
 
-            $wasLiked = $user->likes()->where('video_id', $video->id)->exists();
+            $wasLiked = DB::table('user_video_reactions')
+                ->where('user_id', $user->id)
+                ->where('video_id', $video->id)
+                ->where('type', ReactionType::LIKE->value)
+                ->delete();
 
-            if ($wasLiked) {
-                $user->likes()->detach($video->id);
+            if ($wasLiked > 0) {
                 event(new VideoUnliked($user, $video));
             }
 
-            $user->reactions()->attach($video->id, ['type' => ReactionType::DISLIKE->value]);
-            event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
+            $inserted = DB::table('user_video_reactions')->insertOrIgnore([
+                'user_id' => $user->id,
+                'video_id' => $video->id,
+                'type' => ReactionType::DISLIKE->value,
+            ]);
+
+            if ($inserted > 0) {
+                event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
+            }
         });
     }
 
     /**
      * Toggle save status for a video (add/remove from Watch Later playlist).
+     *
+     * Uses DELETE-first to avoid the read-then-write race condition: two
+     * simultaneous saves would previously both read "not saved" and both
+     * attach, producing a duplicate pivot row. Now the first DELETE wins.
      *
      * Emits VideoSaved when adding, VideoUnsaved when removing.
      *
@@ -238,16 +299,24 @@ class VideoService
     {
         DB::transaction(function () use ($user, $video) {
             $playlist = $user->getWatchLaterPlaylist();
-            $isAlreadySaved = $playlist->videos()->where('video_id', $video->id)->exists();
 
-            if ($isAlreadySaved) {
-                $playlist->videos()->detach($video->id);
+            $removed = DB::table('playlist_video')
+                ->where('playlist_id', $playlist->id)
+                ->where('video_id', $video->id)
+                ->delete();
+
+            if ($removed > 0) {
                 event(new VideoUnsaved($user, $video));
 
                 return;
             }
 
-            $playlist->videos()->attach($video->id, ['position' => 0]);
+            DB::table('playlist_video')->insertOrIgnore([
+                'playlist_id' => $playlist->id,
+                'video_id' => $video->id,
+                'position' => 0,
+            ]);
+
             event(new VideoSaved($user, $video));
         });
     }
@@ -265,7 +334,11 @@ class VideoService
     public function updateProgress(User $user, Video $video, int $percent): void
     {
         DB::transaction(function () use ($user, $video, $percent) {
-            $existing = $user->progress()->where('video_id', $video->id)->first();
+            $existing = $user->progress()
+                ->where('video_id', $video->id)
+                ->lockForUpdate()
+                ->first();
+
             $previousPercent = $existing !== null ? $existing->percent : 0;
 
             $user->progress()->updateOrCreate(
@@ -282,6 +355,28 @@ class VideoService
     }
 
     /**
+     * Publish all scheduled videos whose scheduled_at has passed.
+     *
+     * @return int Number of videos published
+     */
+    public function publishDueVideos(): int
+    {
+        $videos = Video::query()
+            ->where('status', VideoStatus::SCHEDULED)
+            ->where('scheduled_at', '<=', now())
+            ->get();
+
+        foreach ($videos as $video) {
+            $video->update([
+                'status' => VideoStatus::PUBLISHED,
+                'published_at' => $video->scheduled_at,
+            ]);
+        }
+
+        return $videos->count();
+    }
+
+    /**
      * Get AI-generated summary for a video.
      *
      * @param  Video  $video  Video to get summary for
@@ -294,9 +389,9 @@ class VideoService
         if ($summary === null) {
             // TODO: Implement AI summary generation
             return (object) [
-                'keyPoints' => [],
+                'key_points' => [],
                 'chapters' => [],
-                'readingMode' => '',
+                'reading_mode' => '',
             ];
         }
 

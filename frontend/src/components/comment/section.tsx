@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Spinner } from '@ui';
+import { Avatar, Button, Spinner } from '@ui';
 import { useComments } from '@hooks/useComments';
+import { useAuth } from '@hooks/useAuth';
 import CommentForm from './form';
 import CommentItem from './item';
 import type { Vuid } from '@api/videos';
@@ -13,6 +14,7 @@ interface CommentSectionProps {
 
 export default function CommentSection({ vuid }: CommentSectionProps) {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const {
         comments,
         isLoading,
@@ -24,6 +26,7 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
         remove,
         toggleLike,
         loadReplies,
+        loadingReplies,
         getReplies,
     } = useComments(vuid);
 
@@ -38,14 +41,22 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
     const isEmpty = hasLoaded && !isLoading && comments.length === 0;
 
     return (
-        <div className="comment-section">
+        <section className="comment-section">
             <h3 className="comment-section__title">
                 {t('comments.title', { count: total })}
             </h3>
 
-            <div className="comment-section__form">
-                <CommentForm onSubmit={content => add(content)} />
+            <div className="comment-section__input-row">
+                {user !== null && (
+                    <Avatar name={user.name} src={user.avatar ?? ''} size="sm" />
+                )}
+                <CommentForm
+                    collapsible
+                    onSubmit={content => add(content)}
+                />
             </div>
+
+            <div className="comment-section__divider" />
 
             {isInitialLoading && (
                 <div className="comment-section__loading">
@@ -63,6 +74,7 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
                         <CommentItem
                             key={comment.id as string}
                             comment={comment}
+                            loadingReplies={loadingReplies}
                             onToggleLike={toggleLike}
                             onEdit={edit}
                             onDelete={remove}
@@ -88,6 +100,6 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
                     </Button>
                 </div>
             )}
-        </div>
+        </section>
     );
 }

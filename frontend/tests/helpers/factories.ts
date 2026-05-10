@@ -9,6 +9,7 @@ import type { Tag } from '@models/tag';
 import { VideoStatus } from '@models/video';
 import type { User } from '@hooks/useAuth';
 import type { RootState } from '@store';
+import type { Comment, Cuid } from '@models/comment';
 
 // ─── Brand cast helpers ────────────────────────────────────────────────────
 
@@ -20,6 +21,9 @@ export const chId = (s: string): ChannelId => s as unknown as ChannelId;
 
 /** Create a branded Tag from a string. */
 export const tag = (s: string): Tag => s as unknown as Tag;
+
+/** Create a branded Cuid from a string. */
+export const cuid = (s: string): Cuid => s as unknown as Cuid;
 
 // ─── Video factory ────────────────────────────────────────────────────────
 
@@ -49,6 +53,22 @@ export function makeUser(overrides: Partial<User> = {}): User {
         name: 'Test User',
         email: 'test@example.com',
         bio: 'Test bio',
+        ...overrides,
+    };
+}
+
+// ─── Comment factory ──────────────────────────────────────────────────────
+
+export function makeComment(overrides: Partial<Comment> = {}): Comment {
+    return {
+        id: cuid('c-test'),
+        content: 'Test comment content',
+        author: { uuid: 'u-test', name: 'Test User', avatar: '' },
+        createdAt: '2024-01-01T00:00:00Z',
+        isEdited: false,
+        likesCount: 0,
+        isLiked: false,
+        replyCount: 0,
         ...overrides,
     };
 }
@@ -106,6 +126,15 @@ export function makeRootState(overrides: Partial<RootState> = {}): RootState {
         subscription: { subscriptions: [] },
         playlist: { playlists: [] },
         search: { recentSearches: [], results: [] },
+        comment: {
+            byId: {},
+            byVideo: {},
+            repliesById: {},
+            pagination: {},
+            loadingVideos: {},
+            loadingReplies: {},
+            error: null,
+        },
         ...overrides,
     };
 }

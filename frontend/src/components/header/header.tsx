@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Plus, Bell, Menu, LogOut, Search, Clock, X } from 'lucide-react';
+import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils/routes';
 import { useClickOutside } from '@hooks/useClickOutside';
 import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
@@ -17,6 +17,17 @@ interface AppHeaderProps {
     onToggleSidebar: () => void
 }
 
+const MAX_SUGGESTIONS = 8 as const;
+
+type SuggestionKind = 'video' | 'channel' | 'tag';
+
+interface Suggestion {
+    kind: SuggestionKind
+    label: string
+    value: string
+    targetId: string
+}
+
 // eslint-disable-next-line complexity
 export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { t } = useTranslation();
@@ -25,20 +36,79 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
     const dispatch = useAppDispatch();
     const recentSearches = useAppSelector(s => s.search.recentSearches);
+    const videos = useAppSelector(s => s.video.videos);
     const { openUploadModal } = useVideo();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentDropdownOpen, setRecentDropdownOpen] = useState(false);
+    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
     const { registerSearchInput } = useSearch();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchWrapRef = useRef<HTMLDivElement>(null);
 
-    const isRecentDropdownVisible = recentDropdownOpen && recentSearches.length > 0 && searchQuery.trim() === '';
+    const trimmedQuery = searchQuery.trim();
+    const hasQuery = trimmedQuery.length > 0;
+    const isRecentDropdownVisible = recentDropdownOpen && recentSearches.length > 0 && !hasQuery;
+
+    // eslint-disable-next-line complexity
+    const suggestions = useMemo<Suggestion[]>(() => {
+        if (!hasQuery) {
+            return [];
+        }
+
+        const needle = trimmedQuery.toLowerCase();
+        const seen = new Set<string>();
+        const result: Suggestion[] = [];
+
+        function pushUnique(item: Suggestion) {
+            const key = `${item.kind}:${item.value.toLowerCase()}`;
+            const isAlreadySeen = seen.has(key);
+            const isFull = result.length >= MAX_SUGGESTIONS;
+
+            if (isAlreadySeen || isFull) {
+                return;
+            }
+
+            seen.add(key);
+            result.push(item);
+        }
+
+        for (const video of videos) {
+            const isMatch = video.title.toLowerCase().includes(needle);
+
+            if (isMatch) {
+                pushUnique({ kind: 'video', label: video.title, value: video.title, targetId: video.id });
+            }
+        }
+
+        for (const video of videos) {
+            const isMatch = video.channel.toLowerCase().includes(needle);
+
+            if (isMatch) {
+                pushUnique({ kind: 'channel', label: video.channel, value: video.channel, targetId: video.channelId });
+            }
+        }
+
+        for (const video of videos) {
+            for (const tag of video.tags) {
+                const isMatch = tag.toLowerCase().includes(needle);
+
+                if (isMatch) {
+                    pushUnique({ kind: 'tag', label: `#${tag}`, value: tag, targetId: tag });
+                }
+            }
+        }
+
+        return result;
+    }, [trimmedQuery, hasQuery, videos]);
+
+    const isSuggestionsDropdownVisible = suggestionsOpen && hasQuery && suggestions.length > 0;
 
     useEffect(() => {
         function handleOutsideClick(e: MouseEvent) {
             const isOutside = dropdownRef.current && !dropdownRef.current.contains(e.target as Node);
+
             if (isOutside) {
                 setDropdownOpen(false);
             }
@@ -48,11 +118,10 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, []);
 
-    useClickOutside(searchWrapRef, () => setRecentDropdownOpen(false), recentDropdownOpen);
-
-    function handleBrandClick() {
-        navigate(ROUTES.HOME);
-    }
+    useClickOutside(searchWrapRef, () => {
+        setRecentDropdownOpen(false);
+        setSuggestionsOpen(false);
+    }, recentDropdownOpen || suggestionsOpen);
 
     function handleAvatarClick() {
         setDropdownOpen(v => !v);
@@ -65,12 +134,15 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
     function submitSearch(query: string) {
         const trimmed = query.trim();
-        const hasQuery = trimmed.length > 0;
-        if (!hasQuery) {
+        const isEmpty = trimmed.length === 0;
+
+        if (isEmpty) {
             return;
         }
+
         dispatch(searchActions.addRecentSearch(trimmed));
         setRecentDropdownOpen(false);
+        setSuggestionsOpen(false);
         navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
     }
 
@@ -94,15 +166,57 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     }
 
     function handleSearchFocus() {
+        const shouldShowSuggestions = hasQuery && suggestions.length > 0;
+
+        if (shouldShowSuggestions) {
+            setSuggestionsOpen(true);
+            return;
+        }
+
         setRecentDropdownOpen(true);
     }
 
     function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setSearchQuery(e.target.value);
-        const isTyping = e.target.value.length > 0;
+        const value = e.target.value;
+        setSearchQuery(value);
+        const isTyping = value.trim().length > 0;
+
         if (isTyping) {
             setRecentDropdownOpen(false);
+            setSuggestionsOpen(true);
+            return;
         }
+
+        setSuggestionsOpen(false);
+        setRecentDropdownOpen(true);
+    }
+
+    function handleSuggestionClick(s: Suggestion) {
+        setSuggestionsOpen(false);
+
+        if (s.kind === 'video') {
+            navigate(videoUrl(s.targetId));
+            return;
+        }
+
+        if (s.kind === 'channel') {
+            navigate(ROUTES.CHANNEL.replace(':id', s.targetId));
+            return;
+        }
+
+        submitSearch(s.value);
+    }
+
+    function renderSuggestionIcon(kind: SuggestionKind) {
+        if (kind === 'video') {
+            return <Play size={13} className="app-header__recent-icon" />;
+        }
+
+        if (kind === 'channel') {
+            return <User size={13} className="app-header__recent-icon" />;
+        }
+
+        return <TagIcon size={13} className="app-header__recent-icon" />;
     }
 
     return (
@@ -120,12 +234,12 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     </Button>
                 </Tooltip>
 
-                <div className="app-header__brand" onClick={handleBrandClick} style={{ cursor: 'pointer' }}>
+                <Link to={ROUTES.HOME} className="app-header__brand">
                     <div className="app-header__brand-icon">
                         <Play size={15} fill="white" strokeWidth={0} />
                     </div>
                     <span className="app-header__brand-name">{t('common.app_name')}</span>
-                </div>
+                </Link>
             </div>
 
             <div className="app-header__search" ref={searchWrapRef}>
@@ -175,6 +289,24 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                         ))}
                     </div>
                 )}
+
+                {isSuggestionsDropdownVisible && (
+                    <div className="app-header__recent-dropdown" role="listbox" aria-label={t('header.suggestions', 'Suggestions')}>
+                        <p className="app-header__recent-label">{t('header.suggestions', 'Suggestions')}</p>
+                        {suggestions.map(s => (
+                            <div
+                                key={`${s.kind}:${s.value.toLowerCase()}`}
+                                className="app-header__recent-item"
+                                role="option"
+                                aria-selected={false}
+                                onClick={() => handleSuggestionClick(s)}
+                            >
+                                {renderSuggestionIcon(s.kind)}
+                                <span className="app-header__recent-text">{s.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="app-header__right">
@@ -190,16 +322,6 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                         {t('header.create')}
                     </Button>
                 </Tooltip>
-
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="app-header__icon-btn"
-                    aria-label={t('header.notifications')}
-                    style={{ display: 'none' }}
-                >
-                    <Bell size={17} strokeWidth={1.75} />
-                </Button>
 
                 <div className="app-header__avatar-wrap" ref={dropdownRef}>
                     <Tooltip content={user?.name ?? ''} side="bottom">

@@ -1,18 +1,21 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-react';
-import { Avatar, Button, Tooltip } from '@ui';
+import { Avatar, Button, Modal, Spinner, Tooltip } from '@ui';
 import { Format } from '@utils/format';
+import { ROUTES } from '@utils/routes';
 import { useAuth } from '@hooks/useAuth';
 import CommentForm from './form';
+import CommentHistory from './history';
 import CommentReplies from './replies';
-import type { Comment } from '@models/comment';
+import type { Comment, CommentVersion } from '@models/comment';
 import type { Cuid } from '@api/comments';
 import './item.css';
 
 interface CommentItemProps {
     comment: Comment
-    isReply?: boolean
+    loadingReplies: Record<string, boolean>
     onToggleLike: (cuid: Cuid) => Promise<void>
     onEdit: (cuid: Cuid, content: string) => Promise<void>
     onDelete: (cuid: Cuid, parentCuid?: Cuid) => Promise<void>
@@ -23,7 +26,7 @@ interface CommentItemProps {
 
 export default function CommentItem({
     comment,
-    isReply = false,
+    loadingReplies,
     onToggleLike,
     onEdit,
     onDelete,
@@ -36,28 +39,45 @@ export default function CommentItem({
     const [isEditing, setIsEditing] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
     const [showReplies, setShowReplies] = useState(false);
+    const [viewingVersion, setViewingVersion] = useState<CommentVersion | null>(null);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
+    const displayContent = viewingVersion !== null ? viewingVersion.content : comment.content;
     const isOwner = user !== null && (user.id as unknown as string) === comment.author.uuid;
-    const hasReplies = comment.replyCount > 0 && !isReply;
+    const hasReplies = comment.replyCount > 0;
+    const isRepliesLoading = loadingReplies[comment.id as string] ?? false;
+
+    function getToggleIcon() {
+        if (isRepliesLoading && showReplies) {
+            return <Spinner size="sm" />;
+        }
+        return showReplies ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
+    }
+
+    const likeClass = [
+        'comment-item__like-btn',
+        comment.isLiked ? 'comment-item__like-btn--active' : '',
+    ].filter(Boolean).join(' ');
 
     async function handleEdit(content: string) {
         await onEdit(comment.id, content);
         setIsEditing(false);
     }
 
-    async function handleDelete() {
-        const isConfirmed = window.confirm(t('comments.delete_confirm'));
-
-        if (!isConfirmed) {
-            return;
-        }
-
+    async function handleConfirmDelete() {
         await onDelete(comment.id, comment.parentCuid);
+        setIsDeleteOpen(false);
+    }
+
+    function handleCloseDelete() {
+        setIsDeleteOpen(false);
     }
 
     async function handleReply(content: string) {
         await onAddReply(content, comment.id);
         setIsReplying(false);
+        setShowReplies(true);
+        await onLoadReplies(comment.id);
     }
 
     async function handleToggleReplies() {
@@ -73,19 +93,37 @@ export default function CommentItem({
     }
 
     return (
-        <div className={['comment-item', isReply ? 'comment-item--reply' : ''].filter(Boolean).join(' ')}>
-            <div className="comment-item__avatar">
-                <Avatar name={comment.author.name} src={comment.author.avatar} size="sm" />
-            </div>
+        <div className="comment-item">
+            <Avatar name={comment.author.name} src={comment.author.avatar} size="sm" />
 
             <div className="comment-item__body">
                 <div className="comment-item__header">
-                    <span className="comment-item__author">{comment.author.name}</span>
+                    <Link
+                        to={ROUTES.USER.replace(':id', comment.author.uuid)}
+                        className="comment-item__author"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {comment.author.name}
+                    </Link>
                     <span className="comment-item__time">
                         {Format.relativeDate(comment.createdAt, i18n.language)}
                     </span>
-                    {comment.updatedAt !== undefined && (
-                        <span className="comment-item__edited">{t('comments.edited')}</span>
+                    {comment.isEdited && (
+                        <CommentHistory
+                            cuid={comment.id}
+                            selectedVersion={viewingVersion}
+                            onVersionSelect={setViewingVersion}
+                        />
+                    )}
+                    {viewingVersion !== null && (
+                        <button
+                            className="comment-item__version-pill"
+                            onClick={() => setViewingVersion(null)}
+                            title={t('comments.history_view_current')}
+                        >
+                            {t('comments.history_viewing', { n: viewingVersion.version })}
+                            <span aria-hidden="true">×</span>
+                        </button>
                     )}
                 </div>
 
@@ -97,13 +135,16 @@ export default function CommentItem({
                         onCancel={() => setIsEditing(false)}
                     />
                 ) : (
-                    <p className="comment-item__content">{comment.content}</p>
+                    <p className="comment-item__content">{displayContent}</p>
                 )}
 
                 <div className="comment-item__actions">
-                    <Tooltip content={comment.isLiked ? t('comments.unlike') : t('comments.like')} side="top">
+                    <Tooltip
+                        content={comment.isLiked ? t('comments.unlike') : t('comments.like')}
+                        side="top"
+                    >
                         <button
-                            className={['comment-item__like-btn', comment.isLiked ? 'comment-item__like-btn--active' : ''].filter(Boolean).join(' ')}
+                            className={likeClass}
                             onClick={() => {
                                 void onToggleLike(comment.id);
                             }}
@@ -117,38 +158,39 @@ export default function CommentItem({
                         </button>
                     </Tooltip>
 
-                    {!isReply && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
+                    <Tooltip content={t('comments.reply')} side="top">
+                        <button
+                            className="comment-item__action-btn"
                             onClick={() => setIsReplying(v => !v)}
+                            aria-label={t('comments.reply')}
                         >
                             <Reply size={14} />
-                            {t('comments.reply')}
-                        </Button>
-                    )}
+                            <span>{t('comments.reply')}</span>
+                        </button>
+                    </Tooltip>
 
                     {isOwner && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsEditing(v => !v)}
-                                aria-label={t('comments.edit')}
-                            >
-                                <Pencil size={14} />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    void handleDelete();
-                                }}
-                                aria-label={t('comments.delete')}
-                            >
-                                <Trash2 size={14} />
-                            </Button>
-                        </>
+                        <div className="comment-item__owner-actions">
+                            <span className="comment-item__actions-dot" aria-hidden="true" />
+                            <Tooltip content={t('comments.edit')} side="top">
+                                <button
+                                    className="comment-item__action-btn"
+                                    onClick={() => setIsEditing(v => !v)}
+                                    aria-label={t('comments.edit')}
+                                >
+                                    <Pencil size={13} />
+                                </button>
+                            </Tooltip>
+                            <Tooltip content={t('comments.delete')} side="top">
+                                <button
+                                    className="comment-item__action-btn comment-item__action-btn--danger"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                    aria-label={t('comments.delete')}
+                                >
+                                    <Trash2 size={13} />
+                                </button>
+                            </Tooltip>
+                        </div>
                     )}
                 </div>
 
@@ -169,8 +211,9 @@ export default function CommentItem({
                         onClick={() => {
                             void handleToggleReplies();
                         }}
+                        disabled={isRepliesLoading}
                     >
-                        {showReplies ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {getToggleIcon()}
                         {showReplies
                             ? t('comments.hide_replies')
                             : t('comments.view_replies', { count: comment.replyCount })}
@@ -180,13 +223,42 @@ export default function CommentItem({
                 {showReplies && hasReplies && (
                     <CommentReplies
                         parentCuid={comment.id}
+                        isLoading={isRepliesLoading}
                         getReplies={getReplies}
+                        loadingReplies={loadingReplies}
                         onToggleLike={onToggleLike}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        onAddReply={onAddReply}
+                        onLoadReplies={onLoadReplies}
                     />
                 )}
             </div>
+
+            <Modal
+                isOpen={isDeleteOpen}
+                onClose={handleCloseDelete}
+                title={t('comments.delete')}
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="ghost" size="md" onClick={handleCloseDelete}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            variant="danger"
+                            size="md"
+                            onClick={() => {
+                                void handleConfirmDelete();
+                            }}
+                        >
+                            {t('comments.delete')}
+                        </Button>
+                    </>
+                }
+            >
+                <p>{t('comments.delete_confirm')}</p>
+            </Modal>
         </div>
     );
 }

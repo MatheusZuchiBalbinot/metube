@@ -1,5 +1,5 @@
 // Response schemas (with transform: snake_case → camelCase)
-export { CommentApiSchema, CommentListApiSchema, CommentRepliesApiSchema, ToggleLikeApiSchema } from './schemas/comment';
+export { CommentApiSchema, CommentListApiSchema, CommentRepliesApiSchema, ToggleLikeApiSchema, CommentVersionsApiSchema } from './schemas/comment';
 export { UserApiSchema } from './schemas/user';
 export { VideoApiSchema, VideoListApiSchema } from './schemas/video';
 export { PlaylistApiSchema, PlaylistListApiSchema } from './schemas/playlist';

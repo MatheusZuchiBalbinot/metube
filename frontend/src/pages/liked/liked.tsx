@@ -10,6 +10,7 @@ import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
 import { interactions } from '@api/interactions';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
+import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
@@ -87,18 +88,18 @@ export default function LikedPage() {
             )}
 
             {!hasLiked && (
-                <div className="liked-page__empty">
-                    <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
-                    <p className="liked-page__empty-title">{t('nav.liked_videos')}</p>
-                    <p className="liked-page__empty-text">{t('liked.empty_text')}</p>
-                </div>
+                <EmptyState
+                    icon={<Heart size={40} strokeWidth={1.25} />}
+                    title={t('nav.liked_videos')}
+                    description={t('liked.empty_text')}
+                />
             )}
             {hasLiked && !hasResults && (
-                <div className="liked-page__empty">
-                    <Heart size={40} strokeWidth={1.25} className="liked-page__empty-icon" />
-                    <p className="liked-page__empty-title">{t('video.no_results')}</p>
-                    <p className="liked-page__empty-text">{t('video.filter_clear')}</p>
-                </div>
+                <EmptyState
+                    icon={<Heart size={40} strokeWidth={1.25} />}
+                    title={t('video.no_results')}
+                    description={t('video.filter_clear')}
+                />
             )}
             {hasLiked && hasResults && (
                 <div className="liked-page__grid">

@@ -89,7 +89,7 @@ describe('VideoController', function () {
 
         $response->assertNoContent();
         $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
-        $this->assertDatabaseHas('watch_history', ['user_id' => $user->id, 'video_id' => $video->id]);
+        $this->assertDatabaseHas('watch_histories', ['user_id' => $user->id, 'video_id' => $video->id]);
     });
 
     test('record view is ignored within one hour for the same user and video', function () {

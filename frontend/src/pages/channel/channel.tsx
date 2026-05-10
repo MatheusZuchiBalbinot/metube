@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, PlayCircle, Eye, TrendingUp } from 'lucide-react';
 import VideoCard from '@components/video/card';
+import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useVideo } from '@hooks/useVideo';
 import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Format } from '@utils/format';
+import { VideoFilter } from '@utils/applyFilters';
 import TagBadge from '@components/tag/badge';
 import type { Tag } from '@models/tag';
 import Button from '@ui/button/button';
@@ -24,6 +26,7 @@ export default function ChannelPage() {
     const dispatch = useAppDispatch();
     const { publishedVideos } = useVideo();
     const { isSubscribed, toggleSubscription } = useSubscription();
+    const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState());
 
     const channelVideos = useMemo(() => {
         const isIdMissing = !id;
@@ -57,6 +60,21 @@ export default function ChannelPage() {
             .slice(0, TOP_TAGS_COUNT)
             .map(([tag]) => tag);
     }, [channelVideos]);
+
+    const allTags = useMemo(() => {
+        const tagSet = new Set<string>();
+        for (const v of channelVideos) {
+            for (const tag of v.tags) {
+                tagSet.add(tag);
+            }
+        }
+        return Array.from(tagSet).sort() as unknown as Tag[];
+    }, [channelVideos]);
+
+    const filteredVideos = useMemo(
+        () => VideoFilter.apply(channelVideos, filterState),
+        [channelVideos, filterState],
+    );
 
     const mostViewedVideo = useMemo(() => {
         const hasNoVideos = channelVideos.length === 0;
@@ -156,8 +174,11 @@ export default function ChannelPage() {
             </header>
 
             <main className="channel-page__main">
+                <div className="channel-page__filters">
+                    <FilterPanel allTags={allTags} value={filterState} onChange={setFilterState} />
+                </div>
                 <div className="channel-page__grid">
-                    {channelVideos.map((video, i) => (
+                    {filteredVideos.map((video, i) => (
                         <VideoCard key={video.id} video={video} index={i} />
                     ))}
                 </div>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui';
 import './form.css';
@@ -8,23 +8,43 @@ interface CommentFormProps {
     placeholder?: string
     submitLabel?: string
     isLoading?: boolean
+    collapsible?: boolean
     onSubmit: (content: string) => Promise<void>
     onCancel?: () => void
 }
+
+const CHAR_LIMIT = 2000;
+const CHAR_WARN_THRESHOLD = 1800;
 
 export default function CommentForm({
     initialValue = '',
     placeholder,
     submitLabel,
     isLoading = false,
+    collapsible = false,
     onSubmit,
     onCancel,
 }: CommentFormProps) {
     const { t } = useTranslation();
     const [content, setContent] = useState(initialValue);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [expanded, setExpanded] = useState(!collapsible || initialValue !== '');
 
     const isBlank = content.trim() === '';
+    const charCount = content.length;
+    const isNearLimit = charCount > CHAR_WARN_THRESHOLD;
+
+    const charCountClass = [
+        'comment-form__char-count',
+        isNearLimit ? 'comment-form__char-count--warn' : '',
+    ].filter(Boolean).join(' ');
+
+    function handleFormBlur(e: React.FocusEvent<HTMLFormElement>) {
+        const focusMovedInside = e.currentTarget.contains(e.relatedTarget);
+
+        if (!focusMovedInside && collapsible && isBlank) {
+            setExpanded(false);
+        }
+    }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -37,6 +57,10 @@ export default function CommentForm({
 
         await onSubmit(content.trim());
         setContent('');
+
+        if (collapsible) {
+            setExpanded(false);
+        }
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -47,36 +71,53 @@ export default function CommentForm({
         }
     }
 
+    const formClass = [
+        'comment-form',
+        expanded ? 'comment-form--expanded' : '',
+    ].filter(Boolean).join(' ');
+
     return (
-        <form className="comment-form" onSubmit={(e) => {
-            void handleSubmit(e);
-        }}>
+        <form
+            className={formClass}
+            onSubmit={(e) => {
+                void handleSubmit(e);
+            }}
+            onBlur={handleFormBlur}
+        >
             <textarea
-                ref={textareaRef}
                 className="comment-form__textarea"
                 value={content}
                 onChange={e => setContent(e.target.value)}
+                onFocus={() => setExpanded(true)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder ?? t('comments.placeholder')}
-                rows={3}
-                maxLength={2000}
+                rows={expanded ? 3 : 1}
+                maxLength={CHAR_LIMIT}
                 disabled={isLoading}
             />
-            <div className="comment-form__actions">
-                {onCancel && (
-                    <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-                        {t('common.cancel')}
-                    </Button>
-                )}
-                <Button
-                    variant="primary"
-                    size="sm"
-                    type="submit"
-                    disabled={isBlank || isLoading}
-                >
-                    {isLoading ? t('common.loading') : (submitLabel ?? t('comments.submit'))}
-                </Button>
-            </div>
+            {expanded && (
+                <div className="comment-form__actions">
+                    <div className="comment-form__meta">
+                        <span className={charCountClass}>{charCount}/{CHAR_LIMIT}</span>
+                        <span className="comment-form__hint">{t('comments.submit_hint')}</span>
+                    </div>
+                    <div className="comment-form__buttons">
+                        {onCancel && (
+                            <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
+                                {t('common.cancel')}
+                            </Button>
+                        )}
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            type="submit"
+                            disabled={isBlank || isLoading}
+                        >
+                            {isLoading ? t('common.loading') : (submitLabel ?? t('comments.submit'))}
+                        </Button>
+                    </div>
+                </div>
+            )}
         </form>
     );
 }

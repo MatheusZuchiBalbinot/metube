@@ -60,6 +60,7 @@ class VideoController extends Controller
     public function show(string $vuid): JsonResponse
     {
         $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('view', $video);
 
         return $this->json(new VideoResource($video->load('channel')));
     }
@@ -77,6 +78,7 @@ class VideoController extends Controller
     public function update(UpdateVideoRequest $request, string $vuid): JsonResponse
     {
         $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('update', $video);
 
         $updated = $this->videoService->updateVideo($video, $request->validated());
 
@@ -95,6 +97,7 @@ class VideoController extends Controller
     public function destroy(string $vuid): Response
     {
         $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('delete', $video);
 
         $this->videoService->deleteVideo($video);
 

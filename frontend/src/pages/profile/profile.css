@@ -283,28 +283,6 @@
     min-height: 280px;
 }
 
-/* ─── Empty state ──────────────────────────────────────────────────────────── */
-
-.profile-page__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    min-height: 280px;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-lg);
-}
-
-.profile-page__empty-icon {
-    color: var(--text-3);
-}
-
-.profile-page__empty-text {
-    font-size: 0.9375rem;
-    color: var(--text-3);
-}
-
 /* ─── Edit form ────────────────────────────────────────────────────────────── */
 
 .profile-page__edit-form {

@@ -159,6 +159,11 @@
     padding: 24px;
 }
 
+.channel-page__filters {
+    display: flex;
+    margin-bottom: 16px;
+}
+
 .channel-page__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

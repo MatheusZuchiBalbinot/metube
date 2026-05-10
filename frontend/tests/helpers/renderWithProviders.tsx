@@ -15,6 +15,7 @@ import toastSlice from '@store/toastSlice';
 import subscriptionSlice from '@store/subscriptionSlice';
 import playlistSlice from '@store/playlistSlice';
 import searchSlice from '@store/searchSlice';
+import commentSlice from '@store/commentSlice';
 import { SearchProvider } from '@context/searchContext';
 import { TooltipProvider } from '@ui';
 import type { RootState } from '@store';
@@ -42,6 +43,7 @@ export function renderWithProviders(
             subscription: subscriptionSlice.reducer,
             playlist: playlistSlice.reducer,
             search: searchSlice.reducer,
+            comment: commentSlice.reducer,
         },
         preloadedState,
     });

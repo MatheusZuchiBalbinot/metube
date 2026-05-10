@@ -48,7 +48,16 @@
     align-items: center;
     gap: 10px;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
     transition: opacity var(--duration-default);
+}
+
+.app-header__brand:hover,
+.app-header__brand:focus,
+.app-header__brand:visited {
+    text-decoration: none;
+    color: inherit;
 }
 
 .app-header__brand:hover .app-header__brand-icon {
