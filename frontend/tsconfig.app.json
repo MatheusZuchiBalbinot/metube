@@ -76,6 +76,12 @@
       ],
       "@validation/*": [
         "src/validation/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ],
+      "@enums/*": [
+        "src/enums/*"
       ]
     }
   },
