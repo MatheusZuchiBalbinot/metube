@@ -1,0 +1,70 @@
+import { Captions, CaptionsOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import Tooltip from '@ui/tooltip/tooltip';
+import type { VideoCaption } from '@models/video';
+
+interface CaptionsButtonProps {
+    captions: VideoCaption[]
+    activeTrack: string | null
+    onSelect: (lang: string | null) => void
+}
+
+export default function CaptionsButton({ captions, activeTrack, onSelect }: CaptionsButtonProps) {
+    const { t } = useTranslation();
+
+    const hasCaptions = captions.length > 0;
+    if (!hasCaptions) {
+        return null;
+    }
+
+    const isActive = activeTrack !== null;
+    const label = t('player.captions');
+
+    function handleSelectOff(e: React.MouseEvent) {
+        e.stopPropagation();
+        onSelect(null);
+    }
+
+    function makeSelectHandler(lang: string) {
+        return function handleSelectLang(e: React.MouseEvent) {
+            e.stopPropagation();
+            onSelect(lang);
+        };
+    }
+
+    return (
+        <div className="vp__captions">
+            <Tooltip content={label} side="top">
+                <button
+                    className={['vp__btn', isActive ? 'vp__btn--active' : ''].filter(Boolean).join(' ')}
+                    aria-label={label}
+                    aria-pressed={isActive}
+                    aria-haspopup="true"
+                >
+                    {isActive ? <Captions size={16} /> : <CaptionsOff size={16} />}
+                </button>
+            </Tooltip>
+            <div className="vp__captions-menu" role="listbox" aria-label={label}>
+                <button
+                    className={['vp__captions-option', activeTrack === null ? 'vp__captions-option--active' : ''].filter(Boolean).join(' ')}
+                    role="option"
+                    aria-selected={activeTrack === null}
+                    onClick={handleSelectOff}
+                >
+                    {t('player.captions_off')}
+                </button>
+                {captions.map(c => (
+                    <button
+                        key={c.lang}
+                        className={['vp__captions-option', activeTrack === c.lang ? 'vp__captions-option--active' : ''].filter(Boolean).join(' ')}
+                        role="option"
+                        aria-selected={activeTrack === c.lang}
+                        onClick={makeSelectHandler(c.lang)}
+                    >
+                        {c.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}

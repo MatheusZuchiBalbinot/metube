@@ -1,4 +1,5 @@
 import type { VideoChapter } from '@api/videos';
+import type { VideoCaption } from '@models/video';
 import { DefaultVideoPlayer } from './playerDefault';
 import { MiniVideoPlayer } from './playerMini';
 import './player.css';
@@ -9,11 +10,13 @@ export interface VideoPlayerProps {
     mode?: 'default' | 'mini'
     // Default mode
     chapters?: VideoChapter[]
+    captions?: VideoCaption[]
     theaterMode?: boolean
     showCompletion?: boolean
     ambientColor?: string
     // Whether this player instance should capture document keyboard events
     captureKeyboard?: boolean
+    onTheaterToggle?: () => void
     // All modes
     onTimeUpdate?: () => void
     onEnded?: () => void
@@ -25,7 +28,9 @@ export default function VideoPlayer({
     src,
     mode = 'default',
     chapters,
+    captions,
     theaterMode,
+    onTheaterToggle,
     onTimeUpdate,
     onEnded,
     onLoadedMetadata,
@@ -52,7 +57,9 @@ export default function VideoPlayer({
             videoRef={videoRef}
             src={src}
             chapters={chapters}
+            captions={captions}
             theaterMode={theaterMode}
+            onTheaterToggle={onTheaterToggle}
             showCompletion={showCompletion}
             ambientColor={ambientColor}
             captureKeyboard={captureKeyboard}
