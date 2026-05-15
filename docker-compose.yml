@@ -69,6 +69,25 @@ services:
     networks:
       - app_net
 
+  reverb:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080 --no-interaction
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/vendor
+      - /app/bootstrap/cache
+    working_dir: /app
+    networks:
+      - app_net
+
   frontend:
     build: ./frontend
     restart: unless-stopped
