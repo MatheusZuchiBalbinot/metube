@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,6 +17,30 @@ use Illuminate\Support\Facades\DB;
  */
 class ChannelService
 {
+    /**
+     * Get a channel (user) by public UUID.
+     *
+     * @param  string  $uuid  User UUID (v4)
+     * @return User Channel user
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function getByUuid(string $uuid): User
+    {
+        return User::byUuid($uuid)->firstOrFail();
+    }
+
+    /**
+     * Get paginated published videos for a channel, newest first.
+     *
+     * @param  User  $channel  Channel to list videos for
+     * @return LengthAwarePaginator<\App\Models\Video>
+     */
+    public function listVideos(User $channel): LengthAwarePaginator
+    {
+        return $channel->videos()->with('channel')->published()->newestPublished()->paginate(15);
+    }
+
     /**
      * Toggle subscription to a channel.
      *
