@@ -13,7 +13,7 @@ class VideoStorageService
      *
      * @param  string  $tmpPath  Path relative to the 'local' disk (e.g. uploads/tmp/{vuid}.mp4)
      * @param  string  $vuid  Video ULID used as the public filename
-     * @return string Root-relative URL: /storage/videos/{vuid}.{ext}
+     * @return string Disk-relative path: videos/{vuid}.{ext}
      */
     public function publishVideo(string $tmpPath, string $vuid): string
     {
@@ -29,7 +29,7 @@ class VideoStorageService
         Storage::disk('public')->put($finalPath, $stream);
         Storage::disk('local')->delete($tmpPath);
 
-        return '/storage/'.$finalPath;
+        return $finalPath;
     }
 
     /**
@@ -37,7 +37,7 @@ class VideoStorageService
      *
      * @param  string  $tmpPath  Path relative to the 'local' disk
      * @param  string  $vuid  Video ULID used as the public filename
-     * @return string Root-relative URL: /storage/thumbnails/{vuid}.webp
+     * @return string Disk-relative path: thumbnails/{vuid}.webp
      */
     public function publishThumbnail(string $tmpPath, string $vuid): string
     {
@@ -49,7 +49,7 @@ class VideoStorageService
         Storage::disk('public')->put($thumbPath, $webp);
         Storage::disk('local')->delete($tmpPath);
 
-        return '/storage/'.$thumbPath;
+        return $thumbPath;
     }
 
     /**

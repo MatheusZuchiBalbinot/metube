@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\VideoStatus;
+use App\Events\VideoPublished;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -57,6 +58,11 @@ class ProcessVideoUpload implements ShouldQueue
             'status' => $newStatus,
             'published_at' => $publishedAt,
         ]);
+
+        $isPublished = $newStatus === VideoStatus::PUBLISHED;
+        if ($isPublished) {
+            event(new VideoPublished($video));
+        }
     }
 
     /**
