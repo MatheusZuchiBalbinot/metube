@@ -6,6 +6,8 @@ export { interactions } from './interactions';
 export { channel } from './channels';
 export { playlist } from './playlists';
 export { analytics, AnalyticsSource } from './analytics';
+export { notifications } from './notifications';
+export type { Notification as AppNotification } from './notifications';
 
 export type { LoginPayload, LoginResponse, UpdateProfilePayload, User } from './auth';
 export type { Cuid, StoreCommentPayload, ToggleLikeResponse } from './comments';
