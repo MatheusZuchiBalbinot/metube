@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
-use App\Events\VideoImpressed;
+use App\Events\VideoImpressionsBatch;
 use App\Events\VideoSkipped;
 use App\Models\User;
 use App\Models\Video;
@@ -20,6 +20,9 @@ class AnalyticsService
     /**
      * Record that a list of videos was rendered to the user (impressions).
      *
+     * Emits a single VideoImpressionsBatch event instead of one event per video,
+     * so the listener can bulk-insert all rows in one query.
+     *
      * @param  User  $user  Who saw the impressions
      * @param  list<string>  $vuids  Video UUIDs in render order
      * @param  string  $source  Surface origin (feed, search, channel, recommended)
@@ -29,6 +32,8 @@ class AnalyticsService
     {
         $videos = Video::whereIn('vuid', $vuids)->get()->keyBy('vuid');
 
+        $items = [];
+
         foreach ($vuids as $position => $vuid) {
             $video = $videos->get($vuid);
 
@@ -36,8 +41,14 @@ class AnalyticsService
                 continue;
             }
 
-            event(new VideoImpressed($user, $video, $source, $position, $sessionId));
+            $items[] = ['video_id' => $video->id, 'position' => $position];
         }
+
+        if ($items === []) {
+            return;
+        }
+
+        event(new VideoImpressionsBatch($user, $items, $source, $sessionId));
     }
 
     /**

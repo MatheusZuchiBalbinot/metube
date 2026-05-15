@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('user_analytics', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('video_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('video_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('channel_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('event_type', 20);
             $table->string('source', 32)->nullable();
@@ -62,7 +62,7 @@ return new class extends Migration
                 occurred_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id, occurred_at),
                 CONSTRAINT user_analytics_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                CONSTRAINT user_analytics_video_id_foreign FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE,
+                CONSTRAINT user_analytics_video_id_foreign FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE SET NULL,
                 CONSTRAINT user_analytics_channel_id_foreign FOREIGN KEY (channel_id) REFERENCES users(id) ON DELETE CASCADE
             ) PARTITION BY RANGE (occurred_at)
         SQL);
