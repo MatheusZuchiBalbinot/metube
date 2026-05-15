@@ -18,6 +18,7 @@ import { selectWatchLaterIds } from '@store/playlistSlice';
 import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
 import './shorts.css';
+import { ReactionType } from '@enums/reactionType';
 
 const MAX_TAGS = 3;
 
@@ -182,13 +183,13 @@ const ShortItem = memo(function ShortItem({
         onMuteChange(nextMuted);
     }
 
-    function handleReaction(action: 'like' | 'dislike') {
+    function handleReaction(action: ReactionType) {
         switch (action) {
-            case 'like':
+            case ReactionType.LIKE:
                 likeVideo(video.id);
                 triggerLikeAnimation();
                 break;
-            case 'dislike':
+            case ReactionType.DISLIKE:
                 dislikeVideo(video.id);
                 triggerDislikeAnimation();
                 break;
@@ -321,7 +322,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--liked"
                     tooltipSide="right"
-                    onClick={() => handleReaction('like')}
+                    onClick={() => handleReaction(ReactionType.LIKE)}
                 />
 
                 <ReactionBtn
@@ -334,7 +335,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--disliked"
                     tooltipSide="right"
-                    onClick={() => handleReaction('dislike')}
+                    onClick={() => handleReaction(ReactionType.DISLIKE)}
                 />
 
                 <SavePopover videoId={video.id as unknown as string}>

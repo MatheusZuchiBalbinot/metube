@@ -5,24 +5,26 @@ import { useMediaQuery } from '@hooks/useMediaQuery';
 import { History, Search, Trash2, X } from 'lucide-react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
-import Modal from '@ui/modal/modal';
 import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
+import { videoActions } from '@store/videoSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models/video';
 import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/history';
 import './history.css';
+import { ToastType } from '@enums/toastType';
+import { HistoryItemKind } from '@enums/historyItemKind';
 
 // Estimated heights for virtualizer — group headers are shorter than rows.
 const GROUP_HEADER_HEIGHT = 36;
 const VIDEO_ROW_HEIGHT = 136;
 
 type FlatItem =
-    | { type: 'header'; label: string }
-    | { type: 'video'; id: string };
+    | { type: HistoryItemKind.HEADER; label: string }
+    | { type: HistoryItemKind.VIDEO; id: string };
 
 interface HistoryGroup {
     label: string
@@ -96,7 +98,6 @@ export default function HistoryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 250);
     const [selectedPeriod, setSelectedPeriod] = useState<HistoryPeriodType>(HistoryPeriod.ALL);
-    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const videoMap = useMemo(() => {
         const map = new Map<string, Video>(videos.map((v: Video) => [v.id as string, v]));
@@ -147,9 +148,9 @@ export default function HistoryPage() {
     const flatItems = useMemo<FlatItem[]>(() => {
         const result: FlatItem[] = [];
         for (const group of groups) {
-            result.push({ type: 'header', label: group.label });
+            result.push({ type: HistoryItemKind.HEADER, label: group.label });
             for (const id of group.ids) {
-                result.push({ type: 'video', id });
+                result.push({ type: HistoryItemKind.VIDEO, id });
             }
         }
         return result;
@@ -162,7 +163,7 @@ export default function HistoryPage() {
         count: flatItems.length,
         estimateSize: (i) => {
             const item = flatItems[i];
-            return item?.type === 'header' ? GROUP_HEADER_HEIGHT : VIDEO_ROW_HEIGHT;
+            return item?.type === HistoryItemKind.HEADER ? GROUP_HEADER_HEIGHT : VIDEO_ROW_HEIGHT;
         },
         overscan: 5,
         scrollMargin: listRef.current?.offsetTop ?? 0,
@@ -170,22 +171,31 @@ export default function HistoryPage() {
     /* eslint-enable react-hooks/refs */
 
     function handleRemoveFromHistory(id: string) {
+        const snapshot = [...watchHistory];
         removeFromHistory(id as unknown as VideoId);
-        dispatch(toastActions.addToast({ message: t('toast.history_removed'), type: 'info' }));
+        dispatch(toastActions.addToast({
+            message: t('toast.history_removed'),
+            type: ToastType.INFO,
+            action: {
+                label: t('common.undo'),
+                onClick: () => dispatch(videoActions.restoreHistory(snapshot)),
+            },
+            duration: 5000,
+        }));
     }
 
     function handleClearHistoryClick() {
-        setIsClearModalOpen(true);
-    }
-
-    function handleClearHistoryConfirm() {
-        setIsClearModalOpen(false);
+        const snapshot = [...watchHistory];
         clearHistory();
-        dispatch(toastActions.addToast({ message: t('toast.history_cleared'), type: 'info' }));
-    }
-
-    function handleClearHistoryCancel() {
-        setIsClearModalOpen(false);
+        dispatch(toastActions.addToast({
+            message: t('toast.history_cleared'),
+            type: ToastType.INFO,
+            action: {
+                label: t('common.undo'),
+                onClick: () => dispatch(videoActions.restoreHistory(snapshot)),
+            },
+            duration: 5000,
+        }));
     }
 
     return (
@@ -283,7 +293,7 @@ export default function HistoryPage() {
                                         transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
                                     }}
                                 >
-                                    {item.type === 'header' ? (
+                                    {item.type === HistoryItemKind.HEADER ? (
                                         <h2 className="history-page__group-label">{item.label}</h2>
                                     ) : (
                                         <div className="history-page__item">
@@ -311,24 +321,6 @@ export default function HistoryPage() {
                 </div>
             )}
 
-            <Modal
-                isOpen={isClearModalOpen}
-                onClose={handleClearHistoryCancel}
-                title={t('history.clear_confirm_title')}
-                size="sm"
-                footer={
-                    <div className="history-page__modal-footer">
-                        <Button variant="ghost" onClick={handleClearHistoryCancel}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button variant="danger" onClick={handleClearHistoryConfirm}>
-                            {t('history.clear_confirm_action')}
-                        </Button>
-                    </div>
-                }
-            >
-                <p className="history-page__modal-body">{t('history.clear_confirm_text')}</p>
-            </Modal>
         </div>
     );
 }

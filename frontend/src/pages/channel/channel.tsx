@@ -15,6 +15,7 @@ import type { Tag } from '@models/tag';
 import Button from '@ui/button/button';
 import Avatar from '@ui/avatar/avatar';
 import './channel.css';
+import { ToastType } from '@enums/toastType';
 
 const TOP_TAGS_COUNT = 4;
 
@@ -93,7 +94,7 @@ export default function ChannelPage() {
         toggleSubscription(channelId);
         dispatch(toastActions.addToast({
             message: t(isChannelSubscribed ? 'toast.unsubscribed' : 'toast.subscribed'),
-            type: 'success',
+            type: ToastType.SUCCESS,
         }));
     }
 

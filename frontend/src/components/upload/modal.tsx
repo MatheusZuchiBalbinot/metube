@@ -16,10 +16,12 @@ import TagInput from '@components/tag/input';
 import DatePicker from '@ui/date/picker';
 import Badge from '@ui/badge/badge';
 import './modal.css';
+import { ToastType } from '@enums/toastType';
+import { UploadMode } from '@enums/uploadMode';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ModalMode = 'single' | 'batch';
+
 
 interface FormState {
     title: string
@@ -94,7 +96,7 @@ export default function UploadModal() {
         return Array.from(tagSet).sort() as unknown as Tag[];
     }, [allVideos]);
 
-    const [mode, setMode] = useState<ModalMode>('single');
+    const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);
 
     // ─── Single mode state ────────────────────────────────────────────────────
     const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -187,7 +189,7 @@ export default function UploadModal() {
         }
         const hasNoVideoFile = form.videoFile === null;
         if (hasNoVideoFile) {
-            dispatch(toastActions.addToast({ message: t('video.video_file_required'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('video.video_file_required'), type: ToastType.ERROR }));
             return false;
         }
         return true;
@@ -216,13 +218,13 @@ export default function UploadModal() {
         });
 
         if (result === null) {
-            dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: ToastType.ERROR }));
             return;
         }
 
         addVideo(result);
         setPollingVuid(result.id as unknown as Vuid);
-        dispatch(toastActions.addToast({ message: t('toast.video_uploaded'), type: 'success' }));
+        dispatch(toastActions.addToast({ message: t('toast.video_uploaded'), type: ToastType.SUCCESS }));
         closeUploadModal();
         resetSingleForm();
     }
@@ -295,14 +297,14 @@ export default function UploadModal() {
         if (doneCount > 0) {
             dispatch(toastActions.addToast({
                 message: t('toast.batch_uploaded', { count: doneCount }),
-                type: 'success',
+                type: ToastType.SUCCESS,
             }));
         }
 
         if (errorCount > 0) {
             dispatch(toastActions.addToast({
                 message: t('toast.batch_upload_error', { count: errorCount }),
-                type: 'error',
+                type: ToastType.ERROR,
             }));
         }
 
@@ -332,11 +334,11 @@ export default function UploadModal() {
     }
 
     function handleModeToSingle() {
-        handleModeChange('single');
+        handleModeChange(UploadMode.SINGLE);
     }
 
     function handleModeToBatch() {
-        handleModeChange('batch');
+        handleModeChange(UploadMode.BATCH);
     }
 
     function handleBatchDragOver(e: React.DragEvent<HTMLDivElement>) {
@@ -375,7 +377,7 @@ export default function UploadModal() {
         setBatchItems([]);
     }
 
-    function handleModeChange(next: ModalMode) {
+    function handleModeChange(next: UploadMode) {
         if (isBusy) {
             return;
         }
@@ -421,7 +423,7 @@ export default function UploadModal() {
             onClose={handleClose}
             title={t('video.upload')}
             size="lg"
-            footer={mode === 'single' ? footerSingle : footerBatch}
+            footer={mode === UploadMode.SINGLE ? footerSingle : footerBatch}
         >
             {/* Mode tabs */}
             <div role="tablist" className="upload-modal__tabs">
@@ -429,8 +431,8 @@ export default function UploadModal() {
                     variant="ghost"
                     size="sm"
                     role="tab"
-                    aria-selected={mode === 'single'}
-                    className={['upload-modal__tab', mode === 'single' ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
+                    aria-selected={mode === UploadMode.SINGLE}
+                    className={['upload-modal__tab', mode === UploadMode.SINGLE ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
                     onClick={handleModeToSingle}
                 >
                     {t('video.upload_mode_single')}
@@ -439,8 +441,8 @@ export default function UploadModal() {
                     variant="ghost"
                     size="sm"
                     role="tab"
-                    aria-selected={mode === 'batch'}
-                    className={['upload-modal__tab', mode === 'batch' ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
+                    aria-selected={mode === UploadMode.BATCH}
+                    className={['upload-modal__tab', mode === UploadMode.BATCH ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
                     onClick={handleModeToBatch}
                 >
                     {t('video.upload_mode_batch')}
@@ -448,7 +450,7 @@ export default function UploadModal() {
             </div>
 
             {/* ── Single mode ── */}
-            {mode === 'single' && (
+            {mode === UploadMode.SINGLE && (
                 <form className="upload-modal__form" onSubmit={handleSingleSubmit}>
                     <div key={titleShakeKey} className={titleShakeKey > 0 && form.titleError ? 'animate-shake' : ''}>
                         <Input
@@ -581,7 +583,7 @@ export default function UploadModal() {
             )}
 
             {/* ── Batch mode ── */}
-            {mode === 'batch' && (
+            {mode === UploadMode.BATCH && (
                 <div className="upload-modal__batch">
                     {/* Multi-file drop zone */}
                     <div

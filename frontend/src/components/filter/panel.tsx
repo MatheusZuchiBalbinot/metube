@@ -8,6 +8,7 @@ import type { Tag } from '@models/tag';
 import DatePicker from '@ui/date/picker';
 import { Button } from '@ui';
 import './panel.css';
+import { QuickRangeKind } from '@enums/quickRangeKind';
 
 export type { FilterState };
 
@@ -22,13 +23,13 @@ const YEAR_OPTIONS = Array.from(
     (_, i) => new Date().getFullYear() - i,
 );
 
-type QuickRangeKind = 'last7d' | 'last30d' | 'last90d' | 'thisYear';
+
 
 const QUICK_RANGE_PRESETS: { key: QuickRangeKind; labelKey: string }[] = [
-    { key: 'last7d', labelKey: 'video.filter_last_7d' },
-    { key: 'last30d', labelKey: 'video.filter_last_30d' },
-    { key: 'last90d', labelKey: 'video.filter_last_90d' },
-    { key: 'thisYear', labelKey: 'video.filter_this_year' },
+    { key: QuickRangeKind.LAST_7D, labelKey: 'video.filter_last_7d' },
+    { key: QuickRangeKind.LAST_30D, labelKey: 'video.filter_last_30d' },
+    { key: QuickRangeKind.LAST_90D, labelKey: 'video.filter_last_90d' },
+    { key: QuickRangeKind.THIS_YEAR, labelKey: 'video.filter_this_year' },
 ];
 
 function toIsoDate(d: Date): string {
@@ -42,12 +43,12 @@ function computeQuickRange(kind: QuickRangeKind): { from: string; to: string } {
     const today = new Date();
     const to = toIsoDate(today);
 
-    if (kind === 'thisYear') {
+    if (kind === QuickRangeKind.THIS_YEAR) {
         const yearStart = new Date(today.getFullYear(), 0, 1);
         return { from: toIsoDate(yearStart), to };
     }
 
-    const dayMap: Record<Exclude<QuickRangeKind, 'thisYear'>, number> = {
+    const dayMap: Record<Exclude<QuickRangeKind, QuickRangeKind.THIS_YEAR>, number> = {
         last7d: 7,
         last30d: 30,
         last90d: 90,

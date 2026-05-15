@@ -14,6 +14,7 @@ import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
+import { ToastType } from '@enums/toastType';
 
 // eslint-disable-next-line complexity
 export default function LikedPage() {
@@ -55,7 +56,7 @@ export default function LikedPage() {
     function handleUnlike(videoId: string) {
         likeVideo(videoId as unknown as VideoId);
         setLikedVideoList(prev => prev.filter(v => v.id !== videoId));
-        dispatch(toastActions.addToast({ message: t('toast.unliked'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.unliked'), type: ToastType.INFO }));
     }
 
     if (loading) {

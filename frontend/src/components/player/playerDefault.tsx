@@ -4,6 +4,8 @@ import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'luci
 import { usePlayerControls } from '@hooks/usePlayerControls';
 import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
 import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
+import { usePlayerCaptions } from '@hooks/usePlayerCaptions';
+import { usePictureInPicture } from '@hooks/usePictureInPicture';
 import { useShaka } from '@hooks/useShaka';
 import { usePopIcon } from '@hooks/usePopIcon';
 import { useSkipIndicator } from '@hooks/useSkipIndicator';
@@ -15,15 +17,21 @@ import { Format } from '@utils/format';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerSettings from './playerSettings';
+import PipButton from './pipButton';
+import TheaterButton from './theaterButton';
+import CaptionsButton from './captionsButton';
 import type { VideoPlayerProps } from './player';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
+import { PopIconType } from '@enums/popIconType';
 
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({
     videoRef,
     src,
     chapters,
+    captions = [],
     theaterMode,
+    onTheaterToggle,
     showCompletion,
     ambientColor,
     captureKeyboard,
@@ -61,8 +69,10 @@ export function DefaultVideoPlayer({
     const { popIcon, showPopIcon, resetPopIcon } = usePopIcon();
     const { skipIndicator, showSkipIndicator, resetSkipIndicator } = useSkipIndicator();
     const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+    const { isActive: isPiP, isSupported: isPiPSupported, togglePiP } = usePictureInPicture(videoRef);
+    const { levels, currentQuality, setQuality } = useShaka(videoRef, src);
+    const { activeTrack, setActiveTrack } = usePlayerCaptions(videoRef, captions);
 
-    useShaka(videoRef, src);
     useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
     useOutsideClick(settingsRef, handleCloseSettings);
 
@@ -98,7 +108,7 @@ export function DefaultVideoPlayer({
     function handleTogglePlayWithFeedback() {
         const wasPaused = videoRef.current?.paused ?? true;
         handleTogglePlay();
-        showPopIcon(wasPaused ? 'play' : 'pause');
+        showPopIcon(wasPaused ? PopIconType.PLAY : PopIconType.PAUSE);
     }
 
     const { handleClick: handleContainerClick, handleDoubleClick: handleContainerDoubleClick } =
@@ -114,6 +124,13 @@ export function DefaultVideoPlayer({
         onVolumeChange: applyVolume,
         onMuteToggle: applyMuteToggle,
         onFullscreenToggle: toggleFullscreen,
+        onTheaterToggle,
+        onPipToggle: togglePiP,
+        onCaptionsToggle: () => {
+            const isOff = activeTrack === null;
+            const firstTrack = captions[0]?.lang ?? null;
+            setActiveTrack(isOff ? firstTrack : null);
+        },
     });
 
     // ─── Effects ──────────────────────────────────────────────────────────────
@@ -151,6 +168,12 @@ export function DefaultVideoPlayer({
         setShowSettings(false);
     }
 
+    function handleQualityChange(e: React.MouseEvent, index: number) {
+        e.stopPropagation();
+        setQuality(index);
+        setShowSettings(false);
+    }
+
     function handleFullscreenBtn(e: React.MouseEvent) {
         e.stopPropagation();
         toggleFullscreen();
@@ -159,6 +182,16 @@ export function DefaultVideoPlayer({
     function handleToggleSettings(e: React.MouseEvent) {
         e.stopPropagation();
         setShowSettings(v => !v);
+    }
+
+    function handleTheaterBtn(e: React.MouseEvent) {
+        e.stopPropagation();
+        onTheaterToggle?.();
+    }
+
+    function handlePipBtn(e: React.MouseEvent) {
+        e.stopPropagation();
+        togglePiP();
     }
 
     function getVolumeIcon() {
@@ -184,6 +217,8 @@ export function DefaultVideoPlayer({
         (theaterMode ?? false) ? 'vp--theater' : '',
         isDragging ? 'vp--seeking' : '',
     ].filter(Boolean).join(' ');
+
+    const isTheaterMode = theaterMode ?? false;
 
     return (
         <div
@@ -271,13 +306,35 @@ export function DefaultVideoPlayer({
                     </div>
 
                     <div className="vp__bar-right">
+                        <CaptionsButton
+                            captions={captions}
+                            activeTrack={activeTrack}
+                            onSelect={setActiveTrack}
+                        />
+
                         <PlayerSettings
                             playbackRate={playbackRate}
                             showSettings={showSettings}
                             settingsRef={settingsRef}
                             onToggle={handleToggleSettings}
                             onSpeedChange={handleSpeedChange}
+                            levels={levels}
+                            currentQuality={currentQuality}
+                            onQualityChange={handleQualityChange}
                         />
+
+                        <PipButton
+                            isActive={isPiP}
+                            isSupported={isPiPSupported}
+                            onClick={handlePipBtn}
+                        />
+
+                        {onTheaterToggle !== undefined && (
+                            <TheaterButton
+                                isTheater={isTheaterMode}
+                                onClick={handleTheaterBtn}
+                            />
+                        )}
 
                         <button
                             className="vp__btn"

@@ -1,5 +1,6 @@
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
 import type { SkipIndicator, PopIcon } from './playerTypes';
+import { PopIconType } from '@enums/popIconType';
 
 interface PlayerOverlaysProps {
     isBuffering: boolean
@@ -24,7 +25,7 @@ export default function PlayerOverlays({
             {/* Play/Pause flash icon */}
             {popIcon && (
                 <div className="vp__pop-icon" key={popIcon.key}>
-                    {popIcon.type === 'play'
+                    {popIcon.type === PopIconType.PLAY
                         ? <Play size={52} fill="white" color="white" />
                         : <Pause size={52} fill="white" color="white" />
                     }

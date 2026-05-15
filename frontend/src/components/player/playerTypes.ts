@@ -1,4 +1,8 @@
-export type SkipDirection = 'fwd' | 'bwd';
+import type { SkipDirection } from '@enums/skipDirection';
+import type { PopIconType } from '@enums/popIconType';
+
+export type { SkipDirection } from '@enums/skipDirection';
+export type { PopIconType } from '@enums/popIconType';
 
 export type SkipIndicator = {
     dir: SkipDirection;
@@ -7,7 +11,7 @@ export type SkipIndicator = {
 };
 
 export type PopIcon = {
-    type: 'play' | 'pause';
+    type: PopIconType;
     key: number;
 };
 
