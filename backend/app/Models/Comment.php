@@ -59,6 +59,11 @@ class Comment extends Model
         return Attribute::get(fn (): bool => $this->current_version_id !== null);
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'cuid';
+    }
+
     protected static function boot(): void
     {
         parent::boot();
