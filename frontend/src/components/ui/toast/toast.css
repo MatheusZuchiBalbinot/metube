@@ -69,6 +69,25 @@
     color: var(--text);
 }
 
+.toast__action {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background var(--duration-default), border-color var(--duration-default);
+    flex-shrink: 0;
+}
+
+.toast__action:hover {
+    background: var(--surface-3);
+    border-color: var(--text-3);
+}
+
 .toast__close {
     background: transparent;
     border: none;

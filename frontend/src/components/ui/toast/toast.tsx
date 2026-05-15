@@ -14,15 +14,21 @@ interface ToastItemProps {
 function ToastItem({ toast }: ToastItemProps) {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
+    const duration = toast.duration ?? AUTO_DISMISS_MS;
 
     useEffect(() => {
         const timer = setTimeout(() => {
             dispatch(toastActions.removeToast(toast.id));
-        }, AUTO_DISMISS_MS);
+        }, duration);
         return () => clearTimeout(timer);
-    }, [toast.id, dispatch]);
+    }, [toast.id, duration, dispatch]);
 
     function handleClose() {
+        dispatch(toastActions.removeToast(toast.id));
+    }
+
+    function handleAction() {
+        toast.action?.onClick();
         dispatch(toastActions.removeToast(toast.id));
     }
 
@@ -38,12 +44,17 @@ function ToastItem({ toast }: ToastItemProps) {
         <div className={toastClass} role="alert">
             <span className="toast__icon">{iconMap[toast.type]}</span>
             <span className="toast__message">{toast.message}</span>
+            {toast.action !== undefined && (
+                <button className="toast__action" onClick={handleAction}>
+                    {toast.action.label}
+                </button>
+            )}
             <button className="toast__close" onClick={handleClose} aria-label={t('common.close')}>
                 <X size={14} />
             </button>
             <div
                 className="toast__progress"
-                style={{ animationDuration: `${AUTO_DISMISS_MS}ms` }}
+                style={{ animationDuration: `${duration}ms` }}
             />
         </div>
     );
