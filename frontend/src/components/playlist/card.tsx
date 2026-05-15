@@ -16,6 +16,7 @@ import Tooltip from '@ui/tooltip/tooltip';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
 import './card.css';
+import { ToastType } from '@enums/toastType';
 
 interface PlaylistCardProps {
     playlist: Playlist
@@ -41,7 +42,7 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
     function handleRemove(e: React.MouseEvent) {
         e.stopPropagation();
         removeVideoFromPlaylist(playlistId, video.id);
-        dispatch(toastActions.addToast({ message: t('toast.removed_from_playlist'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.removed_from_playlist'), type: ToastType.INFO }));
     }
 
     return (
@@ -159,7 +160,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
 
     function handleDeleteConfirm() {
         deletePlaylist(playlist.id);
-        dispatch(toastActions.addToast({ message: t('toast.playlist_deleted'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.playlist_deleted'), type: ToastType.INFO }));
         setDeleteConfirmOpen(false);
     }
 

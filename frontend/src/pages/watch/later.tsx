@@ -15,6 +15,7 @@ import { VideoFilter } from '@utils/applyFilters';
 import type { Video } from '@models/video';
 import type { Tag } from '@models/tag';
 import './later.css';
+import { ToastType } from '@enums/toastType';
 
 // eslint-disable-next-line complexity
 export default function WatchLaterPage() {
@@ -60,7 +61,7 @@ export default function WatchLaterPage() {
         }
 
         removeVideoFromPlaylist(watchLater.id as string, videoId);
-        dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: ToastType.INFO }));
     }
 
     if (isBootstrapping) {

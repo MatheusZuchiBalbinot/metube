@@ -34,9 +34,12 @@ import { Avatar, Button, Tooltip, Badge } from '@ui';
 import type { Video, VideoId } from '@models/video';
 import type { VideoSummary } from '@api/videos';
 import type { Tag } from '@models/tag';
+import getEcho from '@lib/echo';
 import './video.css';
+import { ToastType } from '@enums/toastType';
+import { SidebarTab } from '@enums/sidebarTab';
 
-type SidebarTab = 'related' | 'summary';
+
 
 function parseTimestamp(ts: string): number {
     const parts = ts.split(':').map(Number);
@@ -76,7 +79,7 @@ export default function VideoPage() {
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
     const [_saveAnimating, triggerSaveAnimation] = useBurstAnimation();
     const [isCopied, triggerCopied] = useBurstAnimation(2000);
-    const [sidebarTab, setSidebarTab] = useState<SidebarTab>('related');
+    const [sidebarTab, setSidebarTab] = useState<SidebarTab>(SidebarTab.RELATED);
     const [readingMode, setReadingMode] = useState(false);
 
     // VISUAL-09: chapter seeking feedback
@@ -181,6 +184,38 @@ export default function VideoPage() {
         return active;
     }, [summary, currentTime]);
 
+    // Live counters: overrides from real-time events (null = fall back to store value)
+    const [_liveLikeCount, setLiveLikeCount] = useState<number | null>(null);
+
+    useEffect(() => {
+        const isIdReady = id !== undefined;
+        if (!isIdReady) {
+            return;
+        }
+
+        setLiveLikeCount(null);
+
+        const echo = getEcho();
+        const isRealtimeAvailable = echo !== null;
+
+        if (!isRealtimeAvailable) {
+            return;
+        }
+
+        const ch = echo.channel(`videos.${id}`);
+
+        ch.listen('.VideoLiked', (data: { like_count: number }) => {
+            const hasCount = typeof data.like_count === 'number';
+            if (hasCount) {
+                setLiveLikeCount(data.like_count);
+            }
+        });
+
+        return () => {
+            echo.leaveChannel(`videos.${id}`);
+        };
+    }, [id]);
+
     // ─── Side effects ─────────────────────────────────────────────────────────
 
     useEffect(() => {
@@ -243,7 +278,7 @@ export default function VideoPage() {
         const isCurrentlyLiked = video?.id ? likedVideos.has(video.id) : false;
         dispatch(toastActions.addToast({
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
-            type: 'success',
+            type: ToastType.SUCCESS,
         }));
         if (video?.id) {
             likeVideo(video.id);
@@ -259,7 +294,7 @@ export default function VideoPage() {
         const isCurrentlySaved = watchLaterIds.has(video.id as string);
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
-            type: 'success',
+            type: ToastType.SUCCESS,
         }));
         if (isCurrentlySaved) {
             removeVideoFromPlaylist(watchLater.id as string, video.id as string);
@@ -308,7 +343,7 @@ export default function VideoPage() {
     function handleLike() {
         dispatch(toastActions.addToast({
             message: t(isLiked ? 'toast.unliked' : 'toast.liked'),
-            type: 'success',
+            type: ToastType.SUCCESS,
         }));
         likeVideo(videoId);
         triggerLikeAnimation();
@@ -322,7 +357,7 @@ export default function VideoPage() {
     function handleShareCopyLink() {
         const url = window.location.href.split('?')[0];
         navigator.clipboard.writeText(url);
-        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: ToastType.INFO }));
         triggerCopied();
         setIsShareDropdownOpen(false);
     }
@@ -332,7 +367,7 @@ export default function VideoPage() {
         const baseUrl = window.location.href.split('?')[0];
         const url = `${baseUrl}?t=${seconds}s`;
         navigator.clipboard.writeText(url);
-        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: 'info' }));
+        dispatch(toastActions.addToast({ message: t('toast.link_copied'), type: ToastType.INFO }));
         triggerCopied();
         setIsShareDropdownOpen(false);
     }
@@ -583,9 +618,9 @@ export default function VideoPage() {
                     <div className="video-page__sidebar-tabs" role="tablist">
                         <button
                             role="tab"
-                            aria-selected={sidebarTab === 'related'}
-                            className={['video-page__sidebar-tab', sidebarTab === 'related' ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
-                            onClick={() => setSidebarTab('related')}
+                            aria-selected={sidebarTab === SidebarTab.RELATED}
+                            className={['video-page__sidebar-tab', sidebarTab === SidebarTab.RELATED ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
+                            onClick={() => setSidebarTab(SidebarTab.RELATED)}
                         >
                             <List size={14} />
                             {t('video.related')}
@@ -593,9 +628,9 @@ export default function VideoPage() {
                         {hasSummary && (
                             <button
                                 role="tab"
-                                aria-selected={sidebarTab === 'summary'}
-                                className={['video-page__sidebar-tab', sidebarTab === 'summary' ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
-                                onClick={() => setSidebarTab('summary')}
+                                aria-selected={sidebarTab === SidebarTab.SUMMARY}
+                                className={['video-page__sidebar-tab', sidebarTab === SidebarTab.SUMMARY ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
+                                onClick={() => setSidebarTab(SidebarTab.SUMMARY)}
                             >
                                 <Lightbulb size={14} />
                                 {t('video.summary')}
@@ -604,7 +639,7 @@ export default function VideoPage() {
                                 )}
                             </button>
                         )}
-                        {sidebarTab === 'related' && (
+                        {sidebarTab === SidebarTab.RELATED && (
                             <div className="video-page__sidebar-filter-slot">
                                 <FilterPanel
                                     allTags={allRelatedTags}
@@ -631,7 +666,7 @@ export default function VideoPage() {
                         )}
                     </div>
 
-                    {sidebarTab === 'related' && (
+                    {sidebarTab === SidebarTab.RELATED && (
                         <>
                             {filteredRelated.length > 0 && (
                                 <div className="video-page__sidebar-list">
@@ -643,7 +678,7 @@ export default function VideoPage() {
                         </>
                     )}
 
-                    {sidebarTab === 'summary' && summary && (
+                    {sidebarTab === SidebarTab.SUMMARY && summary && (
                         <div className="video-page__summary">
                             <div className="video-page__summary-section">
                                 <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>

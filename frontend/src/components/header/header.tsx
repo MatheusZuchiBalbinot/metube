@@ -11,7 +11,9 @@ import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
 import { Avatar, Button, Input, Tooltip } from '@ui';
 import PreferencesPanel from '@components/preferences/preferences';
+import NotificationsBell from '@components/notifications/bell';
 import './header.css';
+import { SuggestionKind } from '@enums/suggestionKind';
 
 interface AppHeaderProps {
     onToggleSidebar: () => void
@@ -19,7 +21,7 @@ interface AppHeaderProps {
 
 const MAX_SUGGESTIONS = 8 as const;
 
-type SuggestionKind = 'video' | 'channel' | 'tag';
+
 
 interface Suggestion {
     kind: SuggestionKind
@@ -78,7 +80,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             const isMatch = video.title.toLowerCase().includes(needle);
 
             if (isMatch) {
-                pushUnique({ kind: 'video', label: video.title, value: video.title, targetId: video.id });
+                pushUnique({ kind: SuggestionKind.VIDEO, label: video.title, value: video.title, targetId: video.id });
             }
         }
 
@@ -86,7 +88,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             const isMatch = video.channel.toLowerCase().includes(needle);
 
             if (isMatch) {
-                pushUnique({ kind: 'channel', label: video.channel, value: video.channel, targetId: video.channelId });
+                pushUnique({ kind: SuggestionKind.CHANNEL, label: video.channel, value: video.channel, targetId: video.channelId });
             }
         }
 
@@ -95,7 +97,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 const isMatch = tag.toLowerCase().includes(needle);
 
                 if (isMatch) {
-                    pushUnique({ kind: 'tag', label: `#${tag}`, value: tag, targetId: tag });
+                    pushUnique({ kind: SuggestionKind.TAG, label: `#${tag}`, value: tag, targetId: tag });
                 }
             }
         }
@@ -194,12 +196,12 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     function handleSuggestionClick(s: Suggestion) {
         setSuggestionsOpen(false);
 
-        if (s.kind === 'video') {
+        if (s.kind === SuggestionKind.VIDEO) {
             navigate(videoUrl(s.targetId));
             return;
         }
 
-        if (s.kind === 'channel') {
+        if (s.kind === SuggestionKind.CHANNEL) {
             navigate(ROUTES.CHANNEL.replace(':id', s.targetId));
             return;
         }
@@ -208,11 +210,11 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     }
 
     function renderSuggestionIcon(kind: SuggestionKind) {
-        if (kind === 'video') {
+        if (kind === SuggestionKind.VIDEO) {
             return <Play size={13} className="app-header__recent-icon" />;
         }
 
-        if (kind === 'channel') {
+        if (kind === SuggestionKind.CHANNEL) {
             return <User size={13} className="app-header__recent-icon" />;
         }
 
@@ -310,6 +312,8 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             </div>
 
             <div className="app-header__right">
+                <NotificationsBell />
+
                 <Tooltip content={t('header.create')} side="bottom">
                     <Button
                         variant="primary"

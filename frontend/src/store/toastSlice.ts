@@ -1,9 +1,19 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { ToastType } from '@enums/toastType';
+
+export type { ToastType };
+
+export interface ToastAction {
+    label: string
+    onClick: () => void
+}
 
 export interface Toast {
     id: string
     message: string
-    type: 'success' | 'error' | 'info'
+    type: ToastType
+    action?: ToastAction
+    duration?: number
 }
 
 interface ToastState {

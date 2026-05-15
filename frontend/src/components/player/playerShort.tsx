@@ -8,6 +8,7 @@ import { usePopIcon } from '@hooks/usePopIcon';
 import { useSkipIndicator } from '@hooks/useSkipIndicator';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import './player.css';
+import { SkipDirection } from '@enums/skipDirection';
 
 export interface ShortPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
@@ -197,7 +198,7 @@ export default function ShortPlayer({
                     className={['vp__skip-indicator', `vp__skip-indicator--${skipIndicator.dir}`].join(' ')}
                 >
                     <div className="vp__skip-indicator-icon">
-                        {skipIndicator.dir === 'fwd'
+                        {skipIndicator.dir === SkipDirection.FWD
                             ? <SkipForward size={26} fill="white" strokeWidth={0} />
                             : <SkipBack size={26} fill="white" strokeWidth={0} />
                         }

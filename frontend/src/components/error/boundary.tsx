@@ -1,7 +1,10 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, Fragment, type ErrorInfo, type ReactNode } from 'react';
 import { logger } from '@utils/logger';
+import { BoundaryLevel } from '@enums/boundaryLevel';
 
-type BoundaryLevel = 'page' | 'section' | 'widget';
+
+
+const MAX_RETRIES = 3;
 
 interface Props {
     children: ReactNode
@@ -13,20 +16,21 @@ interface Props {
 interface State {
     hasError: boolean
     error: Error | null
+    retryCount: number
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = { hasError: false, error: null };
+        this.state = { hasError: false, error: null, retryCount: 0 };
     }
 
-    static getDerivedStateFromError(error: Error): State {
+    static getDerivedStateFromError(error: Error): Partial<State> {
         return { hasError: true, error };
     }
 
     componentDidCatch(error: Error, info: ErrorInfo): void {
-        const { level = 'page', onError } = this.props;
+        const { level = BoundaryLevel.PAGE, onError } = this.props;
         logger.error('Unhandled component error', {
             level,
             error: error.message,
@@ -36,8 +40,8 @@ export default class ErrorBoundary extends Component<Props, State> {
         onError?.(error, info);
     }
 
-    private handleReset = (): void => {
-        this.setState({ hasError: false, error: null });
+    private handleRetry = (): void => {
+        this.setState(prev => ({ hasError: false, error: null, retryCount: prev.retryCount + 1 }));
     };
 
     private handleReload = (): void => {
@@ -45,27 +49,30 @@ export default class ErrorBoundary extends Component<Props, State> {
     };
 
     render(): ReactNode {
-        const { hasError, error } = this.state;
-        const { children, fallback, level = 'page' } = this.props;
+        const { hasError, error, retryCount } = this.state;
+        const { children, fallback, level = BoundaryLevel.PAGE } = this.props;
 
         if (!hasError) {
-            return children;
+            // key forces remount of children on retry, re-triggering all useEffect / data fetches
+            return <Fragment key={retryCount}>{children}</Fragment>;
         }
 
         if (fallback) {
             return fallback;
         }
 
-        const isPage = level === 'page';
-        const isSection = level === 'section';
+        const isPage = level === BoundaryLevel.PAGE;
+        const isSection = level === BoundaryLevel.SECTION;
+        const hasRetriesLeft = retryCount < MAX_RETRIES;
 
         if (isPage) {
             return (
                 <div className="error-boundary error-boundary--page">
                     <p>{error?.message ?? 'Something went wrong.'}</p>
-                    <button onClick={this.handleReload}>
-                        Reload
-                    </button>
+                    {hasRetriesLeft && (
+                        <button onClick={this.handleRetry}>Try again</button>
+                    )}
+                    <button onClick={this.handleReload}>Reload</button>
                 </div>
             );
         }
@@ -74,7 +81,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="error-boundary error-boundary--section">
                     <p>Failed to load this section.</p>
-                    <button onClick={this.handleReset}>Try again</button>
+                    {hasRetriesLeft
+                        ? <button onClick={this.handleRetry}>Try again</button>
+                        : <button onClick={this.handleReload}>Reload</button>
+                    }
                 </div>
             );
         }

@@ -9,6 +9,7 @@ import type { Puid } from '@api/playlists';
 import type { Vuid } from '@api/videos';
 
 export type { Playlist };
+import { ToastType } from '@enums/toastType';
 
 export function usePlaylist() {
     const dispatch = useAppDispatch();
@@ -18,7 +19,7 @@ export function usePlaylist() {
     async function createPlaylist(name: string): Promise<PlaylistId | null> {
         const result = await playlistApi.create(name);
         if (!result) {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
             return null;
         }
         dispatch(playlistActions.createPlaylist({ id: result.id, name: result.name }));
@@ -28,14 +29,14 @@ export function usePlaylist() {
     function renamePlaylist(id: string, name: string): void {
         dispatch(playlistActions.renamePlaylist({ id: id as unknown as PlaylistId, name }));
         playlistApi.update(id as unknown as Puid, name).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
     function deletePlaylist(id: string): void {
         dispatch(playlistActions.deletePlaylist(id as unknown as PlaylistId));
         playlistApi.delete(id as unknown as Puid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
@@ -45,7 +46,7 @@ export function usePlaylist() {
             videoId: videoId as unknown as VideoId,
         }));
         playlistApi.addVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
@@ -55,7 +56,7 @@ export function usePlaylist() {
             videoId: videoId as unknown as VideoId,
         }));
         playlistApi.removeVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
@@ -65,7 +66,7 @@ export function usePlaylist() {
             videoIds: videoIds as unknown as VideoId[],
         }));
         playlistApi.reorder(playlistId as unknown as Puid, videoIds as unknown as Vuid[]).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: 'error' }));
+            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 

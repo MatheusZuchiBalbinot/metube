@@ -1,16 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { KEYBOARD_SKIP_SECONDS } from '@components/player/playerTypes';
 import { isTypingInInput } from '@utils/dom';
+import { SkipDirection } from '@enums/skipDirection';
 
 interface PlayerKeyboardOptions {
     videoRef: React.RefObject<HTMLVideoElement | null>
     isDefault: boolean
     captureKeyboard: boolean
     onTogglePlay: () => void
-    onSkip: (dir: 'fwd' | 'bwd') => void
+    onSkip: (dir: SkipDirection) => void
     onVolumeChange: (newVol: number) => void
     onMuteToggle: () => void
     onFullscreenToggle: () => void
+    onTheaterToggle?: () => void
+    onPipToggle?: () => void
+    onCaptionsToggle?: () => void
 }
 
 export function usePlayerKeyboard({
@@ -22,11 +26,20 @@ export function usePlayerKeyboard({
     onVolumeChange,
     onMuteToggle,
     onFullscreenToggle,
+    onTheaterToggle,
+    onPipToggle,
+    onCaptionsToggle,
 }: PlayerKeyboardOptions) {
     // Keep callbacks in a ref so the effect never needs to re-run when they change identity.
-    const cbRef = useRef({ onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle });
+    const cbRef = useRef({
+        onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle,
+        onTheaterToggle, onPipToggle, onCaptionsToggle,
+    });
     // eslint-disable-next-line react-hooks/refs
-    cbRef.current = { onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle };
+    cbRef.current = {
+        onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle,
+        onTheaterToggle, onPipToggle, onCaptionsToggle,
+    };
 
     useEffect(() => {
         if (!captureKeyboard) {
@@ -34,7 +47,7 @@ export function usePlayerKeyboard({
         }
 
         function handleKeyPress(el: HTMLVideoElement, e: KeyboardEvent) {
-            // Normalize single-char keys to lowercase so 'm'/'M', 'f'/'F', 't'/'T'
+            // Normalize single-char keys to lowercase so 'm'/'M', 'f'/'F' etc.
             // collapse to a single handler entry. Multi-char keys (Arrow*) are kept as-is.
             const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
 
@@ -43,11 +56,11 @@ export function usePlayerKeyboard({
             }
             function skipForward() {
                 el.currentTime = Math.min(el.currentTime + KEYBOARD_SKIP_SECONDS, el.duration);
-                cbRef.current.onSkip('fwd');
+                cbRef.current.onSkip(SkipDirection.FWD);
             }
             function skipBackward() {
                 el.currentTime = Math.max(el.currentTime - KEYBOARD_SKIP_SECONDS, 0);
-                cbRef.current.onSkip('bwd');
+                cbRef.current.onSkip(SkipDirection.BWD);
             }
             function muteToggle() {
                 cbRef.current.onMuteToggle();
@@ -80,12 +93,22 @@ export function usePlayerKeyboard({
             function fullscreenToggle() {
                 cbRef.current.onFullscreenToggle();
             }
-
+            function theaterToggle() {
+                cbRef.current.onTheaterToggle?.();
+            }
+            function pipToggle() {
+                cbRef.current.onPipToggle?.();
+            }
+            function captionsToggle() {
+                cbRef.current.onCaptionsToggle?.();
+            }
             const defaultHandlers: Record<string, () => void> = {
                 'ArrowUp': volumeUp,
                 'ArrowDown': volumeDown,
                 'f': fullscreenToggle,
-                't': fullscreenToggle,
+                't': theaterToggle,
+                'i': pipToggle,
+                'c': captionsToggle,
             };
 
             const defaultHandler = defaultHandlers[key];

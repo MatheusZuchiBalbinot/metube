@@ -11,6 +11,7 @@ import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
 import Modal from '@ui/modal/modal';
 import './savePopover.css';
+import { ToastType } from '@enums/toastType';
 
 interface SavePopoverProps {
     videoId: string
@@ -56,10 +57,10 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
         if (isInWatchLater) {
             removeVideoFromPlaylist(watchLaterPlaylist.id as string, videoId);
-            dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: 'info' }));
+            dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: ToastType.INFO }));
         } else {
             addVideoToPlaylist(watchLaterPlaylist.id as string, videoId);
-            dispatch(toastActions.addToast({ message: t('toast.saved'), type: 'success' }));
+            dispatch(toastActions.addToast({ message: t('toast.saved'), type: ToastType.SUCCESS }));
         }
     }
 
@@ -69,13 +70,13 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
             removeVideoFromPlaylist(playlistId, videoId);
             dispatch(toastActions.addToast({
                 message: t('toast.removed_from_playlist'),
-                type: 'info',
+                type: ToastType.INFO,
             }));
         } else {
             addVideoToPlaylist(playlistId, videoId);
             dispatch(toastActions.addToast({
                 message: t('toast.added_to_playlist', { name: playlistName }),
-                type: 'success',
+                type: ToastType.SUCCESS,
             }));
         }
     }
@@ -98,7 +99,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         addVideoToPlaylist(newId as string, videoId);
         dispatch(toastActions.addToast({
             message: t('toast.playlist_created'),
-            type: 'success',
+            type: ToastType.SUCCESS,
         }));
         setNewPlaylist('');
         setNewPlaylistOpen(false);

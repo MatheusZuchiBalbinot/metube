@@ -14,11 +14,17 @@ import Spinner from '@components/ui/spinner/spinner';
 import ErrorBoundary from '@components/error/boundary';
 import { useTranslation } from 'react-i18next';
 import { useBootstrap } from '@hooks/useBootstrap';
+import { useRealtime } from '@hooks/useRealtime';
+import { ToastType } from '@enums/toastType';
 
 const LoginPage = React.lazy(() => import('@pages/login/login'));
+const SignupPage = React.lazy(() => import('@pages/signup/signup'));
+const ForgotPasswordPage = React.lazy(() => import('@pages/forgotPassword/forgotPassword'));
+const ResetPasswordPage = React.lazy(() => import('@pages/resetPassword/resetPassword'));
 const UploadModal = React.lazy(() => import('@components/upload/modal'));
 import { ROUTES } from '@utils/routes';
 import { TooltipProvider } from '@ui';
+import { BoundaryLevel } from '@enums/boundaryLevel';
 
 const HomePage = React.lazy(() => import('@pages/home/home'));
 const HistoryPage = React.lazy(() => import('@pages/history/history'));
@@ -52,6 +58,7 @@ function AppInit({ children }: { children: React.ReactNode }) {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
     useBootstrap();
+    useRealtime();
 
     useEffect(() => {
         dispatch(fetchMe());
@@ -73,7 +80,7 @@ function AppInit({ children }: { children: React.ReactNode }) {
             if (!isValid) {
                 return;
             }
-            dispatch(toastActions.addToast({ message: e.detail.message, type: 'error' }));
+            dispatch(toastActions.addToast({ message: e.detail.message, type: ToastType.ERROR }));
         }
 
         function onServiceUnavailable(e: Event) {
@@ -81,7 +88,7 @@ function AppInit({ children }: { children: React.ReactNode }) {
             if (!isValid) {
                 return;
             }
-            dispatch(toastActions.addToast({ message: e.detail.message, type: 'error' }));
+            dispatch(toastActions.addToast({ message: e.detail.message, type: ToastType.ERROR }));
         }
 
         window.addEventListener(APP_EVENTS.SESSION_EXPIRED, onSessionExpired);
@@ -120,12 +127,15 @@ export default function App() {
                             <Suspense fallback={null}>
                                 <UploadModal />
                             </Suspense>
-                            <ErrorBoundary level="page">
+                            <ErrorBoundary level={BoundaryLevel.PAGE}>
                                 <Routes>
                                     <Route path={ROUTES.LOGIN} element={<Suspense fallback={<PageSpinner />}><LoginPage /></Suspense>} />
+                                    <Route path={ROUTES.SIGNUP} element={<Suspense fallback={<PageSpinner />}><SignupPage /></Suspense>} />
+                                    <Route path={ROUTES.FORGOT_PASSWORD} element={<Suspense fallback={<PageSpinner />}><ForgotPasswordPage /></Suspense>} />
+                                    <Route path={ROUTES.RESET_PASSWORD} element={<Suspense fallback={<PageSpinner />}><ResetPasswordPage /></Suspense>} />
                                     <Route element={<Guard><AppLayout /></Guard>}>
                                         {PROTECTED_ROUTES.map(({ path, Page }) => (
-                                            <Route key={path} path={path} element={<ErrorBoundary level="section" key={path}><Page /></ErrorBoundary>} />
+                                            <Route key={path} path={path} element={<ErrorBoundary level={BoundaryLevel.SECTION} key={path}><Page /></ErrorBoundary>} />
                                         ))}
                                     </Route>
                                     <Route path="*" element={<Suspense fallback={null}><NotFoundPage /></Suspense>} />

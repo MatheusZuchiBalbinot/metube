@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { PopIcon } from '@components/player/playerTypes';
+import type { PopIconType } from '@enums/popIconType';
 
 const POP_DURATION_MS = 500;
 
@@ -16,7 +17,7 @@ export function usePopIcon() {
         };
     }, []);
 
-    const showPopIcon = useCallback((type: 'play' | 'pause') => {
+    const showPopIcon = useCallback((type: PopIconType) => {
         if (timerRef.current) {
             clearTimeout(timerRef.current);
         }

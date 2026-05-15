@@ -3,23 +3,24 @@ import { video } from '@api/videos';
 import type { VideoUploadPayload } from '@api/videos';
 import type { Video } from '@models/video';
 import type { UploadProgress } from '@utils/upload';
+import { UploadStatus } from '@enums/uploadStatus';
 
-export type UploadStatus = 'idle' | 'uploading' | 'done' | 'error';
+export type { UploadStatus } from '@enums/uploadStatus';
 
 export function useUpload() {
     const [progress, setProgress] = useState<UploadProgress | null>(null);
-    const [status, setStatus] = useState<UploadStatus>('idle');
+    const [status, setStatus] = useState<UploadStatus>(UploadStatus.IDLE);
 
     async function upload(payload: VideoUploadPayload): Promise<Video | null> {
-        setStatus('uploading');
+        setStatus(UploadStatus.UPLOADING);
         setProgress(null);
 
         const result = await video.create(payload, setProgress);
 
         if (result) {
-            setStatus('done');
+            setStatus(UploadStatus.DONE);
         } else {
-            setStatus('error');
+            setStatus(UploadStatus.ERROR);
         }
 
         return result;
@@ -27,7 +28,7 @@ export function useUpload() {
 
     function reset() {
         setProgress(null);
-        setStatus('idle');
+        setStatus(UploadStatus.IDLE);
     }
 
     return { progress, status, upload, reset };
