@@ -19,6 +19,8 @@ export default defineConfig({
             '@store': resolve(__dirname, 'src/store'),
             '@models': resolve(__dirname, 'src/types'),
             '@validation': resolve(__dirname, 'src/validation'),
+            '@lib': resolve(__dirname, 'src/lib'),
+            '@enums': resolve(__dirname, 'src/enums'),
         },
     },
     plugins: [
@@ -67,6 +69,8 @@ export default defineConfig({
             '@ui': resolve(__dirname, 'src/components/ui'),
             '@utils': resolve(__dirname, 'src/utils'),
             '@validation': resolve(__dirname, 'src/validation'),
+            '@lib': resolve(__dirname, 'src/lib'),
+            '@enums': resolve(__dirname, 'src/enums'),
         },
     },
     server: {
