@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\CreateVideoData;
+use App\Data\UpdateVideoData;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
 use App\Http\Requests\Video\UpdateVideoRequest;
@@ -44,7 +46,7 @@ class VideoController extends Controller
      */
     public function store(StoreVideoRequest $request): JsonResponse
     {
-        $video = $this->videoService->createVideo(auth()->user(), $request->validated());
+        $video = $this->videoService->createVideo(auth()->user(), CreateVideoData::fromRequest($request->validated()));
 
         return $this->json(new VideoResource($video), 202);
     }
@@ -80,7 +82,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('update', $video);
 
-        $updated = $this->videoService->updateVideo($video, $request->validated());
+        $updated = $this->videoService->updateVideo($video, UpdateVideoData::fromRequest($request->validated()));
 
         return $this->json(new VideoResource($updated->load('channel')));
     }
