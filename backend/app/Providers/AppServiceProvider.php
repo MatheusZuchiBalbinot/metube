@@ -4,10 +4,15 @@ namespace App\Providers;
 
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
+use App\Events\CommentCreated;
+use App\Events\CommentLiked;
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoFinished;
 use App\Events\VideoImpressed;
+use App\Events\VideoImpressionsBatch;
+use App\Events\VideoLiked;
+use App\Events\VideoPublished;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
 use App\Events\VideoSkipped;
@@ -15,7 +20,13 @@ use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
+use App\Listeners\LogImpressionsBatch;
 use App\Listeners\LogUserAnalytic;
+use App\Listeners\SendCommentLikedNotification;
+use App\Listeners\SendCommentRepliedNotification;
+use App\Listeners\SendNewSubscriberNotification;
+use App\Listeners\SendVideoLikedNotification;
+use App\Listeners\SendVideoPublishedNotifications;
 use App\Models\Comment;
 use App\Models\Playlist;
 use App\Models\Video;
@@ -74,5 +85,13 @@ class AppServiceProvider extends ServiceProvider
         foreach ($loggableEvents as $eventClass) {
             Event::listen($eventClass, LogUserAnalytic::class);
         }
+
+        Event::listen(VideoImpressionsBatch::class, LogImpressionsBatch::class);
+
+        Event::listen(CommentCreated::class, SendCommentRepliedNotification::class);
+        Event::listen(CommentLiked::class, SendCommentLikedNotification::class);
+        Event::listen(VideoLiked::class, SendVideoLikedNotification::class);
+        Event::listen(ChannelSubscribed::class, SendNewSubscriberNotification::class);
+        Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
     }
 }
