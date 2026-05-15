@@ -48,12 +48,11 @@ class CommentController extends Controller
     /**
      * Update the content of an existing comment.
      *
-     * @param  string  $cuid  Public comment identifier
+     * @param  Comment  $comment  Resolved via cuid route key
      * @param  UpdateCommentRequest  $request  Validated request
      */
-    public function update(string $cuid, UpdateCommentRequest $request): JsonResponse
+    public function update(Comment $comment, UpdateCommentRequest $request): JsonResponse
     {
-        $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $this->authorize('update', $comment);
 
         $updated = $this->commentService->update($comment, $request, $request->user());
@@ -64,12 +63,10 @@ class CommentController extends Controller
     /**
      * Delete a comment.
      *
-     * @param  string  $cuid  Public comment identifier
-     * @param  Request  $request  Incoming HTTP request
+     * @param  Comment  $comment  Resolved via cuid route key
      */
-    public function destroy(string $cuid, Request $request): Response
+    public function destroy(Comment $comment): Response
     {
-        $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $this->authorize('delete', $comment);
 
         $this->commentService->destroy($comment);
@@ -80,12 +77,11 @@ class CommentController extends Controller
     /**
      * Toggle a like on a comment for the authenticated user.
      *
-     * @param  string  $cuid  Public comment identifier
+     * @param  Comment  $comment  Resolved via cuid route key
      * @param  Request  $request  Incoming HTTP request
      */
-    public function toggleLike(string $cuid, Request $request): JsonResponse
+    public function toggleLike(Comment $comment, Request $request): JsonResponse
     {
-        $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $user = $request->user();
         $result = $this->commentService->toggleLike($comment, $user);
 
@@ -95,12 +91,11 @@ class CommentController extends Controller
     /**
      * List all replies for a comment.
      *
-     * @param  string  $cuid  Public comment identifier
+     * @param  Comment  $comment  Resolved via cuid route key
      * @param  Request  $request  Incoming HTTP request
      */
-    public function replies(string $cuid, Request $request): JsonResponse
+    public function replies(Comment $comment, Request $request): JsonResponse
     {
-        $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $user = $request->user();
         $replies = $this->commentService->replies($comment, $user);
 
@@ -110,11 +105,10 @@ class CommentController extends Controller
     /**
      * List all saved versions of a comment, newest first.
      *
-     * @param  string  $cuid  Public comment identifier
+     * @param  Comment  $comment  Resolved via cuid route key
      */
-    public function versions(string $cuid): JsonResponse
+    public function versions(Comment $comment): JsonResponse
     {
-        $comment = Comment::where('cuid', $cuid)->firstOrFail();
         $versions = $this->commentService->versions($comment);
 
         return $this->json(CommentVersionResource::collection($versions));

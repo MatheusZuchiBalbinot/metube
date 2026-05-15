@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\CommentCreated;
+use App\Events\CommentLiked;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Models\Comment;
@@ -55,10 +57,14 @@ class CommentService
 
         if (isset($validated['parent_cuid'])) {
             $parent = Comment::where('cuid', $validated['parent_cuid'])->firstOrFail();
+            $isNestedReply = $parent->parent_id !== null;
+
+            abort_if($isNestedReply, 422, 'Cannot reply to a reply.');
+
             $parentId = $parent->id;
         }
 
-        return DB::transaction(function () use ($user, $video, $validated, $parentId): Comment {
+        $comment = DB::transaction(function () use ($user, $video, $validated, $parentId): Comment {
             $comment = Comment::create([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
@@ -86,6 +92,11 @@ class CommentService
 
             return $comment;
         });
+
+        $commentCount = Comment::where('video_id', $video->id)->count();
+        event(new CommentCreated($comment, $user, $video, $commentCount));
+
+        return $comment;
     }
 
     /**
@@ -191,6 +202,8 @@ class CommentService
 
             Comment::where('id', $comment->id)->increment('likes_count');
             $comment->refresh();
+
+            event(new CommentLiked($comment, $user));
 
             return ['liked' => true, 'likes_count' => $comment->likes_count];
         });
