@@ -31,14 +31,24 @@ class ChannelService
     }
 
     /**
-     * Get paginated published videos for a channel, newest first.
+     * Get paginated videos for a channel.
+     *
+     * When $includeAllStatuses is true, returns every status (processing, failed, draft, etc.)
+     * ordered by recency — used when the channel owner is viewing their own page.
+     * Otherwise returns only published videos in newest-published order.
      *
      * @param  User  $channel  Channel to list videos for
      * @return LengthAwarePaginator<\App\Models\Video>
      */
-    public function listVideos(User $channel): LengthAwarePaginator
+    public function listVideos(User $channel, bool $includeAllStatuses = false): LengthAwarePaginator
     {
-        return $channel->videos()->with('channel')->published()->newestPublished()->paginate(15);
+        $query = $channel->videos()->with('channel');
+
+        if ($includeAllStatuses) {
+            return $query->latest()->paginate(50);
+        }
+
+        return $query->published()->newestPublished()->paginate(15);
     }
 
     /**

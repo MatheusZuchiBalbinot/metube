@@ -8,7 +8,6 @@ export type Uuid = string & { readonly _brand: 'Uuid' };
 
 class ChannelApi {
     private readonly baseUrl = '/channels';
-    private readonly userMeUrl = '/users/me';
 
     async get(uuid: Uuid): Promise<User | null> {
         return apiClient.getValidated(`${this.baseUrl}/${uuid}`, UserApiSchema);
@@ -23,7 +22,7 @@ class ChannelApi {
     }
 
     async subscriptions(): Promise<User[] | null> {
-        return apiClient.getValidated(`${this.userMeUrl}/subscriptions`, z.array(UserApiSchema));
+        return apiClient.getValidated('/subscriptions', z.array(UserApiSchema));
     }
 }
 

@@ -8,8 +8,7 @@ export interface HistoryEvent {
 }
 
 class HistoryApi {
-    private readonly baseUrl = '/users/me/history';
-    private readonly userMeUrl = '/users/me';
+    private readonly baseUrl = '/history';
 
     async list(): Promise<Video[] | null> {
         return apiClient.get<Video[]>(this.baseUrl);
@@ -28,7 +27,7 @@ class HistoryApi {
     }
 
     async progress(): Promise<Record<string, number> | null> {
-        const result = await apiClient.get<{ data: Record<string, number> }>(`${this.userMeUrl}/progress`);
+        const result = await apiClient.get<{ data: Record<string, number> }>('/progress');
         return result?.data ?? null;
     }
 }

@@ -3,14 +3,12 @@ import { VideoListApiSchema } from '@validation';
 import type { VideoListResponse } from './videos';
 
 class InteractionsApi {
-    private readonly userMeUrl = '/users/me';
-
     async liked(): Promise<VideoListResponse | null> {
-        return apiClient.getValidated(`${this.userMeUrl}/likes`, VideoListApiSchema);
+        return apiClient.getValidated('/likes', VideoListApiSchema);
     }
 
     async saved(): Promise<VideoListResponse | null> {
-        return apiClient.getValidated(`${this.userMeUrl}/saved`, VideoListApiSchema);
+        return apiClient.getValidated('/saved', VideoListApiSchema);
     }
 }
 
