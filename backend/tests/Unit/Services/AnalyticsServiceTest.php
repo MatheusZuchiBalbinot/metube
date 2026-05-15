@@ -2,7 +2,7 @@
 
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
-use App\Events\VideoImpressed;
+use App\Events\VideoImpressionsBatch;
 use App\Events\VideoSkipped;
 use App\Models\User;
 use App\Models\Video;
@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Event;
 uses(RefreshDatabase::class);
 
 describe('AnalyticsService', function () {
-    test('recordImpressions dispatches one event per known vuid in render order', function () {
+    test('recordImpressions dispatches one batch event with all known vuids in order', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -27,22 +27,32 @@ describe('AnalyticsService', function () {
 
         (new AnalyticsService)->recordImpressions($user, $vuids, 'feed', 'sess-1');
 
-        Event::assertDispatchedTimes(VideoImpressed::class, 3);
+        Event::assertDispatchedTimes(VideoImpressionsBatch::class, 1);
 
-        foreach ($vuids as $position => $vuid) {
-            Event::assertDispatched(
-                VideoImpressed::class,
-                fn (VideoImpressed $event): bool => $event->video->vuid === $vuid
-                    && $event->position === $position
-                    && $event->source === 'feed'
-                    && $event->sessionId === 'sess-1',
-            );
-        }
+        Event::assertDispatched(
+            VideoImpressionsBatch::class,
+            function (VideoImpressionsBatch $event) use ($videos, $vuids): bool {
+                if ($event->source !== 'feed' || $event->sessionId !== 'sess-1') {
+                    return false;
+                }
+
+                foreach ($vuids as $position => $vuid) {
+                    $video = $videos->firstWhere('vuid', $vuid);
+                    $item = $event->items[$position] ?? null;
+
+                    if ($item === null || $item['video_id'] !== $video->id || $item['position'] !== $position) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+        );
     });
 
     test('recordImpressions silently ignores unknown vuids', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -53,12 +63,25 @@ describe('AnalyticsService', function () {
 
         (new AnalyticsService)->recordImpressions($user, [$video->vuid, 'unknownvuid'], 'home');
 
-        Event::assertDispatchedTimes(VideoImpressed::class, 1);
+        Event::assertDispatched(
+            VideoImpressionsBatch::class,
+            fn (VideoImpressionsBatch $event): bool => count($event->items) === 1,
+        );
+    });
+
+    test('recordImpressions dispatches nothing when all vuids are unknown', function () {
+        Event::fake([VideoImpressionsBatch::class]);
+
+        $user = User::factory()->create();
+
+        (new AnalyticsService)->recordImpressions($user, ['notexist1', 'notexist2'], 'feed');
+
+        Event::assertNotDispatched(VideoImpressionsBatch::class);
     });
 
     test('recordClick dispatches VideoClickedFromFeed', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -80,7 +103,7 @@ describe('AnalyticsService', function () {
 
     test('recordSearch dispatches SearchPerformed', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -99,7 +122,7 @@ describe('AnalyticsService', function () {
 
     test('recordSkip dispatches VideoSkipped with percent', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,

@@ -1,5 +1,7 @@
 <?php
 
+use App\Data\CreateVideoData;
+use App\Data\UpdateVideoData;
 use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
 use App\Events\VideoReactionApplied;
@@ -36,12 +38,15 @@ describe('VideoService', function () {
         $description = $faker->paragraph();
         $tags = array_slice($faker->words(5), 0, rand(1, 3));
 
-        $data = [
-            'title' => $title,
-            'description' => $description,
-            'tags' => $tags,
-            'video_file' => UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
-        ];
+        $data = new CreateVideoData(
+            title: $title,
+            description: $description,
+            tags: $tags,
+            status: VideoStatus::DRAFT,
+            videoFile: UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4'),
+            thumbnailFile: null,
+            scheduledAt: null,
+        );
 
         $video = $service->createVideo($user, $data);
 
@@ -79,11 +84,13 @@ describe('VideoService', function () {
         $newStatus = $faker->randomElement(VideoStatus::cases());
 
         $video = Video::factory()->create(['title' => $oldTitle]);
-        $newData = [
-            'title' => $newTitle,
-            'description' => $newDescription,
-            'status' => $newStatus,
-        ];
+        $newData = new UpdateVideoData(
+            title: $newTitle,
+            description: $newDescription,
+            tags: null,
+            status: $newStatus,
+            scheduledAt: null,
+        );
 
         $updated = $service->updateVideo($video, $newData);
 

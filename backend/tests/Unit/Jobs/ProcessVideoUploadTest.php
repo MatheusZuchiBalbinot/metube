@@ -12,14 +12,14 @@ uses(RefreshDatabase::class);
 /**
  * Return a mock VideoStorageService that stubs all methods with sensible defaults.
  *
- * @param  string  $videoUrl  URL returned by publishVideo
- * @param  string|null  $thumbnailUrl  URL returned by publishThumbnail
+ * @param  string  $videoPath  Disk-relative path returned by publishVideo
+ * @param  string|null  $thumbnailPath  Disk-relative path returned by publishThumbnail
  */
-function mockStorage(string $videoUrl = '/storage/videos/test.mp4', ?string $thumbnailUrl = '/storage/thumbnails/test.webp'): VideoStorageService
+function mockStorage(string $videoPath = 'videos/test.mp4', ?string $thumbnailPath = 'thumbnails/test.webp'): VideoStorageService
 {
     $mock = Mockery::mock(VideoStorageService::class);
-    $mock->shouldReceive('publishVideo')->andReturn($videoUrl)->byDefault();
-    $mock->shouldReceive('publishThumbnail')->andReturn($thumbnailUrl)->byDefault();
+    $mock->shouldReceive('publishVideo')->andReturn($videoPath)->byDefault();
+    $mock->shouldReceive('publishThumbnail')->andReturn($thumbnailPath)->byDefault();
     $mock->shouldReceive('cleanupTmp')->byDefault();
 
     return $mock;
@@ -34,12 +34,12 @@ describe('ProcessVideoUpload', function () {
         test('publishes the video and sets status to PUBLISHED when not scheduled', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => null]);
 
-            $storage = mockStorage('/storage/videos/'.$video->vuid.'.mp4');
+            $storage = mockStorage('videos/'.$video->vuid.'.mp4');
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
 
             $video->refresh();
             expect($video->status)->toBe(VideoStatus::PUBLISHED)
-                ->and($video->video_url)->toBe('/storage/videos/'.$video->vuid.'.mp4');
+                ->and($video->video_url)->toBe('videos/'.$video->vuid.'.mp4');
         });
 
         test('sets status to SCHEDULED when scheduled_at is in the future', function () {
@@ -60,26 +60,26 @@ describe('ProcessVideoUpload', function () {
     });
 
     describe('handle — thumbnail', function () {
-        test('publishes thumbnail and stores its url when provided', function () {
+        test('publishes thumbnail and stores its path when provided', function () {
             $video = Video::factory()->processing()->create();
 
             $storage = Mockery::mock(VideoStorageService::class);
-            $storage->shouldReceive('publishVideo')->andReturn('/storage/videos/test.mp4');
+            $storage->shouldReceive('publishVideo')->andReturn('videos/test.mp4');
             $storage->shouldReceive('publishThumbnail')
                 ->once()
                 ->with('uploads/tmp/thumb.jpg', $video->vuid)
-                ->andReturn('/storage/thumbnails/test.webp');
+                ->andReturn('thumbnails/test.webp');
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4', 'uploads/tmp/thumb.jpg'))->handle($storage);
 
-            expect($video->fresh()->thumbnail_url)->toBe('/storage/thumbnails/test.webp');
+            expect($video->fresh()->thumbnail_url)->toBe('thumbnails/test.webp');
         });
 
         test('leaves thumbnail_url unchanged when no thumbnail is provided', function () {
             $video = Video::factory()->processing()->create(['thumbnail_url' => null]);
 
             $storage = Mockery::mock(VideoStorageService::class);
-            $storage->shouldReceive('publishVideo')->andReturn('/storage/videos/test.mp4');
+            $storage->shouldReceive('publishVideo')->andReturn('videos/test.mp4');
             $storage->shouldNotReceive('publishThumbnail');
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);

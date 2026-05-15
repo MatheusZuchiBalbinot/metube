@@ -143,12 +143,12 @@ describe('VideoController', function () {
         $response->assertJsonPath('data.0.title', 'Video A');
     });
 
-    test('index filters videos by search term on tags', function () {
+    test('index filters videos by tags filter (OR semantics)', function () {
         $user = User::factory()->create();
         Video::factory()->create(['title' => 'Video A', 'description' => '', 'tags' => ['php', 'backend']]);
         Video::factory()->create(['title' => 'Video B', 'description' => '', 'tags' => ['javascript']]);
 
-        $response = $this->actingAs($user)->getJson('/api/videos?search=php');
+        $response = $this->actingAs($user)->getJson('/api/videos?tags[]=php');
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
