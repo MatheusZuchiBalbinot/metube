@@ -33,7 +33,11 @@ class ChannelController extends Controller
     }
 
     /**
-     * List all videos published by a channel.
+     * List videos for a channel.
+     *
+     * If the authenticated user owns the channel, every video is returned
+     * (including processing, failed, scheduled, draft) so they can manage them
+     * from their own profile. Otherwise only published videos are exposed.
      *
      * @param  string  $uuid  User UUID (v4)
      * @return JsonResponse array{data: Video[], meta: {total: int}}
@@ -43,7 +47,8 @@ class ChannelController extends Controller
     public function videos(string $uuid): JsonResponse
     {
         $channel = $this->channelService->getByUuid($uuid);
-        $videos = $this->channelService->listVideos($channel);
+        $isOwner = auth()->id() === $channel->id;
+        $videos = $this->channelService->listVideos($channel, $isOwner);
 
         return $this->json(VideoResource::collection($videos));
     }

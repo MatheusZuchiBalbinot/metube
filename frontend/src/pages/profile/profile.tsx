@@ -10,7 +10,7 @@ import type { FilterState } from '@utils/applyFilters';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { Uuid } from '@api';
-import { channel as channelApi, video as videoApi } from '@api';
+import { channel as channelApi } from '@api';
 import { useAppSelector } from '@store/index';
 import type { VideoStatus } from '@models/video';
 import { useAuth } from '@hooks/useAuth';
@@ -73,15 +73,12 @@ export default function ProfilePage() {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoadingOwnVideos(true);
-        const fetch = isOwnProfile
-            ? videoApi.myVideos()
-            : channelApi.videos(channelId as unknown as Uuid);
-        fetch.then(result => {
+        channelApi.videos(channelId as unknown as Uuid).then(result => {
             if (result) {
                 setOwnVideos(result.data);
             }
         }).finally(() => setLoadingOwnVideos(false));
-    }, [channelId, isOwnProfile]);
+    }, [channelId]);
 
     useEffect(() => {
         const hasUpdate = lastVideoStatusUpdate !== null && isOwnProfile;

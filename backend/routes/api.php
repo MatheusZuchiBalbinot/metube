@@ -51,20 +51,17 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
     });
 
-    // User Interactions
-    Route::prefix('users/me')->group(function (): void {
-        Route::get('/videos', [UserController::class, 'myVideos']);
-        Route::get('/likes', [UserController::class, 'likes']);
-        Route::get('/saved', [UserController::class, 'saved']);
-        Route::get('/subscriptions', [UserController::class, 'subscriptions']);
-        Route::get('/progress', [UserController::class, 'progress']);
+    // User library — top-level resources scoped to the authenticated user
+    Route::get('/likes', [UserController::class, 'likes']);
+    Route::get('/saved', [UserController::class, 'saved']);
+    Route::get('/subscriptions', [UserController::class, 'subscriptions']);
+    Route::get('/progress', [UserController::class, 'progress']);
 
-        Route::prefix('history')->group(function (): void {
-            Route::get('/', [UserController::class, 'history']);
-            Route::get('/events', [UserController::class, 'historyEvents']);
-            Route::delete('/', [UserController::class, 'clearHistory']);
-            Route::delete('/{vuid}', [UserController::class, 'removeHistory']);
-        });
+    Route::prefix('history')->group(function (): void {
+        Route::get('/', [UserController::class, 'history']);
+        Route::get('/events', [UserController::class, 'historyEvents']);
+        Route::delete('/', [UserController::class, 'clearHistory']);
+        Route::delete('/{vuid}', [UserController::class, 'removeHistory']);
     });
 
     // Channels
