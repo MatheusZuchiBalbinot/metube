@@ -149,6 +149,10 @@ const videoSlice = createSlice({
             state.watchHistory = [];
         },
 
+        restoreHistory(state, action: PayloadAction<VideoId[]>) {
+            state.watchHistory = action.payload;
+        },
+
         updateProgress(state, action: PayloadAction<{ videoId: VideoId; percent: number }>) {
             state.videoProgress[action.payload.videoId] = action.payload.percent;
         },
