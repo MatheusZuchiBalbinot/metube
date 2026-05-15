@@ -1,0 +1,61 @@
+.verification-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(234, 179, 8, 0.1);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.25);
+    font-size: 0.8125rem;
+    color: var(--text);
+}
+
+:root[data-mode='light'] .verification-banner {
+    background: rgba(234, 179, 8, 0.08);
+}
+
+.verification-banner__icon {
+    color: #eab308;
+    flex-shrink: 0;
+}
+
+.verification-banner__text {
+    flex: 1;
+    min-width: 0;
+}
+
+.verification-banner__action {
+    background: none;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    border-radius: var(--radius-sm);
+    color: #eab308;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.verification-banner__action:hover:not(:disabled) {
+    background: rgba(234, 179, 8, 0.12);
+}
+
+.verification-banner__action:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.verification-banner__dismiss {
+    background: none;
+    border: none;
+    color: var(--text-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.verification-banner__dismiss:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+}
