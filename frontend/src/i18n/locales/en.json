@@ -8,9 +8,12 @@
         "back": "Back",
         "close": "Close",
         "remove": "Remove",
+        "undo": "Undo",
+        "try_again": "Try again",
         "not_found_title": "404",
         "not_found_message": "This page does not exist.",
-        "go_home": "Go home"
+        "go_home": "Go home",
+        "dismiss": "Dismiss"
     },
     "auth": {
         "sign_in": "Sign In",
@@ -21,7 +24,45 @@
         "password_placeholder": "••••••••",
         "signing_in": "Signing in...",
         "invalid_credentials": "Invalid email or password. Please try again.",
-        "session_expired": "Your session has expired. Please sign in again."
+        "session_expired": "Your session has expired. Please sign in again.",
+        "forgot_password": "Forgot password?",
+        "no_account": "Don't have an account?",
+        "signup": {
+            "title": "Create account",
+            "subtitle": "Join Vidsum to start watching and uploading videos",
+            "name": "Name",
+            "name_placeholder": "Your name",
+            "confirm_password": "Confirm password",
+            "submit": "Create account",
+            "have_account": "Already have an account?",
+            "passwords_mismatch": "Passwords do not match.",
+            "error": "Something went wrong. Please try again."
+        },
+        "forgot": {
+            "title": "Forgot password",
+            "subtitle": "Enter your email address and we'll send you a reset link",
+            "submit": "Send reset link",
+            "sent": "A reset link was sent to {{email}}. Check your inbox.",
+            "back_to_login": "Back to sign in",
+            "error": "Could not send reset link. Please try again."
+        },
+        "reset": {
+            "title": "Reset password",
+            "subtitle": "Choose a new password for your account",
+            "new_password": "New password",
+            "submit": "Reset password",
+            "success": "Password reset successfully. You can now sign in.",
+            "passwords_mismatch": "Passwords do not match.",
+            "error": "Could not reset password. The link may have expired.",
+            "invalid_link": "This reset link is invalid or has expired.",
+            "request_new": "Request a new link"
+        },
+        "verify": {
+            "prompt": "Please verify your email address to access all features.",
+            "resend": "Resend email",
+            "sending": "Sending...",
+            "sent": "Verification email sent! Check your inbox."
+        }
     },
     "dashboard": {
         "welcome": "Welcome, {{name}}",
@@ -245,6 +286,7 @@
     "shortcuts": {
         "title": "Keyboard shortcuts",
         "global": "Navigation",
+        "player": "Player",
         "video_page": "Video page",
         "focus_search": "Focus search",
         "open_upload": "Upload video",
@@ -252,9 +294,17 @@
         "go_profile": "Go to Profile",
         "go_search": "Go to Search",
         "show_shortcuts": "Show shortcuts",
+        "play_pause": "Play / Pause",
+        "seek_5s": "Seek ±5 seconds",
+        "volume": "Volume ±10%",
+        "mute": "Mute toggle",
+        "fullscreen": "Fullscreen",
+        "theater_mode": "Theater mode",
+        "pip": "Picture in Picture",
+        "captions": "Captions toggle",
         "like": "Like video",
         "save": "Save video",
-        "theater_mode": "Theater mode",
+        "player_note": "Available when a video is playing",
         "video_note": "Available only on the video page",
         "tip": "Chord shortcuts: press G first, then the second key"
     },
@@ -324,11 +374,17 @@
         "unmute": "Unmute",
         "volume": "Volume",
         "speed": "Speed",
+        "quality": "Quality",
+        "quality_auto": "Auto",
         "settings": "Settings",
         "theater": "Theater mode",
         "exit_theater": "Exit theater mode",
         "fullscreen": "Fullscreen",
-        "exit_fullscreen": "Exit fullscreen"
+        "exit_fullscreen": "Exit fullscreen",
+        "pip": "Picture in picture",
+        "exit_pip": "Exit picture in picture",
+        "captions": "Captions",
+        "captions_off": "Off"
     },
     "comments": {
         "title_one": "{{count}} comment",
@@ -356,5 +412,20 @@
         "history_viewing": "Viewing version {{n}}",
         "history_view_current": "Back to current",
         "submit_hint": "Ctrl+Enter"
+    },
+    "notifications": {
+        "bell": {
+            "label": "Notifications"
+        },
+        "empty": "You're all caught up",
+        "mark_all_read": "Mark all as read",
+        "more": "Scroll up for more",
+        "types": {
+            "comment_replied": "Replied to your comment",
+            "comment_liked": "Liked your comment",
+            "video_liked": "Liked your video",
+            "new_subscriber": "Subscribed to your channel",
+            "video_from_subscription": "New video from a channel you follow"
+        }
     }
 }
