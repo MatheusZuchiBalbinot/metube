@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
 
     // User Interactions
     Route::prefix('users/me')->group(function (): void {
+        Route::get('/videos', [UserController::class, 'myVideos']);
         Route::get('/likes', [UserController::class, 'likes']);
         Route::get('/saved', [UserController::class, 'saved']);
         Route::get('/subscriptions', [UserController::class, 'subscriptions']);

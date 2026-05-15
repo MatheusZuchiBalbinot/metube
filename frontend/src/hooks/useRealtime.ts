@@ -1,14 +1,18 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store/index';
 import { notificationsActions } from '@store/notificationsSlice';
 import { toastActions } from '@store/toastSlice';
+import { videoActions } from '@store/videoSlice';
 import { notifications as notificationsApi } from '@api/notifications';
 import type { Notification } from '@api/notifications';
 import { NotificationType } from '@enums/notificationType';
 import getEcho, { destroyEcho } from '@lib/echo';
 import { ToastType } from '@enums/toastType';
+import { VideoStatus } from '@models/video';
 
 export function useRealtime(): void {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const user = useAppSelector(state => state.auth.user);
 
@@ -39,6 +43,17 @@ export function useRealtime(): void {
                 message: formatNotificationMessage(notification),
                 type: ToastType.INFO,
             }));
+        });
+
+        channel.listen('.VideoStatusUpdated', (data: { vuid: string; status: string }) => {
+            dispatch(videoActions.updateVideoStatus({ vuid: data.vuid, status: data.status }));
+            const isPublished = data.status === VideoStatus.PUBLISHED;
+            if (isPublished) {
+                dispatch(toastActions.addToast({
+                    message: t('video.published_toast'),
+                    type: ToastType.SUCCESS,
+                }));
+            }
         });
 
         return () => {

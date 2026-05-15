@@ -10,7 +10,9 @@ import type { FilterState } from '@utils/applyFilters';
 import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { Uuid } from '@api';
-import { channel as channelApi } from '@api';
+import { channel as channelApi, video as videoApi } from '@api';
+import { useAppSelector } from '@store/index';
+import type { VideoStatus } from '@models/video';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
@@ -66,16 +68,33 @@ export default function ProfilePage() {
 
     const [ownVideos, setOwnVideos] = useState<Video[]>([]);
     const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
+    const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoadingOwnVideos(true);
-        channelApi.videos(channelId as unknown as Uuid).then(result => {
+        const fetch = isOwnProfile
+            ? videoApi.myVideos()
+            : channelApi.videos(channelId as unknown as Uuid);
+        fetch.then(result => {
             if (result) {
                 setOwnVideos(result.data);
             }
         }).finally(() => setLoadingOwnVideos(false));
-    }, [channelId]);
+    }, [channelId, isOwnProfile]);
+
+    useEffect(() => {
+        const hasUpdate = lastVideoStatusUpdate !== null && isOwnProfile;
+        if (!hasUpdate) {
+            return;
+        }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOwnVideos(prev => prev.map(v =>
+            v.id === (lastVideoStatusUpdate.vuid as unknown as typeof v.id)
+                ? { ...v, status: lastVideoStatusUpdate.status as VideoStatus }
+                : v,
+        ));
+    }, [lastVideoStatusUpdate, isOwnProfile]);
 
     const likedVideoList = useMemo(
         () => videos.filter((v: Video) => likedVideos.has(v.id)),

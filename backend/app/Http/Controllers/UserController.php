@@ -21,6 +21,18 @@ class UserController extends Controller
     public function __construct(private readonly UserService $userService) {}
 
     /**
+     * Get all videos owned by the authenticated user (all statuses).
+     *
+     * @return JsonResponse array{data: Video[], meta: {total: int, page: int}}
+     */
+    public function myVideos(): JsonResponse
+    {
+        $videos = $this->userService->getUserVideos(auth()->user());
+
+        return $this->json(VideoResource::collection($videos));
+    }
+
+    /**
      * Get all videos liked by the authenticated user.
      *
      * @return JsonResponse array{data: Video[], meta: {total: int, page: int}}

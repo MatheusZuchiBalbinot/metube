@@ -90,6 +90,11 @@ export default defineConfig({
                 target: 'http://nginx',
                 changeOrigin: true,
             },
+            '/app': {
+                target: 'ws://reverb:8080',
+                ws: true,
+                changeOrigin: true,
+            },
         },
     },
     preview: {

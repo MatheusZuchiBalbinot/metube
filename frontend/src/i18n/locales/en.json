@@ -123,6 +123,7 @@
         "no_own_videos": "You haven't uploaded any videos yet",
         "scheduled": "Scheduled",
         "published": "Published",
+        "published_toast": "Your video is now live!",
         "published_now": "Published immediately",
         "status_label": "Status",
         "views": "views",
