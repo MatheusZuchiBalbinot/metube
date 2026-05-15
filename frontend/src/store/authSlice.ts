@@ -32,6 +32,18 @@ export const signInThunk = createAsyncThunk(
     },
 );
 
+export const signUpThunk = createAsyncThunk(
+    'auth/signUp',
+    async (payload: { name: string; email: string; password: string; password_confirmation: string }) => {
+        await auth.getCsrfCookie();
+        const response = await auth.register(payload);
+        if (!response) {
+            throw new Error('Registration failed');
+        }
+        return response.user;
+    },
+);
+
 export const signOutThunk = createAsyncThunk('auth/signOut', async () => {
     await auth.logout().catch(() => null);
 });
@@ -70,6 +82,10 @@ const authSlice = createSlice({
                 state.loading = false;
             })
             .addCase(signInThunk.fulfilled, (state, action) => {
+                state.user = action.payload;
+                state.sessionError = null;
+            })
+            .addCase(signUpThunk.fulfilled, (state, action) => {
                 state.user = action.payload;
                 state.sessionError = null;
             })
