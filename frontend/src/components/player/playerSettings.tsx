@@ -1,5 +1,6 @@
 import { Settings, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { ShakaLevel } from '@hooks/useShaka';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
 
@@ -9,12 +10,17 @@ interface PlayerSettingsProps {
     settingsRef: React.RefObject<HTMLDivElement | null>
     onToggle: (e: React.MouseEvent) => void
     onSpeedChange: (e: React.MouseEvent, rate: number) => void
+    levels?: ShakaLevel[]
+    currentQuality?: number
+    onQualityChange?: (e: React.MouseEvent, index: number) => void
 }
 
 export default function PlayerSettings({
     playbackRate, showSettings, settingsRef, onToggle, onSpeedChange,
+    levels, currentQuality, onQualityChange,
 }: PlayerSettingsProps) {
     const { t } = useTranslation();
+    const hasLevels = (levels?.length ?? 0) > 0;
 
     return (
         <div className="vp__settings" ref={settingsRef}>
@@ -44,6 +50,37 @@ export default function PlayerSettings({
                             })}
                         </div>
                     </div>
+                    {hasLevels && onQualityChange && (
+                        <div className="vp__settings-section">
+                            <span className="vp__settings-section-label">{t('player.quality')}</span>
+                            <div className="vp__settings-speeds" role="listbox" aria-label={t('player.quality')}>
+                                <button
+                                    className={['vp__settings-option', currentQuality === -1 ? 'vp__settings-option--active' : ''].filter(Boolean).join(' ')}
+                                    onClick={e => onQualityChange(e, -1)}
+                                    role="option"
+                                    aria-selected={currentQuality === -1}
+                                >
+                                    <span>{t('player.quality_auto')}</span>
+                                    {currentQuality === -1 && <Check size={12} />}
+                                </button>
+                                {levels!.map(level => {
+                                    const isActive = currentQuality === level.index;
+                                    return (
+                                        <button
+                                            key={level.index}
+                                            className={['vp__settings-option', isActive ? 'vp__settings-option--active' : ''].filter(Boolean).join(' ')}
+                                            onClick={e => onQualityChange(e, level.index)}
+                                            role="option"
+                                            aria-selected={isActive}
+                                        >
+                                            <span>{level.label}</span>
+                                            {isActive && <Check size={12} />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
             <button
