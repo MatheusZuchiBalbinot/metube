@@ -55,13 +55,16 @@ class AuthController extends Controller
     }
 
     /**
-     * Update authenticated user profile.
+     * Update a user profile. Only the user themself may patch their record.
      *
+     * @param  string  $uuid  Target user UUID (must match the authenticated user)
      * @param  UpdateProfileRequest  $request  Validated: name?, bio?
      * @return JsonResponse User resource
      */
-    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    public function updateProfile(string $uuid, UpdateProfileRequest $request): JsonResponse
     {
+        abort_unless(auth()->user()->uuid === $uuid, 403);
+
         $user = $this->authService->updateProfile($request->validated());
 
         return $this->json(new UserResource($user));
@@ -98,14 +101,19 @@ class AuthController extends Controller
     /**
      * Reset the user's password using the given token.
      *
-     * @param  ResetPasswordRequest  $request  Validated: token, email, password, password_confirmation
+     * @param  string  $token  Password reset token (from URL)
+     * @param  ResetPasswordRequest  $request  Validated: email, password, password_confirmation
      * @return JsonResponse {message: string}
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    public function resetPassword(string $token, ResetPasswordRequest $request): JsonResponse
     {
-        $this->authService->resetPassword($request->validated());
+        $this->authService->resetPassword([
+            'token' => $token,
+            'email' => $request->validated('email'),
+            'password' => $request->validated('password'),
+        ]);
 
         return $this->json(['message' => trans('passwords.reset')]);
     }

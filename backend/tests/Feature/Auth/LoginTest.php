@@ -14,7 +14,7 @@ describe('login', function () {
     it('allows a user to login with valid credentials', function () {
         $user = User::factory()->create();
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/sessions', [
             'email' => $user->email,
             'password' => 'password',
         ])
@@ -26,7 +26,7 @@ describe('login', function () {
     it('fails with a wrong password', function () {
         $user = User::factory()->create();
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/sessions', [
             'email' => $user->email,
             'password' => 'wrong_password',
         ])
@@ -35,7 +35,7 @@ describe('login', function () {
     });
 
     it('fails with a nonexistent email', function () {
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/sessions', [
             'email' => 'nobody@example.com',
             'password' => 'password',
         ])->assertUnauthorized();
@@ -46,13 +46,13 @@ describe('login', function () {
 
 describe('validation', function () {
     it('requires an email', function () {
-        $this->postJson('/api/auth/login', ['password' => 'password'])
+        $this->postJson('/api/sessions', ['password' => 'password'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email']);
     });
 
     it('requires a valid email format', function () {
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/sessions', [
             'email' => 'not-an-email',
             'password' => 'password',
         ])
@@ -63,7 +63,7 @@ describe('validation', function () {
     it('requires a password', function () {
         $user = User::factory()->create();
 
-        $this->postJson('/api/auth/login', ['email' => $user->email])
+        $this->postJson('/api/sessions', ['email' => $user->email])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['password']);
     });
@@ -76,7 +76,7 @@ describe('authenticated endpoints', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->getJson('/api/auth/me')
+            ->getJson('/api/sessions/current')
             ->assertOk()
             ->assertJsonPath('email', $user->email)
             ->assertJsonPath('name', $user->name)
@@ -84,14 +84,14 @@ describe('authenticated endpoints', function () {
     });
 
     it('rejects an unauthenticated request', function () {
-        $this->getJson('/api/auth/me')->assertUnauthorized();
+        $this->getJson('/api/sessions/current')->assertUnauthorized();
     });
 
     it('lets a user logout', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user, 'web')
-            ->postJson('/api/auth/logout')
+            ->deleteJson('/api/sessions/current')
             ->assertOk()
             ->assertJsonStructure(['message']);
     });
@@ -107,7 +107,7 @@ describe('session version', function () {
         $this->actingAs($user)
             ->withHeaders(['Origin' => 'http://localhost'])
             ->withSession(['session_version' => $user->session_version])
-            ->getJson('/api/auth/me')
+            ->getJson('/api/sessions/current')
             ->assertOk();
 
         // Invalidate all sessions by bumping session_version to 2
@@ -118,7 +118,7 @@ describe('session version', function () {
         $this->actingAs($user)
             ->withHeaders(['Origin' => 'http://localhost'])
             ->withSession(['session_version' => 1])
-            ->getJson('/api/auth/me')
+            ->getJson('/api/sessions/current')
             ->assertUnauthorized();
     });
 });
@@ -132,14 +132,14 @@ describe('rate limiting', function () {
 
         foreach (range(1, 5) as $_) {
             $this->withServerVariables($serverVars)
-                ->postJson('/api/auth/login', [
+                ->postJson('/api/sessions', [
                     'email' => $user->email,
                     'password' => 'wrong',
                 ])->assertUnauthorized();
         }
 
         $this->withServerVariables($serverVars)
-            ->postJson('/api/auth/login', [
+            ->postJson('/api/sessions', [
                 'email' => $user->email,
                 'password' => 'wrong',
             ])->assertStatus(429);

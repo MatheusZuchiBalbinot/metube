@@ -14,26 +14,28 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 // ============================================================================
 
-Route::prefix('auth')->group(function (): void {
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
-    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
-});
+Route::post('/sessions', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/users', [AuthController::class, 'register']);
+Route::post('/password-resets', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
+Route::patch('/password-resets/{token}', [AuthController::class, 'resetPassword']);
 
 // ============================================================================
 // Protected Routes (Authenticated + Session Validation)
 // ============================================================================
 
 Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void {
-    // Auth
-    Route::prefix('auth')->group(function (): void {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
-        Route::patch('/me', [AuthController::class, 'updateProfile']);
-        Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
-        Route::post('/email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1');
-    });
+    // Session lifecycle
+    Route::get('/sessions/current', [AuthController::class, 'me']);
+    Route::delete('/sessions/current', [AuthController::class, 'logout']);
+
+    // User profile
+    Route::patch('/users/{uuid}', [AuthController::class, 'updateProfile']);
+
+    // Email verification
+    Route::get('/email-verifications/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->middleware('signed')->name('verification.verify');
+    Route::post('/email-verifications', [AuthController::class, 'resendVerification'])
+        ->middleware('throttle:6,1');
 
     // Videos
     Route::prefix('videos')->group(function (): void {
