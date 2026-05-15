@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\VideoStatus;
 use App\Events\VideoPublished;
+use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -59,6 +60,8 @@ class ProcessVideoUpload implements ShouldQueue
             'published_at' => $publishedAt,
         ]);
 
+        event(new VideoStatusUpdated($video, $newStatus));
+
         $isPublished = $newStatus === VideoStatus::PUBLISHED;
         if ($isPublished) {
             event(new VideoPublished($video));
@@ -68,10 +71,14 @@ class ProcessVideoUpload implements ShouldQueue
     /**
      * Clean up temporary files and mark the video as failed.
      */
-    public function failed(\Throwable $e): void
+    public function failed(\Throwable $_): void
     {
         app(VideoStorageService::class)->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
-        Video::find($this->video->id)?->update(['status' => VideoStatus::FAILED]);
+        $video = Video::find($this->video->id);
+        if ($video !== null) {
+            $video->update(['status' => VideoStatus::FAILED]);
+            event(new VideoStatusUpdated($video, VideoStatus::FAILED));
+        }
     }
 
     /**

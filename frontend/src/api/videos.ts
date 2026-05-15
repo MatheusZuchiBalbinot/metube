@@ -37,6 +37,11 @@ export type VideoChapter = VideoSummary['chapters'][number];
 
 class VideoApi {
     private readonly baseUrl = '/videos';
+    private readonly meUrl = '/users/me';
+
+    async myVideos(): Promise<VideoListResponse | null> {
+        return apiClient.getValidated(`${this.meUrl}/videos`, VideoListApiSchema);
+    }
 
     async list(params?: {
         page?: number

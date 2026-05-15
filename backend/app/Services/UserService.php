@@ -17,6 +17,14 @@ use Illuminate\Support\Facades\DB;
 class UserService
 {
     /**
+     * Get all videos owned by the user, regardless of status (including processing/failed).
+     */
+    public function getUserVideos(User $user): LengthAwarePaginator
+    {
+        return $user->videos()->with('channel')->latest()->paginate(50);
+    }
+
+    /**
      * Get all liked videos for a user.
      */
     public function getUserLikes(User $user): LengthAwarePaginator

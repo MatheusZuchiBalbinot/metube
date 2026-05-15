@@ -32,6 +32,7 @@ export interface VideoState {
     shortsVolume: number
     loading: boolean
     error: string | null
+    lastVideoStatusUpdate: { vuid: string; status: string } | null
 }
 
 const initialState: VideoState = {
@@ -51,6 +52,7 @@ const initialState: VideoState = {
     shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
     loading: false,
     error: null,
+    lastVideoStatusUpdate: null,
 };
 
 const videoSlice = createSlice({
@@ -67,6 +69,10 @@ const videoSlice = createSlice({
 
         addVideo(state, action: PayloadAction<Video>) {
             state.videos.unshift(action.payload);
+        },
+
+        updateVideoStatus(state, action: PayloadAction<{ vuid: string; status: string }>) {
+            state.lastVideoStatusUpdate = action.payload;
         },
 
         updateVideo(state, action: PayloadAction<Video>) {

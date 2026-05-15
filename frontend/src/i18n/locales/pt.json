@@ -123,6 +123,7 @@
         "no_own_videos": "Você ainda não enviou nenhum vídeo",
         "scheduled": "Agendado",
         "published": "Publicado",
+        "published_toast": "Seu vídeo está no ar!",
         "published_now": "Publicado imediatamente",
         "status_label": "Status",
         "views": "visualizações",
