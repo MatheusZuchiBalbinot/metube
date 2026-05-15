@@ -13,8 +13,10 @@ import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
+import { useScrollRestoration } from '@hooks/useScrollRestoration';
 import { useSearch } from '@context/search';
 import { STORAGE_KEYS } from '@utils/storageKeys';
+import EmailVerificationBanner from '@components/auth/verificationBanner';
 import './layout.css';
 
 function getInitialSidebarCollapsed(): boolean {
@@ -66,12 +68,14 @@ export default function AppLayout() {
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.video.activeTagView);
     const theaterMode = useAppSelector(s => s.video.theaterMode);
+    const user = useAppSelector(s => s.auth.user);
+    const isEmailUnverified = user !== null && user.emailVerifiedAt === undefined;
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
-    useEffect(() => {
-        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    useScrollRestoration();
 
+    useEffect(() => {
         const isTagViewOpen = activeTagView !== null;
         if (isTagViewOpen) {
             dispatch(videoActions.closeTagView());
@@ -103,6 +107,7 @@ export default function AppLayout() {
                 <div className="app-layout__bg-orb" />
             </div>
             <AppHeader onToggleSidebar={handleToggleSidebar} />
+            {isEmailUnverified && <EmailVerificationBanner />}
             <div className="app-layout__body">
                 <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
                 {!sidebarCollapsed && (
