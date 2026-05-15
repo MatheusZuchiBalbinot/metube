@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { apiClient } from './client';
 import type { User } from '@models/user';
+import type { Uuid } from './channels';
 import { UserApiSchema, LoginResponseApiSchema } from '@validation';
 
 export type { User } from '@models/user';
@@ -38,7 +39,6 @@ export interface ResetPasswordPayload {
 }
 
 class AuthApi {
-    private readonly baseUrl = '/auth';
     private readonly csrfUrl = '/sanctum/csrf-cookie';
 
     async getCsrfCookie(): Promise<void> {
@@ -46,35 +46,36 @@ class AuthApi {
     }
 
     async login(payload: LoginPayload): Promise<LoginResponse | null> {
-        return apiClient.postValidated(`${this.baseUrl}/login`, LoginResponseApiSchema, payload);
+        return apiClient.postValidated('/sessions', LoginResponseApiSchema, payload);
     }
 
     async logout(): Promise<void> {
-        await apiClient.post(`${this.baseUrl}/logout`);
+        await apiClient.delete('/sessions/current');
     }
 
     async me(): Promise<User | null> {
-        return apiClient.getValidated(`${this.baseUrl}/me`, UserApiSchema);
+        return apiClient.getValidated('/sessions/current', UserApiSchema);
     }
 
-    async updateProfile(payload: UpdateProfilePayload): Promise<User | null> {
-        return apiClient.patchValidated(`${this.baseUrl}/me`, UserApiSchema, payload);
+    async updateProfile(uuid: Uuid, payload: UpdateProfilePayload): Promise<User | null> {
+        return apiClient.patchValidated(`/users/${uuid}`, UserApiSchema, payload);
     }
 
     async register(payload: RegisterPayload): Promise<LoginResponse | null> {
-        return apiClient.postValidated(`${this.baseUrl}/register`, LoginResponseApiSchema, payload);
+        return apiClient.postValidated('/users', LoginResponseApiSchema, payload);
     }
 
     async forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
-        await apiClient.post(`${this.baseUrl}/password/forgot`, payload);
+        await apiClient.post('/password-resets', payload);
     }
 
     async resetPassword(payload: ResetPasswordPayload): Promise<void> {
-        await apiClient.post(`${this.baseUrl}/password/reset`, payload);
+        const { token, ...body } = payload;
+        await apiClient.patch(`/password-resets/${token}`, body);
     }
 
     async resendVerification(): Promise<void> {
-        await apiClient.post(`${this.baseUrl}/email/resend`);
+        await apiClient.post('/email-verifications');
     }
 }
 

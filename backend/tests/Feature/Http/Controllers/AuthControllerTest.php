@@ -12,7 +12,7 @@ describe('AuthController', function () {
     test('login authenticates user', function () {
         $user = User::factory()->create(['password' => bcrypt('password123')]);
 
-        $response = $this->postJson('/api/auth/login', [
+        $response = $this->postJson('/api/sessions', [
             'email' => $user->email,
             'password' => 'password123',
         ]);
@@ -24,7 +24,7 @@ describe('AuthController', function () {
     test('login fails with invalid credentials', function () {
         $user = User::factory()->create(['password' => bcrypt('password123')]);
 
-        $response = $this->postJson('/api/auth/login', [
+        $response = $this->postJson('/api/sessions', [
             'email' => $user->email,
             'password' => 'wrongpassword',
         ]);
@@ -32,17 +32,17 @@ describe('AuthController', function () {
         $response->assertUnauthorized();
     });
 
-    test('me returns authenticated user', function () {
+    test('current session returns authenticated user', function () {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->getJson('/api/auth/me');
+        $response = $this->actingAs($user)->getJson('/api/sessions/current');
 
         $response->assertOk();
         $response->assertJsonPath('uuid', $user->uuid);
     });
 
-    test('me fails without authentication', function () {
-        $response = $this->getJson('/api/auth/me');
+    test('current session fails without authentication', function () {
+        $response = $this->getJson('/api/sessions/current');
 
         $response->assertUnauthorized();
     });
@@ -50,7 +50,7 @@ describe('AuthController', function () {
     test('logout clears session', function () {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/auth/logout');
+        $response = $this->actingAs($user)->deleteJson('/api/sessions/current');
 
         $response->assertOk();
     });
@@ -58,7 +58,7 @@ describe('AuthController', function () {
     test('update profile modifies user data', function () {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->patchJson('/api/auth/me', [
+        $response = $this->actingAs($user)->patchJson("/api/users/{$user->uuid}", [
             'name' => 'New Name',
             'bio' => 'New Bio',
         ]);
@@ -69,5 +69,16 @@ describe('AuthController', function () {
             'name' => 'New Name',
             'bio' => 'New Bio',
         ]);
+    });
+
+    test('update profile rejects other users', function () {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $response = $this->actingAs($user)->patchJson("/api/users/{$other->uuid}", [
+            'name' => 'Hacked',
+        ]);
+
+        $response->assertForbidden();
     });
 });
