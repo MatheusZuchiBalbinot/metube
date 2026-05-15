@@ -13,7 +13,8 @@ import type { Uuid } from '@api';
 import { channel as channelApi } from '@api';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
-import { Avatar, Button, Input, Modal, Spinner, Tooltip } from '@ui';
+import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
+import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import TagInput from '@components/tag/input';
 import './profile.css';
@@ -374,8 +375,10 @@ export default function ProfilePage() {
 
             <main className="profile-page__main">
                 {loadingOwnVideos && activeTab === TAB.VIDEOS && (
-                    <div className="profile-page__loading">
-                        <Spinner />
+                    <div className="profile-page__grid">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <VideoCardSkeleton key={i} />
+                        ))}
                     </div>
                 )}
                 {!loadingOwnVideos && pinnedVideo && (
