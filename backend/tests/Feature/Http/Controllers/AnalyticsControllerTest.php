@@ -2,7 +2,7 @@
 
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
-use App\Events\VideoImpressed;
+use App\Events\VideoImpressionsBatch;
 use App\Events\VideoSkipped;
 use App\Models\User;
 use App\Models\Video;
@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Event;
 uses(RefreshDatabase::class);
 
 describe('AnalyticsController', function () {
-    test('POST /analytics/impressions logs one impression per vuid', function () {
+    test('POST /analytics/impressions dispatches one batch event for all vuids', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -29,7 +29,13 @@ describe('AnalyticsController', function () {
         ]);
 
         $response->assertNoContent();
-        Event::assertDispatchedTimes(VideoImpressed::class, 2);
+        Event::assertDispatchedTimes(VideoImpressionsBatch::class, 1);
+        Event::assertDispatched(
+            VideoImpressionsBatch::class,
+            fn (VideoImpressionsBatch $event): bool => count($event->items) === 2
+                && $event->source === 'feed'
+                && $event->sessionId === 'sess-1',
+        );
     });
 
     test('POST /analytics/impressions rejects invalid source', function () {
@@ -46,7 +52,7 @@ describe('AnalyticsController', function () {
 
     test('POST /analytics/clicks dispatches VideoClickedFromFeed', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -66,7 +72,7 @@ describe('AnalyticsController', function () {
 
     test('POST /analytics/searches dispatches SearchPerformed', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
@@ -87,7 +93,7 @@ describe('AnalyticsController', function () {
 
     test('POST /analytics/skips dispatches VideoSkipped', function () {
         Event::fake([
-            VideoImpressed::class,
+            VideoImpressionsBatch::class,
             VideoClickedFromFeed::class,
             SearchPerformed::class,
             VideoSkipped::class,
