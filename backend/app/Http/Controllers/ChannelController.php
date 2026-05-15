@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
 use App\Http\Resources\VideoResource;
-use App\Models\User;
 use App\Services\ChannelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -28,7 +27,7 @@ class ChannelController extends Controller
      */
     public function show(string $uuid): JsonResponse
     {
-        $user = User::byUuid($uuid)->firstOrFail();
+        $user = $this->channelService->getByUuid($uuid);
 
         return $this->json(new UserResource($user));
     }
@@ -43,8 +42,8 @@ class ChannelController extends Controller
      */
     public function videos(string $uuid): JsonResponse
     {
-        $user = User::byUuid($uuid)->firstOrFail();
-        $videos = $user->videos()->with('channel')->published()->latest()->paginate(15);
+        $channel = $this->channelService->getByUuid($uuid);
+        $videos = $this->channelService->listVideos($channel);
 
         return $this->json(VideoResource::collection($videos));
     }
