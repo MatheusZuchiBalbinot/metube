@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * UserService — Business logic for authenticated user data.
@@ -35,7 +35,7 @@ class UserService
     /**
      * Get all subscriptions for a user.
      *
-     * @return Collection<User>
+     * @return Collection<int, User>
      */
     public function getUserSubscriptions(User $user): Collection
     {
@@ -51,6 +51,7 @@ class UserService
     {
         return $user->history()
             ->filterByPeriod($period)
+            ->with('video')
             ->paginate(20);
     }
 
@@ -88,20 +89,31 @@ class UserService
             ->toArray();
     }
 
+    /**
+     * Get watch activity aggregated by day, newest first, limited to 365 days.
+     *
+     * Aggregates in SQL to avoid loading all history records into memory.
+     *
+     * @return list<array{date: string, count: int}>
+     */
     public function getHistoryEvents(User $user): array
     {
-        $events = $user->history()
-            ->select('id', 'video_id', 'watched_at')
-            ->with('video')
+        /** @var list<array{date: string, count: int}> */
+        return DB::table('watch_histories')
+            ->where('user_id', $user->id)
+            ->select(
+                DB::raw('DATE(watched_at) as date'),
+                DB::raw('COUNT(*) as count'),
+            )
+            ->groupBy(DB::raw('DATE(watched_at)'))
+            ->orderByDesc(DB::raw('DATE(watched_at)'))
+            ->limit(365)
             ->get()
-            ->groupBy(fn ($event) => $event->watched_at->toDateString());
-
-        return $events->map(function (BaseCollection $group) {
-            return [
-                'date' => $group->first()->watched_at->toDateString(),
-                'count' => $group->count(),
-                'videos' => $group->pluck('video')->values(),
-            ];
-        })->toArray();
+            ->map(fn (object $row) => [
+                'date' => (string) $row->date,
+                'count' => (int) $row->count,
+            ])
+            ->values()
+            ->toArray();
     }
 }

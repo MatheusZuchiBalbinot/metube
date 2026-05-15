@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\HistoryPeriod;
+use App\Http\Resources\UserResource;
 use App\Http\Resources\VideoResource;
+use App\Http\Resources\WatchHistoryResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,7 +53,7 @@ class UserController extends Controller
     {
         $channels = $this->userService->getUserSubscriptions(auth()->user());
 
-        return $this->json($channels);
+        return $this->json(UserResource::collection($channels));
     }
 
     /**
@@ -60,16 +62,16 @@ class UserController extends Controller
      * Supports filtering by period: today, week, month, all
      *
      * @param  Request  $request  Query: period?{today|week|month|all}, page?, perPage?
-     * @return JsonResponse array{data: HistoryEvent[], meta: {total: int, page: int}}
+     * @return JsonResponse array{data: array{vuid: string, watched_at: string}[], meta: {total: int, page: int}}
      */
     public function history(Request $request): JsonResponse
     {
         $periodValue = $request->query('period', 'all');
         $periodValue = is_string($periodValue) ? $periodValue : 'all';
         $period = HistoryPeriod::tryFrom($periodValue) ?? HistoryPeriod::ALL;
-        $events = $this->userService->getUserHistory(auth()->user(), $period->value);
+        $history = $this->userService->getUserHistory(auth()->user(), $period->value);
 
-        return $this->json($events);
+        return $this->json(WatchHistoryResource::collection($history));
     }
 
     /**
@@ -98,16 +100,15 @@ class UserController extends Controller
     }
 
     /**
-     * Get watch history events grouped by date.
+     * Get watch activity aggregated by day.
      *
-     * Groups views by day with video count. Useful for displaying
-     * activity heatmap on user profile.
+     * Useful for activity heatmaps. Returns up to 365 days, newest first.
      *
-     * @return array<string, array{date: string, count: int, videos: list}>
+     * @return JsonResponse array{data: array{date: string, count: int}[]}
      */
-    public function historyEvents(): array
+    public function historyEvents(): JsonResponse
     {
-        return $this->userService->getHistoryEvents(auth()->user());
+        return $this->json($this->userService->getHistoryEvents(auth()->user()));
     }
 
     /**
