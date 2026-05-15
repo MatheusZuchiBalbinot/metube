@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
@@ -31,8 +32,18 @@ function getEcho(): Echo<'reverb'> | null {
         wssPort: Number(import.meta.env.VITE_REVERB_PORT ?? 8080),
         forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
         enabledTransports: ['ws', 'wss'],
-        authEndpoint: '/api/broadcasting/auth',
-        withCredentials: true,
+        // Use axios so X-XSRF-TOKEN is sent automatically (Pusher's built-in
+        // XHR does not read the cookie, causing 419 CSRF errors).
+        authorizer: (channel: { name: string }) => ({
+            authorize: (socketId: string, callback: (error: Error | null, data: unknown) => void) => {
+                axios.post('/api/broadcasting/auth', {
+                    socket_id: socketId,
+                    channel_name: channel.name,
+                }, { withCredentials: true })
+                    .then(response => callback(null, response.data))
+                    .catch((error: Error) => callback(error, null));
+            },
+        }),
     });
 
     return echoInstance;
