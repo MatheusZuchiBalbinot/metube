@@ -135,6 +135,12 @@ export function makeRootState(overrides: Partial<RootState> = {}): RootState {
             loadingReplies: {},
             error: null,
         },
+        notifications: {
+            items: [],
+            unreadCount: 0,
+            hasMore: false,
+            loading: false,
+        },
         ...overrides,
     };
 }

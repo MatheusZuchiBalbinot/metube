@@ -23,10 +23,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => []}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
         );
         expect(container.querySelector('.comment-replies')).toBeEmptyDOMElement();
@@ -42,10 +44,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
         );
 
@@ -60,10 +64,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
         );
 
@@ -77,10 +83,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
         );
 
@@ -102,10 +110,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
             { preloadedState: state },
         );
@@ -128,10 +138,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
             { preloadedState: state },
         );
@@ -156,10 +168,12 @@ describe('CommentReplies', () => {
             <CommentReplies
                 parentCuid={parentCuid}
                 getReplies={() => replies}
+                loadingReplies={{}}
                 onToggleLike={noop}
                 onEdit={noop}
                 onDelete={noop}
                 onAddReply={noop}
+                onLoadReplies={noop}
             />,
             { preloadedState: state },
         );

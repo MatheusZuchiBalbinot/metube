@@ -32,6 +32,7 @@ function renderItem(overrides = {}, authUuid?: string) {
     renderWithProviders(
         <CommentItem
             comment={comment}
+            loadingReplies={{}}
             onToggleLike={noop}
             onEdit={noop}
             onDelete={noop}
@@ -145,6 +146,7 @@ describe('CommentItem', () => {
         renderWithProviders(
             <CommentItem
                 comment={comment}
+                loadingReplies={{}}
                 onToggleLike={onToggleLike}
                 onEdit={noop}
                 onDelete={noop}
