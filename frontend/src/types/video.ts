@@ -3,6 +3,12 @@ import type { Tag } from './tag';
 
 export type VideoId = string & { readonly _brand: 'VideoId' };
 
+export interface VideoCaption {
+    lang: string
+    label: string
+    url: string
+}
+
 export const VideoStatus = {
     PUBLISHED: 'published',
     SCHEDULED: 'scheduled',
@@ -27,4 +33,5 @@ export interface Video {
     status: VideoStatus
     duration?: number
     videoUrl?: string
+    captions?: VideoCaption[]
 }

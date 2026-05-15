@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { VideoStatus, type VideoId } from '@models/video';
+import { VideoStatus, type VideoId, type VideoCaption } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
 
@@ -20,6 +20,11 @@ export const VideoApiSchema = z.object({
     scheduled_at: z.string().datetime({ offset: true }).nullable().optional(),
     created_at: z.string().datetime({ offset: true }).optional(),
     tags: z.array(VideoTagSchema).default([]),
+    captions: z.array(z.object({
+        lang: z.string(),
+        label: z.string(),
+        url: z.string(),
+    })).default([]),
     channel: z.string(),
     channel_id: z.string().min(1),
 }).transform(raw => {
@@ -37,6 +42,7 @@ export const VideoApiSchema = z.object({
         createdAt,
         scheduledAt: raw.scheduled_at ?? undefined,
         tags: raw.tags,
+        captions: raw.captions as VideoCaption[],
         channel: raw.channel,
         channelId: raw.channel_id as unknown as ChannelId,
     };
