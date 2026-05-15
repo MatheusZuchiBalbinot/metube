@@ -58,12 +58,27 @@ export default function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps)
             ],
         },
         {
+            titleKey: 'shortcuts.player',
+            titleDefault: 'Player',
+            shortcuts: [
+                { keys: ['Space', 'K'], label: t('shortcuts.play_pause', 'Play / Pause') },
+                { keys: ['←', '→'], label: t('shortcuts.seek_5s', 'Seek ±5 seconds') },
+                { keys: ['↑', '↓'], label: t('shortcuts.volume', 'Volume ±10%') },
+                { keys: ['M'], label: t('shortcuts.mute', 'Mute toggle') },
+                { keys: ['F'], label: t('shortcuts.fullscreen', 'Fullscreen') },
+                { keys: ['T'], label: t('shortcuts.theater_mode', 'Theater mode') },
+                { keys: ['I'], label: t('shortcuts.pip', 'Picture in Picture') },
+                { keys: ['C'], label: t('shortcuts.captions', 'Captions toggle') },
+            ],
+            noteKey: 'shortcuts.player_note',
+            noteDefault: 'Available when a video is playing',
+        },
+        {
             titleKey: 'shortcuts.video_page',
             titleDefault: 'Video page',
             shortcuts: [
                 { keys: ['L'], label: t('shortcuts.like', 'Like video') },
                 { keys: ['S'], label: t('shortcuts.save', 'Save video') },
-                { keys: ['T'], label: t('shortcuts.theater_mode', 'Theater mode') },
             ],
             noteKey: 'shortcuts.video_note',
             noteDefault: 'Available only on the video page',
