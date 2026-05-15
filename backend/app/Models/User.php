@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Enums\PlaylistName;
+use App\Enums\ReactionType;
+use App\Notifications\ResetPasswordNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -22,7 +25,7 @@ use Illuminate\Support\Str;
  * @property bool $is_verified
  * @property int $session_version
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -106,7 +109,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Video::class, 'user_video_reactions')
             ->using(UserVideoReaction::class)
             ->withPivot('type')
-            ->wherePivot('type', '=', 'like');
+            ->wherePivot('type', '=', ReactionType::LIKE->value);
     }
 
     /**
@@ -119,7 +122,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Video::class, 'user_video_reactions')
             ->using(UserVideoReaction::class)
             ->withPivot('type')
-            ->wherePivot('type', '=', 'dislike');
+            ->wherePivot('type', '=', ReactionType::DISLIKE->value);
     }
 
     /**
@@ -160,6 +163,16 @@ class User extends Authenticatable
     public function getWatchLaterPlaylist(): Playlist
     {
         return $this->playlists()->where('name', PlaylistName::WATCH_LATER->value)->firstOrFail();
+    }
+
+    /**
+     * Override the default reset-password notification to link to the frontend SPA.
+     *
+     * @param  string  $token  Password reset token
+     */
+    public function sendPasswordResetNotification(mixed $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**
