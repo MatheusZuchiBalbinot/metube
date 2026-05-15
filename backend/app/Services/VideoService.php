@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Data\CreateVideoData;
+use App\Data\EmptyVideoSummary;
+use App\Data\UpdateVideoData;
 use App\Enums\ReactionType;
 use App\Enums\VideoEventType;
 use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
+use App\Events\VideoLiked;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
 use App\Events\VideoUndisliked;
@@ -15,7 +19,9 @@ use App\Events\VideoViewed;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\VideoSummary;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,35 +39,33 @@ class VideoService
      * Create a new video.
      *
      * @param  User  $user  Video owner (channel)
-     * @param  array<string, mixed>  $data  Validated data
+     * @param  CreateVideoData  $data  Validated and typed input
      * @return Video Created video
      */
-    public function createVideo(User $user, array $data): Video
+    public function createVideo(User $user, CreateVideoData $data): Video
     {
         return DB::transaction(function () use ($user, $data) {
             $video = Video::create([
                 'channel_id' => $user->id,
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'tags' => $data['tags'] ?? [],
+                'title' => $data->title,
+                'description' => $data->description,
+                'tags' => $data->tags,
                 'status' => VideoStatus::PROCESSING,
-                'scheduled_at' => $data['scheduled_at'] ?? null,
+                'scheduled_at' => $data->scheduledAt,
             ]);
 
-            /** @var \Illuminate\Http\UploadedFile $videoFile */
-            $videoFile = $data['video_file'];
-            $ext = $videoFile->getClientOriginalExtension();
-            $tmpPath = $videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
+            $ext = $data->videoFile->getClientOriginalExtension();
+            $tmpPath = $data->videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
 
             $tmpThumbPath = null;
-            if (isset($data['thumbnail_file'])) {
-                /** @var \Illuminate\Http\UploadedFile $thumbFile */
-                $thumbFile = $data['thumbnail_file'];
-                $thumbExt = $thumbFile->getClientOriginalExtension();
-                $tmpThumbPath = $thumbFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
+            if ($data->thumbnailFile !== null) {
+                $thumbExt = $data->thumbnailFile->getClientOriginalExtension();
+                $tmpThumbPath = $data->thumbnailFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
             }
 
             ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
+
+            Cache::tags(['feed'])->flush();
 
             return $video->load('channel');
         });
@@ -70,11 +74,25 @@ class VideoService
     /**
      * Get paginated videos with filters.
      *
+     * Caches the default feed (no search/tags/status filters) for 60 seconds.
+     *
      * @param  array<string, mixed>  $filters
      */
     public function listVideos(array $filters): LengthAwarePaginator
     {
-        return Video::filter($filters)->with('channel')->paginate(15);
+        $hasFilters = isset($filters['search']) || isset($filters['tags']) || isset($filters['status']);
+
+        if ($hasFilters) {
+            return $this->queryVideos($filters);
+        }
+
+        $page = (int) ($filters['page'] ?? 1);
+
+        return Cache::tags(['feed'])->remember(
+            "feed:page:{$page}",
+            60,
+            fn () => $this->queryVideos($filters),
+        );
     }
 
     /**
@@ -93,13 +111,15 @@ class VideoService
      * Update a video's metadata.
      *
      * @param  Video  $video  Video to update
-     * @param  array<string, mixed>  $data  Validated data
+     * @param  UpdateVideoData  $data  Validated and typed input
      * @return Video Updated video
      */
-    public function updateVideo(Video $video, array $data): Video
+    public function updateVideo(Video $video, UpdateVideoData $data): Video
     {
         return DB::transaction(function () use ($video, $data) {
-            $video->update(array_filter($data, fn ($v) => $v !== null));
+            $video->update($data->toUpdateArray());
+
+            Cache::tags(['feed'])->flush();
 
             return $video;
         });
@@ -116,25 +136,25 @@ class VideoService
      */
     public function deleteVideo(Video $video): void
     {
-        $videoUrl = $video->video_url;
-        $thumbnailUrl = $video->thumbnail_url;
+        $videoPath = $video->video_url;
+        $thumbnailPath = $video->thumbnail_url;
 
         DB::transaction(function () use ($video) {
             $video->delete();
         });
 
-        $this->deleteVideoFiles($videoUrl, $thumbnailUrl);
+        $this->deleteVideoFiles($videoPath, $thumbnailPath);
+
+        Cache::tags(['feed'])->flush();
     }
 
-    private function deleteVideoFiles(?string $videoUrl, ?string $thumbnailUrl): void
+    private function deleteVideoFiles(?string $videoPath, ?string $thumbnailPath): void
     {
-        foreach ([$videoUrl, $thumbnailUrl] as $url) {
-            if ($url === null) {
+        foreach ([$videoPath, $thumbnailPath] as $path) {
+            if ($path === null) {
                 continue;
             }
 
-            // Stored as root-relative path: /storage/videos/{file}
-            $path = ltrim(str_replace('/storage/', '', $url), '/');
             Storage::disk('public')->delete($path);
         }
     }
@@ -230,6 +250,11 @@ class VideoService
 
             if ($inserted > 0) {
                 event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
+                $likeCount = DB::table('user_video_reactions')
+                    ->where('video_id', $video->id)
+                    ->where('type', ReactionType::LIKE->value)
+                    ->count();
+                event(new VideoLiked($video, $user, $likeCount));
             }
         });
     }
@@ -361,40 +386,34 @@ class VideoService
      */
     public function publishDueVideos(): int
     {
-        $videos = Video::query()
+        return Video::query()
             ->where('status', VideoStatus::SCHEDULED)
             ->where('scheduled_at', '<=', now())
-            ->get();
-
-        foreach ($videos as $video) {
-            $video->update([
+            ->update([
                 'status' => VideoStatus::PUBLISHED,
-                'published_at' => $video->scheduled_at,
+                'published_at' => DB::raw('scheduled_at'),
+                'updated_at' => now(),
             ]);
-        }
-
-        return $videos->count();
     }
 
     /**
      * Get AI-generated summary for a video.
      *
      * @param  Video  $video  Video to get summary for
-     * @return \App\Models\VideoSummary|object Summary with keyPoints, chapters, readingMode
+     * @return VideoSummary|EmptyVideoSummary Summary with keyPoints, chapters, readingMode
      */
-    public function getSummary(Video $video)
+    public function getSummary(Video $video): VideoSummary|EmptyVideoSummary
     {
-        $summary = $video->summary;
+        return $video->summary ?? new EmptyVideoSummary;
+    }
 
-        if ($summary === null) {
-            // TODO: Implement AI summary generation
-            return (object) [
-                'key_points' => [],
-                'chapters' => [],
-                'reading_mode' => '',
-            ];
-        }
-
-        return $summary;
+    /**
+     * Execute the base video query with filters applied.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    private function queryVideos(array $filters): LengthAwarePaginator
+    {
+        return Video::filter($filters)->with('channel')->paginate(15);
     }
 }
