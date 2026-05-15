@@ -47,11 +47,21 @@ export function useRealtime(): void {
 
         channel.listen('.VideoStatusUpdated', (data: { vuid: string; status: string }) => {
             dispatch(videoActions.updateVideoStatus({ vuid: data.vuid, status: data.status }));
-            const isPublished = data.status === VideoStatus.PUBLISHED;
-            if (isPublished) {
+
+            if (data.status === VideoStatus.PROCESSING) {
+                dispatch(toastActions.addToast({
+                    message: t('video.processing_toast'),
+                    type: ToastType.INFO,
+                }));
+            } else if (data.status === VideoStatus.PUBLISHED) {
                 dispatch(toastActions.addToast({
                     message: t('video.published_toast'),
                     type: ToastType.SUCCESS,
+                }));
+            } else if (data.status === VideoStatus.FAILED) {
+                dispatch(toastActions.addToast({
+                    message: t('video.failed_toast'),
+                    type: ToastType.ERROR,
                 }));
             }
         });

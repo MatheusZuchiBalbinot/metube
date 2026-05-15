@@ -8,6 +8,8 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
@@ -24,6 +26,11 @@ Route::patch('/password-resets/{token}', [AuthController::class, 'resetPassword'
 // ============================================================================
 
 Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void {
+    // Private channel auth (Laravel Echo / Reverb)
+    Route::post('/broadcasting/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
+
     // Session lifecycle
     Route::get('/sessions/current', [AuthController::class, 'me']);
     Route::delete('/sessions/current', [AuthController::class, 'logout']);
