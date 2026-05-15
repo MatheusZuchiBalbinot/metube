@@ -19,6 +19,24 @@ export interface UpdateProfilePayload {
     bio?: string
 }
 
+export interface RegisterPayload {
+    name: string
+    email: string
+    password: string
+    password_confirmation: string
+}
+
+export interface ForgotPasswordPayload {
+    email: string
+}
+
+export interface ResetPasswordPayload {
+    token: string
+    email: string
+    password: string
+    password_confirmation: string
+}
+
 class AuthApi {
     private readonly baseUrl = '/auth';
     private readonly csrfUrl = '/sanctum/csrf-cookie';
@@ -41,6 +59,22 @@ class AuthApi {
 
     async updateProfile(payload: UpdateProfilePayload): Promise<User | null> {
         return apiClient.patchValidated(`${this.baseUrl}/me`, UserApiSchema, payload);
+    }
+
+    async register(payload: RegisterPayload): Promise<LoginResponse | null> {
+        return apiClient.postValidated(`${this.baseUrl}/register`, LoginResponseApiSchema, payload);
+    }
+
+    async forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/password/forgot`, payload);
+    }
+
+    async resetPassword(payload: ResetPasswordPayload): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/password/reset`, payload);
+    }
+
+    async resendVerification(): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/email/resend`);
     }
 }
 
