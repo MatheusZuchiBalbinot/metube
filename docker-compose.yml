@@ -46,6 +46,7 @@ services:
       - ./backend:/app
       - /app/vendor
       - /app/bootstrap/cache
+      - vidsum_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -65,6 +66,7 @@ services:
       - ./backend:/app
       - /app/vendor
       - /app/bootstrap/cache
+      - vidsum_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -84,6 +86,7 @@ services:
       - ./backend:/app
       - /app/vendor
       - /app/bootstrap/cache
+      - vidsum_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -110,7 +113,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./backend/storage/app/public:/var/www/storage:ro
+      - vidsum_storage:/var/www/storage-root:ro
     depends_on:
       - backend
     networks:
@@ -122,3 +125,4 @@ networks:
 
 volumes:
   pgdata:
+  vidsum_storage:
