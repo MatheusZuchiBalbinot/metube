@@ -18,6 +18,7 @@ use Illuminate\Support\Str;
  * @property string $title
  * @property string $description
  * @property array<string> $tags
+ * @property array<array{lang: string, label: string, url: string}> $captions
  * @property \App\Enums\VideoStatus $status
  * @property float|null $duration
  * @property int $views
@@ -26,6 +27,7 @@ use Illuminate\Support\Str;
  * @property \Illuminate\Support\Carbon|null $published_at
  * @property \Illuminate\Support\Carbon|null $scheduled_at
  * @property \App\Models\VideoSummary|null $summary
+ * @property-read \App\Models\User $channel
  */
 class Video extends Model
 {
@@ -51,6 +53,7 @@ class Video extends Model
     {
         return [
             'tags' => 'array',
+            'captions' => 'array',
             'status' => VideoStatus::class,
             'published_at' => 'datetime',
             'scheduled_at' => 'datetime',
@@ -111,7 +114,9 @@ class Video extends Model
     /**
      * Filter videos by search, tags, and status.
      *
-     * Search matches title, description, and tags (case-insensitive).
+     * On PostgreSQL, search uses a pre-computed tsvector column (GIN-indexed).
+     * On other drivers (SQLite in tests), falls back to LIKE.
+     * Tag filtering uses OR semantics: any matching tag includes the video.
      *
      * @param  Builder<Video>  $query
      * @param  array<string, mixed>  $filters
@@ -121,18 +126,26 @@ class Video extends Model
     {
         if (isset($filters['search'])) {
             $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
-            $operator = $isPgsql ? 'ilike' : 'like';
-            $term = "%{$filters['search']}%";
 
-            $query = $query->where(function (Builder $q) use ($operator, $term): void {
-                $q->where('title', $operator, $term)
-                    ->orWhere('description', $operator, $term)
-                    ->orWhere('tags', $operator, $term);
-            });
+            if ($isPgsql) {
+                $term = str_replace(' ', ' & ', trim($filters['search']));
+                $query = $query->whereRaw("search_tsv @@ to_tsquery('simple', ?)", [$term.':*']);
+            } else {
+                $term = "%{$filters['search']}%";
+                $query = $query->where(function (Builder $q) use ($term): void {
+                    $q->where('title', 'like', $term)
+                        ->orWhere('description', 'like', $term);
+                });
+            }
         }
 
         if (isset($filters['tags'])) {
-            $query = $query->whereJsonContains('tags', $filters['tags']);
+            $tags = $filters['tags'];
+            $query = $query->where(function (Builder $q) use ($tags): void {
+                foreach ($tags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
         }
 
         if (isset($filters['status'])) {
@@ -158,10 +171,12 @@ class Video extends Model
     /**
      * Order by publication date, newest first.
      *
+     * Named distinctly from Eloquent's native latest() which orders by created_at.
+     *
      * @param  Builder<Video>  $query
      * @return Builder<Video>
      */
-    public function scopeLatest(Builder $query): Builder
+    public function scopeNewestPublished(Builder $query): Builder
     {
         $query->orderByDesc('published_at');
 

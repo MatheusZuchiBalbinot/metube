@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -18,8 +19,8 @@ return new class extends Migration
             $table->string('status', 20)->default('draft');
             $table->double('duration')->nullable();
             $table->unsignedBigInteger('views')->default(0);
-            $table->string('video_url', 2048)->nullable();
-            $table->string('thumbnail_url', 2048)->nullable();
+            $table->string('video_url', 500)->nullable();
+            $table->string('thumbnail_url', 500)->nullable();
             $table->timestamp('published_at')->nullable();
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamps();
@@ -29,6 +30,20 @@ return new class extends Migration
             $table->index('published_at');
             $table->index(['status', 'published_at']);
         });
+
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement("
+                ALTER TABLE videos
+                ADD COLUMN search_tsv tsvector
+                    GENERATED ALWAYS AS (
+                        setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+                        setweight(to_tsvector('simple', coalesce(description, '')), 'B')
+                    ) STORED
+            ");
+
+            DB::statement('CREATE INDEX videos_search_tsv_gin ON videos USING GIN (search_tsv)');
+            DB::statement('CREATE INDEX videos_tags_gin ON videos USING GIN (tags)');
+        }
     }
 
     public function down(): void
