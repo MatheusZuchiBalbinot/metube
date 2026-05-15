@@ -6,6 +6,7 @@ import toastSlice from './toastSlice';
 import subscriptionSlice from './subscriptionSlice';
 import playlistSlice from './playlistSlice';
 import searchSlice from './searchSlice';
+import notificationsSlice from './notificationsSlice';
 
 export const rootReducer = {
     comment: commentSlice.reducer,
@@ -16,4 +17,5 @@ export const rootReducer = {
     subscription: subscriptionSlice.reducer,
     playlist: playlistSlice.reducer,
     search: searchSlice.reducer,
+    notifications: notificationsSlice.reducer,
 };

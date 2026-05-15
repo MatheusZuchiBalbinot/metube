@@ -1,0 +1,47 @@
+.notifications-bell {
+    position: relative;
+}
+
+.notifications-bell__btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text-secondary, #555);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.notifications-bell__btn:hover {
+    background-color: var(--color-surface-raised, #f5f5f5);
+    color: var(--color-text-primary, #111);
+}
+
+.notifications-bell__badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background-color: var(--color-error, #ef4444);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.notifications-bell__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 200;
+}
