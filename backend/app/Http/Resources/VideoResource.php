@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class VideoResource extends JsonResource
 {
@@ -17,12 +18,13 @@ class VideoResource extends JsonResource
             'status' => $this->status->value,
             'views' => $this->views,
             'duration' => $this->duration,
-            'video_url' => $this->video_url,
-            'thumbnail_url' => $this->thumbnail_url,
+            'video_url' => $this->video_url !== null ? Storage::disk('public')->url($this->video_url) : null,
+            'thumbnail_url' => $this->thumbnail_url !== null ? Storage::disk('public')->url($this->thumbnail_url) : null,
             'published_at' => $this->published_at?->toIso8601String(),
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
             'tags' => $this->tags ?? [],
+            'captions' => $this->captions ?? [],
             'channel' => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
             'channel_id' => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),
         ];
