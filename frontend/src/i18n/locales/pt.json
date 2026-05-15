@@ -8,9 +8,12 @@
         "back": "Voltar",
         "close": "Fechar",
         "remove": "Remover",
+        "undo": "Desfazer",
+        "try_again": "Tentar novamente",
         "not_found_title": "404",
         "not_found_message": "Esta página não existe.",
-        "go_home": "Voltar ao início"
+        "go_home": "Voltar ao início",
+        "dismiss": "Dispensar"
     },
     "auth": {
         "sign_in": "Entrar",
@@ -21,7 +24,45 @@
         "password_placeholder": "••••••••",
         "signing_in": "Entrando...",
         "invalid_credentials": "E-mail ou senha inválidos. Tente novamente.",
-        "session_expired": "Sua sessão expirou. Por favor, entre novamente."
+        "session_expired": "Sua sessão expirou. Por favor, entre novamente.",
+        "forgot_password": "Esqueceu a senha?",
+        "no_account": "Não tem uma conta?",
+        "signup": {
+            "title": "Criar conta",
+            "subtitle": "Junte-se ao Vidsum para assistir e enviar vídeos",
+            "name": "Nome",
+            "name_placeholder": "Seu nome",
+            "confirm_password": "Confirmar senha",
+            "submit": "Criar conta",
+            "have_account": "Já tem uma conta?",
+            "passwords_mismatch": "As senhas não coincidem.",
+            "error": "Algo deu errado. Tente novamente."
+        },
+        "forgot": {
+            "title": "Esqueceu a senha",
+            "subtitle": "Informe seu e-mail e enviaremos um link de redefinição",
+            "submit": "Enviar link de redefinição",
+            "sent": "Um link foi enviado para {{email}}. Verifique sua caixa de entrada.",
+            "back_to_login": "Voltar para entrar",
+            "error": "Não foi possível enviar o link. Tente novamente."
+        },
+        "reset": {
+            "title": "Redefinir senha",
+            "subtitle": "Escolha uma nova senha para sua conta",
+            "new_password": "Nova senha",
+            "submit": "Redefinir senha",
+            "success": "Senha redefinida com sucesso. Você pode entrar agora.",
+            "passwords_mismatch": "As senhas não coincidem.",
+            "error": "Não foi possível redefinir a senha. O link pode ter expirado.",
+            "invalid_link": "Este link de redefinição é inválido ou expirou.",
+            "request_new": "Solicitar novo link"
+        },
+        "verify": {
+            "prompt": "Por favor, verifique seu endereço de e-mail para acessar todos os recursos.",
+            "resend": "Reenviar e-mail",
+            "sending": "Enviando...",
+            "sent": "E-mail de verificação enviado! Verifique sua caixa de entrada."
+        }
     },
     "dashboard": {
         "welcome": "Bem-vindo, {{name}}",
@@ -245,6 +286,7 @@
     "shortcuts": {
         "title": "Atalhos de teclado",
         "global": "Navegação",
+        "player": "Player",
         "video_page": "Página de vídeo",
         "focus_search": "Focar na busca",
         "open_upload": "Enviar vídeo",
@@ -252,9 +294,17 @@
         "go_profile": "Ir para Perfil",
         "go_search": "Ir para Busca",
         "show_shortcuts": "Mostrar atalhos",
+        "play_pause": "Reproduzir / Pausar",
+        "seek_5s": "Avançar/voltar ±5 segundos",
+        "volume": "Volume ±10%",
+        "mute": "Silenciar/ativar som",
+        "fullscreen": "Tela cheia",
+        "theater_mode": "Modo cinema",
+        "pip": "Picture in Picture",
+        "captions": "Ativar/desativar legendas",
         "like": "Curtir vídeo",
         "save": "Salvar vídeo",
-        "theater_mode": "Modo teatro",
+        "player_note": "Disponível quando um vídeo está reproduzindo",
         "video_note": "Disponível apenas na página de vídeo",
         "tip": "Atalhos de sequência: pressione G primeiro, depois a segunda tecla"
     },
@@ -324,11 +374,17 @@
         "unmute": "Ativar som",
         "volume": "Volume",
         "speed": "Velocidade",
+        "quality": "Qualidade",
+        "quality_auto": "Automático",
         "settings": "Configurações",
         "theater": "Modo cinema",
         "exit_theater": "Sair do modo cinema",
         "fullscreen": "Tela cheia",
-        "exit_fullscreen": "Sair da tela cheia"
+        "exit_fullscreen": "Sair da tela cheia",
+        "pip": "Picture in picture",
+        "exit_pip": "Sair do picture in picture",
+        "captions": "Legendas",
+        "captions_off": "Desativar"
     },
     "comments": {
         "title_one": "{{count}} comentário",
@@ -356,5 +412,20 @@
         "history_viewing": "Visualizando versão {{n}}",
         "history_view_current": "Voltar para atual",
         "submit_hint": "Ctrl+Enter"
+    },
+    "notifications": {
+        "bell": {
+            "label": "Notificações"
+        },
+        "empty": "Tudo em dia",
+        "mark_all_read": "Marcar tudo como lido",
+        "more": "Role para ver mais",
+        "types": {
+            "comment_replied": "Respondeu ao seu comentário",
+            "comment_liked": "Curtiu seu comentário",
+            "video_liked": "Curtiu seu vídeo",
+            "new_subscriber": "Se inscreveu no seu canal",
+            "video_from_subscription": "Novo vídeo de um canal que você segue"
+        }
     }
 }
