@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { type Video, type VideoId } from '@models/video';
+import { type Video, type VideoId, type VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
@@ -73,6 +73,11 @@ const videoSlice = createSlice({
 
         updateVideoStatus(state, action: PayloadAction<{ vuid: string; status: string }>) {
             state.lastVideoStatusUpdate = action.payload;
+            const idx = state.videos.findIndex(v => (v.id as unknown as string) === action.payload.vuid);
+            const isFound = idx !== -1;
+            if (isFound) {
+                state.videos[idx].status = action.payload.status as VideoStatus;
+            }
         },
 
         updateVideo(state, action: PayloadAction<Video>) {

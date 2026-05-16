@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Clock, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
@@ -69,18 +69,36 @@ export default function ProfilePage() {
     const [ownVideos, setOwnVideos] = useState<Video[]>([]);
     const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
     const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
+    const reduxVideosCount = useAppSelector(state => state.video.videos.length);
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setLoadingOwnVideos(true);
+        let cancelled = false;
+        const isInitial = !hasFetchedRef.current;
+        if (isInitial) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLoadingOwnVideos(true);
+        }
         channelApi.videos(channelId as unknown as Uuid).then(result => {
-            if (result) {
-                setOwnVideos(result.data);
+            if (cancelled || !result) {
+                return;
             }
-        }).finally(() => setLoadingOwnVideos(false));
-    }, [channelId]);
+            setOwnVideos(result.data);
+        }).finally(() => {
+            if (cancelled) {
+                return;
+            }
+            hasFetchedRef.current = true;
+            setLoadingOwnVideos(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [channelId, lastVideoStatusUpdate, reduxVideosCount]);
 
     useEffect(() => {
+        // Optimistic local patch — applies WS status update instantly so the
+        // user sees the badge change before the refetch lands.
         const hasUpdate = lastVideoStatusUpdate !== null && isOwnProfile;
         if (!hasUpdate) {
             return;
