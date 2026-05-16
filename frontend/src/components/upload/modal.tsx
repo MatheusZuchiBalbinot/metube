@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import * as tus from 'tus-js-client';
 import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { useVideo } from '@hooks/useVideo';
-import { useUpload } from '@hooks/useUpload';
+import { useTusUpload } from '@hooks/useTusUpload';
 import { useVideoProcessingPoll } from '@hooks/useVideoProcessingPoll';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions } from '@store/toastSlice';
@@ -18,6 +19,7 @@ import Badge from '@ui/badge/badge';
 import './modal.css';
 import { ToastType } from '@enums/toastType';
 import { UploadMode } from '@enums/uploadMode';
+import { UploadStatus } from '@enums/uploadStatus';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,32 @@ interface BatchItem {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const TUS_CHUNK_SIZE = 5 * 1024 * 1024;
+const TUS_RETRY_DELAYS = [0, 1_000, 3_000, 5_000, 10_000];
+
+function uploadViaTus(file: File, onProgress: (pct: number) => void): Promise<string | null> {
+    return new Promise(resolve => {
+        const upload = new tus.Upload(file, {
+            endpoint: '/api/uploads/tus',
+            retryDelays: TUS_RETRY_DELAYS,
+            chunkSize: TUS_CHUNK_SIZE,
+            metadata: { filename: file.name, filetype: file.type },
+            onError: () => resolve(null),
+            onProgress: (loaded, total) => {
+                const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+                onProgress(pct);
+            },
+            onSuccess: () => {
+                const url = upload.url;
+                const isUrlMissing = url === null || url === undefined;
+                if (isUrlMissing) { resolve(null); return; }
+                resolve(url.split('/').pop() ?? null);
+            },
+        });
+        upload.start();
+    });
+}
 
 const INITIAL_FORM: FormState = {
     title: '',
@@ -81,7 +109,7 @@ export default function UploadModal() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
-    const { progress, status: uploadStatus, upload, reset: resetUpload } = useUpload();
+    const { progress, status: tusStatus, uploadFile, reset: resetTus } = useTusUpload();
     const allVideos = useAppSelector(s => s.video.videos);
 
     const existingTags = useMemo(() => {
@@ -101,7 +129,7 @@ export default function UploadModal() {
     // ─── Single mode state ────────────────────────────────────────────────────
     const [form, setForm] = useState<FormState>(INITIAL_FORM);
     const [titleShakeKey, setTitleShakeKey] = useState(0);
-    const [pollingVuid, setPollingVuid] = useState<Vuid | null>(null);
+    const [pollingVuids, setPollingVuids] = useState<Vuid[]>([]);
     const videoObjectUrlRef = useRef<string | null>(null);
     const thumbObjectUrlRef = useRef<string | null>(null);
 
@@ -113,14 +141,14 @@ export default function UploadModal() {
 
     const previewStatus = computeStatus(form.publishAt);
     const isScheduled = previewStatus === VideoStatus.SCHEDULED;
-    const isUploading = uploadStatus === 'uploading';
+    const isUploading = tusStatus === UploadStatus.UPLOADING;
     const hasPreview = form.thumbnailPreviewUrl !== null || form.videoObjectUrl !== null;
     const isBusy = isUploading || isBatchUploading;
 
     const batchPending = batchItems.filter(i => i.status === 'pending');
     const batchHasItems = batchItems.length > 0;
 
-    useVideoProcessingPoll(pollingVuid);
+    useVideoProcessingPoll(pollingVuids);
 
     // ─── Single mode handlers ─────────────────────────────────────────────────
 
@@ -177,7 +205,7 @@ export default function UploadModal() {
     function resetSingleForm() {
         revokeObjectUrls();
         setForm(INITIAL_FORM);
-        resetUpload();
+        resetTus();
     }
 
     function validateForm(): boolean {
@@ -195,26 +223,40 @@ export default function UploadModal() {
         return true;
     }
 
-    async function handleSingleSubmit(e: React.FormEvent) {
-        e.preventDefault();
+    async function runSingleUpload() {
         const isValid = validateForm();
         if (!isValid) {
             return;
         }
+
+        const videoResult = await uploadFile(form.videoFile!);
+        const hasVideoError = videoResult === null;
+        if (hasVideoError) {
+            dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: ToastType.ERROR }));
+            return;
+        }
+
+        let thumbnailKey: string | undefined;
+        const hasThumbnail = form.thumbnailFile !== null;
+        if (hasThumbnail) {
+            const thumbResult = await uploadFile(form.thumbnailFile!);
+            thumbnailKey = thumbResult?.uploadKey;
+        }
+
         const status = computeStatus(form.publishAt);
         const isScheduledStatus = status === VideoStatus.SCHEDULED;
         const scheduledAt = isScheduledStatus
             ? new Date(`${form.publishAt!}T00:00:00`).toISOString()
             : undefined;
 
-        const result = await upload({
+        const result = await videoApi.finalize({
+            uploadKey: videoResult.uploadKey,
+            thumbnailKey,
             title: form.title.trim(),
             description: form.description.trim(),
             tags: form.tags,
             status,
             scheduledAt,
-            videoFile: form.videoFile!,
-            thumbnail: form.thumbnailFile ?? undefined,
         });
 
         if (result === null) {
@@ -223,10 +265,15 @@ export default function UploadModal() {
         }
 
         addVideo(result);
-        setPollingVuid(result.id as unknown as Vuid);
+        setPollingVuids(prev => [...prev, result.id as unknown as Vuid]);
         dispatch(toastActions.addToast({ message: t('video.processing_toast'), type: ToastType.INFO }));
         closeUploadModal();
         resetSingleForm();
+    }
+
+    async function handleSingleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        await runSingleUpload();
     }
 
     // ─── Batch mode handlers ──────────────────────────────────────────────────
@@ -272,15 +319,30 @@ export default function UploadModal() {
         await Promise.all(toUpload.map(async (item) => {
             setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading' } : i));
 
-            const result = await videoApi.create(
-                { title: item.title, description: '', tags: [], status: VideoStatus.PUBLISHED, videoFile: item.file },
-                // eslint-disable-next-line max-nested-callbacks
-                (p) => setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: p.percent } : i)),
+            // eslint-disable-next-line max-nested-callbacks
+            const uploadKey = await uploadViaTus(item.file, (pct) =>
+                setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: pct } : i)),
             );
+
+            const hasUploadError = uploadKey === null;
+            if (hasUploadError) {
+                errorCount++;
+                setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error' } : i));
+                return;
+            }
+
+            const result = await videoApi.finalize({
+                uploadKey,
+                title: item.title,
+                description: '',
+                tags: [],
+                status: VideoStatus.PUBLISHED,
+            });
 
             if (result) {
                 doneCount++;
                 addVideo(result);
+                setPollingVuids(prev => [...prev, result.id as unknown as Vuid]);
             } else {
                 errorCount++;
             }
@@ -393,7 +455,7 @@ export default function UploadModal() {
             <Button variant="ghost" size="md" onClick={handleClose} disabled={isBusy}>
                 {t('common.cancel')}
             </Button>
-            <Button variant="primary" size="md" onClick={handleSingleSubmit} disabled={isBusy}>
+            <Button variant="primary" size="md" onClick={() => void runSingleUpload()} disabled={isBusy}>
                 {isUploading ? t('video.uploading') : t('video.upload_submit')}
             </Button>
         </div>
