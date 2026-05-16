@@ -224,7 +224,7 @@ export default function UploadModal() {
 
         addVideo(result);
         setPollingVuid(result.id as unknown as Vuid);
-        dispatch(toastActions.addToast({ message: t('toast.video_uploaded'), type: ToastType.SUCCESS }));
+        dispatch(toastActions.addToast({ message: t('video.processing_toast'), type: ToastType.INFO }));
         closeUploadModal();
         resetSingleForm();
     }

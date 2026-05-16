@@ -31,8 +31,8 @@ interface VideoCardProps {
     onDelete?: (id: VideoId) => void
 }
 
-function buildVideoCardClass(showActions: boolean) {
-    return ['video-card', showActions ? 'video-card--with-actions' : '']
+function buildVideoCardClass(showActions: boolean, notInteractive: boolean) {
+    return ['video-card', showActions ? 'video-card--with-actions' : '', notInteractive ? 'video-card--not-interactive' : '']
         .filter(Boolean)
         .join(' ');
 }
@@ -96,12 +96,16 @@ const VideoCard = memo(function VideoCard({
         }).catch(() => {});
     }
 
+    const isNotInteractive = isProcessing || isFailed;
+
     function handleCardClick() {
+        if (isNotInteractive) return;
         trackClick();
         navigate(videoUrl(video.id));
     }
 
     function handleCardKeyDown(e: React.KeyboardEvent) {
+        if (isNotInteractive) return;
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
         if (!isActivationKey) {
             return;
@@ -142,8 +146,8 @@ const VideoCard = memo(function VideoCard({
     return (
         <article
             ref={cardRef}
-            className={buildVideoCardClass(showActions)}
-            tabIndex={0}
+            className={buildVideoCardClass(showActions, isNotInteractive)}
+            tabIndex={isNotInteractive ? -1 : 0}
             onClick={handleCardClick}
             onKeyDown={handleCardKeyDown}
             style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}

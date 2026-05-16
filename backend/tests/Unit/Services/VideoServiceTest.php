@@ -15,6 +15,7 @@ use App\Models\Video;
 use App\Services\VideoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,7 @@ describe('VideoService', function () {
     $service = new VideoService;
 
     beforeEach(function () use (&$service) {
+        Cache::flush();
         $service = new VideoService;
 
         Queue::fake();
@@ -60,12 +62,22 @@ describe('VideoService', function () {
     });
 
     test('list videos returns paginated results', function () use (&$service) {
-        Video::factory(20)->create();
+        Video::factory(20)->create(['status' => VideoStatus::PUBLISHED]);
 
         $result = $service->listVideos([]);
 
         expect($result->count())->toBe(15);
         expect($result->hasPages())->toBeTrue();
+    });
+
+    test('list videos excludes non-published videos', function () use (&$service) {
+        Video::factory(3)->create(['status' => VideoStatus::PUBLISHED]);
+        Video::factory(2)->create(['status' => VideoStatus::PROCESSING]);
+        Video::factory()->create(['status' => VideoStatus::FAILED]);
+
+        $result = $service->listVideos([]);
+
+        expect($result->total())->toBe(3);
     });
 
     test('get video by uuid returns correct video', function () use (&$service) {
