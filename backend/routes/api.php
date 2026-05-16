@@ -6,45 +6,67 @@ use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\TusController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
-// ============================================================================
-// Public Routes
-// ============================================================================
+// ── Public ────────────────────────────────────────────────────────────────────
 
-Route::post('/sessions', [AuthController::class, 'login'])->middleware('throttle:login');
-Route::post('/users', [AuthController::class, 'register']);
-Route::post('/password-resets', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
-Route::patch('/password-resets/{token}', [AuthController::class, 'resetPassword']);
+Route::prefix('sessions')->group(function (): void {
+    Route::post('/', [AuthController::class, 'login'])->middleware('throttle:login');
+});
 
-// ============================================================================
-// Protected Routes (Authenticated + Session Validation)
-// ============================================================================
+Route::prefix('users')->group(function (): void {
+    Route::post('/', [AuthController::class, 'register']);
+});
+
+Route::prefix('password-resets')->middleware('throttle:password-reset')->group(function (): void {
+    Route::post('/', [AuthController::class, 'forgotPassword']);
+    Route::patch('/{token}', [AuthController::class, 'resetPassword']);
+});
+
+// ── Protected (auth:sanctum + session.version) ────────────────────────────────
+
+Broadcast::routes(['middleware' => ['auth:sanctum', 'session.version']]);
 
 Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void {
-    // Private channel auth (Laravel Echo / Reverb)
-    Route::post('/broadcasting/auth', function (Request $request) {
-        return Broadcast::auth($request);
+    Route::prefix('sessions')->group(function (): void {
+        Route::get('/current', [AuthController::class, 'me']);
+        Route::delete('/current', [AuthController::class, 'logout']);
     });
 
-    // Session lifecycle
-    Route::get('/sessions/current', [AuthController::class, 'me']);
-    Route::delete('/sessions/current', [AuthController::class, 'logout']);
+    Route::prefix('users')->group(function (): void {
+        Route::patch('/{uuid}', [AuthController::class, 'updateProfile']);
 
-    // User profile
-    Route::patch('/users/{uuid}', [AuthController::class, 'updateProfile']);
+        Route::prefix('me')->group(function (): void {
+            Route::get('/likes', [UserController::class, 'likes']);
+            Route::get('/saved', [UserController::class, 'saved']);
+            Route::get('/subscriptions', [UserController::class, 'subscriptions']);
+            Route::get('/progress', [UserController::class, 'progress']);
 
-    // Email verification
-    Route::get('/email-verifications/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-        ->middleware('signed')->name('verification.verify');
-    Route::post('/email-verifications', [AuthController::class, 'resendVerification'])
-        ->middleware('throttle:6,1');
+            Route::prefix('history')->group(function (): void {
+                Route::get('/', [UserController::class, 'history']);
+                Route::get('/events', [UserController::class, 'historyEvents']);
+                Route::delete('/', [UserController::class, 'clearHistory']);
+                Route::delete('/{vuid}', [UserController::class, 'removeHistory']);
+            });
+        });
+    });
 
-    // Videos
+    Route::prefix('email-verifications')->middleware('throttle:email-verification')->group(function (): void {
+        Route::get('/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+            ->middleware('signed')
+            ->name('verification.verify');
+        Route::post('/', [AuthController::class, 'resendVerification']);
+    });
+
+    Route::prefix('uploads')->group(function (): void {
+        Route::any('/tus{suffix?}', [TusController::class, 'handle'])
+            ->where('suffix', '.*');
+    });
+
     Route::prefix('videos')->group(function (): void {
         Route::get('/', [VideoController::class, 'index']);
         Route::post('/', [VideoController::class, 'store']);
@@ -58,40 +80,11 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{vuid}/save', [VideoController::class, 'toggleSave']);
         Route::put('/{vuid}/progress', [VideoController::class, 'updateProgress']);
         Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
-    });
 
-    // User library — top-level resources scoped to the authenticated user
-    Route::get('/likes', [UserController::class, 'likes']);
-    Route::get('/saved', [UserController::class, 'saved']);
-    Route::get('/subscriptions', [UserController::class, 'subscriptions']);
-    Route::get('/progress', [UserController::class, 'progress']);
-
-    Route::prefix('history')->group(function (): void {
-        Route::get('/', [UserController::class, 'history']);
-        Route::get('/events', [UserController::class, 'historyEvents']);
-        Route::delete('/', [UserController::class, 'clearHistory']);
-        Route::delete('/{vuid}', [UserController::class, 'removeHistory']);
-    });
-
-    // Channels
-    Route::prefix('channels/{uuid}')->group(function (): void {
-        Route::get('/', [ChannelController::class, 'show']);
-        Route::get('/videos', [ChannelController::class, 'videos']);
-        Route::post('/subscription', [ChannelController::class, 'toggleSubscription']);
-    });
-
-    // Analytics (client-reported events for the recommender)
-    Route::prefix('analytics')->group(function (): void {
-        Route::post('/impressions', [AnalyticsController::class, 'impressions']);
-        Route::post('/clicks', [AnalyticsController::class, 'click']);
-        Route::post('/searches', [AnalyticsController::class, 'search']);
-        Route::post('/skips', [AnalyticsController::class, 'skip']);
-    });
-
-    // Comments
-    Route::prefix('videos/{vuid}/comments')->group(function (): void {
-        Route::get('/', [CommentController::class, 'index']);
-        Route::post('/', [CommentController::class, 'store']);
+        Route::prefix('{vuid}/comments')->group(function (): void {
+            Route::get('/', [CommentController::class, 'index']);
+            Route::post('/', [CommentController::class, 'store']);
+        });
     });
 
     Route::prefix('comments/{comment}')->group(function (): void {
@@ -102,16 +95,12 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/versions', [CommentController::class, 'versions']);
     });
 
-    // Notifications
-    Route::prefix('notifications')->group(function (): void {
-        Route::get('/', [NotificationsController::class, 'index']);
-        Route::get('/unread-count', [NotificationsController::class, 'unreadCount']);
-        Route::post('/read-all', [NotificationsController::class, 'readAll']);
-        Route::post('/{notification}/read', [NotificationsController::class, 'markRead']);
-        Route::delete('/{notification}', [NotificationsController::class, 'destroy']);
+    Route::prefix('channels/{uuid}')->group(function (): void {
+        Route::get('/', [ChannelController::class, 'show']);
+        Route::get('/videos', [ChannelController::class, 'videos']);
+        Route::post('/subscription', [ChannelController::class, 'toggleSubscription']);
     });
 
-    // Playlists
     Route::prefix('playlists')->group(function (): void {
         Route::get('/', [PlaylistController::class, 'index']);
         Route::post('/', [PlaylistController::class, 'store']);
@@ -120,9 +109,25 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::delete('/{puid}', [PlaylistController::class, 'destroy']);
 
         Route::prefix('{puid}/videos')->group(function (): void {
+            Route::get('/', [PlaylistController::class, 'listVideos']);
             Route::post('/', [PlaylistController::class, 'addVideo']);
-            Route::delete('/{vuid}', [PlaylistController::class, 'removeVideo']);
             Route::put('/', [PlaylistController::class, 'reorderVideos']);
+            Route::delete('/{vuid}', [PlaylistController::class, 'removeVideo']);
         });
+    });
+
+    Route::prefix('notifications')->group(function (): void {
+        Route::get('/', [NotificationsController::class, 'index']);
+        Route::get('/unread-count', [NotificationsController::class, 'unreadCount']);
+        Route::post('/read-all', [NotificationsController::class, 'readAll']);
+        Route::post('/{notification}/read', [NotificationsController::class, 'markRead']);
+        Route::delete('/{notification}', [NotificationsController::class, 'destroy']);
+    });
+
+    Route::prefix('analytics')->group(function (): void {
+        Route::post('/impressions', [AnalyticsController::class, 'impressions']);
+        Route::post('/clicks', [AnalyticsController::class, 'click']);
+        Route::post('/searches', [AnalyticsController::class, 'search']);
+        Route::post('/skips', [AnalyticsController::class, 'skip']);
     });
 });

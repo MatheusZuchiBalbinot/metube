@@ -62,6 +62,14 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(6)->by($request->ip());
+        });
+
+        RateLimiter::for('email-verification', function (Request $request) {
+            return Limit::perMinute(6)->by($request->ip());
+        });
+
         Gate::policy(Video::class, VideoPolicy::class);
         Gate::policy(Playlist::class, PlaylistPolicy::class);
         Gate::policy(Comment::class, CommentPolicy::class);

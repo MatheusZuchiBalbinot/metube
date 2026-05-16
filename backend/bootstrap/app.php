@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->alias(['session.version' => CheckSessionVersion::class]);
+        $middleware->validateCsrfTokens(except: ['api/uploads/tus*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (InvalidCredentialsException $e, Request $request) {
