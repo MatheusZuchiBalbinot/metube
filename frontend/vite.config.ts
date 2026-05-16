@@ -81,6 +81,18 @@ export default defineConfig({
             '/api': {
                 target: 'http://backend:8000',
                 changeOrigin: true,
+                configure: (proxy) => {
+                    proxy.on('proxyRes', (proxyRes, req) => {
+                        const location = proxyRes.headers['location'];
+                        const hasLocation = typeof location === 'string';
+                        if (hasLocation) {
+                            proxyRes.headers['location'] = location.replace(
+                                /^https?:\/\/[^/]+/,
+                                `http://${req.headers.host}`,
+                            );
+                        }
+                    });
+                },
             },
             '/sanctum': {
                 target: 'http://backend:8000',
