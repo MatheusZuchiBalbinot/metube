@@ -1,6 +1,6 @@
 # Frontend — Guia Completo
 
-Stack: **React 19 + TypeScript 5.9 + Vite 7 + Redux Toolkit + React Router v7**
+Stack: **React 19 + TypeScript 5.9 + Vite 7 + Redux Toolkit + React Router v7 + Tailwind CSS**
 
 ---
 
@@ -20,59 +20,227 @@ CI rejeita PRs com erros de TypeScript, erros de lint, ou testes falhando.
 
 ```
 src/
-  App.tsx                     # Roteamento, providers
+  App.tsx                     # Roteamento, providers, AppInit (bootstrap + realtime)
   main.tsx                    # Entry point
+  app.css                     # Estilos globais de nível app
 
-  api/                        # Clientes HTTP por domínio
-    client.ts                 # ApiClient base (axios)
-    auth.ts                   # AuthApi
-    channels.ts               # ChannelApi
-    history.ts                # HistoryApi
-    interactions.ts           # InteractionsApi
-    playlists.ts              # PlaylistApi
-    videos.ts                 # VideoApi
-    index.ts                  # barrel: re-exporta instâncias tipadas
+  api/                        # Clientes HTTP por domínio — nunca use axios diretamente nos componentes
+    client.ts                 # ApiClient base (axios + getValidated/postValidated)
+    analytics.ts              # AnalyticsApi  → /analytics/*
+    auth.ts                   # AuthApi       → /sessions, /users, /password-resets
+    channels.ts               # ChannelApi    → /channels/*
+    comments.ts               # CommentsApi   → /videos/:vuid/comments, /comments/:cuid
+    history.ts                # HistoryApi    → /users/me/history, /users/me/progress
+    interactions.ts           # InteractionsApi → /users/me/likes, /users/me/saved
+    notifications.ts          # NotificationsApi → /notifications/*
+    playlists.ts              # PlaylistApi   → /playlists/*
+    videos.ts                 # VideoApi      → /videos/*
+    index.ts                  # barrel: re-exporta instâncias + tipos públicos
 
   components/
-    error/boundary.tsx        # ErrorBoundary
-    filter/panel.tsx          # FilterPanel (barra horizontal de filtros)
-    guard/guard.tsx           # Guard (protege rotas autenticadas)
-    header/header.tsx         # AppHeader
-    layout/layout.tsx         # Shell: header + sidebar + <Outlet>
-    layout/pageSkeleton.tsx   # Skeleton por rota
-    mini/player.tsx           # Mini-player flutuante
-    player/player.tsx         # VideoPlayer principal
-    player/playerSeekBar.tsx  # Seek bar com preview
-    player/playerSettings.tsx # Painel de velocidade
-    player/playerOverlays.tsx # Overlays (buffering, skip, pop)
-    playlist/card.tsx         # PlaylistCard
-    preferences/preferences.tsx
-    shortcuts/shortcuts.tsx   # Painel de atalhos de teclado
-    sidebar/sidebar.tsx       # Navegação lateral
-    tag/input.tsx             # TagInput
-    tag/badge.tsx             # TagBadge
-    upload/modal.tsx          # UploadModal
-    video/actionCard.tsx      # VideoActionCard
-    video/card.tsx            # VideoCard
-    video/cardSkeleton.tsx    # VideoCardSkeleton
-    video/hero.tsx            # VideoHero (banner de destaque)
-    video/reactionBtn.tsx     # ReactionButton (like/dislike/save)
-    video/readingMode.tsx     # ReadingMode (transcrição)
-    video/row.tsx             # VideoRow
-    video/rowSkeleton.tsx     # VideoRowSkeleton
-    video/savePopover.tsx     # SavePopover (adicionar a playlist)
-    video/statusBadges.tsx    # VideoStatusBadges
-    ui/                       # Primitivos (barrel @ui)
+    auth/
+      verificationBanner.tsx  # Banner de verificação de e-mail
+    comment/
+      form.tsx                # Formulário de novo comentário / edição
+      history.tsx             # Histórico de versões de um comentário
+      item.tsx                # Item individual de comentário (com ações)
+      replies.tsx             # Lista de respostas aninhadas
+      section.tsx             # Seção completa de comentários (lista + form)
+    error/
+      boundary.tsx            # ErrorBoundary com BoundaryLevel (page/section/widget)
+    filter/
+      panel.tsx               # FilterPanel — barra horizontal de filtros acima do grid
+    guard/
+      guard.tsx               # Guard — protege rotas autenticadas
+    header/
+      header.tsx              # AppHeader — barra de topo
+    layout/
+      layout.tsx              # Shell: header + sidebar + <Outlet>
+      pageSkeleton.tsx        # Skeleton por rota
+    mini/
+      player.tsx              # Mini-player flutuante (picture-in-layout)
+    notifications/
+      bell.tsx                # Ícone com badge de não-lidas
+      item.tsx                # Item individual de notificação
+      panel.tsx               # Painel dropdown de notificações
+    player/
+      player.tsx              # Orquestrador do player (roteador: default/mini/short)
+      playerDefault.tsx       # Player principal (desktop/vídeo completo)
+      playerMini.tsx          # Player mini (dentro do mini/player.tsx)
+      playerShort.tsx         # Player de shorts (scroll vertical)
+      playerOverlays.tsx      # Overlays: buffering, pop icon, skip indicator
+      playerSeekBar.tsx       # Seek bar com preview de thumbnail
+      playerSettings.tsx      # Painel de velocidade / qualidade
+      captionsButton.tsx      # Botão de legendas
+      pipButton.tsx           # Botão Picture-in-Picture
+      theaterButton.tsx       # Botão de modo teatro
+      playerTypes.ts          # Tipos compartilhados entre subcomponentes do player
+    playlist/
+      card.tsx                # PlaylistCard
+    preferences/
+      preferences.tsx         # Painel de preferências (tema, idioma, etc.)
+    shortcuts/
+      modal.tsx               # Modal de atalhos de teclado
+    sidebar/
+      sidebar.tsx             # Navegação lateral
+    tag/
+      badge.tsx               # TagBadge (exibe tag com cor)
+      input.tsx               # TagInput (campo de entrada de tags)
+      view.tsx                # TagView (exibe tags de um vídeo)
+    upload/
+      modal.tsx               # UploadModal — lazy-loaded globalmente no App.tsx
+    video/
+      actionCard.tsx          # VideoActionCard (ações: like/dislike/save/share)
+      card.tsx                # VideoCard — thumbnail + metadados
+      cardSkeleton.tsx        # VideoCardSkeleton — placeholder de loading
+      hero.tsx                # VideoHero — banner de destaque
+      reactionBtn.tsx         # ReactionButton (like/dislike/save com animação)
+      readingMode.tsx         # ReadingMode — transcrição/modo leitura
+      row.tsx                 # VideoRow — listagem horizontal
+      rowSkeleton.tsx         # VideoRowSkeleton
+      savePopover.tsx         # SavePopover — adicionar a playlist
+      statusBadges.tsx        # VideoStatusBadges (processing/scheduled/draft/failed)
+    ui/                       # Primitivos reutilizáveis (@ui) — verifique aqui antes de criar elementos
+      avatar/avatar.tsx       # Avatar com iniciais ou imagem (sm/md/lg)
+      badge/badge.tsx         # Badge de status/categoria
+      button/button.tsx       # Button — NUNCA use <button> raw
+      card/card.tsx           # Card container
+      carouselNav/carouselNav.tsx # Navegação de carrossel
+      checkbox/checkbox.tsx   # Checkbox customizado
+      date/picker.tsx         # DatePicker com popover
+      date/calendar.tsx       # Calendário (usado pelo DatePicker)
+      dnd/dnd.tsx             # Área drag-and-drop
+      dropdown/dropdown.tsx   # Select customizado
+      empty/empty.tsx         # Estado vazio com ícone e mensagem
+      input/input.tsx         # Input com icon/label/error/helper
+      modal/modal.tsx         # Modal com focus trap
+      navProgress/navProgress.tsx # Barra de progresso de navegação
+      pageLoader/pageLoader.tsx   # Loading de página inteira
+      skeleton/skeleton.tsx   # Placeholder de loading
+      spinner/spinner.tsx     # Indicador de carregamento
+      toast/toast.tsx         # Notificações temporárias (via toastSlice)
+      tooltip/tooltip.tsx     # Tooltip acessível (Radix)
+      index.ts                # Barrel — importe como `import { Button } from '@ui'`
 
-  hooks/                      # Custom hooks
-  store/                      # Redux slices + middleware
-  pages/                      # Páginas (1 pasta por rota)
-  context/                    # React contexts
+  context/
+    searchContext.tsx         # SearchProvider — estado de busca com debounce
+    search.ts                 # Tipo SearchState
+    useSearch.ts              # Hook para consumir SearchContext
+    index.ts                  # barrel
+
+  data/
+    themeConfig.ts            # Configurações de tema (cores, modos disponíveis)
+
+  enums/                      # Enums TypeScript (ver seção Enums abaixo)
+    barState.ts               # BarState: IDLE | LOADING | DONE
+    boundaryLevel.ts          # BoundaryLevel: PAGE | SECTION | WIDGET
+    historyItemKind.ts        # HistoryItemKind: HEADER | VIDEO
+    notificationType.ts       # NotificationType (espelha o backend)
+    popIconType.ts            # PopIconType: PLAY | PAUSE
+    quickRangeKind.ts         # QuickRangeKind (seletor de intervalo no DatePicker)
+    reactionType.ts           # ReactionType: LIKE | DISLIKE
+    sidebarTab.ts             # SidebarTab: RELATED | SUMMARY
+    skipDirection.ts          # SkipDirection: FWD | BWD
+    suggestionKind.ts         # SuggestionKind (autocomplete de busca)
+    toastType.ts              # ToastType: SUCCESS | ERROR | INFO
+    uploadMode.ts             # UploadMode: SINGLE | BATCH
+    uploadStatus.ts           # UploadStatus: IDLE | UPLOADING | DONE | ERROR
+
+  hooks/                      # Custom hooks (ver seção Hooks abaixo)
+
+  i18n/
+    index.ts                  # Configuração i18next
+    locales/en.json           # Textos em inglês
+    locales/pt.json           # Textos em português
+
+  lib/
+    echo.ts                   # Singleton Laravel Echo (Reverb/WebSocket) com authorizer axios
+
+  pages/
+    channel/channel.tsx       # Página de canal
+    forgotPassword/forgotPassword.tsx
+    history/history.tsx       # Histórico de vídeos assistidos (com filtro de período)
+    home/home.tsx             # Feed principal
+    liked/liked.tsx           # Vídeos curtidos
+    login/login.tsx           # Login
+    notFound/notFound.tsx     # 404
+    playlists/playlists.tsx   # Listagem de playlists
+    profile/profile.tsx       # Perfil do usuário (próprio ou alheio)
+    resetPassword/resetPassword.tsx
+    search/search.tsx         # Resultados de busca (?q=)
+    shorts/shorts.tsx         # Feed de shorts (scroll vertical)
+    signup/signup.tsx         # Cadastro
+    video/video.tsx           # Página de vídeo (/watch?v=vuid)
+    watch/later.tsx           # Watch Later
+
+  store/                      # Redux Toolkit (ver seção Redux abaixo)
+    authSlice.ts
+    commentSlice.ts
+    crossTabSync.ts           # Sync de estado entre abas via `storage` events
+    index.ts                  # configureStore + useAppDispatch/useAppSelector
+    notificationsSlice.ts
+    persistMiddleware.ts      # Persiste slices selecionados no localStorage
+    playlistSlice.ts
+    reducers.ts               # rootReducer (combineReducers)
+    searchSlice.ts
+    subscriptionSlice.ts
+    themeSlice.ts
+    toastSlice.ts
+    types.ts                  # RootState e AppDispatch (isolado para quebrar circular dep)
+    videoSelectors.ts         # Selectors memoizados (selectRecommendations, selectPublishedVideos, etc.)
+    videoSlice.ts
+
+  styles/
+    base.css                  # Design tokens globais (cores, espaçamento, raios, layout)
+    animations.css            # Keyframes globais
+    tailwind.css              # Diretivas Tailwind
+
   types/                      # DTOs de domínio (@models)
-  utils/                      # Utilitários puros
-  styles/                     # CSS global
-  i18n/                       # Config + locales (en.json, pt.json)
-  validation/                 # Schemas Zod
+    channel.ts                # Channel, ChannelId, Uuid
+    comment.ts                # Comment, CommentAuthor, CommentVersion, Cuid
+    common.ts                 # PaginatedResponse, PaginatedMeta
+    history.ts                # WatchHistoryEntry, HistoryPeriod
+    index.ts                  # barrel
+    playlist.ts               # Playlist, Puid
+    reaction.ts               # Reaction
+    tag.ts                    # Tag (string brand)
+    user.ts                   # User, Uuid
+    video.ts                  # Video, VideoId, VideoStatus, VideoCaption
+
+  utils/
+    applyFilters.ts           # Aplica filtros locais à lista de vídeos
+    cn.ts                     # Combina classnames (clsx-like)
+    dom.ts                    # Helpers de DOM
+    events.ts                 # APP_EVENTS: SESSION_EXPIRED | FORBIDDEN | SERVICE_UNAVAILABLE
+    format.ts                 # Formata duração, views, datas
+    impressionBatcher.ts      # Acumula impressões e flush em batch (1s debounce, max 50)
+    loadFromStorage.ts        # loadFromStorage + type guards (isArray, isObject, isNumberInRange)
+    logger.ts                 # Logger com níveis (dev-only)
+    mergeProgress.ts          # Mescla progresso local com dados do servidor
+    parse.ts                  # Parsers de resposta da API
+    routes.ts                 # ROUTES const + videoUrl() helper
+    sessionId.ts              # Gera/persiste session ID de analytics
+    storageKeys.ts            # STORAGE_KEYS — todas as chaves de localStorage
+    tagColors.ts              # Mapeia tags para cores
+    themeRipple.ts            # Efeito ripple na troca de tema
+    themes.ts                 # Definições de temas
+    upload.ts                 # UploadProgress interface + buildProgress()
+    validate.ts               # Helpers de validação de formulário
+    viewedVideos.ts           # Rastreia vídeos visualizados na sessão
+
+  validation/                 # Schemas Zod (transformação snake_case → camelCase)
+    index.ts                  # barrel
+    schemas/
+      channel.ts              # ChannelApiSchema
+      comment.ts              # CommentApiSchema, CommentListApiSchema, CommentRepliesApiSchema, etc.
+      playlist.ts             # PlaylistApiSchema, PlaylistListApiSchema
+      summary.ts              # VideoSummaryApiSchema
+      user.ts                 # UserApiSchema
+      video.ts                # VideoApiSchema, VideoListApiSchema
+      requests/
+        auth.ts               # LoginRequestSchema, SignupRequestSchema, etc.
+        playlist.ts           # PlaylistCreateRequestSchema, etc.
+        video.ts              # VideoUploadRequestSchema, VideoUpdateRequestSchema, etc.
 
 tests/                        # Vitest — espelha src/
   components/
@@ -86,6 +254,7 @@ tests/                        # Vitest — espelha src/
 
 | Alias           | Aponta para                  |
 |-----------------|------------------------------|
+| `@api`          | `src/api` (barrel)           |
 | `@context/*`    | `src/context/*`              |
 | `@components/*` | `src/components/*`           |
 | `@ui`           | `src/components/ui` (barrel) |
@@ -95,9 +264,14 @@ tests/                        # Vitest — espelha src/
 | `@data/*`       | `src/data/*`                 |
 | `@utils/*`      | `src/utils/*`                |
 | `@hooks/*`      | `src/hooks/*`                |
+| `@hooks`        | `src/hooks` (barrel)         |
 | `@store`        | `src/store` (barrel)         |
 | `@store/*`      | `src/store/*`                |
 | `@models/*`     | `src/types/*`                |
+| `@lib/*`        | `src/lib/*`                  |
+| `@enums/*`      | `src/enums/*`                |
+| `@validation`   | `src/validation` (barrel)    |
+| `@validation/*` | `src/validation/*`           |
 
 **Exceção crítica**: dentro de `src/components/ui/`, use caminho relativo (`../button/button`). Usar `@ui` dentro de `ui/` cria dependência circular com o barrel.
 
@@ -108,15 +282,25 @@ tests/                        # Vitest — espelha src/
 Definidas em `src/utils/routes.ts` como `ROUTES`. **Nunca use strings literais de rota.**
 
 ```
-/              → HomePage         /shorts        → ShortsPage
-/login         → LoginPage        /channel/:id   → ChannelPage
-/history       → HistoryPage      /video/:id     → VideoPage
-/playlists     → PlaylistsPage    /search        → SearchPage (?q=)
-/watch-later   → WatchLaterPage   /profile       → ProfilePage
-/liked         → LikedPage        /user/:id      → ProfilePage (outro usuário)
+/login              → LoginPage           (pública)
+/signup             → SignupPage           (pública)
+/forgot-password    → ForgotPasswordPage  (pública)
+/reset-password/:token → ResetPasswordPage (pública)
+/                   → HomePage            (protegida)
+/shorts             → ShortsPage          (protegida)
+/history            → HistoryPage         (protegida)
+/playlists          → PlaylistsPage       (protegida)
+/watch-later        → WatchLaterPage      (protegida)
+/liked              → LikedPage           (protegida)
+/profile            → ProfilePage         (protegida, próprio usuário)
+/user/:id           → ProfilePage         (protegida, outro usuário)
+/watch              → VideoPage           (protegida, ?v=vuid)
+/search             → SearchPage          (protegida, ?q=)
+/channel/:id        → ChannelPage         (protegida)
+*                   → NotFoundPage
 ```
 
-Todas exceto `/login` são protegidas pelo componente `Guard`.
+Todas as rotas protegidas são envolvidas por `<Guard><AppLayout />`. `UploadModal` é lazy-loaded globalmente (fora do router) em `App.tsx` — disponível em qualquer rota.
 
 ---
 
@@ -125,62 +309,196 @@ Todas exceto `/login` são protegidas pelo componente `Guard`.
 Cada domínio tem uma classe com `baseUrl` privado. **Nunca use axios ou fetch diretamente nos componentes/hooks** — use as classes em `src/api/`.
 
 ```ts
-import { video, auth, playlist, channel, history, interactions } from '@api';
+import { video, auth, playlist, channel, history, interactions, comments, analytics, notifications } from '@api';
 
+// Vídeos
 await video.list({ page: 1, tags: ['react'] });
 await video.get(vuid);
+await video.create(payload);       // retorna Video (status 202 — ainda processing)
 await video.toggleLike(vuid);
+await video.getSummary(vuid);
+
+// Auth
 await auth.login({ email, password });
+await auth.me();
+await auth.updateProfile({ name, bio });
+
+// Playlists
 await playlist.list();
 await playlist.addVideo(puid, vuid);
-await channel.toggleSubscription(uuid);
-await interactions.liked();
+await playlist.reorder(puid, [vuid1, vuid2]);
+
+// Comentários
+await comments.list(vuid, { page });
+await comments.create(vuid, { content, parentCuid });
+await comments.toggleLike(cuid);
+await comments.replies(cuid);
+await comments.versions(cuid);
+
+// Analytics
+await analytics.impressions({ vuids, source, sessionId });
+await analytics.click({ vuid, source, position });
+await analytics.search({ query, resultCount });
+await analytics.skip({ vuid, percent });
+
+// Notificações
+await notifications.list(page);
+await notifications.unreadCount();
+await notifications.markRead(id);
+await notifications.markAllRead();
+await notifications.remove(id);
 ```
 
-Respostas validadas com Zod antes de chegar ao store.
+Respostas são validadas com Zod antes de chegar ao store (via `getValidated`/`postValidated`).
 
 ---
 
 ## Redux Slices
 
-| Slice               | Responsabilidade                                                      |
-|---------------------|-----------------------------------------------------------------------|
-| `videoSlice`        | videos, watchHistory, likes/dislikes/saves, progresso, mini-player, teatro, shorts |
-| `authSlice`         | login, sessão, usuário autenticado                                    |
-| `themeSlice`        | modo (dark/light) + cor de acento                                    |
-| `toastSlice`        | notificações (max 3 simultâneas)                                     |
-| `playlistSlice`     | playlists com videoIds, drag-and-drop                                |
-| `subscriptionSlice` | inscrições em canais                                                 |
-| `searchSlice`       | buscas recentes (max 5, dedup por lowercase)                         |
+| Slice                | State key         | Responsabilidade                                                              |
+|----------------------|-------------------|-------------------------------------------------------------------------------|
+| `videoSlice`         | `video`           | lista de vídeos, watchHistory, likes/dislikes/saves, progress, miniPlayer, teatro, shorts, uploadModal |
+| `authSlice`          | `auth`            | usuário autenticado, estado de sessão                                         |
+| `themeSlice`         | `theme`           | modo (dark/light) + cor de acento                                             |
+| `toastSlice`         | `toast`           | notificações temporárias (max 3 simultâneas)                                  |
+| `playlistSlice`      | `playlist`        | playlists com videoIds, drag-and-drop                                         |
+| `subscriptionSlice`  | `subscription`    | inscrições em canais                                                          |
+| `searchSlice`        | `search`          | buscas recentes (max 5, dedup por lowercase)                                  |
+| `commentSlice`       | `comment`         | comentários por vídeo (byId/byVideo), respostas, paginação, loading           |
+| `notificationsSlice` | `notifications`   | itens, unreadCount, hasMore, loading                                          |
 
-- Persistência em localStorage via `persistMiddleware`
-- Sync cross-tab via `crossTabSync.ts` (escuta `storage` events)
-- Hooks tipados: `useAppDispatch()`, `useAppSelector()`
+### Persistência e sync
+- `persistMiddleware` — persiste slices selecionados no `localStorage` (chaves em `STORAGE_KEYS`)
+- `crossTabSync.ts` — escuta eventos `storage` para sincronizar estado entre abas
+- Hooks tipados: `useAppDispatch()`, `useAppSelector()` (importados de `@store`)
+
+### Selectors memoizados (`videoSelectors.ts`)
+- `selectPublishedVideos` — filtra vídeos publicados (inclui scheduled passado)
+- `selectHistoryTags` — extrai tags dos vídeos assistidos
+- `selectLikedSet` / `selectDislikedSet` — sets para lookup O(1)
+- `selectRecommendations` / `makeSelectRecommendations(limit)` — score por afinidade de tags + views
 
 ---
 
-## Hooks principais
+## Hooks
 
-| Hook                     | Uso                                                    |
-|--------------------------|--------------------------------------------------------|
-| `useVideo`               | CRUD de vídeo, filtros, progresso, mini-player         |
-| `useAuth`                | autenticação, usuário logado                           |
-| `useBootstrap`           | popula Redux do backend após login                     |
-| `usePlaylist`            | CRUD de playlists (sincroniza com API)                 |
-| `useSubscription`        | toggle de inscrição em canal                           |
-| `useShaka`               | setup de streaming via Shaka Player (HLS, DASH, MP4)   |
-| `usePlayerKeyboard`      | atalhos de teclado do player                           |
-| `usePlayerControls`      | visibilidade dos controles do player                   |
-| `usePlayerPlayback`      | estado de play/pause/seek/volume                       |
-| `useVideoProgress`       | tracking de progresso + persist                        |
-| `useVideoProcessingPoll` | polling de vídeos com status=processing                |
-| `useFilterState`         | estado do painel de filtros                            |
-| `useUpload`              | upload de arquivo com progresso                        |
-| `useAutoplay`            | lógica de autoplay                                     |
-| `useDebounce`            | debounce de input                                      |
-| `useInView`              | Intersection Observer para lazy loading                |
-| `useMediaQuery`          | detecta breakpoints (ex: isMobile)                    |
-| `useBurstAnimation`      | animação de burst em reações                           |
+| Hook                     | Uso                                                                     |
+|--------------------------|-------------------------------------------------------------------------|
+| `useAuth`                | autenticação, usuário logado, login/logout                              |
+| `useBootstrap`           | popula Redux do backend após login (chamado uma vez no AppInit)         |
+| `useRealtime`            | conecta Laravel Echo; escuta notificações e VideoStatusUpdated do canal privado do usuário |
+| `useVideo`               | CRUD de vídeo, filtros, progresso, miniPlayer                           |
+| `useComments`            | lista, cria, edita, deleta, likes de comentários; gerencia respostas    |
+| `usePlaylist`            | CRUD de playlists (sincroniza com API)                                  |
+| `useSubscription`        | toggle de inscrição em canal                                            |
+| `useShaka`               | setup de streaming via Shaka Player (HLS, DASH, MP4)                   |
+| `usePlayerKeyboard`      | atalhos de teclado do player                                            |
+| `usePlayerControls`      | visibilidade dos controles do player                                    |
+| `usePlayerPlayback`      | estado de play/pause/seek/volume                                        |
+| `usePlayerCaptions`      | estado e seleção de legenda                                             |
+| `useVideoProgress`       | tracking de progresso + persist                                         |
+| `useVideoProcessingPoll` | polling de vídeos com status=processing até resolverem                  |
+| `useTusUpload`           | upload resumável via tus-js-client (pause/resume, progress, retry)      |
+| `useUpload`              | upload direto via axios com progresso                                   |
+| `useFilterState`         | estado do painel de filtros                                             |
+| `useAutoplay`            | lógica de autoplay                                                      |
+| `usePopIcon`             | animação de ícone pop (play/pause feedback)                             |
+| `useSkipIndicator`       | indicador de skip (+10s/-10s)                                           |
+| `useBurstAnimation`      | animação burst em reações (like/dislike)                                |
+| `useFullscreen`          | toggle de fullscreen                                                    |
+| `usePictureInPicture`    | toggle de Picture-in-Picture                                            |
+| `useVolumeWheel`         | scroll da roda do mouse para ajustar volume                             |
+| `useClickDoubleClick`    | distingue click simples de double-click                                 |
+| `useClickOutside`        | detecta click fora de um elemento                                       |
+| `useOutsideClick`        | alias/variante de useClickOutside                                       |
+| `useKeyboardShortcuts`   | atalhos globais de teclado                                              |
+| `useTrackImpression`     | Intersection Observer para registrar impressões de vídeo                |
+| `useScrollRestoration`   | restaura posição de scroll ao navegar                                   |
+| `useTheme`               | lê/aplica tema (modo + cor de acento)                                   |
+| `useDebounce`            | debounce de valor                                                       |
+| `useInView`              | Intersection Observer para lazy loading                                 |
+| `useMediaQuery`          | detecta breakpoints (ex: isMobile)                                      |
+
+---
+
+## Enums
+
+| Enum               | Valores                                                              |
+|--------------------|----------------------------------------------------------------------|
+| `BarState`         | `IDLE`, `LOADING`, `DONE`                                            |
+| `BoundaryLevel`    | `PAGE`, `SECTION`, `WIDGET`                                          |
+| `HistoryItemKind`  | `HEADER`, `VIDEO`                                                    |
+| `NotificationType` | `COMMENT_REPLIED`, `COMMENT_LIKED`, `VIDEO_LIKED`, `NEW_SUBSCRIBER`, `VIDEO_FROM_SUBSCRIPTION` |
+| `PopIconType`      | `PLAY`, `PAUSE`                                                      |
+| `ReactionType`     | `LIKE`, `DISLIKE`                                                    |
+| `SidebarTab`       | `RELATED`, `SUMMARY`                                                 |
+| `SkipDirection`    | `FWD`, `BWD`                                                         |
+| `ToastType`        | `SUCCESS`, `ERROR`, `INFO`                                           |
+| `UploadMode`       | `SINGLE`, `BATCH`                                                    |
+| `UploadStatus`     | `IDLE`, `UPLOADING`, `DONE`, `ERROR`                                 |
+
+---
+
+## Identificadores tipados (`src/types/`)
+
+```ts
+type VideoId   = string & { readonly _brand: 'VideoId' }   // id local Redux (vuid da API)
+type Vuid      = string & { readonly _brand: 'Vuid' }       // id de vídeo na API
+type Cuid      = string & { readonly _brand: 'Cuid' }       // id de comentário
+type ChannelId = string & { readonly _brand: 'ChannelId' }  // uuid do canal
+type Puid      = string & { readonly _brand: 'Puid' }       // id de playlist
+type Uuid      = string & { readonly _brand: 'Uuid' }       // id de usuário
+```
+
+Use type casts explícitos ao construir mocks: `'v-test' as unknown as VideoId`.
+
+---
+
+## Realtime (Laravel Echo + Reverb)
+
+Configurado em `src/lib/echo.ts` como singleton lazy. Inicializado por `useRealtime` no `AppInit`.
+
+```ts
+import getEcho, { destroyEcho } from '@lib/echo';
+const echo = getEcho();  // null se VITE_REVERB_APP_KEY não estiver configurado
+```
+
+**Authorizer customizado**: usa `axios.post('/api/broadcasting/auth', ...)` em vez do XHR nativo do Pusher para que o `X-XSRF-TOKEN` seja enviado automaticamente (o XHR nativo não lê o cookie, causando 419 CSRF).
+
+Variáveis de ambiente necessárias:
+```
+VITE_REVERB_APP_KEY=...
+VITE_REVERB_HOST=localhost
+VITE_REVERB_PORT=8080
+VITE_REVERB_SCHEME=http
+```
+
+Canais escutados por `useRealtime`:
+- `users.{uuid}` (privado) → notificações + `VideoStatusUpdated`
+
+---
+
+## Upload de vídeo
+
+### Fluxo tus resumável (`useTusUpload`)
+
+```ts
+const { uploadFile, progress, status, pause, resume, reset } = useTusUpload();
+
+const result = await uploadFile(file);  // retorna { uploadKey } ou null
+// Depois:
+await video.create({ uploadKey: result.uploadKey, title, ... });
+```
+
+- Chunk size: **5 MB**
+- Retries: `[0, 1s, 3s, 5s, 10s]`
+- Suporta resumo de uploads anteriores (`findPreviousUploads`)
+- `UploadProgress` inclui: `percent`, `speed` (bytes/s), `remaining` (segundos estimados)
+
+### Modo batch (UploadModal)
+O `UploadModal` tem dois modos (`UploadMode`):
+- `SINGLE` — usa `useTusUpload` (padrão)
+- `BATCH` — usa `uploadViaTus` (função standalone que cria instâncias `tus.Upload` independentes, permitindo uploads em paralelo via `Promise.all`)
 
 ---
 
@@ -188,26 +506,47 @@ Respostas validadas com Zod antes de chegar ao store.
 
 **Antes de criar qualquer elemento interativo, verifique se já existe em `src/components/ui/`.**
 
-| Componente    | Uso                                                                          |
-|---------------|------------------------------------------------------------------------------|
-| `Button`      | Todo `<button>`. Nunca use `<button>` raw. Variants: primary/secondary/ghost/danger. Sizes: sm/md/lg/icon |
-| `Checkbox`    | Checkbox customizado com design token. Props: `checked`, `onChange`, `disabled` |
-| `Input`       | Campos de texto. Suporta `icon`, `label`, `error`, `helper`                  |
-| `Modal`       | Dialogs. Suporta `isOpen`, `onClose`, `title`, `size` (sm/md/lg), focus trap |
-| `Dropdown`    | Selects customizados. Recebe `options`, `value`, `onChange`                  |
-| `Tooltip`     | Tooltip acessível via Radix. Recebe `content`, `side`                        |
-| `Avatar`      | Avatar com iniciais ou imagem. Sizes: sm/md/lg                               |
-| `Badge`       | Labels de status/categoria                                                   |
-| `Card`        | Container com borda e sombra                                                 |
-| `Spinner`     | Indicador de carregamento                                                    |
-| `Skeleton`    | Placeholder de loading                                                       |
-| `DatePicker`  | Seletor de data com popover                                                  |
-| `DragAndDrop` | Área de upload com drag-and-drop                                             |
-| `Toast`       | Notificações temporárias (gerenciado via toastSlice)                         |
-| `Empty`       | Estado vazio com ícone e mensagem                                            |
-| `PageLoader`  | Loading de página inteira                                                    |
-| `CarouselNav` | Navegação de carousel                                                        |
-| `NavProgress` | Barra de progresso de navegação                                              |
+| Componente    | Props principais                                                              |
+|---------------|-------------------------------------------------------------------------------|
+| `Button`      | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg/icon). Nunca use `<button>` raw |
+| `Input`       | `icon`, `label`, `error`, `helper`                                            |
+| `Modal`       | `isOpen`, `onClose`, `title`, `size` (sm/md/lg), focus trap                  |
+| `Dropdown`    | `options`, `value`, `onChange`                                                |
+| `Tooltip`     | `content`, `side` — Radix Tooltip                                             |
+| `Avatar`      | `name`, `src`, `size` (sm/md/lg)                                              |
+| `Checkbox`    | `checked`, `onChange`, `disabled`                                             |
+| `DatePicker`  | `value`, `onChange`, com `QuickRangeKind` para atalhos                        |
+| `DragAndDrop` | Área de upload com drag-and-drop                                              |
+| `Toast`       | Gerenciado via `toastSlice` — não renderize diretamente                       |
+| `Empty`       | `icon`, `title`, `description`                                                |
+| `Spinner`     | `fullPage?`                                                                   |
+
+---
+
+## Validação (Zod)
+
+Schemas em `src/validation/schemas/`. Importados via `@validation`.
+
+### Response schemas (API → Redux)
+Fazem transformação `snake_case → camelCase` e cast de tipos.
+
+| Schema                  | Valida                                          |
+|-------------------------|-------------------------------------------------|
+| `VideoApiSchema`        | Vídeo único                                     |
+| `VideoListApiSchema`    | Envelope paginado `{data, meta}` do Laravel     |
+| `PlaylistApiSchema`     | Playlist única                                  |
+| `CommentApiSchema`      | Comentário único                                |
+| `CommentListApiSchema`  | Lista paginada de comentários                   |
+| `UserApiSchema`         | Usuário                                         |
+| `ChannelApiSchema`      | Canal                                           |
+| `VideoSummaryApiSchema` | Resumo de vídeo                                 |
+
+`VideoListApiSchema` normaliza: `current_page`/`per_page` → `page`/`perPage`, `last_page` → `lastPage`.
+
+### Request schemas (formulários)
+Sem transformação — validam entradas do usuário.
+
+`VideoUploadRequestSchema`, `VideoUpdateRequestSchema`, `LoginRequestSchema`, `SignupRequestSchema`, etc.
 
 ---
 
@@ -270,26 +609,18 @@ if (isAlreadyFirst) {
 
 ---
 
-## CSS classes dinâmicas
+## CSS — Convenções
 
-```tsx
-const classes = ['btn', `btn--${variant}`, isActive ? 'btn--active' : '', className]
-    .filter(Boolean)
-    .join(' ');
-```
-
----
-
-## Constantes e enums
-
-```tsx
-// Módulo: SCREAMING_SNAKE com as const
-const MAX_SEARCH_HISTORY = 5 as const;
-
-// Enums: objeto as const com tipo derivado
-export const SortBy = { RECENT: 'recent', VIEWS: 'views', AZ: 'az' } as const;
-export type SortBy = typeof SortBy[keyof typeof SortBy];
-```
+- **BEM-like**: `bloco__elemento--modificador` — ex: `app-header__search-input`, `video-page__channel-row--subscribed`
+- Design tokens em `src/styles/base.css`:
+  - Cores: `--accent`, `--surface`, `--surface-2`, `--border`, `--text`, `--text-2`, `--text-3`
+  - Raios: `--radius-sm`, `--radius-md`, `--radius-lg`
+  - Espaçamento: `--space-1` … `--space-8`
+  - Layout responsivo: `--page-padding-x`, `--page-padding-y` (ajustam em `@media`)
+- Tema claro/escuro: `[data-mode='light']` no `:root`
+- Cores de acento: `[data-color='violet']`, `[data-color='blue']`, etc.
+- Cada componente importa seu próprio `.css`
+- CSS dinâmico via `cn()` (`src/utils/cn.ts`) ou array com `.filter(Boolean).join(' ')`
 
 ---
 
@@ -370,38 +701,10 @@ if (isError) {
 
 ### React Hooks
 - `react-hooks/set-state-in-effect`: se precisar chamar `setState` dentro de `useLayoutEffect`, adicione `// eslint-disable-next-line react-hooks/set-state-in-effect` com justificativa
-- `react-hooks/exhaustive-deps`: corrija dependências; se necessário, adicione disable-line com comentário explicando o porquê
+- `react-hooks/exhaustive-deps`: corrija dependências; se necessário, disable-line com comentário explicando por quê
 
-### Ponto de atenção: pasta `docs/`
+### Pasta `docs/`
 TypeDoc gera arquivos em `docs/` — essa pasta está no `globalIgnores` do `eslint.config.js`. Nunca remova esse ignore.
-
----
-
-## CSS — Convenções
-
-- **BEM-like**: `bloco__elemento--modificador` — ex: `app-header__search-input`, `video-page__channel-row--subscribed`
-- Variáveis globais em `src/styles/base.css`:
-  - Cores: `--accent`, `--surface`, `--surface-2`, `--border`, `--text`, `--text-2`, `--text-3`
-  - Raios: `--radius-sm`, `--radius-md`, `--radius-lg`
-  - Espaçamento: `--space-1` … `--space-8`
-  - Layout responsivo: `--page-padding-x`, `--page-padding-y` (ajustam em `@media`)
-- Tema claro/escuro: `[data-mode='light']` no `:root`
-- Cores de acento: `[data-color='violet']`, `[data-color='blue']`, etc.
-- Cada componente importa seu próprio `.css`
-
----
-
-## Identificadores tipados
-
-```ts
-type VideoId   = string & { readonly _brand: 'VideoId' }   // id local Redux
-type Vuid      = string & { readonly _brand: 'Vuid' }       // id da API
-type ChannelId = string & { readonly _brand: 'ChannelId' }
-type Puid      = string & { readonly _brand: 'Puid' }       // id de playlist
-type Uuid      = string & { readonly _brand: 'Uuid' }       // id de usuário
-```
-
-Use type casts explícitos ao construir mocks: `'v-test' as unknown as VideoId`.
 
 ---
 
@@ -423,31 +726,9 @@ import videoSlice, { videoActions } from '@store/videoSlice';
 // ✅ payload completo — addVideo recebe Video inteiro
 const next = reducer(state, videoActions.addVideo(makeVideo({ id: vid('v-new'), title: 'New' })));
 
-// ❌ payload parcial — id fica undefined
+// ❌ payload parcial — campos ficam undefined
 const next = reducer(state, videoActions.addVideo({ title: 'New', status: 'published' }));
 ```
-
----
-
-## Validação (Zod)
-
-Schemas em `src/validation/schemas/`. Todo dado da API é validado antes de chegar ao Redux.
-
-- `VideoApiSchema` → transforma snake_case da API em camelCase
-- `PlaylistApiSchema` → mesma coisa para playlists
-- `VideoListApiSchema` — envelope `{data, meta}` do paginator Laravel, transforma `current_page`/`per_page` → `page`/`perPage`
-
----
-
-## Gotchas importantes
-
-1. **`docs/` ignorada pelo ESLint** — TypeDoc gera JS em `docs/`. Já está no `globalIgnores`. Nunca delete essa entrada.
-2. **Vuid ≠ UUID v4** — `vuid` é `Str::random(11)`. Não valide com regex de UUID.
-3. **Watch Later auto-criada** — ao criar um `User`, o backend cria automaticamente uma playlist "Watch Later". Considere isso ao contar playlists em testes.
-4. **`useLayoutEffect` + setState** — o lint bloqueia chamadas de `setState` síncronas em `useLayoutEffect`. Use `// eslint-disable-next-line` quando necessário, com comentário explicando por quê.
-5. **`@ui` dentro de `ui/`** — use caminho relativo para evitar circular dependency com o barrel.
-6. **Status 202 em upload** — `POST /api/videos` retorna 202 (não 201) porque o processamento é assíncrono.
-7. **`useBootstrap`** — deve ser chamado uma vez após login para popular Redux do backend. Já está no fluxo de auth — não chame novamente em componentes filhos.
 
 ---
 
@@ -456,7 +737,6 @@ Schemas em `src/validation/schemas/`. Todo dado da API é validado antes de cheg
 ### Componentes são finos — orquestram hooks e renderizam JSX
 
 ```tsx
-// ✅ Bom: cada responsabilidade em seu hook
 export default function DefaultVideoPlayer({ ... }) {
     const controls   = usePlayerControls(videoRef);
     const playback   = usePlayerPlayback(videoRef, { ... });
@@ -502,3 +782,19 @@ export function useVolumeWheel(containerRef, videoRef, applyVolume, revealContro
     }, [containerRef, videoRef]);
 }
 ```
+
+---
+
+## Gotchas importantes
+
+1. **`docs/` ignorada pelo ESLint** — TypeDoc gera JS em `docs/`. Já está no `globalIgnores`. Nunca delete essa entrada.
+2. **Vuid ≠ UUID v4** — `vuid` é `Str::random(11)`. Não valide com regex de UUID.
+3. **Watch Later auto-criada** — ao criar um `User`, o backend cria automaticamente uma playlist "Watch Later". Considere isso ao contar playlists em testes.
+4. **`useLayoutEffect` + setState** — o lint bloqueia chamadas de `setState` síncronas em `useLayoutEffect`. Use `// eslint-disable-next-line` com comentário explicando por quê.
+5. **`@ui` dentro de `ui/`** — use caminho relativo para evitar circular dependency com o barrel.
+6. **Status 202 em upload** — `POST /api/videos` retorna 202 (não 201) porque o processamento é assíncrono.
+7. **`useBootstrap`** — chamado uma vez no `AppInit`. Não chame novamente em componentes filhos.
+8. **`useRealtime`** — também no `AppInit`. Conecta Echo após login; desconecta no logout via `destroyEcho()`.
+9. **Tus Location rewrite** — o proxy Vite reescreve o header `Location` das respostas tus de `http://backend:8000/...` para `http://localhost:5173/...` via `configure` handler em `vite.config.ts`. Sem isso, o `tus-js-client` tenta PATCH direto no host interno do Docker.
+10. **Impressões em batch** — não chame `analytics.impressions()` diretamente. Use `impressionBatcher.ts` que debounce 1s e agrupa até 50 itens por source.
+11. **`store/types.ts` isolado** — `RootState` e `AppDispatch` vivem em `types.ts`, não em `index.ts`, para quebrar a dependência circular `index.ts → persistMiddleware → types.ts`.
