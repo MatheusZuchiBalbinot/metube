@@ -4,16 +4,24 @@ namespace App\Http\Requests\Video;
 
 use App\Enums\VideoStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Validator;
 
 /**
  * StoreVideoRequest — Validates video creation input.
  *
+ * Accepts two mutually exclusive upload modes:
+ *   - Direct upload: `video_file` (multipart/form-data) + optional `thumbnail_file`
+ *   - Resumable upload: `upload_key` (tus session key) + optional `thumbnail_key`
+ *
  * @property string $title Video title
- * @property string $description Video description
+ * @property string|null $description Video description
  * @property list<string> $tags Video tags
  * @property string $status Video status
- * @property \Illuminate\Http\UploadedFile $video_file Video file
- * @property \Illuminate\Http\UploadedFile|null $thumbnail_file Custom thumbnail
+ * @property \Illuminate\Http\UploadedFile|null $video_file Direct video file
+ * @property \Illuminate\Http\UploadedFile|null $thumbnail_file Direct thumbnail file
+ * @property string|null $upload_key Tus resumable upload key
+ * @property string|null $thumbnail_key Tus resumable thumbnail key
  * @property string|null $scheduled_at When to publish (ISO 8601)
  */
 class StoreVideoRequest extends FormRequest
@@ -40,8 +48,10 @@ class StoreVideoRequest extends FormRequest
             'tags.*' => ['string', 'max:50'],
             'status' => ['required', 'in:'.implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
-            'video_file' => ['required', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
+            'video_file' => ['required_without:upload_key', 'nullable', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
+            'upload_key' => ['required_without:video_file', 'nullable', 'string'],
+            'thumbnail_key' => ['nullable', 'string'],
         ];
     }
 
@@ -54,27 +64,59 @@ class StoreVideoRequest extends FormRequest
     {
         return [
             'title.required' => 'Video title is required.',
-            'video_file.required' => 'Video file is required.',
+            'video_file.required_without' => 'A video file is required.',
             'video_file.mimes' => 'Invalid video format. Accepted: mp4, webm, ogg, quicktime, avi.',
+            'upload_key.required_without' => 'An upload key is required.',
             'status.required' => 'Status is required.',
             'status.in' => 'Invalid status value.',
+            'scheduled_at.after' => 'Scheduled date must be in the future.',
         ];
     }
 
     /**
-     * Custom validation logic.
-     *
-     * @param  \Illuminate\Validation\Validator  $validator
+     * Custom validation logic: scheduled_at constraint + tus key ownership.
      */
-    public function withValidator($validator): void
+    public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator) {
-            $status = $this->get('status');
-            $scheduledAt = $this->get('scheduled_at');
+        $validator->after(function (Validator $v): void {
+            $status = $this->input('status');
+            $scheduledAt = $this->input('scheduled_at');
 
-            if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
-                $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
+            $isScheduled = $status === VideoStatus::SCHEDULED->value;
+            $hasScheduledAt = $scheduledAt !== null;
+
+            if ($isScheduled && ! $hasScheduledAt) {
+                $v->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
+            }
+
+            $uploadKey = $this->input('upload_key');
+            $thumbnailKey = $this->input('thumbnail_key');
+
+            $hasUploadKey = is_string($uploadKey) && $uploadKey !== '';
+            if ($hasUploadKey) {
+                $this->assertKeyOwnership($v, $uploadKey, 'upload_key');
+            }
+
+            $hasThumbnailKey = is_string($thumbnailKey) && $thumbnailKey !== '';
+            if ($hasThumbnailKey) {
+                $this->assertKeyOwnership($v, $thumbnailKey, 'thumbnail_key');
             }
         });
+    }
+
+    /**
+     * Check that a tus key exists in cache and belongs to the authenticated user.
+     *
+     * @param  string  $key  Tus upload key
+     * @param  string  $field  Request field name for error reporting
+     */
+    private function assertKeyOwnership(Validator $v, string $key, string $field): void
+    {
+        $ownerId = Cache::get("tus:owner:{$key}");
+        $isOwner = $ownerId !== null && (int) $ownerId === (int) auth()->id();
+
+        if (! $isOwner) {
+            $v->errors()->add($field, 'Upload session not found or has expired.');
+        }
     }
 }
