@@ -5,15 +5,18 @@ use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+beforeEach(fn () => Cache::flush());
+
 describe('VideoController', function () {
     test('index returns paginated videos', function () {
         $user = User::factory()->create();
-        Video::factory(5)->create();
+        Video::factory(5)->create(['status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson('/api/videos');
 
@@ -121,8 +124,8 @@ describe('VideoController', function () {
 
     test('index filters videos by search term on title', function () {
         $user = User::factory()->create();
-        Video::factory()->create(['title' => 'Laravel Tutorial', 'description' => 'intro', 'tags' => []]);
-        Video::factory()->create(['title' => 'Vue Guide', 'description' => 'intro', 'tags' => []]);
+        Video::factory()->create(['title' => 'Laravel Tutorial', 'description' => 'intro', 'tags' => [], 'status' => VideoStatus::PUBLISHED]);
+        Video::factory()->create(['title' => 'Vue Guide', 'description' => 'intro', 'tags' => [], 'status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson('/api/videos?search=laravel');
 
@@ -133,8 +136,8 @@ describe('VideoController', function () {
 
     test('index filters videos by search term on description', function () {
         $user = User::factory()->create();
-        Video::factory()->create(['title' => 'Video A', 'description' => 'deep dive into testing', 'tags' => []]);
-        Video::factory()->create(['title' => 'Video B', 'description' => 'unrelated content', 'tags' => []]);
+        Video::factory()->create(['title' => 'Video A', 'description' => 'deep dive into testing', 'tags' => [], 'status' => VideoStatus::PUBLISHED]);
+        Video::factory()->create(['title' => 'Video B', 'description' => 'unrelated content', 'tags' => [], 'status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson('/api/videos?search=testing');
 
@@ -145,8 +148,8 @@ describe('VideoController', function () {
 
     test('index filters videos by tags filter (OR semantics)', function () {
         $user = User::factory()->create();
-        Video::factory()->create(['title' => 'Video A', 'description' => '', 'tags' => ['php', 'backend']]);
-        Video::factory()->create(['title' => 'Video B', 'description' => '', 'tags' => ['javascript']]);
+        Video::factory()->create(['title' => 'Video A', 'description' => '', 'tags' => ['php', 'backend'], 'status' => VideoStatus::PUBLISHED]);
+        Video::factory()->create(['title' => 'Video B', 'description' => '', 'tags' => ['javascript'], 'status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson('/api/videos?tags[]=php');
 
@@ -157,11 +160,24 @@ describe('VideoController', function () {
 
     test('index returns all videos when no search term provided', function () {
         $user = User::factory()->create();
-        Video::factory(3)->create();
+        Video::factory(3)->create(['status' => VideoStatus::PUBLISHED]);
 
         $response = $this->actingAs($user)->getJson('/api/videos');
 
         $response->assertOk();
         $response->assertJsonCount(3, 'data');
+    });
+
+    test('index does not return processing or draft videos', function () {
+        $user = User::factory()->create();
+        Video::factory()->create(['status' => VideoStatus::PUBLISHED]);
+        Video::factory()->create(['status' => VideoStatus::PROCESSING]);
+        Video::factory()->create(['status' => VideoStatus::DRAFT]);
+        Video::factory()->create(['status' => VideoStatus::FAILED]);
+
+        $response = $this->actingAs($user)->getJson('/api/videos');
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
     });
 });

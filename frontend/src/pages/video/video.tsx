@@ -70,7 +70,27 @@ export default function VideoPage() {
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [descExpanded, setDescExpanded] = useState(false);
 
-    const video = videos.find((v: Video) => v.id === (id as unknown as VideoId));
+    const storeVideo = videos.find((v: Video) => v.id === (id as unknown as VideoId));
+    const [fetchedVideo, setFetchedVideo] = useState<Video | null>(null);
+    const [fetchFailed, setFetchFailed] = useState(false);
+
+    useEffect(() => {
+        if (id === undefined || storeVideo !== undefined) {
+            setFetchedVideo(null);
+            setFetchFailed(false);
+            return;
+        }
+        setFetchFailed(false);
+        videoApi.get(id as unknown as Vuid).then(result => {
+            if (result !== null) {
+                setFetchedVideo(result);
+            } else {
+                setFetchFailed(true);
+            }
+        }).catch(() => setFetchFailed(true));
+    }, [id, storeVideo]);
+
+    const video = storeVideo ?? fetchedVideo ?? undefined;
     const hasVideo = video !== undefined;
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -317,7 +337,7 @@ export default function VideoPage() {
         return (
             <div className="video-page">
                 <div className="video-page__not-found">
-                    <p>{t('video.not_found')}</p>
+                    <p>{fetchFailed ? t('video.not_found') : t('common.loading')}</p>
                 </div>
             </div>
         );

@@ -414,6 +414,13 @@ class VideoService
      */
     private function queryVideos(array $filters): LengthAwarePaginator
     {
-        return Video::filter($filters)->with('channel')->paginate(15);
+        $hasStatusFilter = isset($filters['status']);
+        $query = Video::filter($filters)->with('channel');
+
+        if (! $hasStatusFilter) {
+            $query = $query->published();
+        }
+
+        return $query->paginate(15);
     }
 }
