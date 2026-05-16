@@ -1,6 +1,6 @@
 # Backend — Guia Completo
 
-Stack: **Laravel 12 + FrankenPHP/Octane + PostgreSQL 16 + Redis 7**
+Stack: **Laravel 12 + FrankenPHP/Octane + PostgreSQL 16 + Redis 7 + Laravel Reverb**
 
 ---
 
@@ -19,63 +19,144 @@ composer test          # Pest, SQLite in-memory
 
 Se `composer lint` retornar erros, corrija antes de commitar. CI rejeita PRs com lint ou testes falhando.
 
+Após qualquer mudança de rota ou service em produção, recarregue o Octane:
+
+```bash
+docker exec <backend-container> php artisan octane:reload
+```
+
 ---
 
 ## Estrutura de diretórios
 
 ```
 app/
+  Console/Commands/
+    PublishScheduledVideos.php      # Agendador: publica vídeos com scheduled_at vencido
+
+  Contracts/
+    LoggableUserEvent.php           # Interface para eventos que o LogUserAnalytic persiste
+
+  Data/                             # DTOs tipados — criados a partir de $request->validated()
+    CreateVideoData.php
+    FinalizeUploadData.php          # Para o fluxo de upload resumável (tus)
+    UpdateVideoData.php
+    EmptyVideoSummary.php           # Retornado quando o vídeo ainda não tem summary
+
+  Enums/
+    HistoryPeriod.php               # today | week | month | all
+    NotificationType.php            # comment_replied | comment_liked | video_liked | new_subscriber | video_from_subscription
+    PlaylistName.php                # Watch Later (nome reservado, auto-criado no boot)
+    ReactionType.php                # like | dislike
+    VideoEventType.php              # view, like, dislike, save, finish, skip, ... (sinais para analytics)
+    VideoStatus.php                 # published | scheduled | processing | draft | failed
+
+  Events/                           # Disparados por services; ouvidos por listeners
+    ChannelSubscribed.php / ChannelUnsubscribed.php
+    CommentCreated.php / CommentLiked.php
+    SearchPerformed.php
+    VideoClickedFromFeed.php / VideoFinished.php / VideoImpressed.php / VideoImpressionsBatch.php
+    VideoLiked.php / VideoPublished.php / VideoReactionApplied.php
+    VideoSaved.php / VideoSkipped.php / VideoStatusUpdated.php
+    VideoUndisliked.php / VideoUnliked.php / VideoUnsaved.php / VideoViewed.php
+
+  Exceptions/
+    InvalidCredentialsException.php # 401 renderizado em bootstrap/app.php
+
   Http/
-    Controllers/         # Thin controllers — parse input, authorize, call service, format response
+    Controllers/                    # Thin: parse input → authorize → service → resource
+      AnalyticsController.php
       AuthController.php
       ChannelController.php
+      CommentController.php
+      Controller.php                # Base: json(), noContent(), AuthorizesRequests
+      NotificationsController.php
       PlaylistController.php
+      TusController.php             # Proxy tus-php: lida com todos os verbos do protocolo tus
       UserController.php
       VideoController.php
-    Requests/            # FormRequests com validação e authorize()
-      Auth/
-      Playlist/
+
+    Middleware/
+      CheckSessionVersion.php       # Alias session.version — valida session_version vs DB
+
+    Requests/
+      Analytics/                    # LogClickRequest, LogImpressionsRequest, LogSearchRequest, LogSkipRequest
+      Auth/                         # LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest, UpdateProfileRequest
+      Comment/                      # StoreCommentRequest, UpdateCommentRequest
+      Playlist/                     # AddVideoRequest, ReorderVideosRequest, StorePlaylistRequest, UpdatePlaylistRequest
       Video/
-    Resources/           # JsonResource — formata resposta da API
+        StoreVideoRequest.php       # Aceita upload_key (tus) OU video_file (direto); verifica owner
+        UpdateProgressRequest.php
+        UpdateVideoRequest.php
+
+    Resources/                      # JsonResource — nunca retorne models crus
+      CommentResource.php
+      CommentVersionResource.php
+      NotificationResource.php
       PlaylistResource.php
       UserResource.php
       VideoResource.php
+      WatchHistoryResource.php
+
   Jobs/
-    ProcessVideoUpload.php   # Async: move arquivo tmp → public, atualiza status
+    ProcessVideoUpload.php          # Async: move tmp→public, calcula status, dispara eventos
+
+  Listeners/
+    LogImpressionsBatch.php         # Bulk-insere impressões em user_analytics
+    LogUserAnalytic.php             # Persiste qualquer evento loggable em user_analytics
+    SendCommentLikedNotification.php
+    SendCommentRepliedNotification.php
+    SendNewSubscriberNotification.php
+    SendVideoLikedNotification.php
+    SendVideoPublishedNotifications.php
+
   Models/
-    Playlist.php
-    User.php
-    Video.php
-  Services/              # Business logic — nunca chame Eloquent direto no controller
-    AuthService.php
-    ChannelService.php
-    PlaylistService.php
-    ThumbnailService.php
-    UserService.php
-    VideoService.php
-    VideoStorageService.php
-  Enums/
-    VideoStatus.php      # published | scheduled | processing | draft | failed
-    ReactionType.php
-    HistoryPeriod.php
-  Exceptions/
-    InvalidCredentialsException.php
+    Comment.php                     # cuid, content, likes_count, replies_count, current_version_id
+    CommentVersion.php              # Histórico de edições de comentários
+    Playlist.php                    # puid; videos() → BelongsToMany ordenado por position
+    PlaylistVideo.php               # Pivot: playlist_id, video_id, position
+    User.php                        # uuid; boot cria playlist "Watch Later" para todo user novo
+    UserAnalytic.php                # Registro de eventos analytics do usuário
+    UserSubscription.php            # Pivot: user_id → channel_id
+    UserVideoReaction.php           # Pivot: user_id, video_id, type (like|dislike)
+    Video.php                       # vuid; scopeFilter, scopePublished, scopeNewestPublished
+    VideoProgress.php               # user_id, video_id, percent (0-100)
+    VideoSummary.php                # keyPoints, chapters, readingMode (gerado por IA)
+    WatchHistory.php                # user_id, video_id, watched_at, watched_hour (GENERATED)
+
+  Notifications/
+    CommentLikedNotification.php
+    CommentRepliedNotification.php
+    NewSubscriberNotification.php
+    ResetPasswordNotification.php   # Envia link para o frontend SPA, não para /password/reset do Laravel
+    VideoFromSubscriptionNotification.php
+    VideoLikedNotification.php
+
   Policies/
+    CommentPolicy.php
     PlaylistPolicy.php
     VideoPolicy.php
 
-routes/
-  api.php               # Todas as rotas da API
+  Providers/
+    AppServiceProvider.php          # Rate limiters, Gate::policy(), Event::listen()
 
-tests/
-  Feature/
-    Auth/LoginTest.php
-    Http/Controllers/    # Teste HTTP por controller
-  Unit/
-    Enums/
-    Models/
-    Services/
-    Jobs/
+  Services/
+    AnalyticsService.php            # recordImpressions, recordClick, recordSearch, recordSkip
+    AuthService.php                 # login, logout, me, register, updateProfile, resetPassword
+    ChannelService.php              # show, videos, toggleSubscription
+    CommentService.php              # list, store, update, destroy, toggleLike, replies, versions
+    PlaylistService.php             # CRUD, addVideo, removeVideo, reorderVideos
+    ThumbnailService.php            # redimensiona e salva thumbnail
+    UserService.php                 # getUserLikes, getUserSaved, getUserSubscriptions, getUserHistory, getUserProgress
+    VideoService.php                # CRUD, finalizeUpload (tus), toggleLike/Dislike/Save, updateProgress
+    VideoStorageService.php         # publishVideo, publishThumbnail, cleanupTmp
+
+config/
+  tus.php                           # upload_dir, ttl, max_size, api_path
+
+routes/
+  api.php                           # Todas as rotas REST da API
+  channels.php                      # Canais Reverb: users.{uuid} (privado), videos.{vuid} (público)
 ```
 
 ---
@@ -83,66 +164,98 @@ tests/
 ## API Routes
 
 Todas as rotas da API estão prefixadas em `/api` via `bootstrap/app.php`.
+Organizadas em `Route::prefix(...)->group(...)`. Throttles usam named rate limiters do `AppServiceProvider`.
 
 ### Públicas
 
 ```
-POST /api/auth/login    throttle:5/min    AuthController::login
+POST   /api/sessions                        AuthController::login          throttle:login
+POST   /api/users                           AuthController::register
+POST   /api/password-resets                 AuthController::forgotPassword throttle:password-reset
+PATCH  /api/password-resets/{token}         AuthController::resetPassword  throttle:password-reset
 ```
 
 ### Protegidas (auth:sanctum + session.version)
 
 ```
-POST   /api/auth/logout                   AuthController::logout
-GET    /api/auth/me                       AuthController::me
-PATCH  /api/auth/me                       AuthController::updateProfile
+GET    /api/sessions/current                AuthController::me
+DELETE /api/sessions/current                AuthController::logout
 
-GET    /api/videos                        VideoController::index
-POST   /api/videos                        VideoController::store          → 202 Accepted
-GET    /api/videos/{vuid}                 VideoController::show
-PATCH  /api/videos/{vuid}                 VideoController::update
-DELETE /api/videos/{vuid}                 VideoController::destroy        → 204
-POST   /api/videos/{vuid}/views           VideoController::recordView     → 204
-POST   /api/videos/{vuid}/like            VideoController::toggleLike     → 204
-POST   /api/videos/{vuid}/dislike         VideoController::toggleDislike  → 204
-POST   /api/videos/{vuid}/save            VideoController::toggleSave     → 204
-PUT    /api/videos/{vuid}/progress        VideoController::updateProgress → 204
-GET    /api/videos/{vuid}/summary         VideoController::summary
+PATCH  /api/users/{uuid}                    AuthController::updateProfile
+GET    /api/users/me/likes                  UserController::likes
+GET    /api/users/me/saved                  UserController::saved
+GET    /api/users/me/subscriptions          UserController::subscriptions
+GET    /api/users/me/progress               UserController::progress
+GET    /api/users/me/history                UserController::history          ?period={today|week|month|all}
+GET    /api/users/me/history/events         UserController::historyEvents
+DELETE /api/users/me/history                UserController::clearHistory     → 204
+DELETE /api/users/me/history/{vuid}         UserController::removeHistory    → 204
 
-GET    /api/users/me/likes                UserController::likes
-GET    /api/users/me/saved                UserController::saved
-GET    /api/users/me/subscriptions        UserController::subscriptions
-GET    /api/users/me/history              UserController::history
-GET    /api/users/me/history/events       UserController::historyEvents
-DELETE /api/users/me/history              UserController::clearHistory    → 204
-DELETE /api/users/me/history/{vuid}       UserController::removeHistory   → 204
+GET    /api/email-verifications/{id}/{hash} AuthController::verifyEmail      signed + throttle:email-verification
+POST   /api/email-verifications             AuthController::resendVerification throttle:email-verification
 
-GET    /api/channels/{uuid}               ChannelController::show
-GET    /api/channels/{uuid}/videos        ChannelController::videos
-POST   /api/channels/{uuid}/subscription  ChannelController::toggleSubscription → 204
+ANY    /api/uploads/tus{suffix?}            TusController::handle            CSRF isento
 
-GET    /api/playlists                     PlaylistController::index
-POST   /api/playlists                     PlaylistController::store       → 201
-GET    /api/playlists/{puid}              PlaylistController::show
-PATCH  /api/playlists/{puid}              PlaylistController::update
-DELETE /api/playlists/{puid}              PlaylistController::destroy     → 204
-POST   /api/playlists/{puid}/videos       PlaylistController::addVideo
-DELETE /api/playlists/{puid}/videos/{vuid} PlaylistController::removeVideo → 204
-PUT    /api/playlists/{puid}/videos       PlaylistController::reorderVideos
+GET    /api/videos                          VideoController::index           ?page, search, tags[], status
+POST   /api/videos                          VideoController::store           → 202 Accepted
+GET    /api/videos/{vuid}                   VideoController::show
+PATCH  /api/videos/{vuid}                   VideoController::update
+DELETE /api/videos/{vuid}                   VideoController::destroy         → 204
+POST   /api/videos/{vuid}/views             VideoController::recordView      → 204
+POST   /api/videos/{vuid}/like              VideoController::toggleLike      → 204
+POST   /api/videos/{vuid}/dislike           VideoController::toggleDislike   → 204
+POST   /api/videos/{vuid}/save              VideoController::toggleSave      → 204
+PUT    /api/videos/{vuid}/progress          VideoController::updateProgress  → 204
+GET    /api/videos/{vuid}/summary           VideoController::summary
+GET    /api/videos/{vuid}/comments          CommentController::index         ?page
+POST   /api/videos/{vuid}/comments          CommentController::store
+
+PATCH  /api/comments/{cuid}                 CommentController::update
+DELETE /api/comments/{cuid}                 CommentController::destroy       → 204
+POST   /api/comments/{cuid}/like            CommentController::toggleLike
+GET    /api/comments/{cuid}/replies         CommentController::replies
+GET    /api/comments/{cuid}/versions        CommentController::versions
+
+GET    /api/channels/{uuid}                 ChannelController::show
+GET    /api/channels/{uuid}/videos          ChannelController::videos
+POST   /api/channels/{uuid}/subscription    ChannelController::toggleSubscription → 204
+
+GET    /api/playlists                       PlaylistController::index
+POST   /api/playlists                       PlaylistController::store        → 201
+GET    /api/playlists/{puid}                PlaylistController::show
+PATCH  /api/playlists/{puid}                PlaylistController::update
+DELETE /api/playlists/{puid}                PlaylistController::destroy      → 204
+GET    /api/playlists/{puid}/videos         PlaylistController::listVideos
+POST   /api/playlists/{puid}/videos         PlaylistController::addVideo
+PUT    /api/playlists/{puid}/videos         PlaylistController::reorderVideos
+DELETE /api/playlists/{puid}/videos/{vuid}  PlaylistController::removeVideo  → 204
+
+GET    /api/notifications                   NotificationsController::index
+GET    /api/notifications/unread-count      NotificationsController::unreadCount
+POST   /api/notifications/read-all          NotificationsController::readAll
+POST   /api/notifications/{id}/read         NotificationsController::markRead
+DELETE /api/notifications/{id}              NotificationsController::destroy → 204
+
+POST   /api/analytics/impressions           AnalyticsController::impressions
+POST   /api/analytics/clicks                AnalyticsController::click
+POST   /api/analytics/searches              AnalyticsController::search
+POST   /api/analytics/skips                 AnalyticsController::skip
 ```
 
 ---
 
 ## Identificadores
 
-| Modelo    | Campo | Tipo                  | Geração                 |
-|-----------|-------|-----------------------|-------------------------|
-| User      | `uuid` | UUID v4              | `Str::uuid()` no boot() |
-| Video     | `vuid` | string 11 chars       | `Str::random(11)` no boot() |
-| Playlist  | `puid` | string 11 chars       | `Str::random(11)` no boot() |
+| Modelo    | Campo  | Tipo           | Geração                       |
+|-----------|--------|----------------|-------------------------------|
+| User      | `uuid` | ULID (string)  | `Str::ulid()` no `boot()`     |
+| Video     | `vuid` | string 11 chars| `Str::random(11)` no `boot()` |
+| Playlist  | `puid` | ULID (string)  | `Str::ulid()` no `boot()`     |
+| Comment   | `cuid` | string 11 chars| `Str::random(11)` no `boot()` |
 
 - Nunca use `id` inteiro nas URLs — use sempre o identifier público.
-- Requests que recebem vuid usam `exists:videos,vuid` (não `'uuid'` — vuid NÃO é UUID v4).
+- `vuid` e `cuid` **não são UUID v4** — use `exists:videos,vuid` na validação, não `'uuid'`.
+- `Comment` usa `getRouteKeyName()` → `'cuid'`, então `{comment}` nas rotas resolve por `cuid`.
 
 ---
 
@@ -159,11 +272,13 @@ Todos os controllers usam JsonResource. **Nunca retorne models crus.**
     'status'        => $this->status->value,
     'views'         => $this->views,
     'duration'      => $this->duration,
-    'video_url'     => $this->video_url,
-    'thumbnail_url' => $this->thumbnail_url,
+    'video_url'     => Storage::disk('public')->url($this->video_url),  // null-safe
+    'thumbnail_url' => Storage::disk('public')->url($this->thumbnail_url),
     'published_at'  => $this->published_at?->toIso8601String(),
     'scheduled_at'  => $this->scheduled_at?->toIso8601String(),
+    'created_at'    => $this->created_at->toIso8601String(),
     'tags'          => $this->tags ?? [],
+    'captions'      => $this->captions ?? [],
     'channel'       => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
     'channel_id'    => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),
 ]
@@ -172,11 +287,13 @@ Todos os controllers usam JsonResource. **Nunca retorne models crus.**
 ### UserResource
 ```php
 [
-    'uuid'  => $this->uuid,
-    'name'  => $this->name,
-    'email' => $this->email,
-    'bio'   => $this->bio,
-    // ...
+    'uuid'              => $this->uuid,
+    'name'              => $this->name,
+    'email'             => $this->email,
+    'bio'               => $this->bio,
+    'avatar'            => $this->avatar,
+    'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+    'created_at'        => $this->created_at?->toIso8601String(),
 ]
 ```
 
@@ -190,6 +307,40 @@ Todos os controllers usam JsonResource. **Nunca retorne models crus.**
 ]
 ```
 
+### CommentResource
+```php
+[
+    'cuid'          => $this->cuid,
+    'content'       => $this->content,
+    'likes_count'   => $this->likes_count ?? 0,
+    'replies_count' => $this->replies_count ?? 0,
+    'is_liked'      => $this->is_liked ?? false,         // virtual, injetado pelo service
+    'is_edited'     => $this->current_version_id !== null,
+    'parent_cuid'   => $this->whenLoaded('parent', fn () => $this->parent?->cuid, null),
+    'created_at'    => $this->created_at->toIso8601String(),
+    'author'        => $this->whenLoaded('user', fn () => ['uuid', 'name', 'avatar']),
+]
+```
+
+### NotificationResource
+```php
+[
+    'id'         => $this->id,
+    'type'       => $this->data['type'] ?? null,
+    'data'       => $this->data,
+    'read_at'    => $this->read_at?->toISOString(),
+    'created_at' => $this->created_at->toISOString(),
+]
+```
+
+### WatchHistoryResource
+```php
+[
+    'vuid'       => $this->video->vuid,
+    'watched_at' => $this->watched_at->toIso8601String(),
+]
+```
+
 Coleções paginadas: `VideoResource::collection($paginator)` → envelope `{data: [...], links: {...}, meta: {...}}`.
 
 ---
@@ -197,8 +348,27 @@ Coleções paginadas: `VideoResource::collection($paginator)` → envelope `{dat
 ## Middleware
 
 - `auth:sanctum` — autenticação via Sanctum (cookie de sessão, sem JWT)
-- `session.version` — valida `session_version` do usuário; força logout se divergente
-- `throttle:login` — 5 tentativas/min por IP na rota de login
+- `session.version` — alias para `CheckSessionVersion`; compara `session_version` do token com o do banco; força logout se divergente
+
+### Named rate limiters (definidos em `AppServiceProvider::boot()`)
+
+| Nome                 | Limite                               | Aplicado em                             |
+|----------------------|--------------------------------------|-----------------------------------------|
+| `login`              | 5/min por IP + 10/min por email      | `POST /api/sessions`                    |
+| `password-reset`     | 6/min por IP                         | `POST,PATCH /api/password-resets`       |
+| `email-verification` | 6/min por IP                         | `POST,GET /api/email-verifications`     |
+
+**Nunca use `throttle:N,M` inline nas rotas** — sempre via named limiters com `middleware('throttle:nome')`.
+
+### CSRF — exceção para tus (bootstrap/app.php)
+
+```php
+$middleware->validateCsrfTokens(except: ['api/uploads/tus*']);
+```
+
+`withoutMiddleware(VerifyCsrfToken::class)` **não funciona** em rotas tus porque o Sanctum
+injeta CSRF via `EnsureFrontendRequestsAreStateful` em pipeline próprio, antes do middleware
+do controller. A única solução é o `except` no nível do framework.
 
 ---
 
@@ -206,15 +376,38 @@ Coleções paginadas: `VideoResource::collection($paginator)` → envelope `{dat
 
 ### Boot auto-create
 `User::boot()` cria automaticamente uma playlist "Watch Later" para todo usuário novo.
-Impacto nos testes: `User::factory()->create()` → banco já tem 1 playlist. Ajuste contagens.
+**Impacto nos testes:** `User::factory()->create()` → banco já tem 1 playlist. Ajuste contagens.
 
-### Enum VideoStatus
-Valores: `published | scheduled | processing | draft | failed`
-- `isPublic()` → true apenas para `PUBLISHED`
-- `values()` → array com todos os valores
+### Video::scopeFilter
+Full-text search com fallback por driver:
+- **PostgreSQL:** usa coluna `search_tsv` (tsvector GIN-indexed) com `to_tsquery`
+- **SQLite (testes):** fallback com `LIKE` em `title` e `description`
+
+Tags usam OR: qualquer tag que corresponda inclui o vídeo.
 
 ### Carbon nos modelos
-Campos `published_at`, `scheduled_at` são cast para `Carbon`. Use `->isFuture()` diretamente, não `?->isFuture()` (retornaria `bool|null`, quebrando PHPStan).
+Campos `published_at`, `scheduled_at` são cast para `Carbon`. Use `->isFuture()` diretamente — nunca `?->isFuture()` (retornaria `bool|null`, quebrando PHPStan).
+
+### Comment — `is_liked` virtual
+Não é coluna. O service injeta `is_liked` como atributo virtual via `setRelation` ou `setAttribute`
+após resolver os likes do usuário em bulk para evitar N+1.
+
+### WatchHistory — `watched_hour`
+No PostgreSQL é uma coluna `GENERATED ALWAYS AS` (hora truncada). Em SQLite (testes) é coluna plain.
+Nunca defina `watched_hour` manualmente no PostgreSQL; nos testes, defina para que o `insertOrIgnore` funcione.
+
+---
+
+## Enums
+
+| Enum              | Valores                                                                        |
+|-------------------|--------------------------------------------------------------------------------|
+| `VideoStatus`     | `published`, `scheduled`, `processing`, `draft`, `failed`                     |
+| `ReactionType`    | `like`, `dislike`                                                              |
+| `VideoEventType`  | `view`, `like`, `dislike`, `save`, `finish`, `skip`, `unlike`, `undislike`, `unsave`, `impression`, `click`, `subscribe`, `unsubscribe`, `search` |
+| `NotificationType`| `comment_replied`, `comment_liked`, `video_liked`, `new_subscriber`, `video_from_subscription` |
+| `PlaylistName`    | `Watch Later`                                                                  |
+| `HistoryPeriod`   | `today`, `week`, `month`, `all`                                                |
 
 ---
 
@@ -239,7 +432,7 @@ public function metodo(TipoA $paramA, TipoB $paramB): TipoRetorno
 
 - Toda propriedade de model deve ter `@property` com tipo correto (use `\Illuminate\Support\Carbon`, não `string`, para datas).
 - `@var` inline proibido. Corrija a causa raiz do erro de tipo.
-- Elvis operator `?:` proibido (PHPStan `ternary.shortNotAllowed`). Use `!== null ? ... : ...`.
+- Elvis operator `?:` proibido (`ternary.shortNotAllowed`). Use `!== null ? ... : ...`.
 - `readStream()` retorna `resource|null` — faça null-guard antes de passar para `put()`.
 - Scopes que chamam métodos que retornam `Builder` e depois retornam `$query`: descarte o retorno intermediário.
 
@@ -261,7 +454,8 @@ Framework: **Pest** (nunca PHPUnit raw). Sempre use `describe()` + `test()`.
 
 - SQLite in-memory (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`)
 - Array drivers para session e cache (`SESSION_DRIVER=array`, `CACHE_STORE=array`)
-- RefreshDatabase em cada arquivo Feature
+- `QUEUE_CONNECTION=sync`
+- `RefreshDatabase` em cada arquivo Feature
 
 ### Login e rate limiter
 
@@ -301,6 +495,7 @@ Todo arquivo novo de produção exige arquivo de teste correspondente. PRs sem t
 <?php
 
 use App\Models\User;
+use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
@@ -326,47 +521,158 @@ describe('VideoController', function () {
 
 Controllers são thin: recebem request, autorizam, chamam service, formatam resposta. **Lógica de negócio fica no service.**
 
-| Service               | Responsabilidade                                          |
-|-----------------------|-----------------------------------------------------------|
-| `AuthService`         | login, logout, me, updateProfile                         |
-| `VideoService`        | CRUD de vídeo, toggleLike/Dislike/Save, updateProgress   |
-| `VideoStorageService` | move arquivos tmp→public, publica thumbnail              |
-| `ThumbnailService`    | redimensiona e salva thumbnail                           |
-| `ChannelService`      | toggleSubscription                                        |
-| `PlaylistService`     | CRUD de playlist, addVideo, removeVideo, reorderVideos   |
-| `UserService`         | getUserLikes, getUserSaved, history                      |
+| Service               | Responsabilidade                                                             |
+|-----------------------|------------------------------------------------------------------------------|
+| `AuthService`         | login, logout, me, register, updateProfile, sendPasswordResetLink, resetPassword |
+| `VideoService`        | CRUD, finalizeUpload (tus), toggleLike/Dislike/Save, updateProgress, getSummary |
+| `VideoStorageService` | publishVideo, publishThumbnail, cleanupTmp                                   |
+| `ThumbnailService`    | redimensiona e salva thumbnail                                               |
+| `ChannelService`      | show, videos, toggleSubscription                                             |
+| `PlaylistService`     | CRUD, addVideo, removeVideo, reorderVideos                                   |
+| `UserService`         | getUserLikes, getUserSaved, getUserSubscriptions, getUserHistory, getUserProgress |
+| `CommentService`      | list, store, update, destroy, toggleLike, replies, versions                  |
+| `AnalyticsService`    | recordImpressions, recordClick, recordSearch, recordSkip                     |
 
 ---
 
 ## Upload de vídeo — Fluxo assíncrono
 
+### Modo 1: Upload direto (multipart/form-data)
+
 ```
-POST /api/videos (FormData)
+POST /api/videos { video_file, thumbnail_file?, title, ... }
   → VideoService::createVideo()
      → salva arquivo em uploads/tmp/{vuid}.ext (disco local, privado)
      → cria Video com status=PROCESSING
-     → dispatch ProcessVideoUpload::dispatch($video, $tmpPath)
+     → dispatch ProcessVideoUpload
   → retorna 202 com VideoResource
+```
 
-ProcessVideoUpload::handle()
-  → move arquivo tmp → storage/app/public/videos/{vuid}.ext
-  → atualiza video_url, thumbnail_url
-  → status = PUBLISHED (ou SCHEDULED se scheduled_at futuro)
+### Modo 2: Upload resumável via tus (padrão do frontend)
 
-ProcessVideoUpload::failed()
-  → limpa arquivos tmp
-  → status = FAILED
+```
+1. POST /api/uploads/tus
+     → TusController::handle()
+     → tus-php cria sessão Redis com prefixo tus:server:
+     → listener tus-server.upload.created → Cache::put("tus:owner:{key}", userId)
+     → responde 201 Location: /api/uploads/tus/{key}
+
+2. PATCH /api/uploads/tus/{key}  (N vezes, 5 MB por chunk)
+     → TusController::handle() — escreve chunk no arquivo
+     → responde 204 com Upload-Offset atualizado
+
+3. POST /api/videos { upload_key: "{key}", title, description, tags, status, ... }
+     → StoreVideoRequest — valida owner via Cache::get("tus:owner:{key}")
+     → VideoController::store() → detecta $request->has('upload_key')
+     → VideoService::finalizeUpload()
+        → TusRedisStore (prefixo tus:server:) — busca metadata do arquivo
+        → move arquivo de uploads/tus/ para uploads/tmp/{vuid}.ext
+        → cria Video com status=PROCESSING
+        → dispatch ProcessVideoUpload
+        → deleta entrada tus no Redis + Cache owner
+     → retorna 202 com VideoResource
+```
+
+### ProcessVideoUpload::handle()
+```
+→ VideoStorageService::publishVideo()    → uploads/tmp/{vuid}.ext → storage/app/public/videos/{vuid}.ext
+→ VideoStorageService::publishThumbnail() → uploads/tmp/thumb_{vuid}.ext → storage/app/public/thumbnails/{vuid}.jpg
+→ atualiza video_url, thumbnail_url, status, published_at
+→ dispara VideoStatusUpdated + (se publicado) VideoPublished
+```
+
+### ProcessVideoUpload::failed()
+```
+→ cleanupTmp — deleta arquivos temporários
+→ video.status = FAILED
+→ dispara VideoStatusUpdated
 ```
 
 O worker é o serviço `queue` no docker-compose: `php artisan queue:work redis --tries=3 --timeout=3600`.
+
+### config/tus.php
+
+| Chave        | Valor padrão                      | Descrição                                     |
+|--------------|-----------------------------------|-----------------------------------------------|
+| `upload_dir` | `storage_path('app/uploads/tus')` | Onde os chunks são montados durante o upload  |
+| `ttl`        | `21600` (6h)                      | TTL do Cache owner no Laravel                 |
+| `max_size`   | `5 GB` (via `TUS_MAX_UPLOAD_BYTES`)| Limite por upload                            |
+| `api_path`   | `/api/uploads/tus`                | Deve bater com a rota em api.php              |
+
+### Gotcha — prefixo do TusRedisStore
+
+O `TusServer` define o prefixo Redis via reflection: `'tus:' + strtolower(ShortName) + ':'` → **`tus:server:`**.
+
+Ao instanciar `TusRedisStore` manualmente (ex: em `VideoService`), o prefixo padrão é `tus:`.
+**Sempre chame `setPrefix('tus:server:')` antes de usar `get()`/`delete()`**:
+
+```php
+$tusCache = new TusRedisStore;
+$tusCache->setPrefix('tus:server:');
+$fileMeta = $tusCache->get($uploadKey);
+```
+
+### Gotcha — Location header no Vite proxy
+
+O tus-php monta a `Location` usando o `Host` do request. Com `changeOrigin: true` no proxy do Vite,
+o `Host` vira `backend:8000` (inacessível pelo browser). O `vite.config.ts` tem um `configure` handler
+que reescreve o header de resposta:
+
+```ts
+configure: (proxy) => {
+    proxy.on('proxyRes', (proxyRes, req) => {
+        const location = proxyRes.headers['location'];
+        if (typeof location === 'string') {
+            proxyRes.headers['location'] = location.replace(
+                /^https?:\/\/[^/]+/,
+                `http://${req.headers.host}`,
+            );
+        }
+    });
+},
+```
+
+---
+
+## Events e Listeners
+
+Registrados em `AppServiceProvider::boot()`.
+
+### Eventos loggáveis (→ `LogUserAnalytic`)
+`VideoViewed`, `VideoReactionApplied`, `VideoSaved`, `VideoFinished`, `VideoSkipped`,
+`VideoUnliked`, `VideoUndisliked`, `VideoUnsaved`, `VideoImpressed`, `VideoClickedFromFeed`,
+`ChannelSubscribed`, `ChannelUnsubscribed`, `SearchPerformed`
+
+### Eventos com notificações
+| Evento                  | Listener                              |
+|-------------------------|---------------------------------------|
+| `VideoImpressionsBatch` | `LogImpressionsBatch` (bulk-insert)   |
+| `CommentCreated`        | `SendCommentRepliedNotification`      |
+| `CommentLiked`          | `SendCommentLikedNotification`        |
+| `VideoLiked`            | `SendVideoLikedNotification`          |
+| `ChannelSubscribed`     | `SendNewSubscriberNotification`       |
+| `VideoPublished`        | `SendVideoPublishedNotifications`     |
+
+### Broadcasting (Reverb)
+Canais definidos em `routes/channels.php`:
+
+| Canal             | Tipo    | Autorização                        |
+|-------------------|---------|------------------------------------|
+| `users.{uuid}`    | Privado | `$user->uuid === $uuid`            |
+| `videos.{vuid}`   | Público | sempre `true`                      |
+
+`VideoStatusUpdated` dispara broadcast em `videos.{vuid}` para notificar o frontend em tempo real.
 
 ---
 
 ## Autorização
 
-Policies: `VideoPolicy` e `PlaylistPolicy`. Registradas no `AppServiceProvider` via `Gate::policy()`.
+Policies registradas em `AppServiceProvider` via `Gate::policy()`:
+- `VideoPolicy` — `view`, `update`, `delete`
+- `PlaylistPolicy` — `view`, `update`, `delete`, `addVideo`, `removeVideo`, `reorderVideos`
+- `CommentPolicy` — `update`, `delete`
 
-Controllers chamam `$this->authorize('update', $playlist)` antes de mutações que exigem ownership.
+Controllers chamam `$this->authorize('ação', $model)` antes de qualquer mutação que exige ownership.
 
 ---
 
@@ -374,8 +680,17 @@ Controllers chamam `$this->authorize('update', $playlist)` antes de mutações q
 
 ```env
 QUEUE_CONNECTION=redis
-FILESYSTEM_DISK=local          # uploads temporários
+FILESYSTEM_DISK=local          # uploads temporários (privado)
 FILESYSTEM_DISK_PUBLIC=public  # arquivos servidos pelo nginx
+
+TUS_MAX_UPLOAD_BYTES=5368709120  # 5 GB (opcional — padrão no config/tus.php)
+
+# Reverb (WebSockets)
+REVERB_APP_ID=...
+REVERB_APP_KEY=...
+REVERB_APP_SECRET=...
+REVERB_HOST=reverb             # nome do serviço no docker-compose
+REVERB_PORT=8080
 
 # Testes (phpunit.xml)
 DB_CONNECTION=sqlite
