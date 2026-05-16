@@ -64,8 +64,8 @@ class UpdateVideoRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $status = $this->get('status');
-            $scheduledAt = $this->get('scheduled_at');
+            $status = $this->input('status');
+            $scheduledAt = $this->input('scheduled_at');
 
             if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
                 $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
