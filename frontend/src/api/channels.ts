@@ -22,7 +22,7 @@ class ChannelApi {
     }
 
     async subscriptions(): Promise<User[] | null> {
-        return apiClient.getValidated('/subscriptions', z.array(UserApiSchema));
+        return apiClient.getValidated('/users/me/subscriptions', z.array(UserApiSchema));
     }
 }
 
