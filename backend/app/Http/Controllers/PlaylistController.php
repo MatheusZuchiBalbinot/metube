@@ -7,6 +7,7 @@ use App\Http\Requests\Playlist\ReorderVideosRequest;
 use App\Http\Requests\Playlist\StorePlaylistRequest;
 use App\Http\Requests\Playlist\UpdatePlaylistRequest;
 use App\Http\Resources\PlaylistResource;
+use App\Http\Resources\VideoResource;
 use App\Services\PlaylistService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -59,6 +60,25 @@ class PlaylistController extends Controller
         $this->authorize('view', $playlist);
 
         return $this->json(new PlaylistResource($playlist));
+    }
+
+    /**
+     * List all videos in a playlist, ordered by position.
+     *
+     * @param  string  $puid  Playlist identifier
+     * @return JsonResponse Ordered collection of video resources
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function listVideos(string $puid): JsonResponse
+    {
+        $playlist = $this->playlistService->getPlaylistByPuid($puid);
+        $this->authorize('view', $playlist);
+
+        $videos = $playlist->videos()->with('channel')->get();
+
+        return $this->json(VideoResource::collection($videos));
     }
 
     /**
