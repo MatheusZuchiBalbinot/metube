@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Data\CreateVideoData;
+use App\Data\FinalizeUploadData;
 use App\Data\UpdateVideoData;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
@@ -37,16 +38,30 @@ class VideoController extends Controller
     }
 
     /**
-     * Create a new video.
+     * Create a new video from a direct file upload or a completed tus session.
+     *
+     * Two upload modes are accepted:
+     *   - Direct: multipart/form-data with `video_file` (+ optional `thumbnail_file`)
+     *   - Resumable: JSON with `upload_key` from a completed tus session (+ optional `thumbnail_key`)
      *
      * @param  StoreVideoRequest  $request  Validated video data
-     * @return JsonResponse Created video with $vuid
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse Created video (202 Accepted — still processing)
      */
     public function store(StoreVideoRequest $request): JsonResponse
     {
-        $video = $this->videoService->createVideo(auth()->user(), CreateVideoData::fromRequest($request->validated()));
+        $isTusUpload = $request->has('upload_key');
+
+        if ($isTusUpload) {
+            $video = $this->videoService->finalizeUpload(
+                auth()->user(),
+                FinalizeUploadData::fromRequest($request->validated()),
+            );
+        } else {
+            $video = $this->videoService->createVideo(
+                auth()->user(),
+                CreateVideoData::fromRequest($request->validated()),
+            );
+        }
 
         return $this->json(new VideoResource($video), 202);
     }

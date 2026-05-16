@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Data\CreateVideoData;
 use App\Data\EmptyVideoSummary;
+use App\Data\FinalizeUploadData;
 use App\Data\UpdateVideoData;
 use App\Enums\ReactionType;
 use App\Enums\VideoEventType;
@@ -20,10 +21,12 @@ use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoSummary;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use TusPhp\Cache\RedisStore as TusRedisStore;
 
 /**
  * VideoService — Business logic for videos.
@@ -65,6 +68,77 @@ class VideoService
 
             ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
 
+            Cache::tags(['feed'])->flush();
+
+            return $video->load('channel');
+        });
+    }
+
+    /**
+     * Finalize a tus resumable upload and create the video record.
+     *
+     * The tus upload has already completed (all bytes received). This method
+     * retrieves the assembled file from tus temporary storage, moves it to the
+     * standard uploads/tmp location, creates the Video record with
+     * status=PROCESSING, and dispatches ProcessVideoUpload — exactly like
+     * createVideo() does for the legacy single-POST path.
+     *
+     * @param  User  $user  Authenticated channel owner
+     * @param  FinalizeUploadData  $data  Validated metadata + upload keys
+     * @return Video Freshly created Video (status=PROCESSING)
+     *
+     * @throws ModelNotFoundException When the upload_key is not found in tus cache
+     * @throws \RuntimeException When the assembled file cannot be moved
+     */
+    public function finalizeUpload(User $user, FinalizeUploadData $data): Video
+    {
+        $tusCache = new TusRedisStore;
+        // TusServer sets prefix via reflection: 'tus:' + strtolower(ShortName) + ':'
+        $tusCache->setPrefix('tus:server:');
+
+        $fileMeta = $tusCache->get($data->uploadKey);
+        $isFileReady = $fileMeta !== null && isset($fileMeta['file_path']) && file_exists($fileMeta['file_path']);
+
+        if (! $isFileReady) {
+            throw new ModelNotFoundException('Upload session not found or file is incomplete.');
+        }
+
+        return DB::transaction(function () use ($user, $data, $tusCache, $fileMeta) {
+            $video = Video::create([
+                'channel_id' => $user->id,
+                'title' => $data->title,
+                'description' => $data->description,
+                'tags' => $data->tags,
+                'status' => VideoStatus::PROCESSING,
+                'scheduled_at' => $data->scheduledAt,
+            ]);
+
+            $rawExt = strtolower(pathinfo((string) ($fileMeta['name'] ?? 'video.mp4'), PATHINFO_EXTENSION));
+            $ext = $rawExt !== '' ? $rawExt : 'mp4';
+            $tmpPath = "uploads/tmp/{$video->vuid}.{$ext}";
+            rename((string) $fileMeta['file_path'], Storage::disk('local')->path($tmpPath));
+
+            $tmpThumbPath = null;
+            $hasThumbnailKey = $data->thumbnailKey !== null;
+
+            if ($hasThumbnailKey) {
+                $thumbMeta = $tusCache->get($data->thumbnailKey);
+                $isThumbReady = $thumbMeta !== null && isset($thumbMeta['file_path']) && file_exists((string) $thumbMeta['file_path']);
+
+                if ($isThumbReady) {
+                    $rawThumbExt = strtolower(pathinfo((string) ($thumbMeta['name'] ?? 'thumb.jpg'), PATHINFO_EXTENSION));
+                    $thumbExt = $rawThumbExt !== '' ? $rawThumbExt : 'jpg';
+                    $tmpThumbPath = "uploads/tmp/thumb_{$video->vuid}.{$thumbExt}";
+                    rename((string) $thumbMeta['file_path'], Storage::disk('local')->path($tmpThumbPath));
+                    $tusCache->delete($data->thumbnailKey);
+                    Cache::forget("tus:owner:{$data->thumbnailKey}");
+                }
+            }
+
+            ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
+
+            $tusCache->delete($data->uploadKey);
+            Cache::forget("tus:owner:{$data->uploadKey}");
             Cache::tags(['feed'])->flush();
 
             return $video->load('channel');
