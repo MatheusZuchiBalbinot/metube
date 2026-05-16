@@ -19,6 +19,16 @@ export interface VideoUploadPayload {
     videoFile: File
 }
 
+export interface VideoFinalizePayload {
+    uploadKey: string
+    thumbnailKey?: string
+    title: string
+    description: string
+    tags: Tag[]
+    status: VideoStatus
+    scheduledAt?: string
+}
+
 export interface VideoUpdatePayload {
     title?: string
     description?: string
@@ -77,6 +87,18 @@ class VideoApi {
             onUploadProgress: onProgress
                 ? (event) => onProgress(buildProgress(event, startTime))
                 : undefined,
+        });
+    }
+
+    async finalize(payload: VideoFinalizePayload): Promise<Video | null> {
+        return apiClient.postValidated(this.baseUrl, VideoApiSchema, {
+            upload_key: payload.uploadKey,
+            thumbnail_key: payload.thumbnailKey,
+            title: payload.title,
+            description: payload.description,
+            tags: payload.tags,
+            status: payload.status,
+            scheduled_at: payload.scheduledAt,
         });
     }
 
