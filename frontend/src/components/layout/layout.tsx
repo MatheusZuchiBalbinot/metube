@@ -16,7 +16,6 @@ import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@hooks/useScrollRestoration';
 import { useSearch } from '@context/search';
 import { STORAGE_KEYS } from '@utils/storageKeys';
-import EmailVerificationBanner from '@components/auth/verificationBanner';
 import './layout.css';
 
 function getInitialSidebarCollapsed(): boolean {
@@ -68,8 +67,6 @@ export default function AppLayout() {
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.video.activeTagView);
     const theaterMode = useAppSelector(s => s.video.theaterMode);
-    const user = useAppSelector(s => s.auth.user);
-    const isEmailUnverified = user !== null && user.emailVerifiedAt === undefined;
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
@@ -103,11 +100,7 @@ export default function AppLayout() {
     return (
         <div className="app-layout">
             <a href="#main-content" className="skip-link">{t('nav.skip_to_content')}</a>
-            <div className="app-layout__bg" aria-hidden="true">
-                <div className="app-layout__bg-orb" />
-            </div>
             <AppHeader onToggleSidebar={handleToggleSidebar} />
-            {isEmailUnverified && <EmailVerificationBanner />}
             <div className="app-layout__body">
                 <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
                 {!sidebarCollapsed && (

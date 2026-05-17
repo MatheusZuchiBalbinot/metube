@@ -27,6 +27,10 @@ export class VideoFilter {
         return { tags: [] as Tag[], year: null, dateFrom: null, dateTo: null, sortBy: SortBy.RECENT };
     }
 
+    static isEmpty(f: FilterState): boolean {
+        return f.tags.length === 0 && f.year === null && f.dateFrom === null && f.dateTo === null && f.sortBy === SortBy.RECENT;
+    }
+
     static apply(videos: Video[], f: FilterState): Video[] {
         let result = [...videos];
 

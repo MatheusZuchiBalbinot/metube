@@ -323,7 +323,7 @@
 }
 
 body {
-    background-color: var(--bg);
+    background-color: var(--surface);
     color: var(--text);
     min-height: 100dvh;
 }

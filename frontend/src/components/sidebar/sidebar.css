@@ -3,10 +3,8 @@
 .app-sidebar {
     width: var(--sidebar-width, 220px);
     flex-shrink: 0;
-    background: transparent;
-    backdrop-filter: var(--glass-blur-sm);
-    -webkit-backdrop-filter: var(--glass-blur-sm);
-    border-right: 1px solid var(--border);
+    background: var(--surface);
+    border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
     padding: 10px 0;
     position: sticky;
     top: 58px;
@@ -16,7 +14,8 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    will-change: contents;
+    will-change: width;
+    transition: width 0.24s var(--ease-out);
 }
 
 :root[data-mode='light'] .app-sidebar {
@@ -35,7 +34,7 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     padding: 0 8px;
 }
 
@@ -54,14 +53,17 @@
     text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
-    transition: color var(--duration-default), background var(--duration-default), transform 0.18s var(--ease-bounce);
+    transition:
+        color var(--duration-default),
+        background var(--duration-default),
+        padding 0.24s var(--ease-out),
+        gap 0.24s var(--ease-out);
 }
 
 /* Hover */
 .app-sidebar__item:not(.app-sidebar__item--active):hover {
     color: var(--text);
     background: var(--surface-2);
-    transform: translateX(2px);
 }
 
 /* Active */
@@ -118,8 +120,8 @@
 }
 
 .app-sidebar__item--active .app-sidebar__icon-chip {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 20%, transparent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .app-sidebar__item:not(.app-sidebar__item--active):hover .app-sidebar__icon-chip {
@@ -133,14 +135,14 @@
 /* ─── Section ─────────────────────────────────────────────────────────────── */
 
 .app-sidebar__section {
-    margin-top: 8px;
+    margin-top: 12px;
     padding-top: 8px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
 .app-sidebar__section-label {
     display: block;
-    padding: 6px 20px 4px;
+    padding: 6px 18px 4px;
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
     letter-spacing: 0.06em;
@@ -148,23 +150,39 @@
     color: var(--text-3);
     white-space: nowrap;
     overflow: hidden;
-    transition: opacity var(--duration-default);
+    max-height: 40px;
+    opacity: 1;
+    transition:
+        opacity 0.18s var(--ease-out),
+        max-height 0.24s var(--ease-out),
+        padding 0.24s var(--ease-out),
+        margin 0.24s var(--ease-out);
 }
 
 /* ─── Label ───────────────────────────────────────────────────────────────── */
 
 .app-sidebar__label {
     overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity var(--duration-default);
+    max-width: 160px;
+    opacity: 1;
+    transition:
+        opacity 0.15s var(--ease-out),
+        max-width 0.24s var(--ease-out);
 }
 
 /* ─── Collapsed — icon only ───────────────────────────────────────────────── */
 
-.app-sidebar--collapsed .app-sidebar__label,
-.app-sidebar--collapsed .app-sidebar__section-label {
+.app-sidebar--collapsed .app-sidebar__label {
+    max-width: 0;
     opacity: 0;
-    width: 0;
+    pointer-events: none;
+}
+
+.app-sidebar--collapsed .app-sidebar__section-label {
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
     pointer-events: none;
 }
 
@@ -172,10 +190,6 @@
     justify-content: center;
     padding: 6px;
     gap: 0;
-}
-
-.app-sidebar--collapsed .app-sidebar__item:not(.app-sidebar__item--active):hover {
-    transform: none;
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
@@ -202,11 +216,12 @@
     }
 }
 
-/* ─── Hidden state (theater mode) ────────────────────────────────────────── */
+/* ─── Hidden state (theater mode) — sem transição para ser instantâneo ───── */
 
 .app-sidebar--hidden {
     width: 0;
     padding: 0;
     border: none;
     overflow: hidden;
+    transition: none;
 }
