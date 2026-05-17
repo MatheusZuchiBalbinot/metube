@@ -51,17 +51,31 @@ services:
     networks:
       - app_net
 
-  queue:
+  whisper:
+    build: ./whisper
+    restart: unless-stopped
+    environment:
+      - WHISPER_MODEL=small
+      - WHISPER_LANGUAGE=pt
+      - STORAGE_ROOT=/storage/app/public
+    volumes:
+      - vidsum_storage:/storage:ro
+    networks:
+      - app_net
+
+  horizon:
     build: ./backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
-    command: php artisan queue:work redis --tries=3 --timeout=3600
+    command: php artisan horizon
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      whisper:
+        condition: service_started
     volumes:
       - ./backend:/app
       - /app/vendor
@@ -112,7 +126,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx:/etc/nginx/conf.d:ro
       - vidsum_storage:/var/www/storage-root:ro
     depends_on:
       - backend

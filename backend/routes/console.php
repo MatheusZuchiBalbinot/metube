@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('videos:publish-scheduled')->everyMinute();
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
