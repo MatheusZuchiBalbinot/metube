@@ -1,6 +1,7 @@
 /* eslint-disable @stylistic/max-len */
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '@hooks/useAuth';
@@ -12,8 +13,12 @@ export default function LoginPage() {
     const { t } = useTranslation();
     const { signIn, user, loading: authLoading, sessionError } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const resetSuccess = searchParams.get('reset') === '1';
+
+    const from = (location.state as { from?: Location } | null)?.from;
+    const returnTo = from ? `${from.pathname}${from.search}${from.hash}` : '/';
 
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
@@ -25,7 +30,7 @@ export default function LoginPage() {
     }
 
     if (user) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={returnTo} replace />;
     }
 
     async function handleSubmit(e: { preventDefault(): void }) {
@@ -35,7 +40,7 @@ export default function LoginPage() {
 
         try {
             await signIn(email, password);
-            navigate('/', { replace: true });
+            navigate(returnTo, { replace: true });
         } catch {
             setError(t('auth.invalid_credentials'));
         } finally {

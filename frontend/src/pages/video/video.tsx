@@ -1,15 +1,17 @@
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, Lightbulb, X, ChevronDown, Clock } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, Link2, Check, VideoOff, BookOpen, List, X, Clock, Clapperboard } from 'lucide-react';
 import VideoPlayer from '@components/player/player';
 import CommentSection from '@components/comment/section';
 import VideoRow from '@components/video/row';
+import VideoRowSkeleton from '@components/video/rowSkeleton';
 import FilterPanel from '@components/filter/panel';
 import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ReadingMode from '@components/video/readingMode';
 import type { FilterState } from '@components/filter/panel';
+import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { usePlaylist } from '@hooks/usePlaylist';
 import { useSubscription } from '@hooks/useSubscription';
@@ -30,25 +32,16 @@ import { ROUTES } from '@utils/routes';
 import TagBadge from '@components/tag/badge';
 import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
-import { Avatar, Button, Tooltip, Badge } from '@ui';
+import { Avatar, Button, Tooltip } from '@ui';
 import type { Video, VideoId } from '@models/video';
-import type { VideoSummary } from '@api/videos';
+import { VideoStatus } from '@models/video';
+import type { VideoSummary, VideoTranscription } from '@api/videos';
 import type { Tag } from '@models/tag';
 import getEcho from '@lib/echo';
 import './video.css';
 import { ToastType } from '@enums/toastType';
 import { SidebarTab } from '@enums/sidebarTab';
 
-
-
-function parseTimestamp(ts: string): number {
-    const parts = ts.split(':').map(Number);
-    const isHMS = parts.length === 3;
-    if (isHMS) {
-        return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
-    return parts[0] * 60 + (parts[1] ?? 0);
-}
 
 // eslint-disable-next-line complexity
 export default function VideoPage() {
@@ -65,7 +58,9 @@ export default function VideoPage() {
 
     const { playlists, addVideoToPlaylist, removeVideoFromPlaylist } = usePlaylist();
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
+    const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
 
+    const { user: authUser } = useAuth();
     const { isSubscribed, toggleSubscription } = useSubscription();
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [descExpanded, setDescExpanded] = useState(false);
@@ -90,8 +85,47 @@ export default function VideoPage() {
         }).catch(() => setFetchFailed(true));
     }, [id, storeVideo]);
 
+    // When a VideoStatusUpdated WS event arrives for the current video and the video
+    // is only in fetchedVideo (not in the Redux store), re-fetch to pick up the new status.
+    useEffect(() => {
+        const isCurrentVideo = lastVideoStatusUpdate !== null && lastVideoStatusUpdate.vuid === id;
+        const isOnlyInLocalState = storeVideo === undefined && fetchedVideo !== null;
+
+        if (!isCurrentVideo || !isOnlyInLocalState) {
+            return;
+        }
+
+        videoApi.get(id as unknown as Vuid).then(result => {
+            if (result !== null) {
+                setFetchedVideo(result);
+            }
+        });
+    }, [lastVideoStatusUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const video = storeVideo ?? fetchedVideo ?? undefined;
     const hasVideo = video !== undefined;
+
+    // Fallback poll: if the video is stuck in PROCESSING and neither the WS event
+    // nor the upload-modal poll resolves it (e.g. user closed modal early, Reverb down),
+    // check every 5 s until the status transitions.
+    useEffect(() => {
+        const isVideoProcessing = video !== undefined && video.status === VideoStatus.PROCESSING;
+        if (!isVideoProcessing || id === undefined) {
+            return;
+        }
+        const vuid = id as unknown as Vuid;
+        const timer = setInterval(() => {
+            videoApi.get(vuid).then(result => {
+                const hasTransitioned = result !== null && result.status !== VideoStatus.PROCESSING;
+                if (!hasTransitioned) {
+                    return;
+                }
+                dispatch(videoActions.updateVideo(result));
+            });
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [video?.status, id, dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
+    const isOwner = authUser !== null && video !== undefined && authUser.uuid === video.channelId;
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -102,27 +136,31 @@ export default function VideoPage() {
     const [sidebarTab, setSidebarTab] = useState<SidebarTab>(SidebarTab.RELATED);
     const [readingMode, setReadingMode] = useState(false);
 
-    // VISUAL-09: chapter seeking feedback
-    const [seekingChapterIndex, setSeekingChapterIndex] = useState<number | null>(null);
-
     // UX-16: share dropdown
     const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
-    const relatedVideos = useMemo(() => {
-        if (!video) {
-            return [];
+    const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
+    const [loadingRelated, setLoadingRelated] = useState(false);
+
+    useEffect(() => {
+        const isVideoReady = video !== undefined;
+        if (!isVideoReady) {
+            return;
         }
-        const videoTagSet = new Set(video.tags as string[]);
-        return videos
-            .filter((v: Video) => v.id !== video.id)
-            .map((v: Video) => ({
-                v,
-                score: (v.tags as string[]).filter(t => videoTagSet.has(t)).length,
-            }))
-            .sort((a, b) => b.score - a.score || b.v.views - a.v.views)
-            .map(({ v }) => v)
-            .slice(0, 10);
-    }, [video, videos]);
+        setLoadingRelated(true);
+        const tags = video.tags as unknown as string[];
+        videoApi.list({ tags, page: 1 }).then(result => {
+            if (result === null) {
+                return;
+            }
+            const filtered = result.data
+                .filter(v => v.id !== video.id)
+                .slice(0, 10);
+            setRelatedVideos(filtered);
+        }).finally(() => {
+            setLoadingRelated(false);
+        });
+    }, [video?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ─── Extracted hooks — declared before any derived state that depends on them ─
 
@@ -133,7 +171,7 @@ export default function VideoPage() {
     });
 
     const {
-        currentTime, showCompletion,
+        showCompletion,
         handleLoadedMetadata, handleTimeUpdate, handleVideoEnded, getCurrentTime,
     } = useVideoProgress({
         id,
@@ -141,7 +179,7 @@ export default function VideoPage() {
         video,
         videoProgress,
         updateProgress: (id: string, pct: number) => updateProgress(id as unknown as VideoId, pct),
-        onBackendSync: (id: string, pct: number) => videoApi.updateProgress(id as unknown as Vuid, pct).catch(() => {}),
+        onBackendSync: (id: string, pct: number) => videoApi.updateProgress(id as unknown as Vuid, pct).catch(() => { }),
         consumePendingVideoSeek: (id: string) => consumePendingVideoSeek(id as unknown as VideoId),
         onCompleted: startAutoplayCountdown,
         onFinished: (vuid: string) => videoApi.recordView(vuid as unknown as Vuid),
@@ -165,44 +203,27 @@ export default function VideoPage() {
     );
 
     const [summary, setSummary] = useState<VideoSummary | null>(null);
+    const [transcription, setTranscription] = useState<VideoTranscription | null>(null);
 
     useEffect(() => {
         const isVideoReady = video !== undefined;
+
         if (!isVideoReady) {
             return;
         }
-        videoApi.getSummary(video.id as unknown as Vuid).then(result => {
-            setSummary(result);
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [video?.id]); // intentional: re-fetch only when the video id changes, not on every reference update
 
-    const hasSummary = summary !== null;
+        const isPublished = video.status === VideoStatus.PUBLISHED || video.status === VideoStatus.SCHEDULED;
 
-    const readingTime = useMemo(() => {
-        const hasSummaryContent = summary !== null;
-        if (!hasSummaryContent) {
-            return 0;
+        if (!isPublished) {
+            setSummary(null);
+            setTranscription(null);
+            return;
         }
-        const words = summary.readingMode.split(/\s+/).length;
-        return Math.max(1, Math.ceil(words / 200));
-    }, [summary]);
 
-    // VISUAL-08: active chapter index derived from current playback position
-    const activeChapterIndex = useMemo(() => {
-        if (!summary || summary.chapters.length === 0) {
-            return -1;
-        }
-        let active = -1;
-        for (let i = 0; i < summary.chapters.length; i++) {
-            const chapterTime = parseTimestamp(summary.chapters[i].timestamp);
-            const isBeforeOrAt = chapterTime <= currentTime;
-            if (isBeforeOrAt) {
-                active = i;
-            }
-        }
-        return active;
-    }, [summary, currentTime]);
+        const vuid = video.id as unknown as Vuid;
+        videoApi.getSummary(vuid).then(setSummary);
+        videoApi.getTranscription(vuid).then(setTranscription);
+    }, [video?.id, video?.status]);
 
     // Live counters: overrides from real-time events (null = fall back to store value)
     const [_liveLikeCount, setLiveLikeCount] = useState<number | null>(null);
@@ -229,6 +250,12 @@ export default function VideoPage() {
             if (hasCount) {
                 setLiveLikeCount(data.like_count);
             }
+        });
+
+        ch.listen('.TranscriptionStatusUpdated', () => {
+            videoApi.getTranscription(id as unknown as Vuid).then(result => {
+                setTranscription(result);
+            });
         });
 
         return () => {
@@ -279,7 +306,7 @@ export default function VideoPage() {
                 return;
             }
 
-            analytics.skip({ vuid: tracker.vuid, percent: tracker.percent }).catch(() => {});
+            analytics.skip({ vuid: tracker.vuid, percent: tracker.percent }).catch(() => { });
         };
     }, [id]);
 
@@ -343,6 +370,39 @@ export default function VideoPage() {
         );
     }
 
+    if (video.status === VideoStatus.PROCESSING) {
+        return (
+            <div className="video-page">
+                <div className="video-page__processing">
+                    {video.thumbnail && (
+                        <img
+                            className="video-page__processing-thumb"
+                            src={video.thumbnail}
+                            alt=""
+                            aria-hidden="true"
+                        />
+                    )}
+                    <div className="video-page__processing-bg" aria-hidden="true" />
+                    <div className="video-page__processing-card">
+                        <div className="video-page__processing-icon-wrap" aria-hidden="true">
+                            <div className="video-page__processing-ring video-page__processing-ring--outer" />
+                            <div className="video-page__processing-ring video-page__processing-ring--inner" />
+                            <div className="video-page__processing-icon">
+                                <Clapperboard size={34} strokeWidth={1.25} />
+                            </div>
+                        </div>
+                        <h2 className="video-page__processing-title">{t('video.processing_title')}</h2>
+                        <p className="video-page__processing-sub">{t('video.processing_sub')}</p>
+                        <p className="video-page__processing-video-name">{video.title}</p>
+                        <div className="video-page__processing-progress" aria-hidden="true">
+                            <div className="video-page__processing-progress-bar" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const isLiked = likedVideos.has(video.id);
     const isSaved = watchLaterIds.has(video.id as string);
     const isDisliked = dislikedVideos.has(video.id);
@@ -392,16 +452,19 @@ export default function VideoPage() {
         setIsShareDropdownOpen(false);
     }
 
-    function handleSeekToChapter(timestamp: string, chapterIndex: number) {
-        const seconds = parseTimestamp(timestamp);
-        const el = videoRef.current;
-        if (el) {
-            el.currentTime = seconds;
-        }
+    function handleRetryTranscription() {
+        const vuid = video.id as unknown as Vuid;
+        videoApi.retryTranscription(vuid).then(ok => {
+            const didSucceed = ok !== null;
 
-        // VISUAL-09: brief seeking feedback
-        setSeekingChapterIndex(chapterIndex);
-        setTimeout(() => setSeekingChapterIndex(null), 600);
+            if (!didSucceed) {
+                return;
+            }
+
+            videoApi.getTranscription(vuid).then(result => {
+                setTranscription(result);
+            });
+        });
     }
 
     const videoUrl = video.videoUrl ?? '';
@@ -415,8 +478,13 @@ export default function VideoPage() {
         <div className="video-page">
             <div className="video-page__layout">
                 <main className="video-page__main">
-                    {readingMode && summary ? (
-                        <ReadingMode summary={summary} />
+                    {readingMode && transcription !== null ? (
+                        <ReadingMode
+                            summary={summary}
+                            transcription={transcription}
+                            isOwner={isOwner}
+                            onRetryTranscription={handleRetryTranscription}
+                        />
                     ) : (
                         <div className="video-page__player-wrap">
                             {hasVideoFile ? (
@@ -550,9 +618,6 @@ export default function VideoPage() {
                                         </span>
                                         <span className="rbtn__label">
                                             {isShareCopied ? t('video.copied') : t('video.share')}
-                                            {!isShareCopied && (
-                                                <ChevronDown size={9} strokeWidth={2} className="video-page__share-chevron" aria-hidden />
-                                            )}
                                         </span>
                                     </Popover.Trigger>
                                     <Popover.Portal>
@@ -586,6 +651,19 @@ export default function VideoPage() {
                                         </Popover.Content>
                                     </Popover.Portal>
                                 </Popover.Root>
+
+                                {transcription !== null && (
+                                    <ReactionBtn
+                                        isActive={readingMode}
+                                        icon={<BookOpen size={20} strokeWidth={1.75} />}
+                                        iconActive={<BookOpen size={20} strokeWidth={1.75} fill="currentColor" />}
+                                        label={t('video.reading_mode')}
+                                        activeLabel={t('video.exit_reading_mode')}
+                                        className="video-page__reaction-btn"
+                                        activeClass="video-page__reaction-btn--reading"
+                                        onClick={() => setReadingMode(v => !v)}
+                                    />
+                                )}
                             </div>
                         </div>
 
@@ -645,97 +723,29 @@ export default function VideoPage() {
                             <List size={14} />
                             {t('video.related')}
                         </button>
-                        {hasSummary && (
-                            <button
-                                role="tab"
-                                aria-selected={sidebarTab === SidebarTab.SUMMARY}
-                                className={['video-page__sidebar-tab', sidebarTab === SidebarTab.SUMMARY ? 'video-page__sidebar-tab--active' : ''].filter(Boolean).join(' ')}
-                                onClick={() => setSidebarTab(SidebarTab.SUMMARY)}
-                            >
-                                <Lightbulb size={14} />
-                                {t('video.summary')}
-                                {readingTime > 0 && (
-                                    <Badge variant="neutral">{t('video.reading_time', { min: readingTime })}</Badge>
-                                )}
-                            </button>
-                        )}
-                        {sidebarTab === SidebarTab.RELATED && (
-                            <div className="video-page__sidebar-filter-slot">
-                                <FilterPanel
-                                    allTags={allRelatedTags}
-                                    value={filterState}
-                                    onChange={setFilterState}
-                                />
-                            </div>
-                        )}
-                        {hasSummary && (
-                            <div className="video-page__sidebar-filter-slot">
-                                <Tooltip content={readingMode ? t('video.exit_reading_mode') : t('video.reading_mode')} side="bottom">
-                                    <Button
-                                        variant={readingMode ? 'primary' : 'ghost'}
-                                        size="sm"
-                                        className="video-page__reading-mode-btn"
-                                        onClick={() => setReadingMode(v => !v)}
-                                        aria-pressed={readingMode}
-                                        aria-label={t('video.reading_mode')}
-                                    >
-                                        <BookOpen size={14} strokeWidth={2} />
-                                    </Button>
-                                </Tooltip>
-                            </div>
-                        )}
+                        <div className="video-page__sidebar-filter-slot">
+                            <FilterPanel
+                                allTags={allRelatedTags}
+                                value={filterState}
+                                onChange={setFilterState}
+                                iconOnly
+                            />
+                        </div>
                     </div>
 
                     {sidebarTab === SidebarTab.RELATED && (
-                        <>
-                            {filteredRelated.length > 0 && (
-                                <div className="video-page__sidebar-list">
-                                    {filteredRelated.map((v, idx) => (
-                                        <VideoRow key={v.id} video={v} source={AnalyticsSource.RECOMMENDED} position={idx} />
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {sidebarTab === SidebarTab.SUMMARY && summary && (
-                        <div className="video-page__summary">
-                            <div className="video-page__summary-section">
-                                <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>
-                                <ul className="video-page__key-points">
-                                    {summary.keyPoints.map((point, i) => (
-                                        <li key={i} className="video-page__key-point">{point}</li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="video-page__summary-section">
-                                <h3 className="video-page__summary-heading">{t('video.chapters')}</h3>
-                                <div className="video-page__chapters">
-                                    {summary.chapters.map((ch, i) => {
-                                        const isActiveChapter = i === activeChapterIndex;
-                                        const isSeekingChapter = i === seekingChapterIndex;
-                                        const chapterClass = [
-                                            'video-page__chapter',
-                                            isActiveChapter ? 'video-page__chapter--active' : '',
-                                            isSeekingChapter ? 'video-page__chapter--seeking' : '',
-                                        ].filter(Boolean).join(' ');
-                                        return (
-                                            <button
-                                                key={i}
-                                                className={chapterClass}
-                                                onClick={() => handleSeekToChapter(ch.timestamp, i)}
-                                                aria-label={ch.title}
-                                            >
-                                                <span className="video-page__chapter-time">{ch.timestamp}</span>
-                                                <span className="video-page__chapter-title">{ch.title}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                        <div className="video-page__sidebar-list">
+                            {loadingRelated
+                                ? Array.from({ length: 5 }).map((_, i) => (
+                                    <VideoRowSkeleton key={i} />
+                                ))
+                                : filteredRelated.map((v, idx) => (
+                                    <VideoRow key={v.id} video={v} source={AnalyticsSource.RECOMMENDED} position={idx} />
+                                ))
+                            }
                         </div>
                     )}
+
                 </aside>
             </div>
         </div>
