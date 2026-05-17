@@ -4,6 +4,7 @@ export { UserApiSchema } from './schemas/user';
 export { VideoApiSchema, VideoListApiSchema } from './schemas/video';
 export { PlaylistApiSchema, PlaylistListApiSchema } from './schemas/playlist';
 export { VideoSummaryApiSchema } from './schemas/summary';
+export { VideoTranscriptionApiSchema } from './schemas/transcription';
 export { ChannelApiSchema } from './schemas/channel';
 
 // Request schemas (no transform)
@@ -33,6 +34,7 @@ export type { UserApiInput, UserApiOutput } from './schemas/user';
 export type { VideoApiInput, VideoApiOutput } from './schemas/video';
 export type { PlaylistApiInput, PlaylistApiOutput } from './schemas/playlist';
 export type { VideoSummaryApiInput, VideoSummaryApiOutput } from './schemas/summary';
+export type { VideoTranscriptionApiOutput } from './schemas/transcription';
 export type { ChannelApiInput, ChannelApiOutput } from './schemas/channel';
 export type {
     LoginResponseApiOutput,

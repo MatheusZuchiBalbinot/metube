@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import type { Video, VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { PaginatedResponse } from '@models/common';
-import { VideoApiSchema, VideoListApiSchema, VideoSummaryApiSchema } from '@validation';
+import { VideoApiSchema, VideoListApiSchema, VideoSummaryApiSchema, VideoTranscriptionApiSchema } from '@validation';
 import { buildProgress, type ProgressCallback } from '@utils/upload';
 
 export type Vuid = string & { readonly _brand: 'Vuid' };
@@ -41,6 +41,12 @@ export interface VideoSummary {
     keyPoints: string[]
     chapters: { timestamp: string; title: string }[]
     readingMode: string
+}
+
+export interface VideoTranscription {
+    status: 'pending' | 'processing' | 'completed' | 'failed'
+    language: string | null
+    content: string | null
 }
 
 export type VideoChapter = VideoSummary['chapters'][number];
@@ -132,6 +138,14 @@ class VideoApi {
 
     async getSummary(vuid: Vuid): Promise<VideoSummary | null> {
         return apiClient.getValidated(`${this.baseUrl}/${vuid}/summary`, VideoSummaryApiSchema);
+    }
+
+    async getTranscription(vuid: Vuid): Promise<VideoTranscription | null> {
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}/transcription`, VideoTranscriptionApiSchema);
+    }
+
+    async retryTranscription(vuid: Vuid): Promise<boolean> {
+        return apiClient.postEmpty(`${this.baseUrl}/${vuid}/transcription/retry`);
     }
 }
 
