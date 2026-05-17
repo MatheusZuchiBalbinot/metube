@@ -53,6 +53,8 @@ class ProcessVideoUpload implements ShouldQueue
         $newStatus = $this->resolveStatus($video);
         $publishedAt = $newStatus === VideoStatus::PUBLISHED ? $video->created_at : $video->scheduled_at;
 
+        $previousStatus = $video->status;
+
         $video->update([
             'thumbnail_url' => $thumbnailUrl,
             'video_url' => $storage->publishVideo($this->tmpPath, $video->vuid),
@@ -60,10 +62,14 @@ class ProcessVideoUpload implements ShouldQueue
             'published_at' => $publishedAt,
         ]);
 
-        event(new VideoStatusUpdated($video, $newStatus));
+        $statusChanged = $previousStatus !== $newStatus;
+
+        if ($statusChanged) {
+            event(new VideoStatusUpdated($video, $newStatus));
+        }
 
         $isPublished = $newStatus === VideoStatus::PUBLISHED;
-        if ($isPublished) {
+        if ($isPublished && $statusChanged) {
             event(new VideoPublished($video));
         }
     }
