@@ -10,6 +10,7 @@
         "ankitpokhrel/tus-php": "^2.4",
         "intervention/image": "^3.0",
         "laravel/framework": "^12.0",
+        "laravel/horizon": "^5.46",
         "laravel/octane": "^2.13",
         "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.0",

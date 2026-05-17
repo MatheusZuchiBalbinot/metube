@@ -48,4 +48,12 @@ class VideoPolicy
     {
         return $user->id === $video->channel_id;
     }
+
+    /**
+     * Determine if user can retry the transcription for this video.
+     */
+    public function retryTranscription(User $user, Video $video): bool
+    {
+        return $user->id === $video->channel_id;
+    }
 }

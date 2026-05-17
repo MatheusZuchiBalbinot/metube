@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Data\CreateVideoData;
 use App\Data\FinalizeUploadData;
 use App\Data\UpdateVideoData;
+use App\Enums\TranscriptionStatus;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
 use App\Http\Requests\Video\UpdateVideoRequest;
+use App\Http\Resources\TranscriptionResource;
 use App\Http\Resources\VideoResource;
+use App\Jobs\TranscribeVideo;
+use App\Models\Transcription;
 use App\Models\Video;
 use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
@@ -231,5 +235,54 @@ class VideoController extends Controller
         $summary = $this->videoService->getSummary($video);
 
         return $this->json($summary);
+    }
+
+    /**
+     * Get the speech-to-text transcription for a video.
+     *
+     * Returns the transcription record if it exists, or a 404 when no
+     * transcription has been started yet (e.g. video still processing).
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return JsonResponse {status: string, language: string|null, content: string|null}
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function transcription(string $vuid): JsonResponse
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+
+        $transcription = $video->transcription()->with('video')->first();
+
+        $hasNoTranscription = $transcription === null;
+        if ($hasNoTranscription) {
+            return $this->json(['message' => 'Transcription not available.'], 404);
+        }
+
+        return $this->json(new TranscriptionResource($transcription));
+    }
+
+    /**
+     * Retry a failed transcription for a video the authenticated user owns.
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return Response HTTP 204 No Content
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function retryTranscription(string $vuid): Response
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('retryTranscription', $video);
+
+        Transcription::updateOrCreate(
+            ['video_id' => $video->id],
+            ['status' => TranscriptionStatus::PENDING, 'content' => null, 'language' => null],
+        );
+
+        dispatch(new TranscribeVideo($video));
+
+        return $this->noContent();
     }
 }

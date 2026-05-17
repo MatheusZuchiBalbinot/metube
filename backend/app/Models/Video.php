@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
  * @property \Illuminate\Support\Carbon|null $published_at
  * @property \Illuminate\Support\Carbon|null $scheduled_at
  * @property \App\Models\VideoSummary|null $summary
+ * @property \App\Models\Transcription|null $transcription
  * @property-read \App\Models\User $channel
  */
 class Video extends Model
@@ -89,6 +90,16 @@ class Video extends Model
     public function summary(): HasOne
     {
         return $this->hasOne(VideoSummary::class);
+    }
+
+    /**
+     * Get the transcription for this video (if it exists).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Transcription, $this>
+     */
+    public function transcription(): HasOne
+    {
+        return $this->hasOne(Transcription::class);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
 use App\Events\CommentLiked;
 use App\Events\SearchPerformed;
+use App\Events\TranscriptionStatusUpdated;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoFinished;
 use App\Events\VideoImpressed;
@@ -16,17 +17,21 @@ use App\Events\VideoPublished;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
 use App\Events\VideoSkipped;
+use App\Events\VideoStatusUpdated;
 use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
+use App\Jobs\TranscribeVideo;
 use App\Listeners\LogImpressionsBatch;
 use App\Listeners\LogUserAnalytic;
 use App\Listeners\SendCommentLikedNotification;
 use App\Listeners\SendCommentRepliedNotification;
 use App\Listeners\SendNewSubscriberNotification;
 use App\Listeners\SendVideoLikedNotification;
+use App\Listeners\SendVideoProcessedNotification;
 use App\Listeners\SendVideoPublishedNotifications;
+use App\Listeners\SendVideoTranscribedNotification;
 use App\Models\Comment;
 use App\Models\Playlist;
 use App\Models\Video;
@@ -39,6 +44,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Horizon\Horizon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -74,6 +80,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Playlist::class, PlaylistPolicy::class);
         Gate::policy(Comment::class, CommentPolicy::class);
 
+        Horizon::auth(function (Request $request): bool {
+            return app()->isLocal();
+        });
+
         $loggableEvents = [
             VideoViewed::class,
             VideoReactionApplied::class,
@@ -101,5 +111,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VideoLiked::class, SendVideoLikedNotification::class);
         Event::listen(ChannelSubscribed::class, SendNewSubscriberNotification::class);
         Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
+        Event::listen(VideoPublished::class, function (VideoPublished $event): void {
+            dispatch(new TranscribeVideo($event->video));
+        });
+        Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
+        Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscribedNotification::class);
     }
 }
