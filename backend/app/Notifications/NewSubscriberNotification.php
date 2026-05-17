@@ -4,15 +4,11 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class NewSubscriberNotification extends Notification implements ShouldQueue
+class NewSubscriberNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly User $subscriber,
     ) {}

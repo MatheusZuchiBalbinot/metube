@@ -4,15 +4,11 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\Video;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class VideoFromSubscriptionNotification extends Notification implements ShouldQueue
+class VideoFromSubscriptionNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Video $video,
     ) {}

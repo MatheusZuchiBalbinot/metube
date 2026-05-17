@@ -5,15 +5,11 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class VideoLikedNotification extends Notification implements ShouldQueue
+class VideoLikedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Video $video,
         public readonly User $liker,

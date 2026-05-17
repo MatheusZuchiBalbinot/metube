@@ -5,15 +5,11 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\Comment;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class CommentLikedNotification extends Notification implements ShouldQueue
+class CommentLikedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Comment $comment,
         public readonly User $liker,
