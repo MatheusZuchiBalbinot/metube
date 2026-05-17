@@ -11,6 +11,9 @@ class VideoStorageService
     /**
      * Move a video from temporary local storage to public storage.
      *
+     * Both disks live under the same Docker volume so rename() is O(1)
+     * instead of a full stream copy through PHP.
+     *
      * @param  string  $tmpPath  Path relative to the 'local' disk (e.g. uploads/tmp/{vuid}.mp4)
      * @param  string  $vuid  Video ULID used as the public filename
      * @return string Disk-relative path: videos/{vuid}.{ext}
@@ -20,14 +23,19 @@ class VideoStorageService
         $ext = pathinfo($tmpPath, PATHINFO_EXTENSION);
         $finalPath = "videos/{$vuid}.{$ext}";
 
-        $stream = Storage::disk('local')->readStream($tmpPath);
+        $src = Storage::disk('local')->path($tmpPath);
+        $dst = Storage::disk('public')->path($finalPath);
 
-        if ($stream === null) {
-            throw new \RuntimeException("Could not open upload stream: {$tmpPath}");
+        $dstDir = dirname($dst);
+        $isDirMissing = ! is_dir($dstDir);
+        if ($isDirMissing) {
+            mkdir($dstDir, 0755, true);
         }
 
-        Storage::disk('public')->put($finalPath, $stream);
-        Storage::disk('local')->delete($tmpPath);
+        $moved = rename($src, $dst);
+        if (! $moved) {
+            throw new \RuntimeException("Could not move video file: {$src} → {$dst}");
+        }
 
         return $finalPath;
     }
