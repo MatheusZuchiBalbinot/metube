@@ -65,7 +65,10 @@ function uploadViaTus(file: File, onProgress: (pct: number) => void): Promise<st
             onSuccess: () => {
                 const url = upload.url;
                 const isUrlMissing = url === null || url === undefined;
-                if (isUrlMissing) { resolve(null); return; }
+                if (isUrlMissing) {
+                    resolve(null);
+                    return;
+                }
                 resolve(url.split('/').pop() ?? null);
             },
         });

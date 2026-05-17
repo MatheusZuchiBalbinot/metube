@@ -7,9 +7,8 @@
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
-    background: var(--bg);
+    background: var(--surface);
     position: relative;
-    isolation: isolate;
 }
 
 .app-layout__body {
@@ -28,39 +27,6 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-}
-
-/* ─── Unified parallax background ───────────────────────────────────────── */
-
-.app-layout__bg {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-}
-
-/*
- * Single gradient orb anchored at bottom-left (sidebar origin).
- * Extends ~55 vw horizontally (to the horizontal center of most viewports)
- * and ~65 vh vertically upward.
- * Parallax transform is applied inline via JS on mousemove.
- */
-.app-layout__bg-orb {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 55vw;
-    height: 65vh;
-    background: radial-gradient(
-        ellipse 100% 100% at 0% 100%,
-        color-mix(in srgb, var(--accent) 22%, transparent)  0%,
-        color-mix(in srgb, var(--accent) 10%, transparent) 38%,
-        transparent                                         68%
-    );
-}
-
-:root[data-mode='light'] .app-layout__bg-orb {
-    opacity: 0.4;
 }
 
 /* ─── Sidebar backdrop (mobile only) ──────────────────────────────────────── */

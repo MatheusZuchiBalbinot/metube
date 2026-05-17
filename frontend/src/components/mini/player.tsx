@@ -165,7 +165,7 @@ export default function MiniPlayer() {
         closeMiniPlayer();
     }
 
-    if (miniPlayer === null || video == null) {
+    if (miniPlayer === null || video === null || video === undefined) {
         return null;
     }
 

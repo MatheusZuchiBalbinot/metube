@@ -99,13 +99,17 @@ const VideoCard = memo(function VideoCard({
     const isNotInteractive = isProcessing || isFailed;
 
     function handleCardClick() {
-        if (isNotInteractive) return;
+        if (isNotInteractive) {
+            return;
+        }
         trackClick();
         navigate(videoUrl(video.id));
     }
 
     function handleCardKeyDown(e: React.KeyboardEvent) {
-        if (isNotInteractive) return;
+        if (isNotInteractive) {
+            return;
+        }
         const isActivationKey = e.key === 'Enter' || e.key === ' ';
         if (!isActivationKey) {
             return;

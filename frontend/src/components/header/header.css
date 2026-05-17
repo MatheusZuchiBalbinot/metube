@@ -134,25 +134,35 @@
 .app-header__avatar-btn {
     border: none;
     background: transparent;
-    cursor: pointer;
     padding: 0;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity var(--duration-fast), transform var(--duration-fast);
+    transition: opacity var(--duration-default);
 }
 
-.app-header__avatar-btn:hover {
-    opacity: 0.82;
+.app-header__avatar-btn:hover:not(:disabled) {
+    background: transparent;
+    border-color: transparent;
+    opacity: 0.8;
+}
+
+.app-header__avatar-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent);
+    border-radius: 50%;
 }
 
 .app-header__avatar-btn:active {
-    transform: scale(0.94);
+    opacity: 0.6;
 }
 
-.app-header__avatar-btn.open .avatar {
-    box-shadow: 0 0 0 2px var(--accent);
+/* Avatar: fundo transparente + borda */
+.app-header__avatar-btn .avatar {
+    background: transparent;
+    border: 1.5px solid var(--border-2);
+    color: var(--text-2);
 }
 
 .app-header__dropdown {

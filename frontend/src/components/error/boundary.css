@@ -1,0 +1,166 @@
+/* ─── ErrorBoundary ─────────────────────────────────────────────────────────── */
+
+/* ─── Section error ─────────────────────────────────────────────────────────── */
+
+.error-boundary--section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+    border-radius: var(--radius-lg);
+    margin: 4px 0;
+}
+
+.error-boundary__icon-wrap {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+}
+
+.error-boundary__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.error-boundary__title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 2px;
+}
+
+.error-boundary__message {
+    font-size: var(--text-xs);
+    color: var(--text-3);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.error-boundary__actions {
+    flex-shrink: 0;
+}
+
+/* ─── Shared button ─────────────────────────────────────────────────────────── */
+
+.error-boundary__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-subtle);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: var(--radius-full);
+    padding: 6px 13px;
+    cursor: pointer;
+    transition: all var(--duration-fast);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.error-boundary__btn:hover {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* ─── Page error ─────────────────────────────────────────────────────────────── */
+
+.error-boundary--page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 65vh;
+    gap: 0;
+    text-align: center;
+    padding: 48px 24px;
+    overflow: hidden;
+}
+
+.error-boundary__page-glow {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 480px;
+    height: 280px;
+    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.error-boundary__page-icon {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    margin-bottom: 24px;
+}
+
+.error-boundary__page-title {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+}
+
+.error-boundary__page-message {
+    font-size: var(--text-sm);
+    color: var(--text-3);
+    max-width: 38ch;
+    line-height: 1.65;
+    margin: 0 0 28px;
+}
+
+.error-boundary__page-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.error-boundary__btn--primary {
+    font-size: var(--text-sm);
+    padding: 9px 20px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: transparent;
+}
+
+.error-boundary__btn--primary:hover {
+    background: color-mix(in srgb, var(--accent) 88%, #000);
+    border-color: transparent;
+}
+
+.error-boundary__btn--ghost {
+    font-size: var(--text-sm);
+    padding: 9px 20px;
+    color: var(--text-2);
+    background: var(--surface-2);
+    border-color: var(--border);
+}
+
+.error-boundary__btn--ghost:hover {
+    background: var(--surface-3);
+    color: var(--text);
+    border-color: var(--border-2);
+}

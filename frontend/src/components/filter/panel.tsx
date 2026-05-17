@@ -16,6 +16,7 @@ interface FilterPanelProps {
     allTags: Tag[]
     value: FilterState
     onChange: (f: FilterState) => void
+    iconOnly?: boolean
 }
 
 const YEAR_OPTIONS = Array.from(
@@ -116,10 +117,10 @@ function TagChip({ tag, value, onToggle }: TagChipProps) {
 }
 
 // eslint-disable-next-line complexity
-export default function FilterPanel({ allTags, value, onChange }: FilterPanelProps) {
+export default function FilterPanel({ allTags, value, onChange, iconOnly = false }: FilterPanelProps) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
-    const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+    const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -145,11 +146,14 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
             return;
         }
         const rect = triggerEl.getBoundingClientRect();
+        const dropdownWidth = 340;
         const minMargin = 12;
-        setDropdownPos({
-            top: rect.bottom + 8,
-            right: Math.max(minMargin, window.innerWidth - rect.right),
-        });
+        let left = rect.left;
+        if (left + dropdownWidth > window.innerWidth - minMargin) {
+            left = window.innerWidth - dropdownWidth - minMargin;
+        }
+        left = Math.max(minMargin, left);
+        setDropdownPos({ top: rect.bottom + 8, left });
     }, [open]);
 
     useEffect(() => {
@@ -233,7 +237,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
             className="filter-panel__dropdown"
             role="dialog"
             aria-label={t('video.filters')}
-            style={{ top: dropdownPos.top, right: dropdownPos.right }}
+            style={{ top: dropdownPos.top, left: dropdownPos.left }}
         >
             {hasTags && (
                 <div className="filter-panel__dropdown-section">
@@ -346,6 +350,7 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                 type="button"
                 className={[
                     'filter-panel__trigger',
+                    iconOnly ? 'filter-panel__trigger--icon-only' : '',
                     open ? 'filter-panel__trigger--open' : '',
                     hasActiveFilters ? 'filter-panel__trigger--active' : '',
                 ].filter(Boolean).join(' ')}
@@ -355,11 +360,11 @@ export default function FilterPanel({ allTags, value, onChange }: FilterPanelPro
                 aria-label={t('video.filters')}
             >
                 <SlidersHorizontal size={13} strokeWidth={2} />
-                <span>{t('video.filters')}</span>
+                {!iconOnly && <span>{t('video.filters')}</span>}
                 {hasActiveFilters && (
                     <span className="filter-panel__trigger-badge">{activeCount}</span>
                 )}
-                <ChevronDown size={12} strokeWidth={2.5} className="filter-panel__trigger-chevron" />
+                {!iconOnly && <ChevronDown size={12} strokeWidth={2.5} className="filter-panel__trigger-chevron" />}
             </button>
             {dropdown !== null && createPortal(dropdown, document.body)}
         </div>
