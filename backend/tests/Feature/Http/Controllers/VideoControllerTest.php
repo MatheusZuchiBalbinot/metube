@@ -1,6 +1,9 @@
 <?php
 
+use App\Enums\TranscriptionStatus;
 use App\Enums\VideoStatus;
+use App\Jobs\TranscribeVideo;
+use App\Models\Transcription;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -179,5 +182,97 @@ describe('VideoController', function () {
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
+    });
+
+    test('transcription returns 404 when no transcription exists', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->create();
+
+        $response = $this->actingAs($user)->getJson("/api/videos/{$video->vuid}/transcription");
+
+        $response->assertStatus(404);
+    });
+
+    test('transcription returns status and null content when processing', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->create();
+        Transcription::create([
+            'video_id' => $video->id,
+            'status' => TranscriptionStatus::PROCESSING,
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/videos/{$video->vuid}/transcription");
+
+        $response->assertOk();
+        $response->assertJsonPath('status', 'processing');
+        $response->assertJsonPath('content', null);
+    });
+
+    test('transcription returns content when completed', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->create();
+        Transcription::create([
+            'video_id' => $video->id,
+            'status' => TranscriptionStatus::COMPLETED,
+            'language' => 'pt',
+            'content' => 'Olá mundo',
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/videos/{$video->vuid}/transcription");
+
+        $response->assertOk();
+        $response->assertJsonPath('status', 'completed');
+        $response->assertJsonPath('language', 'pt');
+        $response->assertJsonPath('content', 'Olá mundo');
+    });
+
+    test('retry transcription resets status and dispatches job for owner', function () {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->for($user, 'channel')->create();
+        Transcription::create([
+            'video_id' => $video->id,
+            'status' => TranscriptionStatus::FAILED,
+            'content' => null,
+            'language' => null,
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/transcription/retry");
+
+        $response->assertNoContent();
+        $this->assertDatabaseHas('transcriptions', [
+            'video_id' => $video->id,
+            'status' => TranscriptionStatus::PENDING->value,
+        ]);
+        Queue::assertPushed(TranscribeVideo::class);
+    });
+
+    test('retry transcription returns 403 for non-owner', function () {
+        Queue::fake();
+
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->published()->for($owner, 'channel')->create();
+
+        $response = $this->actingAs($other)->postJson("/api/videos/{$video->vuid}/transcription/retry");
+
+        $response->assertForbidden();
+        Queue::assertNothingPushed();
+    });
+
+    test('retry transcription creates transcription record if none exists', function () {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->for($user, 'channel')->create();
+
+        $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/transcription/retry");
+
+        $response->assertNoContent();
+        $this->assertDatabaseHas('transcriptions', [
+            'video_id' => $video->id,
+            'status' => TranscriptionStatus::PENDING->value,
+        ]);
     });
 });
