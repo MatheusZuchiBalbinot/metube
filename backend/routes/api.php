@@ -80,6 +80,8 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{vuid}/save', [VideoController::class, 'toggleSave']);
         Route::put('/{vuid}/progress', [VideoController::class, 'updateProgress']);
         Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
+        Route::get('/{vuid}/transcription', [VideoController::class, 'transcription']);
+        Route::post('/{vuid}/transcription/retry', [VideoController::class, 'retryTranscription']);
 
         Route::prefix('{vuid}/comments')->group(function (): void {
             Route::get('/', [CommentController::class, 'index']);

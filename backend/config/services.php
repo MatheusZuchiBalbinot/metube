@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'whisper' => [
+        'url' => env('WHISPER_URL', 'http://whisper:8001'),
+    ],
+
 ];
