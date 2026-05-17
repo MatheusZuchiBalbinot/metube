@@ -22,8 +22,14 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
      */
     public function handle(VideoPublished $event): void
     {
-        $video = $event->video;
-        $channelId = $video->channel->id;
+        $video = $event->video->fresh(['channel']);
+        $channel = $video !== null ? $video->channel : null;
+
+        if ($channel === null) {
+            return;
+        }
+
+        $channelId = $channel->id;
 
         DB::table('user_subscriptions')
             ->where('channel_id', $channelId)
