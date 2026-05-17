@@ -1,18 +1,22 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Clock, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, HeartOff, History, Pin, Trash2 } from 'lucide-react';
+import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Trash2, Flame, Hash, Clock, Camera } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
-import { VideoFilter } from '@utils/applyFilters';
+import { VideoFilter, SortBy } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
 import type { FilterState } from '@utils/applyFilters';
 import type { Video, VideoId } from '@models/video';
+import { VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
 import type { Uuid } from '@api';
-import { channel as channelApi } from '@api';
+import { Format } from '@utils/format';
+import { videoUrl } from '@utils/routes';
+import { channel as channelApi, comments as commentsApi } from '@api';
+import type { Comment } from '@models/comment';
+import type { Vuid } from '@api';
 import { useAppSelector } from '@store/index';
-import type { VideoStatus } from '@models/video';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
@@ -20,13 +24,6 @@ import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import TagInput from '@components/tag/input';
 import './profile.css';
-
-const TAB = {
-    VIDEOS: 'videos',
-    LIKED: 'liked',
-    HISTORY: 'history',
-} as const;
-type Tab = typeof TAB[keyof typeof TAB];
 
 function formatWatchTime(seconds: number): string {
     const totalMinutes = Math.floor(seconds / 60);
@@ -52,7 +49,6 @@ export default function ProfilePage() {
     const isOwnProfile = !idParam || String(user!.id) === idParam;
     const channelId = isOwnProfile ? String(user!.id) : idParam!;
 
-    const [activeTab, setActiveTab] = useState<Tab>(TAB.VIDEOS);
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
     const [editTitle, setEditTitle] = useState('');
@@ -66,6 +62,7 @@ export default function ProfilePage() {
     // UX-11: delete confirmation state
     const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
 
+    const [spotlightComments, setSpotlightComments] = useState<Comment[]>([]);
     const [ownVideos, setOwnVideos] = useState<Video[]>([]);
     const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
     const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
@@ -111,48 +108,123 @@ export default function ProfilePage() {
         ));
     }, [lastVideoStatusUpdate, isOwnProfile]);
 
-    const likedVideoList = useMemo(
-        () => videos.filter((v: Video) => likedVideos.has(v.id)),
-        [videos, likedVideos],
-    );
-
-    const historyVideoList = useMemo(
-        () => watchHistory
-            .map((id: string) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
-            .filter((v): v is Video => v !== undefined),
-        [watchHistory, videos],
-    );
-
-    const tabVideos = useMemo(() => {
-        const isVideosTab = activeTab === TAB.VIDEOS;
-        const isLikedTab = activeTab === TAB.LIKED;
-        if (isVideosTab) {
-            return ownVideos;
-        }
-
-        if (isLikedTab) {
-            return likedVideoList;
-        }
-
-        return historyVideoList;
-    }, [activeTab, ownVideos, likedVideoList, historyVideoList]);
-
     const allTags = useMemo(() => {
-        const tagSet = new Set(tabVideos.flatMap((v: Video) => v.tags));
+        const tagSet = new Set(ownVideos.flatMap((v: Video) => v.tags));
         return Array.from(tagSet).sort() as unknown as Tag[];
-    }, [tabVideos]);
+    }, [ownVideos]);
 
     const pinnedVideo = useMemo(
-        () => (isOwnProfile && activeTab === TAB.VIDEOS && pinnedVideoId)
+        () => (isOwnProfile && pinnedVideoId)
             ? videos.find(v => v.id === pinnedVideoId) ?? null
             : null,
-        [isOwnProfile, activeTab, pinnedVideoId, videos],
+        [isOwnProfile, pinnedVideoId, videos],
     );
 
+    const deckGhostVideos = useMemo(() => {
+        const isNotOwn = !isOwnProfile;
+        const hasNoPinned = pinnedVideo === null;
+
+        if (isNotOwn || hasNoPinned) {
+            return [];
+        }
+
+        return ownVideos
+            .filter(v => v.status === VideoStatus.PUBLISHED && v.id !== pinnedVideo.id)
+            .sort((a, b) => b.views - a.views)
+            .slice(0, 2);
+    }, [isOwnProfile, pinnedVideo, ownVideos]);
+
     const filteredVideos = useMemo(
-        () => VideoFilter.apply(tabVideos, filterState).filter(v => v.id !== pinnedVideo?.id),
-        [tabVideos, filterState, pinnedVideo],
+        () => VideoFilter.apply(ownVideos, filterState).filter(v => v.id !== pinnedVideo?.id),
+        [ownVideos, filterState, pinnedVideo],
     );
+
+    const allVideosRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+
+    const SECTIONS_THRESHOLD = 8;
+    const sections = useMemo(() => {
+        const isFiltered = !VideoFilter.isEmpty(filterState);
+        const published = ownVideos.filter(v => v.status === VideoStatus.PUBLISHED);
+        const hasEnough = published.length >= SECTIONS_THRESHOLD;
+
+        if (isFiltered || !hasEnough) {
+            return null;
+        }
+
+        const featured = pinnedVideo
+            ?? [...published].sort((a, b) => b.views - a.views)[0]
+            ?? null;
+
+        const latest = [...published]
+            .sort((a, b) => new Date(b.publishedAt ?? b.createdAt).getTime() - new Date(a.publishedAt ?? a.createdAt).getTime())
+            .filter(v => v.id !== featured?.id)
+            .slice(0, 5);
+
+        const mostViewed = [...published]
+            .sort((a, b) => b.views - a.views)
+            .filter(v => v.id !== featured?.id)
+            .slice(0, 6);
+
+        const tagCounts = new Map<string, number>();
+        for (const v of published) {
+            for (const tag of v.tags) {
+                const isShorts = tag === 'shorts';
+                if (!isShorts) {
+                    tagCounts.set(tag as unknown as string, (tagCounts.get(tag as unknown as string) ?? 0) + 1);
+                }
+            }
+        }
+        const tagSections = [...tagCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4)
+            .filter(([, count]) => count >= 2)
+            .map(([tag, count]) => ({
+                tag,
+                count,
+                videos: published
+                    .filter(v => (v.tags as unknown as string[]).includes(tag))
+                    .sort((a, b) => b.views - a.views)
+                    .slice(0, 3),
+            }));
+
+        const usedIds = new Set<typeof published[0]['id']>([
+            ...(featured ? [featured.id] : []),
+            ...latest.map(v => v.id),
+            ...mostViewed.map(v => v.id),
+        ]);
+        const polaroids = published
+            .filter(v => !usedIds.has(v.id))
+            .slice(0, 5);
+
+        return { featured, latest, mostViewed, tagSections, polaroids };
+    }, [ownVideos, filterState, pinnedVideo]);
+
+    function scrollToAllVideos(newFilter?: Partial<FilterState>) {
+        if (newFilter) {
+            setFilterState({ ...VideoFilter.emptyState(), ...newFilter });
+        }
+        setTimeout(() => {
+            allVideosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+    }
+
+    const featuredId = sections?.featured?.id ?? null;
+
+    useEffect(() => {
+        const isNoFeatured = featuredId === null;
+        if (isNoFeatured) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSpotlightComments([]);
+            return;
+        }
+        commentsApi.list(featuredId as unknown as Vuid, { page: 1 }).then(res => {
+            const hasResult = res !== null;
+            if (hasResult) {
+                setSpotlightComments(res.data.slice(0, 2));
+            }
+        });
+    }, [featuredId]);
 
     const channelName = isOwnProfile
         ? (user?.name ?? '')
@@ -198,11 +270,6 @@ export default function ProfilePage() {
 
         return { videosWatched, watchTimeStr, topTags, likedCount };
     }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos]);
-
-    function handleTabChange(tab: Tab) {
-        setActiveTab(tab);
-        setFilterState(VideoFilter.emptyState());
-    }
 
     function handleEditOpen(video: Video) {
         setEditingVideo(video);
@@ -266,35 +333,24 @@ export default function ProfilePage() {
         setVideoToDelete(null);
     }
 
-    const tabs: { key: Tab; label: string }[] = [
-        { key: TAB.VIDEOS, label: t('video.your_videos') },
-        ...(isOwnProfile
-            ? [
-                { key: TAB.LIKED, label: t('video.liked_videos') },
-                { key: TAB.HISTORY, label: t('video.watch_history') },
-            ]
-            : []),
-    ];
+    function handleDeleteById(id: VideoId) {
+        const video = ownVideos.find(v => v.id === id);
+        const hasVideo = video !== undefined;
+        if (hasVideo) {
+            handleDeleteClick(video);
+        }
+    }
+
+    function handleCoverWatchClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        const featuredVideoId = sections?.featured?.id;
+        const hasFeaturedVideoId = featuredVideoId !== undefined;
+        if (hasFeaturedVideoId) {
+            navigate(videoUrl(featuredVideoId));
+        }
+    }
 
     const hasVideos = filteredVideos.length > 0;
-
-    let EmptyIcon;
-    if (activeTab === TAB.LIKED) {
-        EmptyIcon = HeartOff;
-    } else if (activeTab === TAB.HISTORY) {
-        EmptyIcon = History;
-    } else {
-        EmptyIcon = VideoOff;
-    }
-
-    let emptyTitle: string;
-    if (activeTab === TAB.LIKED) {
-        emptyTitle = t('video.no_results');
-    } else if (activeTab === TAB.HISTORY) {
-        emptyTitle = t('video.no_results');
-    } else {
-        emptyTitle = t('video.no_own_videos');
-    }
 
     return (
         <div className="profile-page">
@@ -383,22 +439,6 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            <div className="profile-page__tabs" role="tablist">
-                {tabs.map(tab => (
-                    <Button
-                        key={tab.key}
-                        role="tab"
-                        variant="ghost"
-                        className={['profile-page__tab', activeTab === tab.key ? 'profile-page__tab--active' : ''].filter(Boolean).join(' ')}
-                        onClick={() => handleTabChange(tab.key)}
-                        aria-selected={activeTab === tab.key}
-                        aria-label={tab.label}
-                    >
-                        {tab.label}
-                    </Button>
-                ))}
-            </div>
-
             <div className="profile-page__filters">
                 <FilterPanel
                     allTags={allTags}
@@ -407,33 +447,311 @@ export default function ProfilePage() {
                 />
             </div>
 
+            {sections !== null && !loadingOwnVideos && (
+                <div className="profile-page__sections">
+                    {/* ─── Cover Story ─── */}
+                    {sections.featured !== null && (
+                        <div
+                            className="profile-page__cover"
+                            style={{ backgroundImage: `url(${sections.featured.thumbnail})` }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={sections.featured.title}
+                            onClick={() => navigate(videoUrl(sections.featured!.id))}
+                            onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.featured!.id))}
+                        >
+                            <div className="profile-page__cover-content">
+                                <span className="profile-page__cover-badge">{t('channel.cover_badge')}</span>
+                                <h2 className="profile-page__cover-title">{sections.featured.title}</h2>
+                                <div className="profile-page__cover-meta">
+                                    <Eye size={13} />
+                                    {Format.views(sections.featured.views)} {t('video.views')}
+                                    {sections.featured.publishedAt && (
+                                        <>
+                                            <span className="profile-page__cover-sep" />
+                                            {Format.relativeDate(sections.featured.publishedAt)}
+                                        </>
+                                    )}
+                                </div>
+                                {sections.featured.tags.length > 0 && (
+                                    <div className="profile-page__cover-tags">
+                                        {sections.featured.tags.slice(0, 4).map(tag => {
+                                            const p = TagColors.palette(tag as unknown as string);
+                                            const tagStyle = { background: p.bg, color: p.color };
+                                            return (
+                                                <span key={tag as unknown as string} className="profile-page__cover-tag" style={tagStyle}>
+                                                    {tag as unknown as string}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {spotlightComments.length > 0 && (
+                                    <>
+                                        <div className="profile-page__cover-divider" />
+                                        <div className="profile-page__cover-comments">
+                                            {spotlightComments.map(c => (
+                                                <p key={c.id} className="profile-page__cover-comment-text">
+                                                    "{c.content}" — {c.author.name}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                                <div className="profile-page__cover-bottom">
+                                    <button
+                                        type="button"
+                                        className="profile-page__cover-watch btn btn--primary btn--sm"
+                                        onClick={handleCoverWatchClick}
+                                    >
+                                        <Play size={13} fill="currentColor" />
+                                        {t('video.watch_now')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── Latest Uploads (asymmetric 5-up mosaic) ─── */}
+                    {sections.latest.length > 0 && (
+                        <div className="profile-page__section">
+                            <div className="profile-page__section-header">
+                                <h3 className="profile-page__section-title">
+                                    <Clock size={16} strokeWidth={2} />
+                                    {t('channel.latest_uploads')}
+                                </h3>
+                                <button type="button" className="profile-page__section-see-all" onClick={() => scrollToAllVideos({ sortBy: SortBy.RECENT })}>
+                                    {t('channel.see_all')}
+                                </button>
+                            </div>
+                            <div className="profile-page__latest-grid">
+                                {sections.latest.map(video => (
+                                    <VideoCard key={video.id} video={video} showActions={isOwnProfile} onEdit={handleEditOpen} onDelete={handleDeleteById} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── Top Videos (diamond pyramid) ─── */}
+                    {sections.mostViewed.length >= 1 && (
+                        <div className="profile-page__section">
+                            <div className="profile-page__section-header">
+                                <h3 className="profile-page__section-title">
+                                    <Flame size={16} strokeWidth={2} />
+                                    {t('channel.top_videos')}
+                                </h3>
+                                <button type="button" className="profile-page__section-see-all" onClick={() => scrollToAllVideos({ sortBy: SortBy.VIEWS })}>
+                                    {t('channel.see_all')}
+                                </button>
+                            </div>
+                            <div className="profile-page__diamond-tiers">
+                                <div className="profile-page__diamond-tier">
+                                    <div
+                                        className="profile-page__diamond"
+                                        style={{ backgroundImage: `url(${sections.mostViewed[0].thumbnail})` }}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => navigate(videoUrl(sections.mostViewed[0].id))}
+                                        onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.mostViewed[0].id))}
+                                    >
+                                        <div className="profile-page__diamond-overlay">
+                                            <div className="profile-page__diamond-info">
+                                                <span className="profile-page__diamond-rank">#1</span>
+                                                <span className="profile-page__diamond-title">{sections.mostViewed[0].title}</span>
+                                                <span className="profile-page__diamond-views">{Format.views(sections.mostViewed[0].views)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {sections.mostViewed.length >= 3 && (
+                                    <div className="profile-page__diamond-tier">
+                                        {sections.mostViewed.slice(1, 3).map((video, i) => (
+                                            <div
+                                                key={video.id}
+                                                className="profile-page__diamond"
+                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => navigate(videoUrl(video.id))}
+                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
+                                            >
+                                                <div className="profile-page__diamond-overlay">
+                                                    <div className="profile-page__diamond-info">
+                                                        <span className="profile-page__diamond-rank">#{i + 2}</span>
+                                                        <span className="profile-page__diamond-title">{video.title}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {sections.mostViewed.length >= 6 && (
+                                    <div className="profile-page__diamond-tier">
+                                        {sections.mostViewed.slice(3, 6).map((video, i) => (
+                                            <div
+                                                key={video.id}
+                                                className="profile-page__diamond"
+                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => navigate(videoUrl(video.id))}
+                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
+                                            >
+                                                <div className="profile-page__diamond-overlay">
+                                                    <div className="profile-page__diamond-info">
+                                                        <span className="profile-page__diamond-rank">#{i + 4}</span>
+                                                        <span className="profile-page__diamond-title">{video.title}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── Polaroids ─── */}
+                    {sections.polaroids.length > 0 && (
+                        <div className="profile-page__section">
+                            <div className="profile-page__section-header">
+                                <h3 className="profile-page__section-title">
+                                    <Camera size={15} strokeWidth={2} />
+                                    {t('channel.highlights')}
+                                </h3>
+                            </div>
+                            <div className="profile-page__polaroids">
+                                {sections.polaroids.map((video, i) => {
+                                    const ROTATIONS = [-4, 3, -2, 5, -3];
+                                    const rot = ROTATIONS[i % ROTATIONS.length];
+                                    return (
+                                        <div
+                                            key={video.id}
+                                            className="profile-page__polaroid"
+                                            style={{ '--rot': `${rot}deg` } as React.CSSProperties}
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => navigate(videoUrl(video.id))}
+                                            onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
+                                        >
+                                            <div className="profile-page__polaroid-photo">
+                                                <img src={video.thumbnail} alt="" loading="lazy" />
+                                            </div>
+                                            <p className="profile-page__polaroid-caption">{video.title}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── By Topic (magazine covers) ─── */}
+                    {sections.tagSections.length > 0 && (
+                        <div className="profile-page__section">
+                            <div className="profile-page__section-header">
+                                <h3 className="profile-page__section-title">
+                                    <Hash size={15} strokeWidth={2.5} />
+                                    {t('channel.by_topic')}
+                                </h3>
+                            </div>
+                            <div className="profile-page__topics">
+                                {sections.tagSections.map(({ tag, count, videos: tagVideos }) => {
+                                    const coverThumb = tagVideos[0]?.thumbnail ?? '';
+                                    return (
+                                        <div
+                                            key={tag}
+                                            className="profile-page__topic-cover"
+                                            style={{ backgroundImage: `url(${coverThumb})` }}
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => scrollToAllVideos({ tags: [tag as unknown as Tag] })}
+                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag as unknown as Tag] })}
+                                        >
+                                            <div className="profile-page__topic-cover-content">
+                                                <span className="profile-page__topic-cover-tag">#{tag}</span>
+                                                <span className="profile-page__topic-cover-count">
+                                                    {t('channel.topic_videos', { count })}
+                                                </span>
+                                                <div className="profile-page__topic-cover-list">
+                                                    {tagVideos.map(v => (
+                                                        <span key={v.id} className="profile-page__topic-cover-item">{v.title}</span>
+                                                    ))}
+                                                </div>
+                                                <div className="profile-page__topic-cover-footer">
+                                                    <button
+                                                        type="button"
+                                                        className="profile-page__topic-cover-see-all"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            scrollToAllVideos({ tags: [tag as unknown as Tag] });
+                                                        }}
+                                                    >
+                                                        {t('channel.see_all')} →
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             <main className="profile-page__main">
-                {loadingOwnVideos && activeTab === TAB.VIDEOS && (
+                {loadingOwnVideos && (
                     <div className="profile-page__grid">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <VideoCardSkeleton key={i} />
                         ))}
                     </div>
                 )}
-                {!loadingOwnVideos && pinnedVideo && (
+
+                {sections !== null && !loadingOwnVideos && (
+                    <div className="profile-page__all-videos-header" ref={allVideosRef}>
+                        <h3 className="profile-page__section-title">
+                            <Play size={15} strokeWidth={2} />
+                            {t('channel.all_videos')}
+                        </h3>
+                    </div>
+                )}
+
+                {sections === null && !loadingOwnVideos && pinnedVideo && (
                     <div className="profile-page__pinned">
                         <div className="profile-page__pinned-header">
                             <Pin size={13} />
                             <span className="profile-page__pinned-label">{t('profile.pinned_video')}</span>
                         </div>
-                        <div className="profile-page__pinned-card">
-                            <VideoCard
-                                video={pinnedVideo}
-                                showActions={true}
-                                onEdit={handleEditOpen}
-                                onDelete={(id: VideoId) => {
-                                    const video = ownVideos.find((v: Video) => v.id === id);
-                                    const hasVideo = video !== undefined;
-                                    if (hasVideo) {
-                                        handleDeleteClick(video);
-                                    }
-                                }}
-                            />
+                        <div className="profile-page__deck">
+                            {deckGhostVideos[1] && (
+                                <div
+                                    className="profile-page__deck-ghost profile-page__deck-ghost--2"
+                                    style={{ backgroundImage: `url(${deckGhostVideos[1].thumbnail})` }}
+                                    aria-hidden="true"
+                                />
+                            )}
+                            {deckGhostVideos[0] && (
+                                <div
+                                    className="profile-page__deck-ghost profile-page__deck-ghost--1"
+                                    style={{ backgroundImage: `url(${deckGhostVideos[0].thumbnail})` }}
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <div className="profile-page__deck-main">
+                                <VideoCard
+                                    video={pinnedVideo}
+                                    showActions={true}
+                                    onEdit={handleEditOpen}
+                                    onDelete={(id: VideoId) => {
+                                        const video = ownVideos.find((v: Video) => v.id === id);
+                                        const hasVideo = video !== undefined;
+                                        if (hasVideo) {
+                                            handleDeleteClick(video);
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
@@ -442,11 +760,9 @@ export default function ProfilePage() {
                     <div className="profile-page__grid">
                         {filteredVideos.map((video, i) => {
                             const isPinned = video.id === pinnedVideoId;
-                            const isVideosTabOwn = isOwnProfile && activeTab === TAB.VIDEOS;
                             return (
                                 <div key={video.id} className="profile-page__card-wrapper">
-                                    {/* UX-12: pinned badge overlay */}
-                                    {isPinned && isVideosTabOwn && (
+                                    {isPinned && isOwnProfile && (
                                         <div className="profile-page__pinned-badge" aria-label={t('video.pinned')}>
                                             <Pin size={10} />
                                             <span>{t('video.pinned')}</span>
@@ -455,7 +771,7 @@ export default function ProfilePage() {
                                     <VideoCard
                                         video={video}
                                         index={i}
-                                        showActions={isVideosTabOwn}
+                                        showActions={isOwnProfile}
                                         onEdit={handleEditOpen}
                                         onDelete={(id: VideoId) => {
                                             const found = ownVideos.find((v: Video) => v.id === id);
@@ -472,8 +788,8 @@ export default function ProfilePage() {
                 )}
                 {!loadingOwnVideos && !hasVideos && (
                     <EmptyState
-                        icon={<EmptyIcon size={36} strokeWidth={1.5} />}
-                        title={emptyTitle}
+                        icon={<VideoOff size={36} strokeWidth={1.5} />}
+                        title={t('video.no_own_videos')}
                     />
                 )}
             </main>
