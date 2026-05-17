@@ -11,7 +11,7 @@ export type { Notification as AppNotification } from './notifications';
 
 export type { LoginPayload, LoginResponse, UpdateProfilePayload, User } from './auth';
 export type { Cuid, StoreCommentPayload, ToggleLikeResponse } from './comments';
-export type { VideoListResponse, VideoUploadPayload, VideoUpdatePayload, VideoSummary, Vuid } from './videos';
+export type { VideoListResponse, VideoUploadPayload, VideoUpdatePayload, VideoSummary, VideoTranscription, Vuid } from './videos';
 export type { HistoryEvent } from './history';
 export type { Uuid } from './channels';
 export type { Puid, Playlist } from './playlists';

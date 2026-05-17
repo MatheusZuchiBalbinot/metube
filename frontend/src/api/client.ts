@@ -128,6 +128,16 @@ class ApiClient {
         }
     }
 
+    async postEmpty(url: string, payload?: unknown): Promise<boolean> {
+        try {
+            await this.axiosInstance.post(url, payload);
+            return true;
+        } catch (error) {
+            this.logError(url, 'POST', error);
+            return false;
+        }
+    }
+
     async post<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
         try {
             const { data } = await this.axiosInstance.post<T>(url, payload, config);
