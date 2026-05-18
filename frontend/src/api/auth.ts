@@ -2,17 +2,15 @@ import axios from 'axios';
 import { apiClient } from './client';
 import type { User } from '@models/user';
 import type { Uuid } from './channels';
-import { UserApiSchema, LoginResponseApiSchema } from '@validation';
+import { parseUser, parseLoginResponse, type LoginApiResponse } from './parsers';
 
 export type { User } from '@models/user';
+
+export type LoginResponse = LoginApiResponse;
 
 export interface LoginPayload {
     email: string
     password: string
-}
-
-export interface LoginResponse {
-    user: User
 }
 
 export interface UpdateProfilePayload {
@@ -46,7 +44,7 @@ class AuthApi {
     }
 
     async login(payload: LoginPayload): Promise<LoginResponse | null> {
-        return apiClient.postValidated('/sessions', LoginResponseApiSchema, payload);
+        return apiClient.postValidated('/sessions', parseLoginResponse, payload);
     }
 
     async logout(): Promise<void> {
@@ -54,15 +52,15 @@ class AuthApi {
     }
 
     async me(): Promise<User | null> {
-        return apiClient.getValidated('/sessions/current', UserApiSchema);
+        return apiClient.getValidated('/sessions/current', parseUser);
     }
 
     async updateProfile(uuid: Uuid, payload: UpdateProfilePayload): Promise<User | null> {
-        return apiClient.patchValidated(`/users/${uuid}`, UserApiSchema, payload);
+        return apiClient.patchValidated(`/users/${uuid}`, parseUser, payload);
     }
 
     async register(payload: RegisterPayload): Promise<LoginResponse | null> {
-        return apiClient.postValidated('/users', LoginResponseApiSchema, payload);
+        return apiClient.postValidated('/users', parseLoginResponse, payload);
     }
 
     async forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
