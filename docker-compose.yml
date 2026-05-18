@@ -44,8 +44,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-      - /app/vendor
-      - /app/bootstrap/cache
+      - backend_vendor:/app/vendor
+      - backend_cache:/app/bootstrap/cache
       - vidsum_storage:/app/storage
     working_dir: /app
     networks:
@@ -78,8 +78,8 @@ services:
         condition: service_started
     volumes:
       - ./backend:/app
-      - /app/vendor
-      - /app/bootstrap/cache
+      - backend_vendor:/app/vendor
+      - backend_cache:/app/bootstrap/cache
       - vidsum_storage:/app/storage
     working_dir: /app
     networks:
@@ -98,8 +98,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-      - /app/vendor
-      - /app/bootstrap/cache
+      - backend_vendor:/app/vendor
+      - backend_cache:/app/bootstrap/cache
       - vidsum_storage:/app/storage
     working_dir: /app
     networks:
@@ -140,3 +140,5 @@ networks:
 volumes:
   pgdata:
   vidsum_storage:
+  backend_vendor:
+  backend_cache:
