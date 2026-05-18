@@ -1,5 +1,9 @@
 export { useAuth } from './useAuth';
 export { useAutoplay } from './useAutoplay';
+export { useProfileVideos } from './useProfileVideos';
+export { useRelatedVideos } from './useRelatedVideos';
+export { useVideoContent } from './useVideoContent';
+export { useVideoFetch } from './useVideoFetch';
 export { useBurstAnimation } from './useBurstAnimation';
 export { useClickDoubleClick } from './useClickDoubleClick';
 export { useClickOutside } from './useClickOutside';
