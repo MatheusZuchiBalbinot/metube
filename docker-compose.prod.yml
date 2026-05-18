@@ -1,5 +1,13 @@
 services:
   frontend:
-    ports:
-      - "4173:4173"
-    command: sh -c "npm run build && npm run preview -- --host 0.0.0.0 --port 4173"
+    profiles:
+      - dev
+
+  nginx:
+    volumes:
+      - ./nginx/prod:/etc/nginx/conf.d:ro
+      - ./frontend/dist:/var/www/frontend:ro
+      - vidsum_storage:/var/www/storage-root:ro
+    depends_on:
+      - backend
+      - reverb
