@@ -1,13 +1,21 @@
 import { apiClient } from './client';
 import type { Video, VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
-import type { PaginatedResponse } from '@models/common';
-import { VideoApiSchema, VideoListApiSchema, VideoSummaryApiSchema, VideoTranscriptionApiSchema } from '@validation';
 import { buildProgress, type ProgressCallback } from '@utils/upload';
+import {
+    parseVideo,
+    parseVideoList,
+    parseVideoSummary,
+    parseVideoTranscription,
+    type VideoSummary,
+    type VideoTranscription,
+    type VideoListApiResponse,
+} from './parsers';
 
 export type Vuid = string & { readonly _brand: 'Vuid' };
-
-export type VideoListResponse = PaginatedResponse<Video>;
+export type { VideoSummary, VideoTranscription };
+export type VideoListResponse = VideoListApiResponse;
+export type VideoChapter = VideoSummary['chapters'][number];
 
 export interface VideoUploadPayload {
     title: string
@@ -37,20 +45,6 @@ export interface VideoUpdatePayload {
     scheduledAt?: string
 }
 
-export interface VideoSummary {
-    keyPoints: string[]
-    chapters: { timestamp: string; title: string }[]
-    readingMode: string
-}
-
-export interface VideoTranscription {
-    status: 'pending' | 'processing' | 'completed' | 'failed'
-    language: string | null
-    content: string | null
-}
-
-export type VideoChapter = VideoSummary['chapters'][number];
-
 class VideoApi {
     private readonly baseUrl = '/videos';
 
@@ -61,11 +55,11 @@ class VideoApi {
         tags?: Tag[]
         status?: VideoStatus
     }): Promise<VideoListResponse | null> {
-        return apiClient.getValidated(this.baseUrl, VideoListApiSchema, { params });
+        return apiClient.getValidated(this.baseUrl, parseVideoList, { params });
     }
 
     async get(vuid: Vuid): Promise<Video | null> {
-        return apiClient.getValidated(`${this.baseUrl}/${vuid}`, VideoApiSchema);
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}`, parseVideo);
     }
 
     async create(payload: VideoUploadPayload, onProgress?: ProgressCallback): Promise<Video | null> {
@@ -74,6 +68,7 @@ class VideoApi {
         form.append('description', payload.description);
         form.append('status', payload.status);
         payload.tags.forEach(tag => form.append('tags[]', tag));
+
         if (payload.scheduledAt) {
             form.append('scheduled_at', payload.scheduledAt);
         }
@@ -88,7 +83,7 @@ class VideoApi {
 
         const startTime = Date.now();
 
-        return apiClient.postValidated(this.baseUrl, VideoApiSchema, form, {
+        return apiClient.postValidated(this.baseUrl, parseVideo, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
             onUploadProgress: onProgress
                 ? (event) => onProgress(buildProgress(event, startTime))
@@ -97,7 +92,7 @@ class VideoApi {
     }
 
     async finalize(payload: VideoFinalizePayload): Promise<Video | null> {
-        return apiClient.postValidated(this.baseUrl, VideoApiSchema, {
+        return apiClient.postValidated(this.baseUrl, parseVideo, {
             upload_key: payload.uploadKey,
             thumbnail_key: payload.thumbnailKey,
             title: payload.title,
@@ -109,7 +104,7 @@ class VideoApi {
     }
 
     async update(vuid: Vuid, payload: VideoUpdatePayload): Promise<Video | null> {
-        return apiClient.patchValidated(`${this.baseUrl}/${vuid}`, VideoApiSchema, payload);
+        return apiClient.patchValidated(`${this.baseUrl}/${vuid}`, parseVideo, payload);
     }
 
     async delete(vuid: Vuid): Promise<void> {
@@ -137,11 +132,11 @@ class VideoApi {
     }
 
     async getSummary(vuid: Vuid): Promise<VideoSummary | null> {
-        return apiClient.getValidated(`${this.baseUrl}/${vuid}/summary`, VideoSummaryApiSchema);
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}/summary`, parseVideoSummary);
     }
 
     async getTranscription(vuid: Vuid): Promise<VideoTranscription | null> {
-        return apiClient.getValidated(`${this.baseUrl}/${vuid}/transcription`, VideoTranscriptionApiSchema);
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}/transcription`, parseVideoTranscription);
     }
 
     async retryTranscription(vuid: Vuid): Promise<boolean> {
