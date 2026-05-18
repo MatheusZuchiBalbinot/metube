@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import type { default as ShakaNamespace } from 'shaka-player';
+
+type ShakaPlayer = InstanceType<typeof ShakaNamespace['Player']>;
 
 export interface ShakaLevel {
     index: number;
@@ -14,7 +17,7 @@ export function useShaka(
     videoRef: React.RefObject<HTMLVideoElement | null>,
     src: string,
 ) {
-    const playerRef = useRef<shaka.Player | null>(null);
+    const playerRef = useRef<ShakaPlayer | null>(null);
     const [levels, setLevels] = useState<ShakaLevel[]>([]);
     const [currentQuality, setCurrentQuality] = useState(-1);
 
@@ -26,7 +29,7 @@ export function useShaka(
         }
 
         let destroyed = false;
-        let player: shaka.Player | null = null;
+        let player: ShakaPlayer | null = null;
 
         const init = async () => {
             const shakaModule = await import('shaka-player');
@@ -41,28 +44,29 @@ export function useShaka(
                 return;
             }
 
-            player = new shaka.Player();
-            playerRef.current = player;
+            player = new shaka.Player() as ShakaPlayer;
+            const p = player;
+            playerRef.current = p;
 
-            player.addEventListener('error', (e: Event) => {
+            p.addEventListener('error', (e: Event) => {
                 const detail = (e as CustomEvent).detail;
                 // eslint-disable-next-line no-console
                 console.warn('[Shaka Error]', detail);
             });
 
-            await player.attach(el);
+            await p.attach(el);
 
             if (destroyed) {
                 return;
             }
 
-            await player.load(src);
+            await p.load(src);
 
             if (destroyed) {
                 return;
             }
 
-            const tracks = player.getVariantTracks();
+            const tracks = p.getVariantTracks();
             const seenHeights = new Set<number>();
             const uniqueLevels: ShakaLevel[] = [];
 
