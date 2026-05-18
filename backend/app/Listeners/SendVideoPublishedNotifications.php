@@ -33,14 +33,14 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
 
         DB::table('user_subscriptions')
             ->where('channel_id', $channelId)
-            ->select('subscriber_id')
-            ->orderBy('subscriber_id')
+            ->select('user_id')
+            ->orderBy('user_id')
             ->chunkById(200, function ($rows) use ($video): void {
                 foreach ($rows as $row) {
-                    \App\Models\User::find($row->subscriber_id)?->notify(
+                    \App\Models\User::find($row->user_id)?->notify(
                         new VideoFromSubscriptionNotification($video)
                     );
                 }
-            }, 'subscriber_id');
+            }, 'user_id');
     }
 }
