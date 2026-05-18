@@ -23,8 +23,8 @@ const GROUP_HEADER_HEIGHT = 36;
 const VIDEO_ROW_HEIGHT = 136;
 
 type FlatItem =
-    | { type: HistoryItemKind.HEADER; label: string }
-    | { type: HistoryItemKind.VIDEO; id: string };
+    | { type: typeof HistoryItemKind.HEADER; label: string }
+    | { type: typeof HistoryItemKind.VIDEO; id: string };
 
 interface HistoryGroup {
     label: string
