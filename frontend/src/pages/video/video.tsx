@@ -15,6 +15,9 @@ import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
 import { usePlaylist } from '@hooks/usePlaylist';
 import { useSubscription } from '@hooks/useSubscription';
+import { useVideoFetch } from '@hooks/useVideoFetch';
+import { useRelatedVideos } from '@hooks/useRelatedVideos';
+import { useVideoContent } from '@hooks/useVideoContent';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
@@ -35,15 +38,11 @@ import * as Popover from '@radix-ui/react-popover';
 import { Avatar, Button, Tooltip } from '@ui';
 import type { Video, VideoId } from '@models/video';
 import { VideoStatus } from '@models/video';
-import type { VideoSummary, VideoTranscription } from '@api/videos';
 import type { Tag } from '@models/tag';
-import getEcho from '@lib/echo';
 import './video.css';
 import { ToastType } from '@enums/toastType';
 import { SidebarTab } from '@enums/sidebarTab';
 
-
-// eslint-disable-next-line complexity
 export default function VideoPage() {
     const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
@@ -58,73 +57,22 @@ export default function VideoPage() {
 
     const { playlists, addVideoToPlaylist, removeVideoFromPlaylist } = usePlaylist();
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
-    const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
 
     const { user: authUser } = useAuth();
     const { isSubscribed, toggleSubscription } = useSubscription();
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [descExpanded, setDescExpanded] = useState(false);
+    const [sidebarTab, setSidebarTab] = useState<SidebarTab>(SidebarTab.RELATED);
+    const [readingMode, setReadingMode] = useState(false);
+    const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
     const storeVideo = videos.find((v: Video) => v.id === (id as unknown as VideoId));
-    const [fetchedVideo, setFetchedVideo] = useState<Video | null>(null);
-    const [fetchFailed, setFetchFailed] = useState(false);
 
-    useEffect(() => {
-        if (id === undefined || storeVideo !== undefined) {
-            setFetchedVideo(null);
-            setFetchFailed(false);
-            return;
-        }
-        setFetchFailed(false);
-        videoApi.get(id as unknown as Vuid).then(result => {
-            if (result !== null) {
-                setFetchedVideo(result);
-            } else {
-                setFetchFailed(true);
-            }
-        }).catch(() => setFetchFailed(true));
-    }, [id, storeVideo]);
+    const { video, fetchFailed } = useVideoFetch(id, storeVideo);
+    const { relatedVideos, loadingRelated } = useRelatedVideos(video?.id, video?.tags ?? []);
+    const { summary, transcription, setTranscription } = useVideoContent(id, video?.status);
 
-    // When a VideoStatusUpdated WS event arrives for the current video and the video
-    // is only in fetchedVideo (not in the Redux store), re-fetch to pick up the new status.
-    useEffect(() => {
-        const isCurrentVideo = lastVideoStatusUpdate !== null && lastVideoStatusUpdate.vuid === id;
-        const isOnlyInLocalState = storeVideo === undefined && fetchedVideo !== null;
-
-        if (!isCurrentVideo || !isOnlyInLocalState) {
-            return;
-        }
-
-        videoApi.get(id as unknown as Vuid).then(result => {
-            if (result !== null) {
-                setFetchedVideo(result);
-            }
-        });
-    }, [lastVideoStatusUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const video = storeVideo ?? fetchedVideo ?? undefined;
     const hasVideo = video !== undefined;
-
-    // Fallback poll: if the video is stuck in PROCESSING and neither the WS event
-    // nor the upload-modal poll resolves it (e.g. user closed modal early, Reverb down),
-    // check every 5 s until the status transitions.
-    useEffect(() => {
-        const isVideoProcessing = video !== undefined && video.status === VideoStatus.PROCESSING;
-        if (!isVideoProcessing || id === undefined) {
-            return;
-        }
-        const vuid = id as unknown as Vuid;
-        const timer = setInterval(() => {
-            videoApi.get(vuid).then(result => {
-                const hasTransitioned = result !== null && result.status !== VideoStatus.PROCESSING;
-                if (!hasTransitioned) {
-                    return;
-                }
-                dispatch(videoActions.updateVideo(result));
-            });
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [video?.status, id, dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
     const isOwner = authUser !== null && video !== undefined && authUser.uuid === video.channelId;
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -133,36 +81,6 @@ export default function VideoPage() {
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
     const [_saveAnimating, triggerSaveAnimation] = useBurstAnimation();
     const [isCopied, triggerCopied] = useBurstAnimation(2000);
-    const [sidebarTab, setSidebarTab] = useState<SidebarTab>(SidebarTab.RELATED);
-    const [readingMode, setReadingMode] = useState(false);
-
-    // UX-16: share dropdown
-    const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
-
-    const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
-    const [loadingRelated, setLoadingRelated] = useState(false);
-
-    useEffect(() => {
-        const isVideoReady = video !== undefined;
-        if (!isVideoReady) {
-            return;
-        }
-        setLoadingRelated(true);
-        const tags = video.tags as unknown as string[];
-        videoApi.list({ tags, page: 1 }).then(result => {
-            if (result === null) {
-                return;
-            }
-            const filtered = result.data
-                .filter(v => v.id !== video.id)
-                .slice(0, 10);
-            setRelatedVideos(filtered);
-        }).finally(() => {
-            setLoadingRelated(false);
-        });
-    }, [video?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // ─── Extracted hooks — declared before any derived state that depends on them ─
 
     const { autoplayCountdown, startAutoplayCountdown, cancelAutoplay } = useAutoplay({
         id,
@@ -178,22 +96,22 @@ export default function VideoPage() {
         videoRef,
         video,
         videoProgress,
-        updateProgress: (id: string, pct: number) => updateProgress(id as unknown as VideoId, pct),
-        onBackendSync: (id: string, pct: number) => videoApi.updateProgress(id as unknown as Vuid, pct).catch(() => { }),
-        consumePendingVideoSeek: (id: string) => consumePendingVideoSeek(id as unknown as VideoId),
+        updateProgress: (vid: string, pct: number) => updateProgress(vid as unknown as VideoId, pct),
+        onBackendSync: (vid: string, pct: number) => videoApi.updateProgress(vid as unknown as Vuid, pct).catch(() => { }),
+        consumePendingVideoSeek: (vid: string) => consumePendingVideoSeek(vid as unknown as VideoId),
         onCompleted: startAutoplayCountdown,
         onFinished: (vuid: string) => videoApi.recordView(vuid as unknown as Vuid),
     });
 
-    // ─── Derived state that depends on hook output ────────────────────────────
-
     const allRelatedTags = useMemo(() => {
         const tagSet = new Set<string>();
+
         for (const v of relatedVideos) {
             for (const tag of v.tags) {
                 tagSet.add(tag as string);
             }
         }
+
         return Array.from(tagSet).sort() as unknown as Tag[];
     }, [relatedVideos]);
 
@@ -202,69 +120,6 @@ export default function VideoPage() {
         [relatedVideos, filterState],
     );
 
-    const [summary, setSummary] = useState<VideoSummary | null>(null);
-    const [transcription, setTranscription] = useState<VideoTranscription | null>(null);
-
-    useEffect(() => {
-        const isVideoReady = video !== undefined;
-
-        if (!isVideoReady) {
-            return;
-        }
-
-        const isPublished = video.status === VideoStatus.PUBLISHED || video.status === VideoStatus.SCHEDULED;
-
-        if (!isPublished) {
-            setSummary(null);
-            setTranscription(null);
-            return;
-        }
-
-        const vuid = video.id as unknown as Vuid;
-        videoApi.getSummary(vuid).then(setSummary);
-        videoApi.getTranscription(vuid).then(setTranscription);
-    }, [video?.id, video?.status]);
-
-    // Live counters: overrides from real-time events (null = fall back to store value)
-    const [_liveLikeCount, setLiveLikeCount] = useState<number | null>(null);
-
-    useEffect(() => {
-        const isIdReady = id !== undefined;
-        if (!isIdReady) {
-            return;
-        }
-
-        setLiveLikeCount(null);
-
-        const echo = getEcho();
-        const isRealtimeAvailable = echo !== null;
-
-        if (!isRealtimeAvailable) {
-            return;
-        }
-
-        const ch = echo.channel(`videos.${id}`);
-
-        ch.listen('.VideoLiked', (data: { like_count: number }) => {
-            const hasCount = typeof data.like_count === 'number';
-            if (hasCount) {
-                setLiveLikeCount(data.like_count);
-            }
-        });
-
-        ch.listen('.TranscriptionStatusUpdated', () => {
-            videoApi.getTranscription(id as unknown as Vuid).then(result => {
-                setTranscription(result);
-            });
-        });
-
-        return () => {
-            echo.leaveChannel(`videos.${id}`);
-        };
-    }, [id]);
-
-    // ─── Side effects ─────────────────────────────────────────────────────────
-
     useEffect(() => {
         closeMiniPlayer();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,16 +127,18 @@ export default function VideoPage() {
 
     useEffect(() => {
         const shouldRegister = hasVideo && id !== undefined && !hasViewed(id);
+
         if (!shouldRegister) {
             return;
         }
+
         markViewed(id);
         watchVideo(id as unknown as VideoId);
         videoApi.recordView(id as unknown as Vuid);
         dispatch(videoActions.incrementViews(id as unknown as VideoId));
     }, [id, hasVideo, watchVideo, dispatch]);
 
-    // ─── Skip detection: reports an early abandon when leaving the page below 10% ─
+    // Skip detection: reports an early abandon when leaving the page below 10%
     const skipTrackerRef = useRef<{ vuid: Vuid; percent: number } | null>(null);
 
     useEffect(() => {
@@ -312,14 +169,14 @@ export default function VideoPage() {
 
     useEffect(() => {
         const tracker = skipTrackerRef.current;
+
         if (tracker === null || video === undefined) {
             return;
         }
+
         const livePercent = videoProgress[video.id] ?? 0;
         tracker.percent = livePercent;
     }, [videoProgress, video]);
-
-    // ─── Stable keyboard shortcut handlers (safe before early return) ──────────
 
     const handleLikeShortcut = useCallback(() => {
         const isCurrentlyLiked = video?.id ? likedVideos.has(video.id) : false;
@@ -327,27 +184,33 @@ export default function VideoPage() {
             message: t(isCurrentlyLiked ? 'toast.unliked' : 'toast.liked'),
             type: ToastType.SUCCESS,
         }));
+
         if (video?.id) {
             likeVideo(video.id);
         }
+
         triggerLikeAnimation();
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
         const watchLater = playlists.find(p => p.name === PLAYLIST_CONSTANTS.WATCH_LATER);
+
         if (!watchLater || !video?.id) {
             return;
         }
+
         const isCurrentlySaved = watchLaterIds.has(video.id as string);
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: ToastType.SUCCESS,
         }));
+
         if (isCurrentlySaved) {
             removeVideoFromPlaylist(watchLater.id as string, video.id as string);
         } else {
             addVideoToPlaylist(watchLater.id as string, video.id as string);
         }
+
         triggerSaveAnimation();
     }, [video?.id, watchLaterIds, playlists, addVideoToPlaylist, removeVideoFromPlaylist, dispatch, t, triggerSaveAnimation]);
 
@@ -408,16 +271,11 @@ export default function VideoPage() {
     const isDisliked = dislikedVideos.has(video.id);
     const isChannelSubscribed = isSubscribed(video.channel);
     const hasLongDesc = (video.description ?? '').length > 220;
-
     const hasVideoFile = video.videoUrl !== undefined && video.videoUrl !== '';
     const isAutoplayActive = autoplayCountdown !== null;
     const nextVideo = relatedVideos[0];
-
     const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
-
     const videoId = video.id;
-
-    // UX-07: named boolean for share copied state
     const isShareCopied = isCopied;
 
     function handleLike() {
@@ -453,6 +311,7 @@ export default function VideoPage() {
     }
 
     function handleRetryTranscription() {
+        if (!video) return;
         const vuid = video.id as unknown as Vuid;
         videoApi.retryTranscription(vuid).then(ok => {
             const didSucceed = ok !== null;
@@ -745,7 +604,6 @@ export default function VideoPage() {
                             }
                         </div>
                     )}
-
                 </aside>
             </div>
         </div>
