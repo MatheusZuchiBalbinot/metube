@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import { Home, Clapperboard, History, ThumbsUp, User, ListVideo } from 'lucide-react';
 import { ROUTES } from '@utils/routes';
 import { useAppSelector } from '@store';
@@ -61,16 +60,8 @@ function SidebarItem({ item }: SidebarItemProps) {
                 <SidebarLink to={item.to} end={item.end} aria-label={t(item.labelKey)}>
                     {isActive && (
                         <>
-                            <motion.div
-                                layoutId="sidebar-active-bg"
-                                className="app-sidebar__active-bg"
-                                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                            />
-                            <motion.div
-                                layoutId="sidebar-active-pill"
-                                className="app-sidebar__active-pill"
-                                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                            />
+                            <div className="app-sidebar__active-bg" />
+                            <div className="app-sidebar__active-pill" />
                         </>
                     )}
                     <span className="app-sidebar__icon-chip">
