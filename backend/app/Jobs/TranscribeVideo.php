@@ -19,9 +19,6 @@ class TranscribeVideo implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    /** @var string Dedicated queue so concurrency is capped independently of other jobs */
-    public string $queue = 'transcription';
-
     /** @var int Max seconds this job may run */
     public int $timeout = 3600;
 
@@ -37,7 +34,10 @@ class TranscribeVideo implements ShouldQueue
     /**
      * @param  Video  $video  Published video to transcribe
      */
-    public function __construct(private readonly Video $video) {}
+    public function __construct(private readonly Video $video)
+    {
+        $this->onQueue('transcription');
+    }
 
     /**
      * Call the Whisper service and persist the transcription result.
@@ -93,7 +93,6 @@ class TranscribeVideo implements ShouldQueue
             ]);
 
             $transcription->update(['status' => TranscriptionStatus::FAILED]);
-            event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
 
             throw new \RuntimeException("Whisper returned HTTP {$response->status()} for video {$video->vuid}");
         }
