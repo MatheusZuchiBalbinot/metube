@@ -389,7 +389,7 @@
     overflow: hidden;
 }
 
-.profile-page__latest-grid > *:first-child {
+.profile-page__latest-grid>*:first-child {
     grid-row: span 2;
 }
 
@@ -535,67 +535,6 @@
     font-size: 0.625rem;
     color: rgba(255, 255, 255, 0.65);
     white-space: nowrap;
-}
-
-/* ─── Polaroids ──────────────────────────────────────────────────────────────── */
-
-.profile-page__polaroids {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0;
-    padding: 24px 0 52px;
-}
-
-.profile-page__polaroid {
-    background: #fff;
-    padding: 10px 10px 36px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    transform: rotate(var(--rot, 0deg));
-    transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
-    cursor: pointer;
-    margin: -8px;
-    position: relative;
-    z-index: 1;
-    outline: none;
-}
-
-.profile-page__polaroid:hover {
-    transform: rotate(0deg) scale(1.1);
-    z-index: 10;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-}
-
-.profile-page__polaroid:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-}
-
-.profile-page__polaroid-photo {
-    width: 180px;
-    height: 120px;
-    overflow: hidden;
-    background: #ccc;
-}
-
-.profile-page__polaroid-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.profile-page__polaroid-caption {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #222;
-    margin: 10px 0 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-    max-width: 180px;
 }
 
 /* ─── Topic covers ───────────────────────────────────────────────────────────── */
@@ -909,7 +848,7 @@
         grid-template-rows: 130px 130px;
     }
 
-    .profile-page__latest-grid > *:first-child {
+    .profile-page__latest-grid>*:first-child {
         grid-row: auto;
     }
 
@@ -948,10 +887,6 @@
 
     .profile-page__topics {
         grid-template-columns: 1fr;
-    }
-
-    .profile-page__polaroids {
-        gap: 8px;
     }
 
     .profile-page__polaroid {
