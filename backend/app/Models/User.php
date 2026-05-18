@@ -186,4 +186,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->where('uuid', $uuid);
     }
+
+    /**
+     * Route broadcast notifications to the same private channel the frontend subscribes to.
+     */
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return "users.{$this->uuid}";
+    }
 }
