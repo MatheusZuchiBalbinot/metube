@@ -2,11 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { toastActions } from '@store/toastSlice';
 import { video } from '@api/videos';
 import type { Vuid } from '@api/videos';
 import { VideoStatus } from '@models/video';
-import { ToastType } from '@enums/toastType';
 
 const POLL_INITIAL_MS = 3_000;
 const POLL_SLOW_MS = 5_000;
@@ -57,17 +55,6 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
             entries.delete(vuid);
         }
 
-        function emitToast(status: string): void {
-            if (status === VideoStatus.PUBLISHED) {
-                dispatch(toastActions.addToast({ message: t('video.published_toast'), type: ToastType.SUCCESS }));
-                return;
-            }
-
-            if (status === VideoStatus.FAILED) {
-                dispatch(toastActions.addToast({ message: t('video.failed_toast'), type: ToastType.ERROR }));
-            }
-        }
-
         async function pollOne(vuid: Vuid): Promise<void> {
             const entry = entries.get(vuid);
             if (entry === undefined) {
@@ -93,7 +80,6 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
             const isStillProcessing = result.status === VideoStatus.PROCESSING;
             if (!isStillProcessing) {
                 dispatch(videoActions.updateVideoStatus({ vuid, status: result.status }));
-                emitToast(result.status);
                 clearEntry(vuid);
                 return;
             }
@@ -102,7 +88,7 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
             const delay = isSlow ? POLL_SLOW_MS : POLL_INITIAL_MS;
             entry.timer = setTimeout(() => {
                 void pollOne(vuid);
-            },delay);
+            }, delay);
         }
 
         for (const vuid of list) {
@@ -114,7 +100,7 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
             entries.set(vuid, entry);
             entry.timer = setTimeout(() => {
                 void pollOne(vuid);
-            },POLL_INITIAL_MS);
+            }, POLL_INITIAL_MS);
         }
 
         const incomingSet = new Set<string>(list);
