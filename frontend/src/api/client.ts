@@ -1,5 +1,4 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
-import { type ZodType, type ZodError } from 'zod';
 import i18n from '../i18n';
 import { APP_EVENTS } from '../utils/events';
 import { logger } from '../utils/logger';
@@ -81,21 +80,6 @@ class ApiClient {
 
         // For primitives, they're valid unless null/undefined (already checked)
         return true;
-    }
-
-    private formatZodError(error: ZodError): string {
-        return error.issues
-            .map(issue => `[${issue.path.join('.')}] ${issue.message}`)
-            .join(', ');
-    }
-
-    private parseWithSchema<T>(schema: ZodType<T>, raw: unknown, url: string, method: string): T | null {
-        const result = schema.safeParse(raw);
-        if (!result.success) {
-            this.logError(url, method, `Schema validation failed: ${this.formatZodError(result.error)}`);
-            return null;
-        }
-        return result.data;
     }
 
     private logError(url: string, method: string, error: unknown): void {
@@ -202,36 +186,68 @@ class ApiClient {
         }
     }
 
-    async getValidated<T>(url: string, schema: ZodType<T>, config?: AxiosRequestConfig): Promise<T | null> {
+    async getValidated<T>(url: string, parse: (raw: unknown) => T | null, config?: AxiosRequestConfig): Promise<T | null> {
         const raw = await this.get<unknown>(url, config);
+
         if (raw === null) {
             return null;
         }
-        return this.parseWithSchema(schema, raw, url, 'GET');
+
+        const result = parse(raw);
+
+        if (result === null) {
+            this.logError(url, 'GET', 'Parse failed: unexpected response shape');
+        }
+
+        return result;
     }
 
-    async postValidated<T>(url: string, schema: ZodType<T>, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async postValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
         const raw = await this.post<unknown>(url, payload, config);
+
         if (raw === null) {
             return null;
         }
-        return this.parseWithSchema(schema, raw, url, 'POST');
+
+        const result = parse(raw);
+
+        if (result === null) {
+            this.logError(url, 'POST', 'Parse failed: unexpected response shape');
+        }
+
+        return result;
     }
 
-    async patchValidated<T>(url: string, schema: ZodType<T>, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async patchValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
         const raw = await this.patch<unknown>(url, payload, config);
+
         if (raw === null) {
             return null;
         }
-        return this.parseWithSchema(schema, raw, url, 'PATCH');
+
+        const result = parse(raw);
+
+        if (result === null) {
+            this.logError(url, 'PATCH', 'Parse failed: unexpected response shape');
+        }
+
+        return result;
     }
 
-    async putValidated<T>(url: string, schema: ZodType<T>, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async putValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
         const raw = await this.put<unknown>(url, payload, config);
+
         if (raw === null) {
             return null;
         }
-        return this.parseWithSchema(schema, raw, url, 'PUT');
+
+        const result = parse(raw);
+
+        if (result === null) {
+            this.logError(url, 'PUT', 'Parse failed: unexpected response shape');
+        }
+
+        return result;
     }
 
     getAxiosInstance(): AxiosInstance {

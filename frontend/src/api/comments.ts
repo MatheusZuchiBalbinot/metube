@@ -1,22 +1,25 @@
 import { apiClient } from './client';
 import type { Comment } from '@models/comment';
-import type { PaginatedResponse } from '@models/common';
 import type { Vuid } from './videos';
-import { CommentListApiSchema, CommentRepliesApiSchema, CommentApiSchema, ToggleLikeApiSchema, CommentVersionsApiSchema } from '@validation';
 import type { CommentVersion } from '@models/comment';
+import {
+    parseComment,
+    parseCommentList,
+    parseCommentReplies,
+    parseToggleLike,
+    parseCommentVersions,
+    type CommentListApiResponse,
+    type ToggleLikeApiResponse,
+} from './parsers';
 
 export type { Cuid } from '@models/comment';
 
-export type CommentListResponse = PaginatedResponse<Comment>;
+export type CommentListResponse = CommentListApiResponse;
+export type ToggleLikeResponse = ToggleLikeApiResponse;
 
 export interface StoreCommentPayload {
     content: string
     parentCuid?: string
-}
-
-export interface ToggleLikeResponse {
-    liked: boolean
-    likesCount: number
 }
 
 class CommentsApi {
@@ -26,7 +29,7 @@ class CommentsApi {
     async list(vuid: Vuid, params?: { page?: number }): Promise<CommentListResponse | null> {
         return apiClient.getValidated(
             `${this.baseUrl}/${vuid}/comments`,
-            CommentListApiSchema,
+            parseCommentList,
             { params },
         );
     }
@@ -40,7 +43,7 @@ class CommentsApi {
 
         return apiClient.postValidated(
             `${this.baseUrl}/${vuid}/comments`,
-            CommentApiSchema,
+            parseComment,
             body,
         );
     }
@@ -48,7 +51,7 @@ class CommentsApi {
     async update(cuid: string, content: string): Promise<Comment | null> {
         return apiClient.patchValidated(
             `${this.commentsUrl}/${cuid}`,
-            CommentApiSchema,
+            parseComment,
             { content },
         );
     }
@@ -60,7 +63,7 @@ class CommentsApi {
     async toggleLike(cuid: string): Promise<ToggleLikeResponse | null> {
         return apiClient.postValidated(
             `${this.commentsUrl}/${cuid}/like`,
-            ToggleLikeApiSchema,
+            parseToggleLike,
             {},
         );
     }
@@ -68,14 +71,14 @@ class CommentsApi {
     async replies(cuid: string): Promise<Comment[] | null> {
         return apiClient.getValidated(
             `${this.commentsUrl}/${cuid}/replies`,
-            CommentRepliesApiSchema,
+            parseCommentReplies,
         );
     }
 
     async versions(cuid: string): Promise<CommentVersion[] | null> {
         return apiClient.getValidated(
             `${this.commentsUrl}/${cuid}/versions`,
-            CommentVersionsApiSchema,
+            parseCommentVersions,
         );
     }
 }
