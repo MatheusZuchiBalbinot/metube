@@ -75,8 +75,6 @@
     color: var(--accent);
 }
 
-/* ─── Magic active background (framer-motion layoutId) ──────────────────── */
-
 .app-sidebar__active-bg {
     position: absolute;
     inset: 0;
@@ -84,6 +82,7 @@
     border-radius: var(--radius-sm);
     z-index: 0;
     pointer-events: none;
+    animation: sidebar-active-fade 0.15s var(--ease-out) both;
 }
 
 .app-sidebar__active-pill {
@@ -98,6 +97,12 @@
     border-radius: 0 3px 3px 0;
     z-index: 1;
     pointer-events: none;
+    animation: sidebar-active-fade 0.15s var(--ease-out) both;
+}
+
+@keyframes sidebar-active-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .app-sidebar__icon-chip,
@@ -195,6 +200,7 @@
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+
     /* Quando aberta em mobile: vira overlay sobre o conteúdo (não empurra) */
     .app-sidebar:not(.app-sidebar--collapsed) {
         position: fixed;
