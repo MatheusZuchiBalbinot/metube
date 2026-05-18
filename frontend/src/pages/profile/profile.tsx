@@ -10,15 +10,14 @@ import type { FilterState } from '@utils/applyFilters';
 import type { Video, VideoId } from '@models/video';
 import { VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
-import type { Uuid } from '@api';
 import { Format } from '@utils/format';
 import { videoUrl } from '@utils/routes';
-import { channel as channelApi, comments as commentsApi } from '@api';
+import { comments as commentsApi } from '@api';
 import type { Comment } from '@models/comment';
 import type { Vuid } from '@api';
-import { useAppSelector } from '@store/index';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
+import { useProfileVideos } from '@hooks/useProfileVideos';
 import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
@@ -36,7 +35,6 @@ function formatWatchTime(seconds: number): string {
     return `${hours}h ${minutes}m`;
 }
 
-// eslint-disable-next-line complexity
 export default function ProfilePage() {
     const { t } = useTranslation();
     const { id: idParam } = useParams<{ id?: string }>();
@@ -49,6 +47,8 @@ export default function ProfilePage() {
     const isOwnProfile = !idParam || String(user!.id) === idParam;
     const channelId = isOwnProfile ? String(user!.id) : idParam!;
 
+    const { ownVideos, setOwnVideos, loadingOwnVideos } = useProfileVideos(channelId, isOwnProfile);
+
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
     const [editTitle, setEditTitle] = useState('');
@@ -59,54 +59,8 @@ export default function ProfilePage() {
     const [editName, setEditName] = useState('');
     const [editBio, setEditBio] = useState('');
 
-    // UX-11: delete confirmation state
     const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
-
     const [spotlightComments, setSpotlightComments] = useState<Comment[]>([]);
-    const [ownVideos, setOwnVideos] = useState<Video[]>([]);
-    const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
-    const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
-    const reduxVideosCount = useAppSelector(state => state.video.videos.length);
-    const hasFetchedRef = useRef(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        const isInitial = !hasFetchedRef.current;
-        if (isInitial) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setLoadingOwnVideos(true);
-        }
-        channelApi.videos(channelId as unknown as Uuid).then(result => {
-            if (cancelled || !result) {
-                return;
-            }
-            setOwnVideos(result.data);
-        }).finally(() => {
-            if (cancelled) {
-                return;
-            }
-            hasFetchedRef.current = true;
-            setLoadingOwnVideos(false);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [channelId, lastVideoStatusUpdate, reduxVideosCount]);
-
-    useEffect(() => {
-        // Optimistic local patch — applies WS status update instantly so the
-        // user sees the badge change before the refetch lands.
-        const hasUpdate = lastVideoStatusUpdate !== null && isOwnProfile;
-        if (!hasUpdate) {
-            return;
-        }
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setOwnVideos(prev => prev.map(v =>
-            v.id === (lastVideoStatusUpdate.vuid as unknown as typeof v.id)
-                ? { ...v, status: lastVideoStatusUpdate.status as VideoStatus }
-                : v,
-        ));
-    }, [lastVideoStatusUpdate, isOwnProfile]);
 
     const allTags = useMemo(() => {
         const tagSet = new Set(ownVideos.flatMap((v: Video) => v.tags));
@@ -188,16 +142,7 @@ export default function ProfilePage() {
                     .slice(0, 3),
             }));
 
-        const usedIds = new Set<typeof published[0]['id']>([
-            ...(featured ? [featured.id] : []),
-            ...latest.map(v => v.id),
-            ...mostViewed.map(v => v.id),
-        ]);
-        const polaroids = published
-            .filter(v => !usedIds.has(v.id))
-            .slice(0, 5);
-
-        return { featured, latest, mostViewed, tagSections, polaroids };
+        return { featured, latest, mostViewed, tagSections };
     }, [ownVideos, filterState, pinnedVideo]);
 
     function scrollToAllVideos(newFilter?: Partial<FilterState>) {
@@ -611,40 +556,6 @@ export default function ProfilePage() {
                         </div>
                     )}
 
-                    {/* ─── Polaroids ─── */}
-                    {sections.polaroids.length > 0 && (
-                        <div className="profile-page__section">
-                            <div className="profile-page__section-header">
-                                <h3 className="profile-page__section-title">
-                                    <Camera size={15} strokeWidth={2} />
-                                    {t('channel.highlights')}
-                                </h3>
-                            </div>
-                            <div className="profile-page__polaroids">
-                                {sections.polaroids.map((video, i) => {
-                                    const ROTATIONS = [-4, 3, -2, 5, -3];
-                                    const rot = ROTATIONS[i % ROTATIONS.length];
-                                    return (
-                                        <div
-                                            key={video.id}
-                                            className="profile-page__polaroid"
-                                            style={{ '--rot': `${rot}deg` } as React.CSSProperties}
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => navigate(videoUrl(video.id))}
-                                            onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
-                                        >
-                                            <div className="profile-page__polaroid-photo">
-                                                <img src={video.thumbnail} alt="" loading="lazy" />
-                                            </div>
-                                            <p className="profile-page__polaroid-caption">{video.title}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
                     {/* ─── By Topic (magazine covers) ─── */}
                     {sections.tagSections.length > 0 && (
                         <div className="profile-page__section">
@@ -743,13 +654,7 @@ export default function ProfilePage() {
                                     video={pinnedVideo}
                                     showActions={true}
                                     onEdit={handleEditOpen}
-                                    onDelete={(id: VideoId) => {
-                                        const video = ownVideos.find((v: Video) => v.id === id);
-                                        const hasVideo = video !== undefined;
-                                        if (hasVideo) {
-                                            handleDeleteClick(video);
-                                        }
-                                    }}
+                                    onDelete={handleDeleteById}
                                 />
                             </div>
                         </div>
@@ -773,13 +678,7 @@ export default function ProfilePage() {
                                         index={i}
                                         showActions={isOwnProfile}
                                         onEdit={handleEditOpen}
-                                        onDelete={(id: VideoId) => {
-                                            const found = ownVideos.find((v: Video) => v.id === id);
-                                            const hasFound = found !== undefined;
-                                            if (hasFound) {
-                                                handleDeleteClick(found);
-                                            }
-                                        }}
+                                        onDelete={handleDeleteById}
                                     />
                                 </div>
                             );
