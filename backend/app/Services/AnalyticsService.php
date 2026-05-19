@@ -30,18 +30,17 @@ class AnalyticsService
      */
     public function recordImpressions(User $user, array $vuids, string $source, ?string $sessionId = null): void
     {
-        $videos = Video::whereIn('vuid', $vuids)->get()->keyBy('vuid');
+        /** @var array<string, int> $idByVuid */
+        $idByVuid = Video::whereIn('vuid', $vuids)->pluck('id', 'vuid')->all();
 
         $items = [];
 
         foreach ($vuids as $position => $vuid) {
-            $video = $videos->get($vuid);
-
-            if ($video === null) {
+            if (! isset($idByVuid[$vuid])) {
                 continue;
             }
 
-            $items[] = ['video_id' => $video->id, 'position' => $position];
+            $items[] = ['video_id' => $idByVuid[$vuid], 'position' => $position];
         }
 
         if ($items === []) {

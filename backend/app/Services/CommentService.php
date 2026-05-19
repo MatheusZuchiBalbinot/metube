@@ -64,7 +64,7 @@ class CommentService
             $parentId = $parent->id;
         }
 
-        $comment = DB::transaction(function () use ($user, $video, $validated, $parentId): Comment {
+        $result = DB::transaction(function () use ($user, $video, $validated, $parentId): array {
             $comment = Comment::create([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
@@ -82,6 +82,11 @@ class CommentService
                 Comment::where('id', $parentId)->increment('replies_count');
             }
 
+            // Denormalized counter on videos to avoid COUNT(*) per comment.
+            $newCount = DB::table('videos')->where('id', $video->id)->value('comments_count');
+            DB::table('videos')->where('id', $video->id)->increment('comments_count');
+            $commentCount = (int) $newCount + 1;
+
             $comment->load('user');
 
             if ($parentId !== null) {
@@ -90,11 +95,11 @@ class CommentService
 
             $comment->is_liked = false;
 
-            return $comment;
+            return ['comment' => $comment, 'count' => $commentCount];
         });
 
-        $commentCount = Comment::where('video_id', $video->id)->count();
-        event(new CommentCreated($comment, $user, $video, $commentCount));
+        $comment = $result['comment'];
+        event(new CommentCreated($comment, $user, $video, $result['count']));
 
         return $comment;
     }
@@ -160,6 +165,8 @@ class CommentService
             if ($hasParent) {
                 Comment::where('id', $comment->parent_id)->decrement('replies_count');
             }
+
+            DB::table('videos')->where('id', $comment->video_id)->decrement('comments_count');
 
             $comment->delete();
         });

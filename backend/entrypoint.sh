@@ -21,9 +21,14 @@ if [ "$VOLUME_HASH" != "$IMAGE_HASH" ]; then
     echo "$IMAGE_HASH" > /app/vendor/.lock-hash
 fi
 
-echo "Clearing Laravel caches..."
-php artisan optimize:clear || true
-rm -rf bootstrap/cache/*.php || true
+if [ "$APP_ENV" = "production" ]; then
+    echo "Caching Laravel config, routes, events, views..."
+    php artisan optimize || true
+else
+    echo "Clearing Laravel caches..."
+    php artisan optimize:clear || true
+    rm -rf bootstrap/cache/*.php || true
+fi
 
 echo "Waiting for database..."
 

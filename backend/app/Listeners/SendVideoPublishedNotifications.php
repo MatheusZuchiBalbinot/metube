@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\VideoPublished;
-use App\Notifications\VideoFromSubscriptionNotification;
+use App\Jobs\NotifySubscribersChunk;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\DB;
 
@@ -15,10 +15,15 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
     /** @var int */
     public $tries = 3;
 
+    /** Subscribers per fan-out child job. */
+    private const CHUNK_SIZE = 500;
+
     /**
-     * Notify all subscribers of the channel when a new video is published.
+     * Fan out notifications to all subscribers via chunked child jobs.
      *
-     * Loads subscribers in chunks to avoid loading thousands of models at once.
+     * The work is split into NotifySubscribersChunk jobs so the notifications
+     * supervisor can parallelize the load across workers instead of one
+     * worker iterating a single 100k-row stream.
      */
     public function handle(VideoPublished $event): void
     {
@@ -29,18 +34,13 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
             return;
         }
 
-        $channelId = $channel->id;
-
         DB::table('user_subscriptions')
-            ->where('channel_id', $channelId)
+            ->where('channel_id', $channel->id)
             ->select('user_id')
             ->orderBy('user_id')
-            ->chunkById(200, function ($rows) use ($video): void {
-                foreach ($rows as $row) {
-                    \App\Models\User::find($row->user_id)?->notify(
-                        new VideoFromSubscriptionNotification($video)
-                    );
-                }
+            ->chunkById(self::CHUNK_SIZE, function ($rows) use ($video): void {
+                $ids = $rows->pluck('user_id')->all();
+                NotifySubscribersChunk::dispatch($video, $ids);
             }, 'user_id');
     }
 }

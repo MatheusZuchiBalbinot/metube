@@ -23,6 +23,7 @@ return [
         'redis:default' => 60,
         'redis:notifications' => 60,
         'redis:transcription' => 60,
+        'redis:analytics' => 60,
     ],
 
     'trim' => [
@@ -87,6 +88,19 @@ return [
             'timeout' => 3600,
             'nice' => 0,
         ],
+        'supervisor-analytics' => [
+            'connection' => 'redis',
+            'queue' => ['analytics'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 3,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 120,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -105,6 +119,11 @@ return [
                 'minProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
                 'maxProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
             ],
+            'supervisor-analytics' => [
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
         ],
 
         'local' => [
@@ -117,6 +136,9 @@ return [
             'supervisor-transcription' => [
                 'minProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
                 'maxProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
+            ],
+            'supervisor-analytics' => [
+                'maxProcesses' => 2,
             ],
         ],
     ],
