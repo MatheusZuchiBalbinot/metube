@@ -23,11 +23,11 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 describe('VideoService', function () {
-    $service = new VideoService;
+    $service = app(VideoService::class);
 
     beforeEach(function () use (&$service) {
         Cache::flush();
-        $service = new VideoService;
+        $service = app(VideoService::class);
 
         Queue::fake();
         Storage::fake('local');

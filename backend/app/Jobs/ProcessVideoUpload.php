@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 
 class ProcessVideoUpload implements ShouldQueue
 {
@@ -71,6 +72,7 @@ class ProcessVideoUpload implements ShouldQueue
         $isPublished = $newStatus === VideoStatus::PUBLISHED;
         if ($isPublished && $statusChanged) {
             event(new VideoPublished($video));
+            Cache::tags(['feed'])->flush();
         }
     }
 
