@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\UserProfileUpdated;
 use App\Exceptions\InvalidCredentialsException;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -70,6 +71,8 @@ class AuthService
         /** @var User $user */
         $user = Auth::user();
         $user->update($data);
+
+        event(new UserProfileUpdated($user));
 
         return $user;
     }

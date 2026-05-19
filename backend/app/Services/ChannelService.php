@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ChannelService
 {
+    public function __construct(private readonly CacheService $cache) {}
+
     /**
      * Get a channel (user) by public UUID.
      *
@@ -27,7 +29,10 @@ class ChannelService
      */
     public function getByUuid(string $uuid): User
     {
-        return User::byUuid($uuid)->firstOrFail();
+        return $this->cache->rememberChannelInfo(
+            $uuid,
+            fn () => User::byUuid($uuid)->firstOrFail(),
+        );
     }
 
     /**
@@ -35,7 +40,7 @@ class ChannelService
      *
      * When $includeAllStatuses is true, returns every status (processing, failed, draft, etc.)
      * ordered by recency — used when the channel owner is viewing their own page.
-     * Otherwise returns only published videos in newest-published order.
+     * Otherwise returns only published videos in newest-published order (cached per page).
      *
      * @param  User  $channel  Channel to list videos for
      * @return LengthAwarePaginator<\App\Models\Video>
@@ -48,7 +53,13 @@ class ChannelService
             return $query->latest()->paginate(50);
         }
 
-        return $query->published()->newestPublished()->paginate(15);
+        $page = (int) request()->query('page', '1');
+
+        return $this->cache->rememberChannelVideos(
+            $channel->uuid,
+            $page,
+            fn () => $query->published()->newestPublished()->paginate(15),
+        );
     }
 
     /**

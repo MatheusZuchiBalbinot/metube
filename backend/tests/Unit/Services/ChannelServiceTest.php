@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Event;
 uses(RefreshDatabase::class);
 
 describe('ChannelService', function () {
-    $service = new ChannelService;
+    $service = app(ChannelService::class);
 
     beforeEach(function () use (&$service) {
-        $service = new ChannelService;
+        $service = app(ChannelService::class);
     });
 
     test('toggle subscription subscribes user to channel', function () use (&$service) {
