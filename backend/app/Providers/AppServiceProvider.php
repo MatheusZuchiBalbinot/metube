@@ -23,6 +23,7 @@ use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
 use App\Jobs\TranscribeVideo;
+use App\Listeners\InvalidateCacheSubscriber;
 use App\Listeners\LogImpressionsBatch;
 use App\Listeners\LogUserAnalytic;
 use App\Listeners\SendCommentLikedNotification;
@@ -116,5 +117,7 @@ class AppServiceProvider extends ServiceProvider
         });
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
         Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscribedNotification::class);
+
+        Event::subscribe(InvalidateCacheSubscriber::class);
     }
 }

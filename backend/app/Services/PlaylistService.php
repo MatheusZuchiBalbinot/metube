@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Events\PlaylistMutated;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,14 +19,19 @@ use Illuminate\Support\Facades\DB;
  */
 class PlaylistService
 {
+    public function __construct(private readonly CacheService $cache) {}
+
     /**
      * Get all playlists for a user.
      *
-     * @return Collection<Playlist>
+     * @return Collection<int, Playlist>
      */
     public function getUserPlaylists(User $user): Collection
     {
-        return $user->playlists()->with('videos')->get();
+        return $this->cache->rememberUserPlaylists(
+            $user->id,
+            fn () => $user->playlists()->with('videos')->get(),
+        );
     }
 
     /**
@@ -38,7 +44,10 @@ class PlaylistService
     public function createPlaylist(User $user, string $name): Playlist
     {
         return DB::transaction(function () use ($user, $name) {
-            return $user->playlists()->create(['name' => $name]);
+            $playlist = $user->playlists()->create(['name' => $name]);
+            event(new PlaylistMutated($user->id));
+
+            return $playlist;
         });
     }
 
@@ -66,6 +75,7 @@ class PlaylistService
     {
         return DB::transaction(function () use ($playlist, $name) {
             $playlist->update(['name' => $name]);
+            event(new PlaylistMutated($playlist->user_id));
 
             return $playlist;
         });
@@ -76,9 +86,13 @@ class PlaylistService
      */
     public function deletePlaylist(Playlist $playlist): void
     {
+        $userId = $playlist->user_id;
+
         DB::transaction(function () use ($playlist) {
             $playlist->delete();
         });
+
+        event(new PlaylistMutated($userId));
     }
 
     /**
@@ -95,6 +109,7 @@ class PlaylistService
             $video = Video::where('vuid', $vuid)->firstOrFail();
 
             $playlist->videos()->syncWithoutDetaching($video->id);
+            event(new PlaylistMutated($playlist->user_id));
 
             return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
         });
@@ -113,6 +128,7 @@ class PlaylistService
             $video = Video::where('vuid', $vuid)->firstOrFail();
 
             $playlist->videos()->detach($video->id);
+            event(new PlaylistMutated($playlist->user_id));
         });
     }
 
@@ -127,12 +143,44 @@ class PlaylistService
     public function reorderPlaylistVideos(Playlist $playlist, array $vuids): Playlist
     {
         return DB::transaction(function () use ($playlist, $vuids) {
-            $position = 0;
-
-            foreach ($vuids as $vuid) {
-                $video = Video::where('vuid', $vuid)->firstOrFail();
-                $playlist->videos()->updateExistingPivot($video->id, ['position' => $position++]);
+            if ($vuids === []) {
+                return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
             }
+
+            /** @var array<string, int> $idByVuid */
+            $idByVuid = Video::whereIn('vuid', $vuids)->pluck('id', 'vuid')->all();
+
+            $missing = array_diff($vuids, array_keys($idByVuid));
+            if ($missing !== []) {
+                throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)
+                    ->setModel(Video::class, array_values($missing));
+            }
+
+            // One UPDATE using CASE WHEN, instead of N separate updates.
+            $cases = [];
+            $bindings = [];
+            $videoIds = [];
+
+            foreach ($vuids as $position => $vuid) {
+                $videoId = $idByVuid[$vuid];
+                $cases[] = 'WHEN ? THEN ?';
+                $bindings[] = $videoId;
+                $bindings[] = $position;
+                $videoIds[] = $videoId;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($videoIds), '?'));
+            $sql = 'UPDATE playlist_video SET position = CASE video_id '
+                .implode(' ', $cases)
+                ." END WHERE playlist_id = ? AND video_id IN ({$placeholders})";
+
+            $bindings[] = $playlist->id;
+            foreach ($videoIds as $videoId) {
+                $bindings[] = $videoId;
+            }
+
+            DB::update($sql, $bindings);
+            event(new PlaylistMutated($playlist->user_id));
 
             return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
         });
