@@ -13,7 +13,11 @@ use Illuminate\Support\Facades\Cache;
 /**
  * CacheService — Typed cache wrapper for all application cache groups.
  *
- * Larastan infers the return type of each `Cache::remember` call from the
+ * Each group is controlled by two config keys under cache.vidsum.*:
+ *   ttl    → seconds to cache the value (integers only)
+ *   active → when false the callback is called directly, bypassing cache
+ *
+ * Larastan infers the return type of each Cache::remember call from the
  * typed Closure PHPDoc, so no explicit assertions or casts are needed here.
  *
  * Key namespaces and tags:
@@ -21,9 +25,6 @@ use Illuminate\Support\Facades\Cache;
  *   channel:{uuid}   → channel info + paginated channel videos
  *   video:{vuid}     → video metadata + AI summary
  *   user:{id}        → playlists + subscriptions + history events
- *
- * Flushing a tag removes all keys under that namespace at once.
- * Forgetting a single tagged key requires Cache::tags()->forget(), not Cache::forget().
  */
 class CacheService
 {
@@ -35,8 +36,12 @@ class CacheService
      */
     public function rememberFeed(int $page, Closure $callback): LengthAwarePaginator
     {
+        if (! (bool) config('cache.vidsum.feed.active')) {
+            return $callback();
+        }
+
         return Cache::tags(['feed'])
-            ->remember("feed:page:{$page}", config('cache.ttl.feed'), $callback);
+            ->remember("feed:page:{$page}", config('cache.vidsum.feed.ttl'), $callback);
     }
 
     /**
@@ -55,8 +60,12 @@ class CacheService
      */
     public function rememberChannelInfo(string $uuid, Closure $callback): User
     {
+        if (! (bool) config('cache.vidsum.channel.info.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:info:{$uuid}", config('cache.ttl.channel_info'), $callback);
+            ->remember("channel:info:{$uuid}", config('cache.vidsum.channel.info.ttl'), $callback);
     }
 
     /**
@@ -67,8 +76,12 @@ class CacheService
      */
     public function rememberChannelVideos(string $uuid, int $page, Closure $callback): LengthAwarePaginator
     {
+        if (! (bool) config('cache.vidsum.channel.videos.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.ttl.channel_videos'), $callback);
+            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.vidsum.channel.videos.ttl'), $callback);
     }
 
     /**
@@ -86,8 +99,12 @@ class CacheService
      */
     public function rememberVideoMeta(string $vuid, Closure $callback): Video
     {
+        if (! (bool) config('cache.vidsum.video.meta.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["video:{$vuid}"])
-            ->remember("video:meta:{$vuid}", config('cache.ttl.video_meta'), $callback);
+            ->remember("video:meta:{$vuid}", config('cache.vidsum.video.meta.ttl'), $callback);
     }
 
     /**
@@ -101,6 +118,10 @@ class CacheService
      */
     public function getOrCacheVideoSummary(string $vuid, Closure $callback): ?VideoSummary
     {
+        if (! (bool) config('cache.vidsum.video.summary.active')) {
+            return $callback();
+        }
+
         $key = "video:summary:{$vuid}";
         $tag = "video:{$vuid}";
 
@@ -133,8 +154,12 @@ class CacheService
      */
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {
+        if (! (bool) config('cache.vidsum.user.playlists.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:playlists:{$userId}", config('cache.ttl.user_data'), $callback);
+            ->remember("user:playlists:{$userId}", config('cache.vidsum.user.playlists.ttl'), $callback);
     }
 
     /**
@@ -153,8 +178,12 @@ class CacheService
      */
     public function rememberUserSubscriptions(int $userId, Closure $callback): Collection
     {
+        if (! (bool) config('cache.vidsum.user.subscriptions.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:subscriptions:{$userId}", config('cache.ttl.user_data'), $callback);
+            ->remember("user:subscriptions:{$userId}", config('cache.vidsum.user.subscriptions.ttl'), $callback);
     }
 
     /**
@@ -173,8 +202,12 @@ class CacheService
      */
     public function rememberHistoryEvents(int $userId, Closure $callback): array
     {
+        if (! (bool) config('cache.vidsum.user.history_events.active')) {
+            return $callback();
+        }
+
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:history-events:{$userId}", config('cache.ttl.user_data'), $callback);
+            ->remember("user:history-events:{$userId}", config('cache.vidsum.user.history_events.ttl'), $callback);
     }
 
     /**
