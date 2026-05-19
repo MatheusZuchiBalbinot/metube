@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
@@ -107,18 +107,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
     const isSuggestionsDropdownVisible = suggestionsOpen && hasQuery && suggestions.length > 0;
 
-    useEffect(() => {
-        function handleOutsideClick(e: MouseEvent) {
-            const isOutside = dropdownRef.current && !dropdownRef.current.contains(e.target as Node);
-
-            if (isOutside) {
-                setDropdownOpen(false);
-            }
-        }
-
-        document.addEventListener('mousedown', handleOutsideClick);
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
-    }, []);
+    useClickOutside(dropdownRef, () => setDropdownOpen(false), dropdownOpen);
 
     useClickOutside(searchWrapRef, () => {
         setRecentDropdownOpen(false);
