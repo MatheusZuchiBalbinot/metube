@@ -4,17 +4,20 @@ namespace App\Listeners;
 
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
-use App\Events\PlaylistMutated;
-use App\Events\VideoStatusUpdated;
 use App\Events\VideoViewed;
 use App\Services\CacheService;
 use Illuminate\Events\Dispatcher;
 
 /**
- * InvalidateCacheSubscriber — Event-driven cache invalidation.
+ * InvalidateCacheSubscriber — Event-driven cache invalidation for raw-DB operations.
  *
- * Subscribes to domain events and flushes the relevant cache keys/tags so that
- * services don't carry scattered `Cache::forget()` calls alongside their mutations.
+ * Handles only events that arise from raw DB queries, where Eloquent model
+ * observers cannot intercept the change:
+ *   - Channel subscriptions (DB::table('user_subscriptions') in ChannelService)
+ *   - Watch history (DB::table('watch_histories')->insertOrIgnore in VideoService)
+ *
+ * All other cache invalidation is handled by VideoObserver, PlaylistObserver,
+ * and UserObserver reacting to standard Eloquent model events.
  */
 class InvalidateCacheSubscriber
 {
@@ -28,11 +31,9 @@ class InvalidateCacheSubscriber
     public function subscribe(Dispatcher $events): array
     {
         return [
-            VideoViewed::class => 'onVideoViewed',
-            PlaylistMutated::class => 'onPlaylistMutated',
             ChannelSubscribed::class => 'onChannelSubscribed',
-            VideoStatusUpdated::class => 'onVideoStatusUpdated',
             ChannelUnsubscribed::class => 'onChannelUnsubscribed',
+            VideoViewed::class => 'onVideoViewed',
         ];
     }
 
@@ -55,23 +56,10 @@ class InvalidateCacheSubscriber
     }
 
     /**
-     * Flush all cached data for the video whose status changed.
-     */
-    public function onVideoStatusUpdated(VideoStatusUpdated $event): void
-    {
-        $this->cache->forgetVideo($event->video->vuid);
-    }
-
-    /**
-     * Flush the playlist cache for the user whose playlists were mutated.
-     */
-    public function onPlaylistMutated(PlaylistMutated $event): void
-    {
-        $this->cache->forgetUserPlaylists($event->userId);
-    }
-
-    /**
-     * Flush the history-events heatmap cache for the user who watched a video.
+     * Flush the history-events heatmap cache for the user who just watched a video.
+     *
+     * VideoService uses insertOrIgnore (raw DB), so no WatchHistory model event fires —
+     * this subscriber bridges that gap via the VideoViewed domain event.
      */
     public function onVideoViewed(VideoViewed $event): void
     {

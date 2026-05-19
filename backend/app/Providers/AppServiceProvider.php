@@ -35,7 +35,11 @@ use App\Listeners\SendVideoPublishedNotifications;
 use App\Listeners\SendVideoTranscribedNotification;
 use App\Models\Comment;
 use App\Models\Playlist;
+use App\Models\User;
 use App\Models\Video;
+use App\Observers\PlaylistObserver;
+use App\Observers\UserObserver;
+use App\Observers\VideoObserver;
 use App\Policies\CommentPolicy;
 use App\Policies\PlaylistPolicy;
 use App\Policies\VideoPolicy;
@@ -80,6 +84,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Video::class, VideoPolicy::class);
         Gate::policy(Playlist::class, PlaylistPolicy::class);
         Gate::policy(Comment::class, CommentPolicy::class);
+
+        Video::observe(VideoObserver::class);
+        Playlist::observe(PlaylistObserver::class);
+        User::observe(UserObserver::class);
 
         Horizon::auth(function (Request $request): bool {
             return app()->isLocal();

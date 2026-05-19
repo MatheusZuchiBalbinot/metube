@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Events\PlaylistMutated;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
@@ -44,10 +43,7 @@ class PlaylistService
     public function createPlaylist(User $user, string $name): Playlist
     {
         return DB::transaction(function () use ($user, $name) {
-            $playlist = $user->playlists()->create(['name' => $name]);
-            event(new PlaylistMutated($user->id));
-
-            return $playlist;
+            return $user->playlists()->create(['name' => $name]);
         });
     }
 
@@ -75,7 +71,6 @@ class PlaylistService
     {
         return DB::transaction(function () use ($playlist, $name) {
             $playlist->update(['name' => $name]);
-            event(new PlaylistMutated($playlist->user_id));
 
             return $playlist;
         });
@@ -86,13 +81,9 @@ class PlaylistService
      */
     public function deletePlaylist(Playlist $playlist): void
     {
-        $userId = $playlist->user_id;
-
         DB::transaction(function () use ($playlist) {
             $playlist->delete();
         });
-
-        event(new PlaylistMutated($userId));
     }
 
     /**
@@ -109,7 +100,7 @@ class PlaylistService
             $video = Video::where('vuid', $vuid)->firstOrFail();
 
             $playlist->videos()->syncWithoutDetaching($video->id);
-            event(new PlaylistMutated($playlist->user_id));
+            $playlist->touch();
 
             return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
         });
@@ -128,7 +119,7 @@ class PlaylistService
             $video = Video::where('vuid', $vuid)->firstOrFail();
 
             $playlist->videos()->detach($video->id);
-            event(new PlaylistMutated($playlist->user_id));
+            $playlist->touch();
         });
     }
 
@@ -180,7 +171,7 @@ class PlaylistService
             }
 
             DB::update($sql, $bindings);
-            event(new PlaylistMutated($playlist->user_id));
+            $playlist->touch();
 
             return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
         });

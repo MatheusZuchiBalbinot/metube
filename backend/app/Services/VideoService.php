@@ -199,20 +199,7 @@ class VideoService
     public function updateVideo(Video $video, UpdateVideoData $data): Video
     {
         return DB::transaction(function () use ($video, $data) {
-            $previousStatus = $video->status;
-            $previousPublishedAt = $video->published_at;
-
             $video->update($data->toUpdateArray());
-
-            $statusChanged = $previousStatus !== $video->status;
-            $publishedAtChanged = $previousPublishedAt?->getTimestamp() !== $video->published_at?->getTimestamp();
-            $affectsFeed = $statusChanged || $publishedAtChanged;
-
-            $this->cache->forgetVideo($video->vuid);
-
-            if ($affectsFeed) {
-                Cache::tags(['feed'])->flush();
-            }
 
             return $video;
         });
@@ -237,9 +224,6 @@ class VideoService
         });
 
         $this->deleteVideoFiles($videoPath, $thumbnailPath);
-
-        $this->cache->forgetVideo($video->vuid);
-        Cache::tags(['feed'])->flush();
     }
 
     private function deleteVideoFiles(?string $videoPath, ?string $thumbnailPath): void
