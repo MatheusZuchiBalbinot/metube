@@ -49,7 +49,7 @@ function computeQuickRange(kind: QuickRangeKind): { from: string; to: string } {
         return { from: toIsoDate(yearStart), to };
     }
 
-    const dayMap: Record<Exclude<QuickRangeKind, QuickRangeKind.THIS_YEAR>, number> = {
+    const dayMap: Record<Exclude<QuickRangeKind, typeof QuickRangeKind.THIS_YEAR>, number> = {
         last7d: 7,
         last30d: 30,
         last90d: 90,
