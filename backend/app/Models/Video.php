@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
  * @property \App\Enums\VideoStatus $status
  * @property float|null $duration
  * @property int $views
+ * @property int $comments_count
  * @property string|null $video_url
  * @property string|null $thumbnail_url
  * @property \Illuminate\Support\Carbon|null $published_at
@@ -60,6 +61,7 @@ class Video extends Model
             'scheduled_at' => 'datetime',
             'duration' => 'float',
             'views' => 'integer',
+            'comments_count' => 'integer',
         ];
     }
 
@@ -151,12 +153,19 @@ class Video extends Model
         }
 
         if (isset($filters['tags'])) {
-            $tags = $filters['tags'];
-            $query = $query->where(function (Builder $q) use ($tags): void {
-                foreach ($tags as $tag) {
-                    $q->orWhereJsonContains('tags', $tag);
-                }
-            });
+            $tags = array_values($filters['tags']);
+            $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
+
+            if ($isPgsql) {
+                $placeholders = implode(',', array_fill(0, count($tags), '?'));
+                $query = $query->whereRaw("tags ?| array[{$placeholders}]", $tags);
+            } else {
+                $query = $query->where(function (Builder $q) use ($tags): void {
+                    foreach ($tags as $tag) {
+                        $q->orWhereJsonContains('tags', $tag);
+                    }
+                });
+            }
         }
 
         if (isset($filters['status'])) {
