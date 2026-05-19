@@ -228,19 +228,8 @@ src/
     validate.ts               # Helpers de validação de formulário
     viewedVideos.ts           # Rastreia vídeos visualizados na sessão
 
-  validation/                 # Schemas Zod (transformação snake_case → camelCase)
-    index.ts                  # barrel
-    schemas/
-      channel.ts              # ChannelApiSchema
-      comment.ts              # CommentApiSchema, CommentListApiSchema, CommentRepliesApiSchema, etc.
-      playlist.ts             # PlaylistApiSchema, PlaylistListApiSchema
-      summary.ts              # VideoSummaryApiSchema
-      user.ts                 # UserApiSchema
-      video.ts                # VideoApiSchema, VideoListApiSchema
-      requests/
-        auth.ts               # LoginRequestSchema, SignupRequestSchema, etc.
-        playlist.ts           # PlaylistCreateRequestSchema, etc.
-        video.ts              # VideoUploadRequestSchema, VideoUpdateRequestSchema, etc.
+  api/
+    parsers.ts                # Parse functions: snake_case → camelCase transforms for all API responses
 
 tests/                        # Vitest — espelha src/
   components/
@@ -349,7 +338,7 @@ await notifications.markAllRead();
 await notifications.remove(id);
 ```
 
-Respostas são validadas com Zod antes de chegar ao store (via `getValidated`/`postValidated`).
+Respostas são parseadas por funções em `src/api/parsers.ts` antes de chegar ao store (via `getValidated`/`postValidated`). Cada função faz a transformação snake_case → camelCase e retorna `T | null`.
 
 ---
 
@@ -523,30 +512,28 @@ O `UploadModal` tem dois modos (`UploadMode`):
 
 ---
 
-## Validação (Zod)
+## Parsers de API (`src/api/parsers.ts`)
 
-Schemas em `src/validation/schemas/`. Importados via `@validation`.
+Substituem o Zod. Funções puras que recebem `unknown` e retornam `T | null`.
 
-### Response schemas (API → Redux)
-Fazem transformação `snake_case → camelCase` e cast de tipos.
+| Função                    | Transforma                                      |
+|---------------------------|-------------------------------------------------|
+| `parseVideo`              | Vídeo único                                     |
+| `parseVideoList`          | Envelope paginado `{data, meta}` do Laravel     |
+| `parsePlaylist`           | Playlist única                                  |
+| `parsePlaylistList`       | Array de playlists                              |
+| `parseComment`            | Comentário único                                |
+| `parseCommentList`        | Lista paginada de comentários                   |
+| `parseCommentReplies`     | Array de respostas                              |
+| `parseCommentVersions`    | Array de versões de comentário                  |
+| `parseUser`               | Usuário / Canal                                 |
+| `parseUserArray`          | Array de usuários                               |
+| `parseLoginResponse`      | Resposta de login `{ user }`                    |
+| `parseVideoSummary`       | Resumo de vídeo                                 |
+| `parseVideoTranscription` | Transcrição de vídeo                            |
+| `parseToggleLike`         | Resposta de like em comentário                  |
 
-| Schema                  | Valida                                          |
-|-------------------------|-------------------------------------------------|
-| `VideoApiSchema`        | Vídeo único                                     |
-| `VideoListApiSchema`    | Envelope paginado `{data, meta}` do Laravel     |
-| `PlaylistApiSchema`     | Playlist única                                  |
-| `CommentApiSchema`      | Comentário único                                |
-| `CommentListApiSchema`  | Lista paginada de comentários                   |
-| `UserApiSchema`         | Usuário                                         |
-| `ChannelApiSchema`      | Canal                                           |
-| `VideoSummaryApiSchema` | Resumo de vídeo                                 |
-
-`VideoListApiSchema` normaliza: `current_page`/`per_page` → `page`/`perPage`, `last_page` → `lastPage`.
-
-### Request schemas (formulários)
-Sem transformação — validam entradas do usuário.
-
-`VideoUploadRequestSchema`, `VideoUpdateRequestSchema`, `LoginRequestSchema`, `SignupRequestSchema`, etc.
+Todas normalizam `snake_case → camelCase` e aplicam defaults. Importar de `@api/parsers` ou `./parsers`.
 
 ---
 
@@ -794,7 +781,7 @@ export function useVolumeWheel(containerRef, videoRef, applyVolume, revealContro
 5. **`@ui` dentro de `ui/`** — use caminho relativo para evitar circular dependency com o barrel.
 6. **Status 202 em upload** — `POST /api/videos` retorna 202 (não 201) porque o processamento é assíncrono.
 7. **`useBootstrap`** — chamado uma vez no `AppInit`. Não chame novamente em componentes filhos.
-8. **`useRealtime`** — também no `AppInit`. Conecta Echo após login; desconecta no logout via `destroyEcho()`.
+8. **`useRealtime`** — também no `AppInit`. `getEcho()` é agora async (carrega Pusher/laravel-echo via dynamic import apenas quando necessário). Conecta após login; desconecta no logout via `destroyEcho()`.
 9. **Tus Location rewrite** — o proxy Vite reescreve o header `Location` das respostas tus de `http://backend:8000/...` para `http://localhost:5173/...` via `configure` handler em `vite.config.ts`. Sem isso, o `tus-js-client` tenta PATCH direto no host interno do Docker.
 10. **Impressões em batch** — não chame `analytics.impressions()` diretamente. Use `impressionBatcher.ts` que debounce 1s e agrupa até 50 itens por source.
 11. **`store/types.ts` isolado** — `RootState` e `AppDispatch` vivem em `types.ts`, não em `index.ts`, para quebrar a dependência circular `index.ts → persistMiddleware → types.ts`.

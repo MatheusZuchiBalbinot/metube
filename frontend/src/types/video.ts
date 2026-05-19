@@ -24,7 +24,7 @@ export interface Video {
     description: string
     tags: Tag[]
     thumbnail: string
-    publishedAt: string | null
+    publishedAt: string
     scheduledAt?: string
     createdAt: string
     channel: string
