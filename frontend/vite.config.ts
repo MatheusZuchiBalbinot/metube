@@ -40,6 +40,7 @@ export default defineConfig({
                         [['node_modules/framer-motion', 'node_modules/@radix-ui'], 'vendor-ui'],
                         [['node_modules/@reduxjs/toolkit', 'node_modules/react-redux'], 'vendor-state'],
                         [['node_modules/i18next', 'node_modules/react-i18next'], 'vendor-i18n'],
+                        [['node_modules/pusher-js', 'node_modules/laravel-echo'], 'vendor-realtime'],
                     ];
 
                     for (const [patterns, chunk] of CHUNK_RULES) {
@@ -115,15 +116,20 @@ export default defineConfig({
         strictPort: true,
         proxy: {
             '/api': {
-                target: 'http://localhost:80',
+                target: 'http://backend:8000',
                 changeOrigin: true,
             },
             '/sanctum': {
-                target: 'http://localhost:80',
+                target: 'http://backend:8000',
                 changeOrigin: true,
             },
             '/storage': {
-                target: 'http://localhost:80',
+                target: 'http://nginx',
+                changeOrigin: true,
+            },
+            '/app': {
+                target: 'ws://reverb:8080',
+                ws: true,
                 changeOrigin: true,
             },
         },
