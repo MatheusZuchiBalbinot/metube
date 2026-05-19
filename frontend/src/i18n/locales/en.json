@@ -129,7 +129,6 @@
         "scheduled": "Scheduled",
         "published": "Published",
         "processing_toast": "Your video is being processed…",
-        "published_toast": "Your video is now live!",
         "failed_toast": "Video processing failed. Please try again.",
         "transcription_started_toast": "Transcription started for your video.",
         "transcription_completed_toast": "Transcription complete — your video has been transcribed.",
