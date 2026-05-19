@@ -113,14 +113,53 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cache TTLs (seconds)
+    | Vidsum cache groups
     |--------------------------------------------------------------------------
+    |
+    | Each group has:
+    |   ttl    → seconds (integer); ignored for entries cached forever (summary)
+    |   active → whether caching is enabled; set to false to bypass the cache
+    |            for that group without changing any code
+    |
     */
-    'ttl' => [
-        'channel_info' => 600,
-        'channel_videos' => 120,
-        'video_meta' => 300,
-        'user_data' => 300,
-        'feed' => 60,
+    'vidsum' => [
+        'feed' => [
+            'ttl' => env('CACHE_FEED_TTL', 60),
+            'active' => env('CACHE_FEED_ACTIVE', true),
+        ],
+        'channel' => [
+            'info' => [
+                'ttl' => env('CACHE_CHANNEL_INFO_TTL', 600),
+                'active' => env('CACHE_CHANNEL_INFO_ACTIVE', true),
+            ],
+            'videos' => [
+                'ttl' => env('CACHE_CHANNEL_VIDEOS_TTL', 120),
+                'active' => env('CACHE_CHANNEL_VIDEOS_ACTIVE', true),
+            ],
+        ],
+        'video' => [
+            'meta' => [
+                'ttl' => env('CACHE_VIDEO_META_TTL', 300),
+                'active' => env('CACHE_VIDEO_META_ACTIVE', true),
+            ],
+            'summary' => [
+                'active' => env('CACHE_VIDEO_SUMMARY_ACTIVE', true),
+            ],
+        ],
+        'user' => [
+            'playlists' => [
+                'ttl' => env('CACHE_USER_PLAYLISTS_TTL', 300),
+                'active' => env('CACHE_USER_PLAYLISTS_ACTIVE', true),
+            ],
+            'subscriptions' => [
+                'ttl' => env('CACHE_USER_SUBSCRIPTIONS_TTL', 300),
+                'active' => env('CACHE_USER_SUBSCRIPTIONS_ACTIVE', true),
+            ],
+            'history_events' => [
+                'ttl' => env('CACHE_USER_HISTORY_EVENTS_TTL', 300),
+                'active' => env('CACHE_USER_HISTORY_EVENTS_ACTIVE', true),
+            ],
+        ],
+
     ],
 ];
