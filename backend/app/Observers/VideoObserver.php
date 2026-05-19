@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Models\Video;
 use App\Services\CacheService;
-use Illuminate\Support\Facades\Cache;
 
 class VideoObserver
 {
@@ -19,7 +18,7 @@ class VideoObserver
 
         $affectsFeed = $video->wasChanged('status') || $video->wasChanged('published_at');
         if ($affectsFeed) {
-            Cache::tags(['feed'])->flush();
+            $this->cache->forgetFeed();
         }
     }
 
@@ -29,6 +28,6 @@ class VideoObserver
     public function deleted(Video $video): void
     {
         $this->cache->forgetVideo($video->vuid);
-        Cache::tags(['feed'])->flush();
+        $this->cache->forgetFeed();
     }
 }
