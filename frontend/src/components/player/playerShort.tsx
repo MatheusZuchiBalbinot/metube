@@ -9,6 +9,7 @@ import { useSkipIndicator } from '@hooks/useSkipIndicator';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import './player.css';
 import { SkipDirection } from '@enums/skipDirection';
+import { PopIconType } from '@enums/popIconType';
 
 export interface ShortPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
@@ -90,7 +91,7 @@ export default function ShortPlayer({
     function handleTogglePlayWithFeedback() {
         const wasPaused = videoRef.current?.paused ?? true;
         handleTogglePlay();
-        showPopIcon(wasPaused ? 'play' : 'pause');
+        showPopIcon(wasPaused ? PopIconType.PLAY : PopIconType.PAUSE);
     }
 
     usePlayerKeyboard({
