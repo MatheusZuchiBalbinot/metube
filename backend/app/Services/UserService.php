@@ -65,6 +65,7 @@ class UserService
     public function clearUserHistory(User $user): void
     {
         $user->history()->delete();
+        $this->cache->forgetHistoryEvents($user->id);
     }
 
     /**
@@ -77,6 +78,7 @@ class UserService
         $user->history()
             ->whereHas('video', fn ($q) => $q->where('vuid', $vuid))
             ->delete();
+        $this->cache->forgetHistoryEvents($user->id);
     }
 
     /**

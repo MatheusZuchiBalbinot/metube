@@ -409,6 +409,7 @@ class VideoService
                 ->delete();
 
             if ($removed > 0) {
+                $playlist->touch();
                 event(new VideoUnsaved($user, $video));
 
                 return;
@@ -420,6 +421,7 @@ class VideoService
                 'position' => 0,
             ]);
 
+            $playlist->touch();
             event(new VideoSaved($user, $video));
         });
     }
@@ -464,14 +466,30 @@ class VideoService
      */
     public function publishDueVideos(): int
     {
-        return Video::query()
+        $vuids = Video::query()
             ->where('status', VideoStatus::SCHEDULED)
             ->where('scheduled_at', '<=', now())
+            ->pluck('vuid');
+
+        if ($vuids->isEmpty()) {
+            return 0;
+        }
+
+        $count = Video::query()
+            ->whereIn('vuid', $vuids)
             ->update([
                 'status' => VideoStatus::PUBLISHED,
                 'published_at' => DB::raw('scheduled_at'),
                 'updated_at' => now(),
             ]);
+
+        foreach ($vuids as $vuid) {
+            $this->cache->forgetVideo($vuid);
+        }
+
+        Cache::tags(['feed'])->flush();
+
+        return $count;
     }
 
     /**
