@@ -165,11 +165,7 @@ class VideoService
 
         $page = (int) ($filters['page'] ?? 1);
 
-        return Cache::tags(['feed'])->remember(
-            "feed:page:{$page}",
-            60,
-            fn () => $this->queryVideos($filters),
-        );
+        return $this->cache->rememberFeed($page, fn () => $this->queryVideos($filters));
     }
 
     /**
@@ -488,7 +484,7 @@ class VideoService
             $this->cache->forgetVideo($vuid);
         }
 
-        Cache::tags(['feed'])->flush();
+        $this->cache->forgetFeed();
 
         return $count;
     }

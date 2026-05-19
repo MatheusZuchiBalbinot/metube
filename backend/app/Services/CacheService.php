@@ -17,45 +17,62 @@ use Illuminate\Support\Facades\Cache;
  * typed Closure PHPDoc, so no explicit assertions or casts are needed here.
  *
  * Key namespaces and tags:
+ *   feed             → paginated public video feed
  *   channel:{uuid}   → channel info + paginated channel videos
  *   video:{vuid}     → video metadata + AI summary
  *   user:{id}        → playlists + subscriptions + history events
  *
  * Flushing a tag removes all keys under that namespace at once.
+ * Forgetting a single tagged key requires Cache::tags()->forget(), not Cache::forget().
  */
 class CacheService
 {
     /**
+     * Return the cached paginated public feed, or resolve and store it.
+     *
+     * @param  Closure(): LengthAwarePaginator<int, Video>  $callback
+     * @return LengthAwarePaginator<int, Video>
+     */
+    public function rememberFeed(int $page, Closure $callback): LengthAwarePaginator
+    {
+        return Cache::tags(['feed'])
+            ->remember("feed:page:{$page}", config('cache.ttl.feed'), $callback);
+    }
+
+    /**
+     * Flush the entire feed cache (all pages).
+     */
+    public function forgetFeed(): void
+    {
+        Cache::tags(['feed'])->flush();
+    }
+
+    /**
      * Return the cached channel (User) for the given UUID, or resolve and store it.
      *
-     * @param  string  $uuid  Channel UUID
      * @param  Closure(): User  $callback  DB resolver on cache miss
      * @return User Channel user
      */
     public function rememberChannelInfo(string $uuid, Closure $callback): User
     {
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:info:{$uuid}", 600, $callback);
+            ->remember("channel:info:{$uuid}", config('cache.ttl.channel_info'), $callback);
     }
 
     /**
      * Return the cached paginated video list for a channel page.
      *
-     * @param  string  $uuid  Channel UUID
-     * @param  int  $page  Page number
      * @param  Closure(): LengthAwarePaginator<int, Video>  $callback
      * @return LengthAwarePaginator<int, Video>
      */
     public function rememberChannelVideos(string $uuid, int $page, Closure $callback): LengthAwarePaginator
     {
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:videos:{$uuid}:page:{$page}", 120, $callback);
+            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.ttl.channel_videos'), $callback);
     }
 
     /**
      * Flush all cached data for a channel (info + all video pages).
-     *
-     * @param  string  $uuid  Channel UUID
      */
     public function forgetChannel(string $uuid): void
     {
@@ -65,13 +82,12 @@ class CacheService
     /**
      * Return the cached video for the given vuid, or resolve and store it.
      *
-     * @param  string  $vuid  Video vuid
      * @param  Closure(): Video  $callback  DB resolver on cache miss
      */
     public function rememberVideoMeta(string $vuid, Closure $callback): Video
     {
         return Cache::tags(["video:{$vuid}"])
-            ->remember("video:meta:{$vuid}", 300, $callback);
+            ->remember("video:meta:{$vuid}", config('cache.ttl.video_meta'), $callback);
     }
 
     /**
@@ -81,7 +97,6 @@ class CacheService
      * each request re-queries so the result appears as soon as it exists without
      * waiting for a TTL to expire.
      *
-     * @param  string  $vuid  Video vuid
      * @param  Closure(): (VideoSummary|null)  $callback  DB resolver on cache miss
      */
     public function getOrCacheVideoSummary(string $vuid, Closure $callback): ?VideoSummary
@@ -104,8 +119,6 @@ class CacheService
 
     /**
      * Flush all cached data for a video (metadata + summary).
-     *
-     * @param  string  $vuid  Video vuid
      */
     public function forgetVideo(string $vuid): void
     {
@@ -121,7 +134,7 @@ class CacheService
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:playlists:{$userId}", 300, $callback);
+            ->remember("user:playlists:{$userId}", config('cache.ttl.user_data'), $callback);
     }
 
     /**
@@ -129,7 +142,7 @@ class CacheService
      */
     public function forgetUserPlaylists(int $userId): void
     {
-        Cache::forget("user:playlists:{$userId}");
+        Cache::tags(["user:{$userId}"])->forget("user:playlists:{$userId}");
     }
 
     /**
@@ -141,7 +154,7 @@ class CacheService
     public function rememberUserSubscriptions(int $userId, Closure $callback): Collection
     {
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:subscriptions:{$userId}", 300, $callback);
+            ->remember("user:subscriptions:{$userId}", config('cache.ttl.user_data'), $callback);
     }
 
     /**
@@ -149,7 +162,7 @@ class CacheService
      */
     public function forgetUserSubscriptions(int $userId): void
     {
-        Cache::forget("user:subscriptions:{$userId}");
+        Cache::tags(["user:{$userId}"])->forget("user:subscriptions:{$userId}");
     }
 
     /**
@@ -161,7 +174,7 @@ class CacheService
     public function rememberHistoryEvents(int $userId, Closure $callback): array
     {
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:history-events:{$userId}", 300, $callback);
+            ->remember("user:history-events:{$userId}", config('cache.ttl.user_data'), $callback);
     }
 
     /**
@@ -169,6 +182,6 @@ class CacheService
      */
     public function forgetHistoryEvents(int $userId): void
     {
-        Cache::forget("user:history-events:{$userId}");
+        Cache::tags(["user:{$userId}"])->forget("user:history-events:{$userId}");
     }
 }
