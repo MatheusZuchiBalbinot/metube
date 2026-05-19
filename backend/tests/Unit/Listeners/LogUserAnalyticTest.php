@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\VideoEventType;
+use App\Enums\VideoSource;
 use App\Events\ChannelSubscribed;
 use App\Events\SearchPerformed;
 use App\Events\VideoImpressed;
@@ -25,14 +26,14 @@ describe('LogUserAnalytic', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoViewed($user, $video, 'feed', 'sess-123'));
+        (new LogUserAnalytic)->handle(new VideoViewed($user, $video, VideoSource::FEED, 'sess-123'));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
         expect($row)->not->toBeNull()
             ->and($row->event_type)->toBe(VideoEventType::VIEW)
             ->and($row->video_id)->toBe($video->id)
-            ->and($row->source)->toBe('feed')
+            ->and($row->source)->toBe(VideoSource::FEED->value)
             ->and($row->session_id)->toBe('sess-123');
     });
 
@@ -61,12 +62,12 @@ describe('LogUserAnalytic', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoImpressed($user, $video, 'recommended', 4, 'sess-x'));
+        (new LogUserAnalytic)->handle(new VideoImpressed($user, $video, VideoSource::RECOMMENDED, 4, 'sess-x'));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
         expect($row->event_type)->toBe(VideoEventType::IMPRESSION)
-            ->and($row->source)->toBe('recommended')
+            ->and($row->source)->toBe(VideoSource::RECOMMENDED->value)
             ->and($row->session_id)->toBe('sess-x')
             ->and($row->payload)->toBe(['position' => 4]);
     });

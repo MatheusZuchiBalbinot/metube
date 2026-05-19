@@ -69,7 +69,7 @@ class UserController extends Controller
         $periodValue = $request->query('period', 'all');
         $periodValue = is_string($periodValue) ? $periodValue : 'all';
         $period = HistoryPeriod::tryFrom($periodValue) ?? HistoryPeriod::ALL;
-        $history = $this->userService->getUserHistory(auth()->user(), $period->value);
+        $history = $this->userService->getUserHistory(auth()->user(), $period);
 
         return $this->json(WatchHistoryResource::collection($history));
     }

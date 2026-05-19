@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Analytics;
 
+use App\Enums\VideoSource;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * LogClickRequest — Validates a single feed click event.
@@ -20,13 +22,13 @@ class LogClickRequest extends FormRequest
     }
 
     /**
-     * @return array<string, string|list<string>>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'vuid' => ['required', 'string', 'exists:videos,vuid'],
-            'source' => ['required', 'string', 'in:feed,search,channel,playlist,recommended,home'],
+            'source' => ['required', 'string', Rule::enum(VideoSource::class)],
             'position' => ['nullable', 'integer', 'min:0'],
             'session_id' => ['nullable', 'string', 'max:64'],
         ];

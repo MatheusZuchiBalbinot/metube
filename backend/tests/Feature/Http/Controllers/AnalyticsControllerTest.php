@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\VideoSource;
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoImpressionsBatch;
@@ -33,7 +34,7 @@ describe('AnalyticsController', function () {
         Event::assertDispatched(
             VideoImpressionsBatch::class,
             fn (VideoImpressionsBatch $event): bool => count($event->items) === 2
-                && $event->source === 'feed'
+                && $event->source === VideoSource::FEED
                 && $event->sessionId === 'sess-1',
         );
     });
