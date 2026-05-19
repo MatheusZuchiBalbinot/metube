@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +15,8 @@ use Illuminate\Support\Facades\DB;
  */
 class UserService
 {
+    public function __construct(private readonly CacheService $cache) {}
+
     /**
      * Get all liked videos for a user.
      */
@@ -35,11 +36,14 @@ class UserService
     /**
      * Get all subscriptions for a user.
      *
-     * @return Collection<int, User>
+     * @return \Illuminate\Support\Collection<int, User>
      */
-    public function getUserSubscriptions(User $user): Collection
+    public function getUserSubscriptions(User $user): \Illuminate\Support\Collection
     {
-        return $user->subscriptions()->get();
+        return $this->cache->rememberUserSubscriptions(
+            $user->id,
+            fn () => $user->subscriptions()->get(),
+        );
     }
 
     /**
@@ -93,27 +97,33 @@ class UserService
      * Get watch activity aggregated by day, newest first, limited to 365 days.
      *
      * Aggregates in SQL to avoid loading all history records into memory.
+     * Result is cached for 300 s and invalidated on each new view via VideoViewed event.
      *
      * @return list<array{date: string, count: int}>
      */
     public function getHistoryEvents(User $user): array
     {
-        /** @var list<array{date: string, count: int}> */
-        return DB::table('watch_histories')
-            ->where('user_id', $user->id)
-            ->select(
-                DB::raw('DATE(watched_at) as date'),
-                DB::raw('COUNT(*) as count'),
-            )
-            ->groupBy(DB::raw('DATE(watched_at)'))
-            ->orderByDesc(DB::raw('DATE(watched_at)'))
-            ->limit(365)
-            ->get()
-            ->map(fn (object $row) => [
-                'date' => (string) $row->date,
-                'count' => (int) $row->count,
-            ])
-            ->values()
-            ->toArray();
+        return $this->cache->rememberHistoryEvents(
+            $user->id,
+            function () use ($user): array {
+                /** @var list<array{date: string, count: int}> */
+                return DB::table('watch_histories')
+                    ->where('user_id', $user->id)
+                    ->select(
+                        DB::raw('DATE(watched_at) as date'),
+                        DB::raw('COUNT(*) as count'),
+                    )
+                    ->groupBy(DB::raw('DATE(watched_at)'))
+                    ->orderByDesc(DB::raw('DATE(watched_at)'))
+                    ->limit(365)
+                    ->get()
+                    ->map(fn (object $row) => [
+                        'date' => (string) $row->date,
+                        'count' => (int) $row->count,
+                    ])
+                    ->values()
+                    ->toArray();
+            },
+        );
     }
 }

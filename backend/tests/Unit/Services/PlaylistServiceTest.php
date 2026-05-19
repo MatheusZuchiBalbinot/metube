@@ -9,10 +9,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 describe('PlaylistService', function () {
-    $service = new PlaylistService;
+    $service = app(PlaylistService::class);
 
     beforeEach(function () use (&$service) {
-        $service = new PlaylistService;
+        $service = app(PlaylistService::class);
     });
 
     test('create playlist for user', function () use (&$service) {

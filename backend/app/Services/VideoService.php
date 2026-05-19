@@ -38,6 +38,11 @@ use TusPhp\Cache\RedisStore as TusRedisStore;
  */
 class VideoService
 {
+    public function __construct(
+        private readonly ViewCounterService $viewCounter,
+        private readonly CacheService $cache,
+    ) {}
+
     /**
      * Create a new video.
      *
@@ -67,8 +72,6 @@ class VideoService
             }
 
             ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
-
-            Cache::tags(['feed'])->flush();
 
             return $video->load('channel');
         });
@@ -139,7 +142,6 @@ class VideoService
 
             $tusCache->delete($data->uploadKey);
             Cache::forget("tus:owner:{$data->uploadKey}");
-            Cache::tags(['feed'])->flush();
 
             return $video->load('channel');
         });
@@ -172,13 +174,19 @@ class VideoService
     /**
      * Get a specific video by UUID.
      *
+     * Result is cached for 300 s with the channel relation eager-loaded so that
+     * `VideoResource` can render channel name/id without an extra query.
+     *
      * @param  string  $vuid  Video UUID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getVideoByUuid(string $vuid): Video
     {
-        return Video::where('vuid', $vuid)->firstOrFail();
+        return $this->cache->rememberVideoMeta(
+            $vuid,
+            fn () => Video::where('vuid', $vuid)->with('channel')->firstOrFail(),
+        );
     }
 
     /**
@@ -191,9 +199,20 @@ class VideoService
     public function updateVideo(Video $video, UpdateVideoData $data): Video
     {
         return DB::transaction(function () use ($video, $data) {
+            $previousStatus = $video->status;
+            $previousPublishedAt = $video->published_at;
+
             $video->update($data->toUpdateArray());
 
-            Cache::tags(['feed'])->flush();
+            $statusChanged = $previousStatus !== $video->status;
+            $publishedAtChanged = $previousPublishedAt?->getTimestamp() !== $video->published_at?->getTimestamp();
+            $affectsFeed = $statusChanged || $publishedAtChanged;
+
+            $this->cache->forgetVideo($video->vuid);
+
+            if ($affectsFeed) {
+                Cache::tags(['feed'])->flush();
+            }
 
             return $video;
         });
@@ -219,6 +238,7 @@ class VideoService
 
         $this->deleteVideoFiles($videoPath, $thumbnailPath);
 
+        $this->cache->forgetVideo($video->vuid);
         Cache::tags(['feed'])->flush();
     }
 
@@ -271,7 +291,7 @@ class VideoService
                 return;
             }
 
-            $video->increment('views');
+            $this->viewCounter->increment($video->id);
 
             event(new VideoViewed($user, $video, $source, $sessionId));
         });
@@ -473,12 +493,21 @@ class VideoService
     /**
      * Get AI-generated summary for a video.
      *
+     * Caches the summary forever once generated (it is immutable). Does not cache
+     * null so the result appears immediately after the AI finishes without waiting
+     * for a TTL to expire.
+     *
      * @param  Video  $video  Video to get summary for
      * @return VideoSummary|EmptyVideoSummary Summary with keyPoints, chapters, readingMode
      */
     public function getSummary(Video $video): VideoSummary|EmptyVideoSummary
     {
-        return $video->summary ?? new EmptyVideoSummary;
+        $summary = $this->cache->getOrCacheVideoSummary(
+            $video->vuid,
+            fn () => $video->summary,
+        );
+
+        return $summary !== null ? $summary : new EmptyVideoSummary;
     }
 
     /**
