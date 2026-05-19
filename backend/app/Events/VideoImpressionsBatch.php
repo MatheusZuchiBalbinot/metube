@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Enums\VideoEventType;
+use App\Enums\VideoSource;
 use App\Models\User;
 
 class VideoImpressionsBatch
@@ -13,7 +14,7 @@ class VideoImpressionsBatch
     public function __construct(
         public readonly User $user,
         public readonly array $items,
-        public readonly string $source,
+        public readonly VideoSource $source,
         public readonly ?string $sessionId,
     ) {}
 
@@ -30,7 +31,7 @@ class VideoImpressionsBatch
             'user_id' => $this->user->id,
             'video_id' => $item['video_id'],
             'event_type' => VideoEventType::IMPRESSION->value,
-            'source' => $this->source,
+            'source' => $this->source->value,
             'session_id' => $this->sessionId,
             'payload' => json_encode(['position' => $item['position']]),
             'occurred_at' => $now,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\VideoSource;
 use App\Http\Requests\Analytics\LogClickRequest;
 use App\Http\Requests\Analytics\LogImpressionsRequest;
 use App\Http\Requests\Analytics\LogSearchRequest;
@@ -36,7 +37,7 @@ class AnalyticsController extends Controller
         $this->analyticsService->recordImpressions(
             auth()->user(),
             $data['vuids'],
-            $data['source'],
+            VideoSource::from($data['source']),
             $data['session_id'] ?? null,
         );
 
@@ -59,7 +60,7 @@ class AnalyticsController extends Controller
         $this->analyticsService->recordClick(
             auth()->user(),
             $video,
-            $data['source'],
+            VideoSource::from($data['source']),
             $data['position'] ?? null,
             $data['session_id'] ?? null,
         );

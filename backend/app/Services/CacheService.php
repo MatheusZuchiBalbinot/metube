@@ -25,10 +25,6 @@ use Illuminate\Support\Facades\Cache;
  */
 class CacheService
 {
-    // -------------------------------------------------------------------------
-    // Channel
-    // -------------------------------------------------------------------------
-
     /**
      * Return the cached channel (User) for the given UUID, or resolve and store it.
      *
@@ -65,10 +61,6 @@ class CacheService
     {
         Cache::tags(["channel:{$uuid}"])->flush();
     }
-
-    // -------------------------------------------------------------------------
-    // Video
-    // -------------------------------------------------------------------------
 
     /**
      * Return the cached video for the given vuid, or resolve and store it.
@@ -120,10 +112,6 @@ class CacheService
         Cache::tags(["video:{$vuid}"])->flush();
     }
 
-    // -------------------------------------------------------------------------
-    // User — playlists
-    // -------------------------------------------------------------------------
-
     /**
      * Return the cached playlist collection for a user.
      *
@@ -144,10 +132,6 @@ class CacheService
         Cache::forget("user:playlists:{$userId}");
     }
 
-    // -------------------------------------------------------------------------
-    // User — subscriptions
-    // -------------------------------------------------------------------------
-
     /**
      * Return the cached subscription collection for a user.
      *
@@ -167,10 +151,6 @@ class CacheService
     {
         Cache::forget("user:subscriptions:{$userId}");
     }
-
-    // -------------------------------------------------------------------------
-    // User — history events (heatmap)
-    // -------------------------------------------------------------------------
 
     /**
      * Return the cached watch-history heatmap for a user.

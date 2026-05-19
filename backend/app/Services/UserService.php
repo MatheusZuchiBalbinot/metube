@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\HistoryPeriod;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -48,10 +49,8 @@ class UserService
 
     /**
      * Get watch history with optional period filter.
-     *
-     * @param  string  $period  today|week|month|all
      */
-    public function getUserHistory(User $user, string $period = 'all'): LengthAwarePaginator
+    public function getUserHistory(User $user, HistoryPeriod $period = HistoryPeriod::ALL): LengthAwarePaginator
     {
         return $user->history()
             ->filterByPeriod($period)

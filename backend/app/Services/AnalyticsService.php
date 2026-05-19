@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\VideoSource;
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoImpressionsBatch;
@@ -25,10 +26,10 @@ class AnalyticsService
      *
      * @param  User  $user  Who saw the impressions
      * @param  list<string>  $vuids  Video UUIDs in render order
-     * @param  string  $source  Surface origin (feed, search, channel, recommended)
+     * @param  VideoSource  $source  Surface origin
      * @param  string|null  $sessionId  Client session id
      */
-    public function recordImpressions(User $user, array $vuids, string $source, ?string $sessionId = null): void
+    public function recordImpressions(User $user, array $vuids, VideoSource $source, ?string $sessionId = null): void
     {
         /** @var array<string, int> $idByVuid */
         $idByVuid = Video::whereIn('vuid', $vuids)->pluck('id', 'vuid')->all();
@@ -55,11 +56,11 @@ class AnalyticsService
      *
      * @param  User  $user  Who clicked
      * @param  Video  $video  What was clicked
-     * @param  string  $source  Surface origin (feed, search, channel, recommended)
+     * @param  VideoSource  $source  Surface origin
      * @param  int|null  $position  Render position when clicked
      * @param  string|null  $sessionId  Client session id
      */
-    public function recordClick(User $user, Video $video, string $source, ?int $position = null, ?string $sessionId = null): void
+    public function recordClick(User $user, Video $video, VideoSource $source, ?int $position = null, ?string $sessionId = null): void
     {
         event(new VideoClickedFromFeed($user, $video, $source, $position, $sessionId));
     }

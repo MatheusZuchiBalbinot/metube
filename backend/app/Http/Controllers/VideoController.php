@@ -6,6 +6,7 @@ use App\Data\CreateVideoData;
 use App\Data\FinalizeUploadData;
 use App\Data\UpdateVideoData;
 use App\Enums\TranscriptionStatus;
+use App\Enums\VideoSource;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
 use App\Http\Requests\Video\UpdateVideoRequest;
@@ -138,13 +139,14 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $source = $request->input('source');
+        $sourceInput = $request->input('source');
+        $source = is_string($sourceInput) ? VideoSource::tryFrom($sourceInput) : null;
         $sessionId = $request->input('session_id');
 
         $this->videoService->recordView(
             auth()->user(),
             $video,
-            is_string($source) ? $source : null,
+            $source,
             is_string($sessionId) ? $sessionId : null,
         );
 
