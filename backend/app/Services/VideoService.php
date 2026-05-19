@@ -8,6 +8,7 @@ use App\Data\FinalizeUploadData;
 use App\Data\UpdateVideoData;
 use App\Enums\ReactionType;
 use App\Enums\VideoEventType;
+use App\Enums\VideoSource;
 use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
 use App\Events\VideoLiked;
@@ -248,10 +249,10 @@ class VideoService
      *
      * @param  User  $user  Who watched
      * @param  Video  $video  What was watched
-     * @param  string|null  $source  Surface origin (feed, search, channel, playlist, recommended)
+     * @param  VideoSource|null  $source  Surface origin
      * @param  string|null  $sessionId  Client session id
      */
-    public function recordView(User $user, Video $video, ?string $source = null, ?string $sessionId = null): void
+    public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
         DB::transaction(function () use ($user, $video, $source, $sessionId) {
             $now = now();

@@ -4,6 +4,7 @@ namespace App\Events;
 
 use App\Contracts\LoggableUserEvent;
 use App\Enums\VideoEventType;
+use App\Enums\VideoSource;
 use App\Models\User;
 use App\Models\Video;
 
@@ -12,7 +13,7 @@ class VideoImpressed implements LoggableUserEvent
     public function __construct(
         public readonly User $user,
         public readonly Video $video,
-        public readonly string $source,
+        public readonly VideoSource $source,
         public readonly ?int $position = null,
         public readonly ?string $sessionId = null,
     ) {}
@@ -32,7 +33,7 @@ class VideoImpressed implements LoggableUserEvent
             'user_id' => $this->user->id,
             'video_id' => $this->video->id,
             'event_type' => VideoEventType::IMPRESSION->value,
-            'source' => $this->source,
+            'source' => $this->source->value,
             'session_id' => $this->sessionId,
             'payload' => $payload === [] ? null : $payload,
         ];

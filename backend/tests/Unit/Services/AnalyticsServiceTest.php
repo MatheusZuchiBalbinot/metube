@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\VideoSource;
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoImpressionsBatch;
@@ -25,14 +26,14 @@ describe('AnalyticsService', function () {
         $videos = Video::factory(3)->create();
         $vuids = $videos->pluck('vuid')->all();
 
-        (new AnalyticsService)->recordImpressions($user, $vuids, 'feed', 'sess-1');
+        (new AnalyticsService)->recordImpressions($user, $vuids, VideoSource::FEED, 'sess-1');
 
         Event::assertDispatchedTimes(VideoImpressionsBatch::class, 1);
 
         Event::assertDispatched(
             VideoImpressionsBatch::class,
             function (VideoImpressionsBatch $event) use ($videos, $vuids): bool {
-                if ($event->source !== 'feed' || $event->sessionId !== 'sess-1') {
+                if ($event->source !== VideoSource::FEED || $event->sessionId !== 'sess-1') {
                     return false;
                 }
 
@@ -61,7 +62,7 @@ describe('AnalyticsService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new AnalyticsService)->recordImpressions($user, [$video->vuid, 'unknownvuid'], 'home');
+        (new AnalyticsService)->recordImpressions($user, [$video->vuid, 'unknownvuid'], VideoSource::HOME);
 
         Event::assertDispatched(
             VideoImpressionsBatch::class,
@@ -74,7 +75,7 @@ describe('AnalyticsService', function () {
 
         $user = User::factory()->create();
 
-        (new AnalyticsService)->recordImpressions($user, ['notexist1', 'notexist2'], 'feed');
+        (new AnalyticsService)->recordImpressions($user, ['notexist1', 'notexist2'], VideoSource::FEED);
 
         Event::assertNotDispatched(VideoImpressionsBatch::class);
     });
@@ -90,12 +91,12 @@ describe('AnalyticsService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new AnalyticsService)->recordClick($user, $video, 'recommended', 2, 'sess-9');
+        (new AnalyticsService)->recordClick($user, $video, VideoSource::RECOMMENDED, 2, 'sess-9');
 
         Event::assertDispatched(
             VideoClickedFromFeed::class,
             fn (VideoClickedFromFeed $event): bool => $event->video->id === $video->id
-                && $event->source === 'recommended'
+                && $event->source === VideoSource::RECOMMENDED
                 && $event->position === 2
                 && $event->sessionId === 'sess-9',
         );
