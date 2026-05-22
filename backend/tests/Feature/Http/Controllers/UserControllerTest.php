@@ -11,7 +11,7 @@ describe('UserController', function () {
     test('progress returns empty map when user has no progress', function () {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->getJson('/api/progress');
+        $response = $this->actingAs($user)->getJson('/api/users/me/progress');
 
         $response->assertOk();
         $response->assertJson(['data' => []]);
@@ -33,7 +33,7 @@ describe('UserController', function () {
             'percent' => 100,
         ]);
 
-        $response = $this->actingAs($user)->getJson('/api/progress');
+        $response = $this->actingAs($user)->getJson('/api/users/me/progress');
 
         $response->assertOk();
         $response->assertJson([
@@ -55,7 +55,7 @@ describe('UserController', function () {
             'percent' => 70,
         ]);
 
-        $response = $this->actingAs($user)->getJson('/api/progress');
+        $response = $this->actingAs($user)->getJson('/api/users/me/progress');
 
         $response->assertOk();
         $response->assertJson(['data' => []]);

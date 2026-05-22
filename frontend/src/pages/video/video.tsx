@@ -311,7 +311,10 @@ export default function VideoPage() {
     }
 
     function handleRetryTranscription() {
-        if (!video) return;
+        if (!video) {
+            return;
+        }
+
         const vuid = video.id as unknown as Vuid;
         videoApi.retryTranscription(vuid).then(ok => {
             const didSucceed = ok !== null;

@@ -6,6 +6,7 @@ use App\Listeners\SendVideoTranscribedNotification;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoTranscribedNotification;
+use App\Notifications\VideoTranscriptionStartedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 
@@ -23,7 +24,7 @@ describe('SendVideoTranscribedNotification', function () {
         Notification::assertSentTo($owner, VideoTranscribedNotification::class);
     });
 
-    test('does not notify for PROCESSING status', function () {
+    test('notifies the owner when transcription starts', function () {
         Notification::fake();
 
         $owner = User::factory()->create();
@@ -31,7 +32,7 @@ describe('SendVideoTranscribedNotification', function () {
 
         (new SendVideoTranscribedNotification)->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING));
 
-        Notification::assertNothingSent();
+        Notification::assertSentTo($owner, VideoTranscriptionStartedNotification::class);
     });
 
     test('does not notify for FAILED status', function () {
