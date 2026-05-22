@@ -58,10 +58,19 @@ services:
       - WHISPER_MODEL=small
       - WHISPER_LANGUAGE=pt
       - STORAGE_ROOT=/storage/app/public
+      - WHISPER_DEVICE=cuda
+      - WHISPER_COMPUTE_TYPE=float16
     volumes:
       - vidsum_storage:/storage:ro
     networks:
       - app_net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   horizon:
     build: ./backend

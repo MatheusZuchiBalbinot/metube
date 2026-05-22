@@ -9,10 +9,12 @@ STORAGE_ROOT = os.environ.get("STORAGE_ROOT", "/storage/app/public")
 MODEL_SIZE = os.environ.get("WHISPER_MODEL", "small")
 # Hint the language to skip auto-detection (saves ~1-2s per job). Set to None to auto-detect.
 LANGUAGE = os.environ.get("WHISPER_LANGUAGE", "pt") or None
+DEVICE = os.environ.get("WHISPER_DEVICE", "cuda")
+COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE", "float16")
 
 app = FastAPI()
 
-model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
 
 
 class TranscribeRequest(BaseModel):
