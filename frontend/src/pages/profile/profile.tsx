@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Trash2, Flame, Hash, Clock, Camera } from 'lucide-react';
+import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Trash2, Flame, Hash, Clock } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { VideoFilter, SortBy } from '@utils/applyFilters';
