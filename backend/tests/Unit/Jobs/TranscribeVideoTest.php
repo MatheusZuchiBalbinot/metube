@@ -8,11 +8,14 @@ use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
 describe('TranscribeVideo', function () {
     describe('handle — happy path', function () {
+        beforeEach(fn () => Queue::fake());
+
         test('creates a completed transcription when whisper responds successfully', function () {
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
 

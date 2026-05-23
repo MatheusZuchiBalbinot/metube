@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { useLayoutEffect, useRef } from 'react';
 import { useInView } from '@hooks/useInView';
 
 // ─── IntersectionObserver mock ─────────────────────────────────────────────────
@@ -61,13 +62,17 @@ function installObserverMock() {
 
 function useInViewWithElement(options?: Parameters<typeof useInView>[0]) {
     const result = useInView(options);
-    const ref = result.ref as React.MutableRefObject<HTMLElement | null>;
+    const elRef = useRef<HTMLElement | null>(null);
 
-    if (ref.current === null) {
-        const el = document.createElement('div');
-        document.body.appendChild(el);
-        ref.current = el;
-    }
+    useLayoutEffect(() => {
+        if (elRef.current === null) {
+            const el = document.createElement('div');
+            document.body.appendChild(el);
+            elRef.current = el;
+        }
+        // eslint-disable-next-line react-hooks/immutability
+        (result.ref as React.MutableRefObject<HTMLElement | null>).current = elRef.current;
+    });
 
     return result;
 }
