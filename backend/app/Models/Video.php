@@ -172,7 +172,7 @@ class Video extends Model
 
             if ($isPgsql) {
                 $placeholders = implode(',', array_fill(0, count($tags), '?'));
-                $query = $query->whereRaw("tags ?| array[{$placeholders}]", $tags);
+                $query = $query->whereRaw("tags ??| array[{$placeholders}]", $tags);
             } else {
                 $query = $query->where(function (Builder $q) use ($tags): void {
                     foreach ($tags as $tag) {
