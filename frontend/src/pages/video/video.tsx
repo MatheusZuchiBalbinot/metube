@@ -10,6 +10,7 @@ import FilterPanel from '@components/filter/panel';
 import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ReadingMode from '@components/video/readingMode';
+import AiSuggestions from '@components/video/aiSuggestions';
 import type { FilterState } from '@components/filter/panel';
 import { useAuth } from '@hooks/useAuth';
 import { useVideo } from '@hooks/useVideo';
@@ -570,6 +571,8 @@ export default function VideoPage() {
                             )}
                         </div>
                     </div>
+
+                    {isOwner && hasVideo && <AiSuggestions video={video} />}
 
                     <CommentSection vuid={video.id as unknown as Vuid} />
                 </main>

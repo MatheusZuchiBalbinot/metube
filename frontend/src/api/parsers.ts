@@ -20,6 +20,13 @@ export interface VideoTranscription {
     content: string | null
 }
 
+export interface AiSuggestion {
+    status: 'pending' | 'accepted' | 'dismissed'
+    suggestedTitle: string
+    suggestedDescription: string
+    suggestedTags: string[]
+}
+
 export interface LoginApiResponse {
     user: User
 }
@@ -345,5 +352,27 @@ export function parseVideoTranscription(raw: unknown): VideoTranscription | null
         status: str(r['status']) as VideoTranscription['status'],
         language: typeof r['language'] === 'string' ? r['language'] : null,
         content: typeof r['content'] === 'string' ? r['content'] : null,
+    };
+}
+
+// ─── AI Suggestion ─────────────────────────────────────────────────────────────
+
+export function parseAiSuggestion(raw: unknown): AiSuggestion | null {
+    const r = toRaw(raw);
+
+    if (!r) {
+        return null;
+    }
+
+    const status = str(r['status']);
+    if (!status) {
+        return null;
+    }
+
+    return {
+        status: status as AiSuggestion['status'],
+        suggestedTitle: str(r['suggested_title']),
+        suggestedDescription: str(r['suggested_description']),
+        suggestedTags: Array.isArray(r['suggested_tags']) ? (r['suggested_tags'] as string[]) : [],
     };
 }

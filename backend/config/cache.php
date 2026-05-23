@@ -160,6 +160,10 @@ return [
                 'active' => env('CACHE_USER_HISTORY_EVENTS_ACTIVE', true),
             ],
         ],
+        'recommendations' => [
+            'ttl' => env('CACHE_RECOMMENDATIONS_TTL', 300),
+            'active' => env('CACHE_RECOMMENDATIONS_ACTIVE', true),
+        ],
 
     ],
 ];

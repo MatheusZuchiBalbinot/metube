@@ -97,6 +97,13 @@ export function useRealtime(): void {
                     }));
                 }
             });
+
+            channel.listen('.AiSuggestionReady', (payload: { vuid: string; title: string }) => {
+                dispatch(toastActions.addToast({
+                    message: t('ai_suggestion.pending_toast', { title: payload.title }),
+                    type: ToastType.SUCCESS,
+                }));
+            });
         });
 
         return () => {

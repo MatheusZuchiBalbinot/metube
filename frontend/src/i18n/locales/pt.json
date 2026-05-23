@@ -212,6 +212,16 @@
         "show_more": "Mostrar mais",
         "show_less": "Mostrar menos"
     },
+    "ai_suggestion": {
+        "title": "Sugestões de IA",
+        "pending_toast": "Sugestões de IA prontas para \"{{title}}\"",
+        "accepted_toast": "Sugestões aplicadas com sucesso",
+        "accept_error": "Falha ao aplicar sugestões",
+        "dismissed_toast": "Sugestões descartadas",
+        "dismiss_error": "Falha ao descartar sugestões",
+        "accept": "Aceitar sugestões",
+        "dismiss": "Descartar"
+    },
     "nav": {
         "aria_label": "Navegação principal",
         "home": "Início",

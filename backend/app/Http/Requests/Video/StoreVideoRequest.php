@@ -23,6 +23,7 @@ use Illuminate\Validation\Validator;
  * @property string|null $upload_key Tus resumable upload key
  * @property string|null $thumbnail_key Tus resumable thumbnail key
  * @property string|null $scheduled_at When to publish (ISO 8601)
+ * @property bool $is_batch Whether this is a batch upload (auto-apply fields)
  */
 class StoreVideoRequest extends FormRequest
 {
@@ -52,6 +53,7 @@ class StoreVideoRequest extends FormRequest
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
             'upload_key' => ['required_without:video_file', 'nullable', 'string'],
             'thumbnail_key' => ['nullable', 'string'],
+            'is_batch' => ['sometimes', 'boolean'],
         ];
     }
 

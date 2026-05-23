@@ -19,6 +19,7 @@ final readonly class CreateVideoData
         public UploadedFile $videoFile,
         public ?UploadedFile $thumbnailFile,
         public ?Carbon $scheduledAt,
+        public bool $isBatch = false,
     ) {}
 
     /**

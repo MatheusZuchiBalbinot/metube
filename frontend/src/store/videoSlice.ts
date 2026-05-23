@@ -33,6 +33,8 @@ export interface VideoState {
     loading: boolean
     error: string | null
     lastVideoStatusUpdate: { vuid: string; status: string } | null
+    serverRecommendations: Video[]
+    recommendationsLoading: boolean
 }
 
 const initialState: VideoState = {
@@ -53,6 +55,8 @@ const initialState: VideoState = {
     loading: false,
     error: null,
     lastVideoStatusUpdate: null,
+    serverRecommendations: [],
+    recommendationsLoading: false,
 };
 
 const videoSlice = createSlice({
@@ -253,6 +257,14 @@ const videoSlice = createSlice({
         },
         xTabSetPinnedVideoId(state, action: PayloadAction<VideoId | null>) {
             state.pinnedVideoId = action.payload;
+        },
+
+        setServerRecommendations(state, action: PayloadAction<Video[]>) {
+            state.serverRecommendations = action.payload;
+        },
+
+        setRecommendationsLoading(state, action: PayloadAction<boolean>) {
+            state.recommendationsLoading = action.payload;
         },
     },
 });

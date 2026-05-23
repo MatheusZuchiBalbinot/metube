@@ -85,6 +85,8 @@ class TranscribeVideo implements ShouldQueue
             ]);
 
             event(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
+
+            dispatch(new GenerateAiMetadata($video));
         } else {
             Log::error('Whisper transcription failed', [
                 'vuid' => $video->vuid,

@@ -18,6 +18,7 @@ final readonly class FinalizeUploadData
         public array $tags,
         public VideoStatus $status,
         public ?Carbon $scheduledAt,
+        public bool $isBatch = false,
     ) {}
 
     /**
@@ -37,6 +38,7 @@ final readonly class FinalizeUploadData
             scheduledAt: isset($validated['scheduled_at'])
                 ? Carbon::parse($validated['scheduled_at'])
                 : null,
+            isBatch: (bool) ($validated['is_batch'] ?? false),
         );
     }
 }

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, type Transition } from 'framer-motion';
+import { useDispatch } from 'react-redux';
 import { useInView } from '@hooks/useInView';
 import { Filter, Flame, PlayCircle, Shuffle } from 'lucide-react';
 import VideoCard from '@components/video/card';
@@ -13,6 +14,8 @@ import { ROUTES, videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
 import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
+import { videoActions } from '@store/videoSlice';
+import { video } from '@api/videos';
 import type { Tag } from '@models/tag';
 import type { Video } from '@models/video';
 import './home.css';
@@ -39,6 +42,7 @@ const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1]
 export default function HomePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { recommendations, publishedVideos, videoProgress, watchHistory, videos } = useVideo();
     const { filterState, setFilterState, hasActiveFilters, clearFilters } = useFilterState();
     const trendingRef = useRef<HTMLDivElement>(null);
@@ -125,6 +129,16 @@ export default function HomePage() {
         el.addEventListener('scroll', update, { passive: true });
         return () => el.removeEventListener('scroll', update);
     }, [hasContinueWatching]);
+
+    useEffect(() => {
+        async function fetchRecommendations() {
+            dispatch(videoActions.setRecommendationsLoading(true));
+            const items = await video.recommendations(1);
+            dispatch(videoActions.setServerRecommendations(items));
+            dispatch(videoActions.setRecommendationsLoading(false));
+        }
+        void fetchRecommendations();
+    }, [dispatch]);
 
     function scrollCarousel(ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') {
         const el = ref.current;

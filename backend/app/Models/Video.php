@@ -27,8 +27,10 @@ use Illuminate\Support\Str;
  * @property string|null $thumbnail_url
  * @property \Illuminate\Support\Carbon|null $published_at
  * @property \Illuminate\Support\Carbon|null $scheduled_at
+ * @property bool $is_batch
  * @property \App\Models\VideoSummary|null $summary
  * @property \App\Models\Transcription|null $transcription
+ * @property \App\Models\VideoAiSuggestion|null $aiSuggestion
  * @property-read \App\Models\User $channel
  */
 class Video extends Model
@@ -48,6 +50,7 @@ class Video extends Model
         'thumbnail_url',
         'published_at',
         'scheduled_at',
+        'is_batch',
     ];
 
     /** @return array<string, string> */
@@ -62,6 +65,7 @@ class Video extends Model
             'duration' => 'float',
             'views' => 'integer',
             'comments_count' => 'integer',
+            'is_batch' => 'boolean',
         ];
     }
 
@@ -102,6 +106,16 @@ class Video extends Model
     public function transcription(): HasOne
     {
         return $this->hasOne(Transcription::class);
+    }
+
+    /**
+     * Get the AI-generated suggestion for this video (if it exists).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\VideoAiSuggestion, $this>
+     */
+    public function aiSuggestion(): HasOne
+    {
+        return $this->hasOne(VideoAiSuggestion::class);
     }
 
     /**

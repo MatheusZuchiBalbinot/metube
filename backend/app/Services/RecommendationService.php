@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\VideoEventType;
+use App\Models\User;
+use App\Models\UserAnalytic;
+use App\Models\Video;
+use App\Models\WatchHistory;
+use Illuminate\Support\Collection;
+
+class RecommendationService
+{
+    public function __construct(private readonly CacheService $cache) {}
+
+    /**
+     * Get recommended videos for a user with server-side scoring.
+     *
+     * @return Collection<int, Video>
+     */
+    public function forUser(User $user, int $page = 1): Collection
+    {
+        $recommendations = $this->cache->rememberRecommendations(
+            $user->id,
+            $page,
+            /**
+             * @return Collection<int, Video>
+             */
+            function () use ($user, $page): Collection {
+                $userEventScores = $this->getUserEventScores($user->id);
+
+                if ($userEventScores->isEmpty()) {
+                    return $this->popularVideos($page);
+                }
+
+                $tagAffinity = $this->deriveTagAffinity($userEventScores);
+                $watchedVideoIds = $this->getWatchedVideoIds($user->id);
+                $candidates = $this->getCandidateVideos($watchedVideoIds);
+
+                if ($candidates->isEmpty()) {
+                    return $candidates;
+                }
+
+                $maxViews = $candidates->max('views') ?? 1;
+
+                $scored = $candidates
+                    ->map(fn (Video $v) => [
+                        'video' => $v,
+                        'score' => $this->score($v, $tagAffinity, $maxViews),
+                    ])
+                    ->sortByDesc('score')
+                    ->values();
+
+                $paginated = $this->paginate($scored, $page);
+
+                return $paginated->map(fn (array $item) => $item['video'])->values();
+
+            });
+
+        return $recommendations;
+    }
+
+    /**
+     * Get user event scores aggregated by video over the last 30 days.
+     *
+     * @return \Illuminate\Support\Collection<int, float>
+     */
+    private function getUserEventScores(int $userId): \Illuminate\Support\Collection
+    {
+        $events = UserAnalytic::query()
+            ->where('user_id', $userId)
+            ->where('occurred_at', '>=', now()->subDays(30))
+            ->get();
+
+        return $events
+            ->groupBy('video_id')
+            ->map(fn ($videoEvents) => $videoEvents->sum(fn (UserAnalytic $e) => $this->eventWeight($e)));
+    }
+
+    /**
+     * Calculate weight for a single event based on its type.
+     */
+    private function eventWeight(UserAnalytic $event): float
+    {
+        return match ($event->event_type) {
+            VideoEventType::FINISH => 1.0,
+            VideoEventType::LIKE => 0.8,
+            VideoEventType::SAVE => 0.7,
+            VideoEventType::CLICK => 0.4,
+            VideoEventType::VIEW => 0.2,
+            VideoEventType::DISLIKE => -0.5,
+            VideoEventType::SKIP => $this->skipWeight($event),
+            default => 0.0,
+        };
+    }
+
+    /**
+     * Calculate weight for SKIP events based on watch completion percentage.
+     */
+    private function skipWeight(UserAnalytic $event): float
+    {
+        $percent = (int) ($event->payload['percent'] ?? 100);
+
+        return $percent < 20 ? -0.3 : 0.0;
+    }
+
+    /**
+     * Derive tag affinity from positively-scored videos.
+     *
+     * @param  \Illuminate\Support\Collection<int, float>  $videoScores
+     * @return array<string, float>
+     */
+    private function deriveTagAffinity(\Illuminate\Support\Collection $videoScores): array
+    {
+        $positiveVideoIds = $videoScores->filter(fn (float $score) => $score > 0)->keys()->toArray();
+
+        if ($positiveVideoIds === []) {
+            return [];
+        }
+
+        $videos = Video::whereIn('id', $positiveVideoIds)->get();
+
+        $tagWeights = [];
+
+        foreach ($videos as $video) {
+            $videoScore = $videoScores[$video->id] ?? 0;
+            foreach ($video->tags ?? [] as $tag) {
+                $tagWeights[$tag] = ($tagWeights[$tag] ?? 0) + $videoScore;
+            }
+        }
+
+        return $tagWeights;
+    }
+
+    /**
+     * Get IDs of videos the user has already watched.
+     *
+     * @return int[]
+     */
+    private function getWatchedVideoIds(int $userId): array
+    {
+        return WatchHistory::where('user_id', $userId)->pluck('video_id')->toArray();
+    }
+
+    /**
+     * Get candidate videos (published, excluding watched).
+     *
+     * @param  int[]  $excludeIds
+     * @return Collection<int, Video>
+     */
+    private function getCandidateVideos(array $excludeIds): Collection
+    {
+        return Video::published()
+            ->whereNotIn('id', $excludeIds)
+            ->with('channel')
+            ->get();
+    }
+
+    /**
+     * Calculate composite score for a video.
+     *
+     * Score = (tagScore × 0.70) + (popularScore × 0.20) + (freshScore × 0.10)
+     *
+     * @param  array<string, float>  $tagAffinity
+     */
+    private function score(Video $video, array $tagAffinity, int $maxViews): float
+    {
+        $tagScore = $this->tagScore($video, $tagAffinity);
+        $popularScore = log1p($video->views) / log1p($maxViews);
+        $freshScore = exp(-now()->diffInDays($video->published_at) / 30);
+
+        return ($tagScore * 0.70) + ($popularScore * 0.20) + ($freshScore * 0.10);
+    }
+
+    /**
+     * Calculate tag relevance score for a video.
+     *
+     * @param  array<string, float>  $tagAffinity
+     */
+    private function tagScore(Video $video, array $tagAffinity): float
+    {
+        $tags = $video->tags ?? [];
+
+        if ($tags === []) {
+            return 0.0;
+        }
+
+        $totalWeight = collect($tags)
+            ->sum(fn (string $tag) => $tagAffinity[$tag] ?? 0);
+
+        return $totalWeight / count($tags);
+    }
+
+    /**
+     * Get popular videos for new users with no event history.
+     *
+     * @return Collection<int, Video>
+     */
+    private function popularVideos(int $page): Collection
+    {
+        return Video::published()
+            ->orderByDesc('views')
+            ->with('channel')
+            ->skip(($page - 1) * 15)
+            ->take(15)
+            ->get();
+    }
+
+    /**
+     * Paginate a collection of items (15 per page).
+     *
+     * @template T
+     *
+     * @param  \Illuminate\Support\Collection<int, T>  $items
+     * @return \Illuminate\Support\Collection<int, T>
+     */
+    private function paginate(\Illuminate\Support\Collection $items, int $page): \Illuminate\Support\Collection
+    {
+        $perPage = 15;
+        $start = ($page - 1) * $perPage;
+
+        return $items->skip($start)->take($perPage);
+    }
+}
