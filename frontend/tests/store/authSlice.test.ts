@@ -123,3 +123,22 @@ describe('authSlice — signOutThunk', () => {
         expect(next.user).toBeNull();
     });
 });
+
+// ─── signUpThunk ──────────────────────────────────────────────────────────────
+
+import { signUpThunk } from '@store/authSlice';
+
+describe('authSlice — signUpThunk', () => {
+    it('sets user on fulfilled', () => {
+        const user = makeUser();
+        const state = makeState();
+        const next = reducer(state, signUpThunk.fulfilled(user, '', {
+            name: 'Alice',
+            email: 'alice@example.com',
+            password: 'pass',
+            password_confirmation: 'pass',
+        }));
+        expect(next.user).toEqual(user);
+        expect(next.sessionError).toBeNull();
+    });
+});

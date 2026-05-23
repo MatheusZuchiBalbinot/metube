@@ -3,8 +3,9 @@
  * Simple component that renders a tag with deterministic color.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import TagBadge from '@components/tag/badge';
 import { renderWithProviders } from '../../helpers/renderWithProviders';
 
@@ -40,5 +41,21 @@ describe('TagBadge', () => {
         const color2 = screen.getByText('rust').getAttribute('style');
 
         expect(color1).toBe(color2);
+    });
+
+    it('calls onClick when clicked', async () => {
+        const onClick = vi.fn();
+        renderWithProviders(<TagBadge tag="react" onClick={onClick} />);
+        await userEvent.click(screen.getByRole('button', { name: /react/i }));
+        expect(onClick).toHaveBeenCalled();
+    });
+
+    it('calls onClick on Enter key press', async () => {
+        const onClick = vi.fn();
+        renderWithProviders(<TagBadge tag="node" onClick={onClick} />);
+        const badge = screen.getByRole('button', { name: /node/i });
+        badge.focus();
+        await userEvent.keyboard('{Enter}');
+        expect(onClick).toHaveBeenCalled();
     });
 });

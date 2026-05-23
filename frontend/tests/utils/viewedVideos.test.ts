@@ -15,7 +15,8 @@ describe('viewedVideos', () => {
 
     beforeEach(async () => {
         // Force a fresh module instance for each test so the internal Set resets.
-        const mod = await import('@utils/viewedVideos?t=' + Date.now() as string);
+        // eslint-disable-next-line prefer-template
+        const mod = await import('@utils/viewedVideos?t=' + Date.now());
         markViewed = mod.markViewed;
         hasViewed = mod.hasViewed;
     });

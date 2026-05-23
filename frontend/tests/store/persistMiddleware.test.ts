@@ -212,7 +212,7 @@ describe('persistMiddleware', () => {
 
             const call = lastCallFor(setItemSpy, STORAGE_KEYS.PLAYLISTS);
             expect(call).toBeDefined();
-            const written = JSON.parse(call![1]) as Array<{ id: string }>;
+            const written = JSON.parse(call![1]) as { id: string }[];
             expect(written.some((p) => p.id === 'pl-1')).toBe(true);
         });
 
