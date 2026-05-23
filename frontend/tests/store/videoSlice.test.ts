@@ -412,3 +412,66 @@ describe('videoSlice — incrementViews', () => {
         expect(next.videos[1].views).toBe(0);
     });
 });
+
+// ─── restoreHistory ──────────────────────────────────────────────────────────
+
+describe('videoSlice — restoreHistory', () => {
+    it('replaces watchHistory with provided array', () => {
+        const state = makeState({ watchHistory: [vid('v1')] });
+        const next = reducer(state, videoActions.restoreHistory([vid('v2'), vid('v3')]));
+        expect(next.watchHistory).toEqual([vid('v2'), vid('v3')]);
+    });
+});
+
+// ─── setVideoProgress ────────────────────────────────────────────────────────
+
+describe('videoSlice — setVideoProgress', () => {
+    it('replaces entire videoProgress map', () => {
+        const state = makeState({ videoProgress: { [vid('v1')]: 50 } });
+        const next = reducer(state, videoActions.setVideoProgress({ [vid('v2')]: 80 }));
+        expect(next.videoProgress[vid('v2')]).toBe(80);
+        expect(next.videoProgress[vid('v1')]).toBeUndefined();
+    });
+});
+
+// ─── videoFinished ───────────────────────────────────────────────────────────
+
+describe('videoSlice — videoFinished', () => {
+    it('sets progress to 100 for the video', () => {
+        const state = makeState();
+        const next = reducer(state, videoActions.videoFinished(vid('v1')));
+        expect(next.videoProgress[vid('v1')]).toBe(100);
+    });
+
+    it('adds video to front of watchHistory when not already there', () => {
+        const state = makeState({ watchHistory: [vid('v2')] });
+        const next = reducer(state, videoActions.videoFinished(vid('v1')));
+        expect(next.watchHistory[0]).toBe(vid('v1'));
+    });
+
+    it('does not duplicate in watchHistory when already present', () => {
+        const state = makeState({ watchHistory: [vid('v1')] });
+        const next = reducer(state, videoActions.videoFinished(vid('v1')));
+        expect(next.watchHistory.filter(id => id === vid('v1'))).toHaveLength(1);
+    });
+});
+
+// ─── serverRecommendations ───────────────────────────────────────────────────
+
+describe('videoSlice — setServerRecommendations', () => {
+    it('sets server recommendations', () => {
+        const state = makeState();
+        const recs = [makeVideo({ id: vid('v-rec') })];
+        const next = reducer(state, videoActions.setServerRecommendations(recs));
+        expect(next.serverRecommendations).toHaveLength(1);
+        expect(next.serverRecommendations[0].id).toBe(vid('v-rec'));
+    });
+});
+
+describe('videoSlice — setRecommendationsLoading', () => {
+    it('sets recommendationsLoading flag', () => {
+        const state = makeState();
+        const next = reducer(state, videoActions.setRecommendationsLoading(true));
+        expect(next.recommendationsLoading).toBe(true);
+    });
+});
