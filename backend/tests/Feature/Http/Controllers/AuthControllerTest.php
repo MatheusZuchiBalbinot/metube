@@ -81,4 +81,68 @@ describe('AuthController', function () {
 
         $response->assertForbidden();
     });
+
+    test('register creates user and returns 201', function () {
+        $response = $this->postJson('/api/users', [
+            'name' => 'New User',
+            'email' => 'newuser@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonStructure(['user']);
+        $this->assertDatabaseHas('users', ['email' => 'newuser@example.com']);
+    });
+
+    test('register fails with duplicate email', function () {
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'Another',
+            'email' => 'taken@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['email']);
+    });
+
+    test('register fails with mismatched password confirmation', function () {
+        $response = $this->postJson('/api/users', [
+            'name' => 'Alice',
+            'email' => 'alice@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'different',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['password']);
+    });
+
+    test('forgot password fails with unknown email', function () {
+        config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
+
+        $response = $this->postJson('/api/password-resets', [
+            'email' => 'nobody@example.com',
+        ]);
+
+        $response->assertUnprocessable();
+    });
+
+    test('forgot password requires valid email format', function () {
+        $response = $this->postJson('/api/password-resets', [
+            'email' => 'not-an-email',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['email']);
+    });
+
+    test('resend verification requires authentication', function () {
+        $response = $this->postJson('/api/email-verifications');
+
+        $response->assertUnauthorized();
+    });
 });

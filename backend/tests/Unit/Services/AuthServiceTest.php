@@ -110,4 +110,38 @@ describe('AuthService', function () {
         expect(fn () => $service->sendPasswordResetLink('nobody@example.com'))
             ->toThrow(ValidationException::class);
     });
+
+    test('resetPassword throws ValidationException when broker returns invalid status', function () use (&$service) {
+        $brokerMock = Mockery::mock(\Illuminate\Auth\Passwords\PasswordBroker::class);
+        $brokerMock->shouldReceive('reset')
+            ->once()
+            ->andReturn(\Illuminate\Support\Facades\Password::INVALID_TOKEN);
+
+        \Illuminate\Support\Facades\Password::shouldReceive('broker')
+            ->andReturn($brokerMock);
+
+        expect(fn () => $service->resetPassword([
+            'token' => 'invalid-token',
+            'email' => 'user@example.com',
+            'password' => 'newpassword123',
+        ]))->toThrow(ValidationException::class);
+    });
+
+    test('me returns the currently authenticated user', function () use (&$service) {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $result = $service->me();
+
+        expect($result->id)->toBe($user->id);
+    });
+
+    test('logout clears authentication without error', function () use (&$service) {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $service->logout();
+
+        expect(auth()->user())->toBeNull();
+    });
 });
