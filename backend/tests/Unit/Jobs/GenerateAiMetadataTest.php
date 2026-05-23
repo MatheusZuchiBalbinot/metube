@@ -83,9 +83,8 @@ describe('GenerateAiMetadata', function () {
         ]);
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
-        GenerateAiMetadata::dispatch($video)->onQueue('default');
-
-        $this->artisan('queue:work', ['--once' => true]);
+        $job = new GenerateAiMetadata($video);
+        $job->handle(app(GeminiService::class));
 
         expect(VideoAiSuggestion::where('video_id', $video->id)->exists())->toBeTrue();
         $suggestion = VideoAiSuggestion::where('video_id', $video->id)->first();

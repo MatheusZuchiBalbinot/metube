@@ -154,7 +154,7 @@ class PlaylistService
 
             foreach ($vuids as $position => $vuid) {
                 $videoId = $idByVuid[$vuid];
-                $cases[] = 'WHEN ? THEN ?';
+                $cases[] = 'WHEN ? THEN CAST(? AS INTEGER)';
                 $bindings[] = $videoId;
                 $bindings[] = $position;
                 $videoIds[] = $videoId;

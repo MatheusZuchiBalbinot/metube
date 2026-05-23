@@ -10,3 +10,5 @@ docker-compose.override.yml
 .vscode/
 .claude/settings.json
 .claude/settings.local.json
+
+frontend/coverage/
