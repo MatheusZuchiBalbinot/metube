@@ -20,4 +20,24 @@ describe('getSessionId', () => {
 
         expect(getSessionId()).toBe('fixed-id');
     });
+
+    it('creates a new id and persists it when sessionStorage is empty', () => {
+        window.sessionStorage.clear();
+        const id = getSessionId();
+        expect(id.length).toBeGreaterThan(0);
+        expect(window.sessionStorage.getItem('analytics:sessionId')).toBe(id);
+    });
+});
+
+describe('getSessionId — crypto fallback', () => {
+    it('falls back to manual id when crypto.randomUUID is not available', () => {
+        const originalUUID = crypto.randomUUID;
+        // @ts-expect-error — intentionally removing for test
+        delete crypto.randomUUID;
+        window.sessionStorage.clear();
+        const id = getSessionId();
+        expect(id.length).toBeGreaterThan(0);
+        // Restore
+        crypto.randomUUID = originalUUID;
+    });
 });

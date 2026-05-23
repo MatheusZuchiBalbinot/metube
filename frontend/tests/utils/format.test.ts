@@ -190,3 +190,89 @@ describe('Format.relativeDate', () => {
         expect(result).toMatch(/year/i);
     });
 });
+
+describe('Format.durationCompact', () => {
+    it('returns 0m for invalid input', () => {
+        expect(Format.durationCompact(-1)).toBe('0m');
+        expect(Format.durationCompact(NaN)).toBe('0m');
+    });
+
+    it('returns hours and minutes for long durations', () => {
+        expect(Format.durationCompact(3661)).toBe('1h 1m');
+    });
+
+    it('returns minutes for < 1 hour', () => {
+        expect(Format.durationCompact(125)).toBe('2m');
+    });
+
+    it('returns <1m for very short durations', () => {
+        expect(Format.durationCompact(45)).toBe('<1m');
+    });
+});
+
+describe('Format.bytes', () => {
+    it('formats bytes', () => {
+        expect(Format.bytes(500)).toBe('500 B');
+    });
+
+    it('formats kilobytes', () => {
+        expect(Format.bytes(2048)).toBe('2 KB');
+    });
+
+    it('formats megabytes', () => {
+        expect(Format.bytes(2_097_152)).toBe('2.0 MB');
+    });
+
+    it('formats gigabytes', () => {
+        expect(Format.bytes(2_147_483_648)).toBe('2.0 GB');
+    });
+});
+
+describe('Format.speed', () => {
+    it('appends /s to bytes format', () => {
+        expect(Format.speed(1024)).toBe('1 KB/s');
+    });
+});
+
+describe('Format.eta', () => {
+    it('returns empty string for non-positive seconds', () => {
+        expect(Format.eta(0)).toBe('');
+        expect(Format.eta(-5)).toBe('');
+    });
+
+    it('returns seconds remaining for < 60s', () => {
+        const result = Format.eta(30, 'en');
+        expect(result).toMatch(/second/i);
+        expect(result).toContain('left');
+    });
+
+    it('returns minutes remaining for < 3600s', () => {
+        const result = Format.eta(120, 'en');
+        expect(result).toMatch(/minute/i);
+        expect(result).toContain('left');
+    });
+
+    it('returns hours remaining for >= 3600s', () => {
+        const result = Format.eta(7200, 'en');
+        expect(result).toMatch(/hour/i);
+        expect(result).toContain('left');
+    });
+});
+
+describe('Format.percent', () => {
+    it('rounds and appends %', () => {
+        expect(Format.percent(42.6)).toBe('43%');
+        expect(Format.percent(0)).toBe('0%');
+        expect(Format.percent(100)).toBe('100%');
+    });
+});
+
+describe('Format.truncate', () => {
+    it('returns text unchanged when within max', () => {
+        expect(Format.truncate('hello', 10)).toBe('hello');
+    });
+
+    it('truncates and appends ... when over max', () => {
+        expect(Format.truncate('hello world', 8)).toBe('hello...');
+    });
+});
