@@ -4,15 +4,17 @@ import userEvent from '@testing-library/user-event';
 import AiSuggestions from '@components/video/aiSuggestions';
 import { video as videoApi } from '@api/videos';
 import { renderWithProviders } from '../../helpers/renderWithProviders';
-import type { Video } from '@models/video';
+import type { Video, VideoId } from '@models/video';
+import { VideoStatus } from '@models/video';
+import type { ChannelId } from '@models/channel';
 
 vi.mock('@api/videos');
 
 const mockVideo: Video = {
-    id: '550e8400-e29b-41d4-a716-446655440000' as any,
+    id: '550e8400-e29b-41d4-a716-446655440000' as VideoId,
     title: 'Test Video',
     description: 'Test Description',
-    status: 'published' as any,
+    status: VideoStatus.PUBLISHED,
     views: 100,
     duration: 600,
     videoUrl: 'https://example.com/video.mp4',
@@ -22,7 +24,7 @@ const mockVideo: Video = {
     tags: ['test'],
     captions: [],
     channel: 'Test Channel',
-    channelId: '550e8400-e29b-41d4-a716-446655440001' as any,
+    channelId: '550e8400-e29b-41d4-a716-446655440001' as ChannelId,
 };
 
 const mockSuggestion = {
