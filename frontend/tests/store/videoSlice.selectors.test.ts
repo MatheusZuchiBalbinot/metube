@@ -5,7 +5,6 @@ import {
     selectPublishedVideos,
     selectLikedSet,
     selectDislikedSet,
-    makeSelectRecommendations,
 } from '@store/videoSelectors';
 import { VideoStatus, type Video, type VideoId } from '@models/video';
 
@@ -177,66 +176,3 @@ describe('selectDislikedSet', () => {
 
 // ─── makeSelectRecommendations ────────────────────────────────────────────────
 
-describe('makeSelectRecommendations', () => {
-    it('sorts by views when there is no watch history', () => {
-        const state = makeState({
-            videos: [
-                makeVideo({ id: vid('v1'), views: 100, status: VideoStatus.PUBLISHED }),
-                makeVideo({ id: vid('v2'), views: 900, status: VideoStatus.PUBLISHED }),
-                makeVideo({ id: vid('v3'), views: 300, status: VideoStatus.PUBLISHED }),
-            ],
-            watchHistory: [],
-        });
-        const select = makeSelectRecommendations(10);
-        const result = select(state);
-        expect(result[0].id).toBe(vid('v2'));
-        expect(result[1].id).toBe(vid('v3'));
-        expect(result[2].id).toBe(vid('v1'));
-    });
-
-    it('respects the limit', () => {
-        const state = makeState({
-            videos: Array.from({ length: 10 }, (_, i) =>
-                makeVideo({ id: vid(`v${i}`), status: VideoStatus.PUBLISHED }),
-            ),
-            watchHistory: [],
-        });
-        const select = makeSelectRecommendations(3);
-        expect(select(state)).toHaveLength(3);
-    });
-
-    it('ranks videos with matching history tags higher', () => {
-        const state = makeState({
-            videos: [
-                makeVideo({ id: vid('match'), views: 10, tags: ['react'] as unknown as Video['tags'], status: VideoStatus.PUBLISHED }),
-                makeVideo({ id: vid('no-match'), views: 10, tags: ['css'] as unknown as Video['tags'], status: VideoStatus.PUBLISHED }),
-            ],
-            watchHistory: [vid('watched')],
-            // watched video has react tag — make a video in the list with it
-        });
-        // Add the watched video that carries the 'react' tag
-        state.video.videos.push(
-            makeVideo({ id: vid('watched'), tags: ['react'] as unknown as Video['tags'], status: VideoStatus.PUBLISHED }),
-        );
-        state.video.watchHistory = [vid('watched')];
-
-        const select = makeSelectRecommendations(10);
-        const result = select(state);
-        const ids = result.map(v => v.id);
-        expect(ids.indexOf(vid('match'))).toBeLessThan(ids.indexOf(vid('no-match')));
-    });
-
-    it('only includes published videos', () => {
-        const state = makeState({
-            videos: [
-                makeVideo({ id: vid('pub'), status: VideoStatus.PUBLISHED }),
-                makeVideo({ id: vid('draft'), status: VideoStatus.DRAFT }),
-            ],
-            watchHistory: [],
-        });
-        const select = makeSelectRecommendations(10);
-        const ids = select(state).map(v => v.id);
-        expect(ids).toContain(vid('pub'));
-        expect(ids).not.toContain(vid('draft'));
-    });
-});

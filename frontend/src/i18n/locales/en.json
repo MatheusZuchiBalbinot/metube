@@ -212,6 +212,16 @@
         "show_more": "Show more",
         "show_less": "Show less"
     },
+    "ai_suggestion": {
+        "title": "AI Suggestions",
+        "pending_toast": "AI suggestions ready for \"{{title}}\"",
+        "accepted_toast": "Suggestions applied successfully",
+        "accept_error": "Failed to apply suggestions",
+        "dismissed_toast": "Suggestions dismissed",
+        "dismiss_error": "Failed to dismiss suggestions",
+        "accept": "Accept suggestions",
+        "dismiss": "Dismiss"
+    },
     "nav": {
         "aria_label": "Main navigation",
         "home": "Home",

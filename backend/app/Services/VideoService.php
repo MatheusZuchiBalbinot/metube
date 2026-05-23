@@ -61,6 +61,7 @@ class VideoService
                 'tags' => $data->tags,
                 'status' => VideoStatus::PROCESSING,
                 'scheduled_at' => $data->scheduledAt,
+                'is_batch' => $data->isBatch,
             ]);
 
             $ext = $data->videoFile->getClientOriginalExtension();
@@ -115,6 +116,7 @@ class VideoService
                 'tags' => $data->tags,
                 'status' => VideoStatus::PROCESSING,
                 'scheduled_at' => $data->scheduledAt,
+                'is_batch' => $data->isBatch,
             ]);
 
             $rawExt = strtolower(pathinfo((string) ($fileMeta['name'] ?? 'video.mp4'), PATHINFO_EXTENSION));
@@ -507,6 +509,42 @@ class VideoService
         );
 
         return $summary !== null ? $summary : new EmptyVideoSummary;
+    }
+
+    /**
+     * Accept pending AI suggestions and apply them to the video.
+     *
+     * @param  Video  $video  Video to accept suggestions for
+     *
+     * @throws ModelNotFoundException When no suggestion exists
+     */
+    public function acceptAiSuggestion(Video $video): void
+    {
+        $suggestion = $video->aiSuggestion ?? throw new ModelNotFoundException('AI suggestion not found.');
+
+        $video->update([
+            'title' => $suggestion->suggested_title ?? $video->title,
+            'description' => $suggestion->suggested_description ?? $video->description,
+            'tags' => ($suggestion->suggested_tags !== []) ? $suggestion->suggested_tags : $video->tags,
+        ]);
+
+        $suggestion->update(['status' => \App\Enums\AiSuggestionStatus::ACCEPTED]);
+
+        $this->cache->forgetVideo($video->vuid);
+    }
+
+    /**
+     * Dismiss pending AI suggestions without applying them.
+     *
+     * @param  Video  $video  Video to dismiss suggestions for
+     *
+     * @throws ModelNotFoundException When no suggestion exists
+     */
+    public function dismissAiSuggestion(Video $video): void
+    {
+        $suggestion = $video->aiSuggestion ?? throw new ModelNotFoundException('AI suggestion not found.');
+
+        $suggestion->update(['status' => \App\Enums\AiSuggestionStatus::DISMISSED]);
     }
 
     /**

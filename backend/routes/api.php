@@ -67,6 +67,8 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
             ->where('suffix', '.*');
     });
 
+    Route::get('/recommendations', [VideoController::class, 'recommendations']);
+
     Route::prefix('videos')->group(function (): void {
         Route::get('/', [VideoController::class, 'index']);
         Route::post('/', [VideoController::class, 'store']);
@@ -82,6 +84,9 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
         Route::get('/{vuid}/transcription', [VideoController::class, 'transcription']);
         Route::post('/{vuid}/transcription/retry', [VideoController::class, 'retryTranscription']);
+        Route::get('/{vuid}/ai-suggestion', [VideoController::class, 'aiSuggestion']);
+        Route::post('/{vuid}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion']);
+        Route::post('/{vuid}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion']);
 
         Route::prefix('{vuid}/comments')->group(function (): void {
             Route::get('/', [CommentController::class, 'index']);

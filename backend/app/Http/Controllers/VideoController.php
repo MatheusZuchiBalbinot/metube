@@ -11,10 +11,12 @@ use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
 use App\Http\Requests\Video\UpdateVideoRequest;
 use App\Http\Resources\TranscriptionResource;
+use App\Http\Resources\VideoAiSuggestionResource;
 use App\Http\Resources\VideoResource;
 use App\Jobs\TranscribeVideo;
 use App\Models\Transcription;
 use App\Models\Video;
+use App\Services\RecommendationService;
 use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,7 +29,10 @@ use Illuminate\Http\Response;
  */
 class VideoController extends Controller
 {
-    public function __construct(private readonly VideoService $videoService) {}
+    public function __construct(
+        private readonly VideoService $videoService,
+        private readonly RecommendationService $recommendationService,
+    ) {}
 
     /**
      * List all videos with pagination and filters.
@@ -286,5 +291,81 @@ class VideoController extends Controller
         dispatch(new TranscribeVideo($video));
 
         return $this->noContent();
+    }
+
+    /**
+     * Get pending AI suggestions for a video.
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return JsonResponse AI suggestion or 404
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function aiSuggestion(string $vuid): JsonResponse
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('manageSuggestion', $video);
+
+        $suggestion = $video->aiSuggestion;
+
+        $hasSuggestion = $suggestion !== null;
+        if (! $hasSuggestion) {
+            return $this->json(['message' => 'No AI suggestions available.'], 404);
+        }
+
+        return $this->json(new VideoAiSuggestionResource($suggestion));
+    }
+
+    /**
+     * Accept pending AI suggestions and apply to video.
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return Response HTTP 204 No Content
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function acceptSuggestion(string $vuid): Response
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('manageSuggestion', $video);
+
+        $this->videoService->acceptAiSuggestion($video);
+
+        return $this->noContent();
+    }
+
+    /**
+     * Dismiss pending AI suggestions without applying them.
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return Response HTTP 204 No Content
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function dismissSuggestion(string $vuid): Response
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('manageSuggestion', $video);
+
+        $this->videoService->dismissAiSuggestion($video);
+
+        return $this->noContent();
+    }
+
+    /**
+     * Get personalized video recommendations for the authenticated user.
+     *
+     * @param  Request  $request  Query: page? (default 1)
+     * @return JsonResponse array{data: Video[], meta: {total: int, page: int, ...}}
+     */
+    public function recommendations(Request $request): JsonResponse
+    {
+        $page = (int) $request->query('page', '1');
+        $items = $this->recommendationService->forUser($request->user(), $page);
+
+        return $this->json(VideoResource::collection($items));
     }
 }

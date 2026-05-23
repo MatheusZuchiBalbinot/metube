@@ -7,13 +7,15 @@ import {
     parseVideoList,
     parseVideoSummary,
     parseVideoTranscription,
+    parseAiSuggestion,
     type VideoSummary,
     type VideoTranscription,
+    type AiSuggestion,
     type VideoListApiResponse,
 } from './parsers';
 
 export type Vuid = string & { readonly _brand: 'Vuid' };
-export type { VideoSummary, VideoTranscription };
+export type { VideoSummary, VideoTranscription, AiSuggestion };
 export type VideoListResponse = VideoListApiResponse;
 export type VideoChapter = VideoSummary['chapters'][number];
 
@@ -35,6 +37,7 @@ export interface VideoFinalizePayload {
     tags: Tag[]
     status: VideoStatus
     scheduledAt?: string
+    is_batch?: boolean
 }
 
 export interface VideoUpdatePayload {
@@ -100,6 +103,7 @@ class VideoApi {
             tags: payload.tags,
             status: payload.status,
             scheduled_at: payload.scheduledAt,
+            is_batch: payload.is_batch ?? false,
         });
     }
 
@@ -141,6 +145,25 @@ class VideoApi {
 
     async retryTranscription(vuid: Vuid): Promise<boolean> {
         return apiClient.postEmpty(`${this.baseUrl}/${vuid}/transcription/retry`);
+    }
+
+    async recommendations(page = 1): Promise<Video[]> {
+        const result = await apiClient.getValidated('/recommendations', parseVideoList, {
+            params: { page },
+        });
+        return result?.data ?? [];
+    }
+
+    async getAiSuggestion(vuid: Vuid): Promise<AiSuggestion | null> {
+        return apiClient.getValidated(`${this.baseUrl}/${vuid}/ai-suggestion`, parseAiSuggestion);
+    }
+
+    async acceptAiSuggestion(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/ai-suggestion/accept`);
+    }
+
+    async dismissAiSuggestion(vuid: Vuid): Promise<void> {
+        await apiClient.post(`${this.baseUrl}/${vuid}/ai-suggestion/dismiss`);
     }
 }
 

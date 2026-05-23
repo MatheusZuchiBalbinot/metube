@@ -217,4 +217,28 @@ class CacheService
     {
         Cache::tags(["user:{$userId}"])->forget("user:history-events:{$userId}");
     }
+
+    /**
+     * Return the cached recommended videos for a user page, or resolve and store.
+     *
+     * @param  Closure(): Collection<int, Video>  $callback
+     * @return Collection<int, Video>
+     */
+    public function rememberRecommendations(int $userId, int $page, Closure $callback): Collection
+    {
+        if (! (bool) config('cache.vidsum.recommendations.active')) {
+            return $callback();
+        }
+
+        return Cache::tags(["user:{$userId}"])
+            ->remember("user:recommendations:{$userId}:page:{$page}", config('cache.vidsum.recommendations.ttl'), $callback);
+    }
+
+    /**
+     * Invalidate all recommendation pages for a user.
+     */
+    public function forgetRecommendations(int $userId): void
+    {
+        Cache::tags(["user:{$userId}"])->forget("user:recommendations:{$userId}:*");
+    }
 }
