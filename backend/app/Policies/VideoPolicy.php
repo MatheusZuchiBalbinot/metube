@@ -56,4 +56,12 @@ class VideoPolicy
     {
         return $user->id === $video->channel_id;
     }
+
+    /**
+     * Determine if user can accept/dismiss AI suggestions for this video.
+     */
+    public function manageSuggestion(User $user, Video $video): bool
+    {
+        return $user->id === $video->channel_id;
+    }
 }

@@ -15,6 +15,7 @@ import {
     parseVideoSummary,
     parseVideoTranscription,
     parseToggleLike,
+    parseAiSuggestion,
 } from '@api/parsers';
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────────
@@ -992,5 +993,111 @@ describe('parseToggleLike', () => {
 
     it('returns null for a number', () => {
         expect(parseToggleLike(42)).toBeNull();
+    });
+});
+
+// ─── parseAiSuggestion ─────────────────────────────────────────────────────────
+
+describe('parseAiSuggestion', () => {
+    it('returns a correct AiSuggestion from valid snake_case input', () => {
+        const raw = {
+            status: 'pending',
+            suggested_title: 'Better Title',
+            suggested_description: 'Better Description',
+            suggested_tags: ['tag1', 'tag2', 'tag3'],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result).toEqual({
+            status: 'pending',
+            suggestedTitle: 'Better Title',
+            suggestedDescription: 'Better Description',
+            suggestedTags: ['tag1', 'tag2', 'tag3'],
+        });
+    });
+
+    it('handles accepted status', () => {
+        const raw = {
+            status: 'accepted',
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: [],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result?.status).toBe('accepted');
+    });
+
+    it('handles dismissed status', () => {
+        const raw = {
+            status: 'dismissed',
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: [],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result?.status).toBe('dismissed');
+    });
+
+    it('returns null when status is missing', () => {
+        const raw = {
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: [],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result).toBeNull();
+    });
+
+    it('handles empty tags array', () => {
+        const raw = {
+            status: 'pending',
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: [],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result?.suggestedTags).toEqual([]);
+    });
+
+    it('handles non-array tags', () => {
+        const raw = {
+            status: 'pending',
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: 'not-an-array',
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result?.suggestedTags).toEqual([]);
+    });
+
+    it('returns null for null', () => {
+        expect(parseAiSuggestion(null)).toBeNull();
+    });
+
+    it('returns null for undefined', () => {
+        expect(parseAiSuggestion(undefined)).toBeNull();
+    });
+
+    it('returns null for a string', () => {
+        expect(parseAiSuggestion('string')).toBeNull();
+    });
+
+    it('returns null for an array', () => {
+        expect(parseAiSuggestion([])).toBeNull();
+    });
+
+    it('returns null for a number', () => {
+        expect(parseAiSuggestion(42)).toBeNull();
     });
 });

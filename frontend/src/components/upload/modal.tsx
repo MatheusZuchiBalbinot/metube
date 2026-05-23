@@ -340,6 +340,7 @@ export default function UploadModal() {
                 description: '',
                 tags: [],
                 status: VideoStatus.PUBLISHED,
+                is_batch: true,
             });
 
             if (result) {
