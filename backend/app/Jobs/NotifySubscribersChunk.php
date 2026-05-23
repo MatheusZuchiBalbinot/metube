@@ -15,9 +15,6 @@ class NotifySubscribersChunk implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    /** @var string */
-    public $queue = 'notifications';
-
     /** @var int */
     public $tries = 3;
 
@@ -31,7 +28,9 @@ class NotifySubscribersChunk implements ShouldQueue
     public function __construct(
         private readonly Video $video,
         private readonly array $userIds,
-    ) {}
+    ) {
+        $this->queue = 'notifications';
+    }
 
     public function handle(): void
     {
