@@ -68,8 +68,14 @@
       "@store/*": [
         "src/store/*"
       ],
+      "@models": [
+        "src/types/index.ts"
+      ],
       "@models/*": [
         "src/types/*"
+      ],
+      "@utils": [
+        "src/utils/index.ts"
       ],
       "@validation": [
         "src/validation/index.ts"
