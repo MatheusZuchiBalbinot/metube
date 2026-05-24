@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as tus from 'tus-js-client';
-import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
@@ -17,6 +16,8 @@ import { UploadMode } from '@enums/uploadMode';
 import { UploadStatus } from '@enums/uploadStatus';
 import { useVideo, useTusUpload, useVideoProcessingPoll } from '@hooks';
 import { VideoStatus, type Tag } from '@models';
+import UploadPreview from './uploadPreview';
+import BatchItemRow from './batchItemRow';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,7 +33,7 @@ interface FormState {
     titleError: string | null
 }
 
-interface BatchItem {
+export interface BatchItem {
     id: string
     file: File
     title: string
@@ -577,34 +578,10 @@ export default function UploadModal() {
                     {hasPreview && (
                         <div className="upload-modal__field">
                             <label className="upload-modal__label">{t('video.preview')}</label>
-                            <div className="upload-modal__preview-strip">
-                                {form.thumbnailPreviewUrl !== null && (
-                                    <div className="upload-modal__preview-item">
-                                        <span className="upload-modal__preview-caption">
-                                            {t('video.upload_thumbnail')}
-                                        </span>
-                                        <img
-                                            className="upload-modal__preview-media"
-                                            src={form.thumbnailPreviewUrl}
-                                            alt={t('video.upload_thumbnail')}
-                                        />
-                                    </div>
-                                )}
-                                {form.videoObjectUrl !== null && (
-                                    <div className="upload-modal__preview-item">
-                                        <span className="upload-modal__preview-caption">
-                                            {t('video.upload_video_file')}
-                                        </span>
-                                        <video
-                                            className="upload-modal__preview-media"
-                                            src={form.videoObjectUrl}
-                                            controls
-                                            muted
-                                            preload="metadata"
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            <UploadPreview
+                                thumbnailPreviewUrl={form.thumbnailPreviewUrl}
+                                videoObjectUrl={form.videoObjectUrl}
+                            />
                         </div>
                     )}
 
@@ -670,48 +647,12 @@ export default function UploadModal() {
                     {batchHasItems && (
                         <div className="upload-modal__batch-list">
                             {batchItems.map(item => (
-                                <div key={item.id} className={`upload-modal__batch-item upload-modal__batch-item--${item.status}`}>
-                                    <div className="upload-modal__batch-item-body">
-                                        <Input
-                                            className="upload-modal__batch-title"
-                                            value={item.title}
-                                            onChange={e => updateBatchTitle(item.id, e.target.value)}
-                                            disabled={item.status !== 'pending'}
-                                            placeholder={t('video.upload_title')}
-                                        />
-                                        <span className="upload-modal__batch-filename">{item.file.name}</span>
-                                        {item.status === 'uploading' && (
-                                            <div className="upload-modal__batch-progress">
-                                                <div
-                                                    className="upload-modal__batch-progress-fill"
-                                                    style={{ width: `${item.progress}%` }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="upload-modal__batch-item-side">
-                                        {item.status === 'pending' && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="upload-modal__batch-remove"
-                                                onClick={() => removeBatchItem(item.id)}
-                                                aria-label={t('video.batch_remove')}
-                                            >
-                                                <Trash2 size={13} />
-                                            </Button>
-                                        )}
-                                        {item.status === 'uploading' && (
-                                            <span className="upload-modal__batch-pct">{Math.round(item.progress)}%</span>
-                                        )}
-                                        {item.status === 'done' && (
-                                            <CheckCircle2 size={16} className="upload-modal__batch-done" />
-                                        )}
-                                        {item.status === 'error' && (
-                                            <AlertCircle size={16} className="upload-modal__batch-error" />
-                                        )}
-                                    </div>
-                                </div>
+                                <BatchItemRow
+                                    key={item.id}
+                                    item={item}
+                                    onRemove={removeBatchItem}
+                                    onTitleChange={updateBatchTitle}
+                                />
                             ))}
                         </div>
                     )}
