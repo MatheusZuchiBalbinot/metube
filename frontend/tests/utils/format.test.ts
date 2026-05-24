@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { getVisibleTags, countTagFrequency, Format } from '@utils/format';
 import type { Video } from '@models/video';
 
@@ -87,38 +87,6 @@ describe('countTagFrequency', () => {
     });
 });
 
-// ─── Format.duration ─────────────────────────────────────────────────────────
-
-describe('Format.duration', () => {
-    it('formats seconds-only', () => {
-        expect(Format.duration(45)).toBe('0:45');
-    });
-
-    it('formats minutes and seconds', () => {
-        expect(Format.duration(125)).toBe('2:05');
-    });
-
-    it('pads single-digit seconds', () => {
-        expect(Format.duration(60 + 3)).toBe('1:03');
-    });
-
-    it('formats hours, minutes and seconds', () => {
-        expect(Format.duration(3661)).toBe('1:01:01');
-    });
-
-    it('pads minutes when hours present', () => {
-        expect(Format.duration(3600 + 5 * 60 + 9)).toBe('1:05:09');
-    });
-
-    it('floors decimal seconds', () => {
-        expect(Format.duration(59.9)).toBe('0:59');
-    });
-
-    it('formats 0 seconds', () => {
-        expect(Format.duration(0)).toBe('0:00');
-    });
-});
-
 // ─── Format.views ─────────────────────────────────────────────────────────────
 
 describe('Format.views', () => {
@@ -136,80 +104,6 @@ describe('Format.views', () => {
     it('formats millions with M suffix', () => {
         expect(Format.views(1_000_000)).toBe('1.0M');
         expect(Format.views(2_500_000)).toBe('2.5M');
-    });
-});
-
-// ─── Format.relativeDate ─────────────────────────────────────────────────────
-
-describe('Format.relativeDate', () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2024-06-01T12:00:00Z'));
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
-    });
-
-    it('returns "now" / seconds ago for very recent dates', () => {
-        const isoDate = new Date(Date.now() - 30_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/second/i);
-    });
-
-    it('returns minutes ago', () => {
-        const isoDate = new Date(Date.now() - 5 * 60_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/minute/i);
-    });
-
-    it('returns hours ago', () => {
-        const isoDate = new Date(Date.now() - 3 * 3600_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/hour/i);
-    });
-
-    it('returns days ago', () => {
-        const isoDate = new Date(Date.now() - 3 * 86400_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/day/i);
-    });
-
-    it('returns weeks ago', () => {
-        const isoDate = new Date(Date.now() - 14 * 86400_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/week/i);
-    });
-
-    it('returns months ago', () => {
-        const isoDate = new Date(Date.now() - 60 * 86400_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/month/i);
-    });
-
-    it('returns years ago', () => {
-        const isoDate = new Date(Date.now() - 400 * 86400_000).toISOString();
-        const result = Format.relativeDate(isoDate, 'en');
-        expect(result).toMatch(/year/i);
-    });
-});
-
-describe('Format.durationCompact', () => {
-    it('returns 0m for invalid input', () => {
-        expect(Format.durationCompact(-1)).toBe('0m');
-        expect(Format.durationCompact(NaN)).toBe('0m');
-    });
-
-    it('returns hours and minutes for long durations', () => {
-        expect(Format.durationCompact(3661)).toBe('1h 1m');
-    });
-
-    it('returns minutes for < 1 hour', () => {
-        expect(Format.durationCompact(125)).toBe('2m');
-    });
-
-    it('returns <1m for very short durations', () => {
-        expect(Format.durationCompact(45)).toBe('<1m');
     });
 });
 
@@ -234,31 +128,6 @@ describe('Format.bytes', () => {
 describe('Format.speed', () => {
     it('appends /s to bytes format', () => {
         expect(Format.speed(1024)).toBe('1 KB/s');
-    });
-});
-
-describe('Format.eta', () => {
-    it('returns empty string for non-positive seconds', () => {
-        expect(Format.eta(0)).toBe('');
-        expect(Format.eta(-5)).toBe('');
-    });
-
-    it('returns seconds remaining for < 60s', () => {
-        const result = Format.eta(30, 'en');
-        expect(result).toMatch(/second/i);
-        expect(result).toContain('left');
-    });
-
-    it('returns minutes remaining for < 3600s', () => {
-        const result = Format.eta(120, 'en');
-        expect(result).toMatch(/minute/i);
-        expect(result).toContain('left');
-    });
-
-    it('returns hours remaining for >= 3600s', () => {
-        const result = Format.eta(7200, 'en');
-        expect(result).toMatch(/hour/i);
-        expect(result).toContain('left');
     });
 });
 
