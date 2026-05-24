@@ -12,7 +12,7 @@ interface TagSection {
     videos: Video[]
 }
 
-export interface ProfileSections {
+export interface ProfileSectionsData {
     featured: Video | null
     latest: Video[]
     mostViewed: Video[]
@@ -23,7 +23,7 @@ export function useProfileSections(
     ownVideos: Video[],
     filterState: FilterState,
     pinnedVideo: Video | null,
-): ProfileSections | null {
+): ProfileSectionsData | null {
     return useMemo(() => {
         const isFiltered = !VideoFilter.isEmpty(filterState);
         const published = ownVideos.filter(v => domain.video.isPublished(v));
