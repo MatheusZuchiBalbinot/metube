@@ -1,13 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
-import { formatDuration, cn } from '@utils';
+import { Maximize, Minimize } from 'lucide-react';
+import { cn } from '@utils';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
-import PlayerSettings from './playerSettings';
-import PipButton from './pipButton';
-import TheaterButton from './theaterButton';
-import CaptionsButton from './captionsButton';
+import PlayerControlsBar from './playerControlsBar';
 import type { VideoPlayerProps } from './player';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import { PopIconType } from '@enums/popIconType';
@@ -41,7 +37,6 @@ export function DefaultVideoPlayer({
     onEnded,
     onLoadedMetadata,
 }: Omit<VideoPlayerProps, 'mode'>) {
-    const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -196,21 +191,6 @@ export function DefaultVideoPlayer({
         togglePiP();
     }
 
-    function getVolumeIcon() {
-        const isVolumeZero = isMuted || volume === 0;
-        const isVolumeLow = !isVolumeZero && volume < 0.5;
-
-        if (isVolumeZero) {
-            return <VolumeX size={16} />;
-        }
-
-        if (isVolumeLow) {
-            return <Volume1 size={16} />;
-        }
-
-        return <Volume2 size={16} />;
-    }
-
     // ─── Render ───────────────────────────────────────────────────────────────
 
     const wrapClass = cn(
@@ -268,87 +248,37 @@ export function DefaultVideoPlayer({
                     onDraggingChange={setIsDragging}
                 />
 
-                <div className="vp__bar" onClick={handleBarClick}>
-                    <div className="vp__bar-left">
-                        <button
-                            className="vp__btn"
-                            onClick={handleTogglePlayBtn}
-                            title={isPlaying ? t('player.pause') : t('player.play')}
-                            aria-label={isPlaying ? t('player.pause') : t('player.play')}
-                        >
-                            {isPlaying
-                                ? <Pause size={18} fill="white" strokeWidth={0} />
-                                : <Play size={18} fill="white" strokeWidth={0} />
-                            }
-                        </button>
-
-                        <div className="vp__volume" onClick={handleBarClick}>
-                            <button
-                                className="vp__btn"
-                                onClick={handleToggleMute}
-                                title={isMuted ? t('player.unmute') : t('player.mute')}
-                                aria-label={isMuted ? t('player.unmute') : t('player.mute')}
-                            >
-                                {getVolumeIcon()}
-                            </button>
-                            <input
-                                type="range"
-                                className="vp__volume-slider"
-                                min="0" max="1" step="0.05"
-                                value={isMuted ? 0 : volume}
-                                onChange={handleVolumeChange}
-                                aria-label={t('player.volume')}
-                                style={{ '--vol': isMuted ? '0%' : `${volume * 100}%` } as React.CSSProperties}
-                            />
-                        </div>
-
-                        <span className="vp__time">
-                            {formatDuration(currentTime)} / {formatDuration(duration)}
-                        </span>
-                    </div>
-
-                    <div className="vp__bar-right">
-                        <CaptionsButton
-                            captions={captions}
-                            activeTrack={activeTrack}
-                            onSelect={setActiveTrack}
-                        />
-
-                        <PlayerSettings
-                            playbackRate={playbackRate}
-                            showSettings={showSettings}
-                            settingsRef={settingsRef}
-                            onToggle={handleToggleSettings}
-                            onSpeedChange={handleSpeedChange}
-                            levels={levels}
-                            currentQuality={currentQuality}
-                            onQualityChange={handleQualityChange}
-                        />
-
-                        <PipButton
-                            isActive={isPiP}
-                            isSupported={isPiPSupported}
-                            onClick={handlePipBtn}
-                        />
-
-                        {onTheaterToggle !== undefined && (
-                            <TheaterButton
-                                isTheater={isTheaterMode}
-                                onClick={handleTheaterBtn}
-                            />
-                        )}
-
-                        <button
-                            className="vp__btn"
-                            onClick={handleFullscreenBtn}
-                            title={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
-                            aria-label={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
-                            aria-pressed={isFullscreen}
-                        >
-                            {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-                        </button>
-                    </div>
-                </div>
+                <PlayerControlsBar
+                    isPlaying={isPlaying}
+                    currentTime={currentTime}
+                    duration={duration}
+                    volume={volume}
+                    isMuted={isMuted}
+                    playbackRate={playbackRate}
+                    isFullscreen={isFullscreen}
+                    isTheaterMode={isTheaterMode}
+                    isPiP={isPiP}
+                    isPiPSupported={isPiPSupported}
+                    showSettings={showSettings}
+                    settingsRef={settingsRef}
+                    captions={captions}
+                    activeTrack={activeTrack}
+                    levels={levels}
+                    currentQuality={currentQuality}
+                    onBarClick={handleBarClick}
+                    onTogglePlay={handleTogglePlayBtn}
+                    onToggleMute={handleToggleMute}
+                    onVolumeChange={handleVolumeChange}
+                    onToggleSettings={handleToggleSettings}
+                    onSpeedChange={handleSpeedChange}
+                    onQualityChange={handleQualityChange}
+                    onPip={handlePipBtn}
+                    onTheater={handleTheaterBtn}
+                    onFullscreen={handleFullscreenBtn}
+                    onCaptionSelect={setActiveTrack}
+                    showTheaterButton={onTheaterToggle !== undefined}
+                    fullscreenIcon={isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                />
             </div>
         </div>
     );
