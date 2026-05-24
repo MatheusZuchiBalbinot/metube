@@ -1,12 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Pencil, Upload, VideoOff, Pin, Flame, Hash, Clock } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { domain } from '@domain';
-import { comments as commentsApi } from '@api';
-import { toVuid } from '@api';
 import { Avatar, Button, Tooltip } from '@ui';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
@@ -15,10 +13,13 @@ import { useAuth, useVideo, useProfileVideos } from '@hooks';
 import { useAppSelector } from '@store';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
 import { VideoFilter, SortBy, videoUrl, type FilterState } from '@utils';
-import type { Video, VideoId, Tag, Comment } from '@models';
+import type { Video, Tag, VideoId } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
 import { useEditProfileModal } from './hooks/useEditProfileModal';
 import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
+import { useSpotlightComments } from './hooks/useSpotlightComments';
+import { useProfileSections } from './hooks/useProfileSections';
+import { useProfileStats } from './hooks/useProfileStats';
 import EditVideoModal from './components/EditVideoModal';
 import EditProfileModal from './components/EditProfileModal';
 import DeleteVideoModal from './components/DeleteVideoModal';
@@ -26,17 +27,6 @@ import ProfileStats from './components/ProfileStats';
 import ProfileCoverStory from './components/ProfileCoverStory';
 import ProfileDiamondTiers from './components/ProfileDiamondTiers';
 import ProfileTopicGrid from './components/ProfileTopicGrid';
-
-function formatWatchTime(seconds: number): string {
-    const totalMinutes = Math.floor(seconds / 60);
-    const isLessThanHour = totalMinutes < 60;
-    if (isLessThanHour) {
-        return `${totalMinutes}m`;
-    }
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours}h ${minutes}m`;
-}
 
 export default function ProfilePage() {
     const { t } = useTranslation();
@@ -56,7 +46,6 @@ export default function ProfilePage() {
     const watchedTagFrequency = useAppSelector(selectWatchedTagFrequency);
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
-    const [spotlightComments, setSpotlightComments] = useState<Comment[]>([]);
 
     const {
         editingVideo, editTitle, editDescription, editTags,
@@ -108,54 +97,19 @@ export default function ProfilePage() {
     const allVideosRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
-    const SECTIONS_THRESHOLD = 8;
-    const sections = useMemo(() => {
-        const isFiltered = !VideoFilter.isEmpty(filterState);
-        const published = ownVideos.filter(v => domain.video.isPublished(v));
-        const hasEnough = published.length >= SECTIONS_THRESHOLD;
+    const sections = useProfileSections(ownVideos, filterState, pinnedVideo);
+    const stats = useProfileStats({ isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency });
+    const spotlightComments = useSpotlightComments(sections?.featured?.id ?? null);
 
-        if (isFiltered || !hasEnough) {
-            return null;
-        }
+    const navigateToVideo = useCallback(
+        (id: VideoId) => navigate(videoUrl(id)),
+        [navigate],
+    );
 
-        const featured = pinnedVideo
-            ?? [...published].sort((a, b) => b.views - a.views)[0]
-            ?? null;
-
-        const latest = [...published]
-            .sort((a, b) => new Date(b.publishedAt ?? b.createdAt).getTime() - new Date(a.publishedAt ?? a.createdAt).getTime())
-            .filter(v => v.id !== featured?.id)
-            .slice(0, 5);
-
-        const mostViewed = [...published]
-            .sort((a, b) => b.views - a.views)
-            .filter(v => v.id !== featured?.id)
-            .slice(0, 6);
-
-        const tagCounts = new Map<Tag, number>();
-        for (const video of published) {
-            for (const tag of video.tags) {
-                const isShorts = tag === 'shorts';
-                if (!isShorts) {
-                    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-                }
-            }
-        }
-        const tagSections = [...tagCounts.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 4)
-            .filter(([, count]) => count >= 2)
-            .map(([tag, count]) => ({
-                tag,
-                count,
-                videos: published
-                    .filter(v => v.tags.includes(tag))
-                    .sort((a, b) => b.views - a.views)
-                    .slice(0, 3),
-            }));
-
-        return { featured, latest, mostViewed, tagSections };
-    }, [ownVideos, filterState, pinnedVideo]);
+    const handleDelete = useCallback(
+        (id: VideoId) => handleDeleteById(id, ownVideos),
+        [handleDeleteById, ownVideos],
+    );
 
     function scrollToAllVideos(newFilter?: Partial<FilterState>) {
         if (newFilter) {
@@ -167,66 +121,21 @@ export default function ProfilePage() {
         }, 50);
     }
 
-    const featuredId = sections?.featured?.id ?? null;
+    function handleCoverWatchClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        const featuredVideoId = sections?.featured?.id;
+        const hasFeaturedVideoId = featuredVideoId !== undefined;
 
-    useEffect(() => {
-        const isNoFeatured = featuredId === null;
-        if (isNoFeatured) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSpotlightComments([]);
-            return;
+        if (hasFeaturedVideoId) {
+            navigate(videoUrl(featuredVideoId));
         }
-        commentsApi.list(toVuid(featuredId), { page: 1 }).then(res => {
-            if (res.ok) {
-                setSpotlightComments(res.data.data.slice(0, 2));
-            }
-        });
-    }, [featuredId]);
+    }
 
     const channelName = isOwnProfile
         ? (user?.name ?? '')
         : (ownVideos[0]?.channel ?? idParam ?? '');
 
     const profileBio = isOwnProfile ? (user?.bio ?? '') : '';
-
-    // ─── Personal stats (own profile only) ────────────────────────────────────
-    const stats = useMemo(() => {
-        const isNotOwn = !isOwnProfile;
-        if (isNotOwn) {
-            return null;
-        }
-
-        const videosWatched = watchHistory.length;
-
-        // VISUAL-11: accurate watch time using video duration
-        const totalWatchSeconds = watchHistory.reduce((sum: number, id: VideoId) => {
-            const video = videos.find((v: Video) => v.id === id);
-            const duration = video?.duration ?? 600;
-            const progress = videoProgress[id] ?? 0;
-            return sum + (progress / 100) * duration;
-        }, 0);
-
-        const watchTimeStr = formatWatchTime(totalWatchSeconds);
-
-        const topTags = [...watchedTagFrequency.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 3)
-            .map(([tag]) => tag);
-
-        const likedCount = likedVideos.size;
-
-        return { videosWatched, watchTimeStr, topTags, likedCount };
-    }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency]);
-
-    function handleCoverWatchClick(e: React.MouseEvent) {
-        e.stopPropagation();
-        const featuredVideoId = sections?.featured?.id;
-        const hasFeaturedVideoId = featuredVideoId !== undefined;
-        if (hasFeaturedVideoId) {
-            navigate(videoUrl(featuredVideoId));
-        }
-    }
-
     const hasVideos = filteredVideos.length > 0;
 
     return (
@@ -275,7 +184,6 @@ export default function ProfilePage() {
                     )}
 
                     {stats && <ProfileStats stats={stats} />}
-
                 </div>
             </div>
 
@@ -289,17 +197,15 @@ export default function ProfilePage() {
 
             {sections !== null && !isLoadingVideos && (
                 <div className="profile-page__sections">
-                    {/* ─── Cover Story ─── */}
                     {sections.featured !== null && (
                         <ProfileCoverStory
                             featured={sections.featured}
                             spotlightComments={spotlightComments}
-                            onNavigate={id => navigate(videoUrl(id))}
+                            onNavigate={navigateToVideo}
                             onWatchClick={handleCoverWatchClick}
                         />
                     )}
 
-                    {/* ─── Latest Uploads (asymmetric 5-up mosaic) ─── */}
                     {sections.latest.length > 0 && (
                         <div className="profile-page__section">
                             <div className="profile-page__section-header">
@@ -313,13 +219,12 @@ export default function ProfilePage() {
                             </div>
                             <div className="profile-page__latest-grid">
                                 {sections.latest.map(video => (
-                                    <VideoCard key={video.id} video={video} showActions={isOwnProfile} onEdit={handleEditOpen} onDelete={id => handleDeleteById(id, ownVideos)} />
+                                    <VideoCard key={video.id} video={video} showActions={isOwnProfile} onEdit={handleEditOpen} onDelete={handleDelete} />
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* ─── Top Videos (diamond pyramid) ─── */}
                     {sections.mostViewed.length >= 1 && (
                         <div className="profile-page__section">
                             <div className="profile-page__section-header">
@@ -333,12 +238,11 @@ export default function ProfilePage() {
                             </div>
                             <ProfileDiamondTiers
                                 videos={sections.mostViewed}
-                                onNavigate={id => navigate(videoUrl(id))}
+                                onNavigate={navigateToVideo}
                             />
                         </div>
                     )}
 
-                    {/* ─── By Topic (magazine covers) ─── */}
                     {sections.tagSections.length > 0 && (
                         <div className="profile-page__section">
                             <div className="profile-page__section-header">
@@ -400,7 +304,7 @@ export default function ProfilePage() {
                                     video={pinnedVideo}
                                     showActions={true}
                                     onEdit={handleEditOpen}
-                                    onDelete={id => handleDeleteById(id, ownVideos)}
+                                    onDelete={handleDelete}
                                 />
                             </div>
                         </div>
@@ -424,13 +328,14 @@ export default function ProfilePage() {
                                         index={i}
                                         showActions={isOwnProfile}
                                         onEdit={handleEditOpen}
-                                        onDelete={id => handleDeleteById(id, ownVideos)}
+                                        onDelete={handleDelete}
                                     />
                                 </div>
                             );
                         })}
                     </div>
                 )}
+
                 {!isLoadingVideos && !hasVideos && (
                     <EmptyState
                         icon={<VideoOff size={36} strokeWidth={1.5} />}
