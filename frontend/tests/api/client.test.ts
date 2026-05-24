@@ -2,7 +2,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '@api/client';
 
-// Spy on the axios instance methods directly through the exposed getter
 const axiosInstance = apiClient.getAxiosInstance();
 
 beforeEach(() => {
@@ -38,48 +37,48 @@ function mockAxiosDelete(data: unknown, status = 204) {
 }
 
 describe('ApiClient.get', () => {
-    it('returns data on successful GET', async () => {
+    it('returns ok result with data on successful GET', async () => {
         mockAxiosGet({ id: 1, name: 'Alice' });
         const result = await apiClient.get('/test');
-        expect(result).toEqual({ id: 1, name: 'Alice' });
+        expect(result).toEqual({ ok: true, data: { id: 1, name: 'Alice' } });
     });
 
-    it('returns null for empty object response', async () => {
+    it('returns ok:false for empty object response', async () => {
         mockAxiosGet({});
         const result = await apiClient.get('/empty');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns null on network error', async () => {
+    it('returns ok:false on network error', async () => {
         mockAxiosGetError(new Error('Network error'));
         const result = await apiClient.get('/fail');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns array responses (valid even if empty)', async () => {
+    it('returns array responses as ok (valid even if empty)', async () => {
         mockAxiosGet([]);
         const result = await apiClient.get('/list');
-        expect(result).toEqual([]);
+        expect(result).toEqual({ ok: true, data: [] });
     });
 });
 
 describe('ApiClient.post', () => {
-    it('returns data on successful POST', async () => {
+    it('returns ok result with data on successful POST', async () => {
         mockAxiosPost({ created: true });
         const result = await apiClient.post('/post', { name: 'x' });
-        expect(result).toEqual({ created: true });
+        expect(result).toEqual({ ok: true, data: { created: true } });
     });
 
-    it('returns null on POST failure', async () => {
+    it('returns ok:false on POST failure', async () => {
         mockAxiosPostError(new Error('Server error'));
         const result = await apiClient.post('/fail');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns null when POST response is empty object', async () => {
+    it('returns ok:false when POST response is empty object', async () => {
         mockAxiosPost({});
         const result = await apiClient.post('/empty');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
@@ -98,128 +97,128 @@ describe('ApiClient.postEmpty', () => {
 });
 
 describe('ApiClient.patch', () => {
-    it('returns data on successful PATCH', async () => {
+    it('returns ok result with data on successful PATCH', async () => {
         mockAxiosPatch({ updated: true });
         const result = await apiClient.patch('/item/1', {});
-        expect(result).toEqual({ updated: true });
+        expect(result).toEqual({ ok: true, data: { updated: true } });
     });
 
-    it('returns null on PATCH failure', async () => {
+    it('returns ok:false on PATCH failure', async () => {
         vi.spyOn(axiosInstance, 'patch').mockRejectedValue(new Error('422'));
         const result = await apiClient.patch('/item/1');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns null for empty response', async () => {
+    it('returns ok:false for empty response', async () => {
         mockAxiosPatch({});
         const result = await apiClient.patch('/item/1');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.put', () => {
-    it('returns data on successful PUT', async () => {
-        mockAxiosPut({ ok: true });
+    it('returns ok result with data on successful PUT', async () => {
+        mockAxiosPut({ status: 'active' });
         const result = await apiClient.put('/item/1', {});
-        expect(result).toEqual({ ok: true });
+        expect(result).toEqual({ ok: true, data: { status: 'active' } });
     });
 
-    it('returns null on PUT failure', async () => {
+    it('returns ok:false on PUT failure', async () => {
         vi.spyOn(axiosInstance, 'put').mockRejectedValue(new Error('500'));
         const result = await apiClient.put('/item/1');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns null for empty PUT response', async () => {
+    it('returns ok:false for empty PUT response', async () => {
         mockAxiosPut({});
         const result = await apiClient.put('/item/1');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.delete', () => {
-    it('returns null for 204 (no content)', async () => {
+    it('returns ok:true with undefined data for 204 (no content)', async () => {
         mockAxiosDelete(null);
         const result = await apiClient.delete('/item/1');
-        expect(result).toBeNull();
+        expect(result).toEqual({ ok: true, data: undefined });
     });
 
-    it('returns null on DELETE failure', async () => {
+    it('returns ok:false on DELETE failure', async () => {
         vi.spyOn(axiosInstance, 'delete').mockRejectedValue(new Error('403'));
         const result = await apiClient.delete('/item/1');
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.getValidated', () => {
-    it('parses and returns valid response', async () => {
+    it('parses and returns ok result with parsed data', async () => {
         mockAxiosGet({ foo: 'bar' });
         const parse = vi.fn((raw: unknown) => ({ parsed: (raw as Record<string, string>).foo }));
         const result = await apiClient.getValidated('/validated', parse);
-        expect(result).toEqual({ parsed: 'bar' });
+        expect(result).toEqual({ ok: true, data: { parsed: 'bar' } });
         expect(parse).toHaveBeenCalled();
     });
 
-    it('returns null when get returns null', async () => {
+    it('returns ok:false when get fails', async () => {
         mockAxiosGetError(new Error('network'));
         const parse = vi.fn(() => ({ ok: true }));
         const result = await apiClient.getValidated('/null', parse);
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
         expect(parse).not.toHaveBeenCalled();
     });
 
-    it('returns null when parse returns null', async () => {
+    it('returns ok:false when parse returns null', async () => {
         mockAxiosGet({ x: 1 });
         const result = await apiClient.getValidated('/bad-shape', () => null);
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.postValidated', () => {
-    it('parses and returns valid response', async () => {
+    it('parses and returns ok result with parsed data', async () => {
         mockAxiosPost({ id: 42 });
         const parse = vi.fn((raw: unknown) => ({ id: (raw as Record<string, number>).id }));
         const result = await apiClient.postValidated('/create', parse, {});
-        expect(result).toEqual({ id: 42 });
+        expect(result).toEqual({ ok: true, data: { id: 42 } });
     });
 
-    it('returns null when parse fails', async () => {
+    it('returns ok:false when parse fails', async () => {
         mockAxiosPost({ id: 1 });
         const result = await apiClient.postValidated('/bad', () => null, {});
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 
-    it('returns null when post fails', async () => {
+    it('returns ok:false when post fails', async () => {
         mockAxiosPostError(new Error('fail'));
         const result = await apiClient.postValidated('/fail', v => v, {});
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.patchValidated', () => {
-    it('returns parsed result on success', async () => {
+    it('returns ok result with parsed data on success', async () => {
         mockAxiosPatch({ name: 'new' });
         const result = await apiClient.patchValidated('/update', (raw: unknown) => (raw as Record<string, string>).name, {});
-        expect(result).toBe('new');
+        expect(result).toEqual({ ok: true, data: 'new' });
     });
 
-    it('returns null when patch fails', async () => {
+    it('returns ok:false when patch fails', async () => {
         vi.spyOn(axiosInstance, 'patch').mockRejectedValue(new Error('fail'));
         const result = await apiClient.patchValidated('/fail', v => v, {});
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });
 
 describe('ApiClient.putValidated', () => {
-    it('returns parsed result on success', async () => {
+    it('returns ok result with parsed data on success', async () => {
         mockAxiosPut({ status: 'ok' });
         const result = await apiClient.putValidated('/replace', (raw: unknown) => (raw as Record<string, string>).status, {});
-        expect(result).toBe('ok');
+        expect(result).toEqual({ ok: true, data: 'ok' });
     });
 
-    it('returns null when put fails', async () => {
+    it('returns ok:false when put fails', async () => {
         vi.spyOn(axiosInstance, 'put').mockRejectedValue(new Error('fail'));
         const result = await apiClient.putValidated('/fail', v => v, {});
-        expect(result).toBeNull();
+        expect(result.ok).toBe(false);
     });
 });

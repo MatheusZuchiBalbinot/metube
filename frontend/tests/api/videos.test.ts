@@ -135,7 +135,7 @@ describe('VideoApi', () => {
 
     describe('recommendations', () => {
         it('calls getValidated on /recommendations with page param', async () => {
-            vi.mocked(apiClient.getValidated).mockResolvedValue(null);
+            vi.mocked(apiClient.getValidated).mockResolvedValue({ ok: false, error: 'fail' });
             await video.recommendations(3);
             expect(apiClient.getValidated).toHaveBeenCalledWith(
                 '/recommendations',
@@ -145,7 +145,7 @@ describe('VideoApi', () => {
         });
 
         it('defaults to page 1', async () => {
-            vi.mocked(apiClient.getValidated).mockResolvedValue(null);
+            vi.mocked(apiClient.getValidated).mockResolvedValue({ ok: false, error: 'fail' });
             await video.recommendations();
             expect(apiClient.getValidated).toHaveBeenCalledWith(
                 '/recommendations',
@@ -154,8 +154,8 @@ describe('VideoApi', () => {
             );
         });
 
-        it('returns empty array when response is null', async () => {
-            vi.mocked(apiClient.getValidated).mockResolvedValue(null);
+        it('returns empty array when response fails', async () => {
+            vi.mocked(apiClient.getValidated).mockResolvedValue({ ok: false, error: 'fail' });
             const result = await video.recommendations();
             expect(result).toEqual([]);
         });

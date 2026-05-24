@@ -78,7 +78,7 @@ describe('useAuth', () => {
     });
 
     it('signIn dispatches signInThunk and calls getCsrfCookie + login', async () => {
-        vi.mocked(auth.login).mockResolvedValue({ user: makeUser() });
+        vi.mocked(auth.login).mockResolvedValue({ ok: true, data: { user: makeUser() } });
         const store = makeStore();
         const { result } = renderHook(() => useAuth(), { wrapper: wrapper(store) });
 
@@ -92,7 +92,7 @@ describe('useAuth', () => {
 
     it('signIn sets user in store on success', async () => {
         const user = makeUser({ name: 'Alice' });
-        vi.mocked(auth.login).mockResolvedValue({ user });
+        vi.mocked(auth.login).mockResolvedValue({ ok: true, data: { user } });
         const store = makeStore();
         const { result } = renderHook(() => useAuth(), { wrapper: wrapper(store) });
 
@@ -133,7 +133,7 @@ import { act as actNative } from '@testing-library/react';
 
 describe('fetchMe thunk', () => {
     it('fetches CSRF and calls auth.me', async () => {
-        vi.mocked(auth.me).mockResolvedValue(makeUser());
+        vi.mocked(auth.me).mockResolvedValue({ ok: true, data: makeUser() });
         const store = makeStore();
 
         await actNative(async () => {

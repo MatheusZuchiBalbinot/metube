@@ -11,6 +11,9 @@ vi.mock('@api/client', () => ({
     },
 }));
 
+const ok = <T>(data: T) => ({ ok: true as const, data });
+const fail = () => ({ ok: false as const, error: 'fail' });
+
 beforeEach(() => {
     vi.clearAllMocks();
 });
@@ -18,13 +21,13 @@ beforeEach(() => {
 describe('NotificationsApi', () => {
     describe('list', () => {
         it('calls get on /notifications?page=1 by default', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+            vi.mocked(apiClient.get).mockResolvedValue(ok({ data: [], meta: { current_page: 1, last_page: 1 } }));
             await notifications.list();
             expect(apiClient.get).toHaveBeenCalledWith('/notifications?page=1');
         });
 
         it('uses provided page number', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+            vi.mocked(apiClient.get).mockResolvedValue(ok({ data: [], meta: { current_page: 3, last_page: 5 } }));
             await notifications.list(3);
             expect(apiClient.get).toHaveBeenCalledWith('/notifications?page=3');
         });
@@ -32,13 +35,13 @@ describe('NotificationsApi', () => {
 
     describe('unreadCount', () => {
         it('returns count from response', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue({ count: 5 });
+            vi.mocked(apiClient.get).mockResolvedValue(ok({ count: 5 }));
             const result = await notifications.unreadCount();
             expect(result).toBe(5);
         });
 
-        it('returns 0 when response is null', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+        it('returns 0 when response fails', async () => {
+            vi.mocked(apiClient.get).mockResolvedValue(fail());
             const result = await notifications.unreadCount();
             expect(result).toBe(0);
         });
@@ -46,7 +49,7 @@ describe('NotificationsApi', () => {
 
     describe('markRead', () => {
         it('posts to /notifications/:id/read', async () => {
-            vi.mocked(apiClient.post).mockResolvedValue(null);
+            vi.mocked(apiClient.post).mockResolvedValue(ok(null));
             await notifications.markRead('notif-001');
             expect(apiClient.post).toHaveBeenCalledWith('/notifications/notif-001/read');
         });
@@ -54,7 +57,7 @@ describe('NotificationsApi', () => {
 
     describe('markAllRead', () => {
         it('posts to /notifications/read-all', async () => {
-            vi.mocked(apiClient.post).mockResolvedValue(null);
+            vi.mocked(apiClient.post).mockResolvedValue(ok(null));
             await notifications.markAllRead();
             expect(apiClient.post).toHaveBeenCalledWith('/notifications/read-all');
         });
@@ -62,7 +65,7 @@ describe('NotificationsApi', () => {
 
     describe('remove', () => {
         it('deletes /notifications/:id', async () => {
-            vi.mocked(apiClient.delete).mockResolvedValue(null);
+            vi.mocked(apiClient.delete).mockResolvedValue(ok(undefined));
             await notifications.remove('notif-001');
             expect(apiClient.delete).toHaveBeenCalledWith('/notifications/notif-001');
         });
