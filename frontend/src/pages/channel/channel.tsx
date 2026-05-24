@@ -14,8 +14,11 @@ import { toVuid } from '@api';
 import './channel.css';
 import { ToastType } from '@enums/toastType';
 import { useVideo, useSubscription } from '@hooks';
-import { Format, VideoFilter, SortBy, TagColors, videoUrl, formatRelativeDate, cn } from '@utils';
+import { Format, VideoFilter, SortBy, videoUrl, cn } from '@utils';
 import type { Tag, Comment, ChannelId } from '@models';
+import ChannelCoverStory from './components/ChannelCoverStory';
+import ChannelDiamondTiers from './components/ChannelDiamondTiers';
+import ChannelTopicGrid from './components/ChannelTopicGrid';
 
 const TOP_TAGS_COUNT = 4;
 const SECTIONS_THRESHOLD = 8;
@@ -252,65 +255,12 @@ export default function ChannelPage() {
                 <div className="channel-page__sections">
                     {/* ─── Cover Story ─── */}
                     {sections.featured !== null && (
-                        <div
-                            className="channel-page__cover"
-                            style={{ backgroundImage: `url(${sections.featured.thumbnail})` }}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={sections.featured.title}
-                            onClick={() => navigate(videoUrl(sections.featured!.id))}
-                            onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.featured!.id))}
-                        >
-                            <div className="channel-page__cover-content">
-                                <span className="channel-page__cover-badge">{t('channel.cover_badge')}</span>
-                                <h2 className="channel-page__cover-title">{sections.featured.title}</h2>
-                                <div className="channel-page__cover-meta">
-                                    <Eye size={13} />
-                                    {Format.views(sections.featured.views)} {t('video.views')}
-                                    {sections.featured.publishedAt && (
-                                        <>
-                                            <span className="channel-page__cover-sep" />
-                                            {formatRelativeDate(sections.featured.publishedAt)}
-                                        </>
-                                    )}
-                                </div>
-                                {sections.featured.tags.length > 0 && (
-                                    <div className="channel-page__cover-tags">
-                                        {sections.featured.tags.slice(0, 4).map(tag => {
-                                            const palette = TagColors.palette(tag as string);
-                                            const tagStyle = { background: palette.bg, color: palette.color };
-                                            return (
-                                                <span key={tag as string} className="channel-page__cover-tag" style={tagStyle}>
-                                                    {tag as string}
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                                {spotlightComments.length > 0 && (
-                                    <>
-                                        <div className="channel-page__cover-divider" />
-                                        <div className="channel-page__cover-comments">
-                                            {spotlightComments.map(c => (
-                                                <p key={c.id} className="channel-page__cover-comment-text">
-                                                    "{c.content}" — {c.author.name}
-                                                </p>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                                <div className="channel-page__cover-bottom">
-                                    <button
-                                        type="button"
-                                        className="channel-page__cover-watch btn btn--primary btn--sm"
-                                        onClick={handleCoverWatchClick}
-                                    >
-                                        <Play size={13} fill="currentColor" />
-                                        {t('video.watch_now')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <ChannelCoverStory
+                            featured={sections.featured}
+                            spotlightComments={spotlightComments}
+                            onNavigate={id => navigate(videoUrl(id))}
+                            onWatchClick={handleCoverWatchClick}
+                        />
                     )}
 
                     {/* ─── Latest Uploads (asymmetric 5-up mosaic) ─── */}
@@ -345,70 +295,10 @@ export default function ChannelPage() {
                                     {t('channel.see_all')}
                                 </button>
                             </div>
-                            <div className="channel-page__diamond-tiers">
-                                <div className="channel-page__diamond-tier">
-                                    <div
-                                        className="channel-page__diamond"
-                                        style={{ backgroundImage: `url(${sections.mostViewed[0].thumbnail})` }}
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => navigate(videoUrl(sections.mostViewed[0].id))}
-                                        onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.mostViewed[0].id))}
-                                    >
-                                        <div className="channel-page__diamond-overlay">
-                                            <div className="channel-page__diamond-info">
-                                                <span className="channel-page__diamond-rank">#1</span>
-                                                <span className="channel-page__diamond-title">{sections.mostViewed[0].title}</span>
-                                                <span className="channel-page__diamond-views">{Format.views(sections.mostViewed[0].views)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {sections.mostViewed.length >= 3 && (
-                                    <div className="channel-page__diamond-tier">
-                                        {sections.mostViewed.slice(1, 3).map((video, i) => (
-                                            <div
-                                                key={video.id}
-                                                className="channel-page__diamond"
-                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={() => navigate(videoUrl(video.id))}
-                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
-                                            >
-                                                <div className="channel-page__diamond-overlay">
-                                                    <div className="channel-page__diamond-info">
-                                                        <span className="channel-page__diamond-rank">#{i + 2}</span>
-                                                        <span className="channel-page__diamond-title">{video.title}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {sections.mostViewed.length >= 6 && (
-                                    <div className="channel-page__diamond-tier">
-                                        {sections.mostViewed.slice(3, 6).map((video, i) => (
-                                            <div
-                                                key={video.id}
-                                                className="channel-page__diamond"
-                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={() => navigate(videoUrl(video.id))}
-                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
-                                            >
-                                                <div className="channel-page__diamond-overlay">
-                                                    <div className="channel-page__diamond-info">
-                                                        <span className="channel-page__diamond-rank">#{i + 4}</span>
-                                                        <span className="channel-page__diamond-title">{video.title}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <ChannelDiamondTiers
+                                videos={sections.mostViewed}
+                                onNavigate={id => navigate(videoUrl(id))}
+                            />
                         </div>
                     )}
 
@@ -421,46 +311,10 @@ export default function ChannelPage() {
                                     {t('channel.by_topic')}
                                 </h3>
                             </div>
-                            <div className="channel-page__topics">
-                                {sections.tagSections.map(({ tag, count, videos: tagVideos }) => {
-                                    const coverThumb = tagVideos[0]?.thumbnail ?? '';
-                                    return (
-                                        <div
-                                            key={tag}
-                                            className="channel-page__topic-cover"
-                                            style={{ backgroundImage: `url(${coverThumb})` }}
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => scrollToAllVideos({ tags: [tag] })}
-                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag] })}
-                                        >
-                                            <div className="channel-page__topic-cover-content">
-                                                <span className="channel-page__topic-cover-tag">#{tag}</span>
-                                                <span className="channel-page__topic-cover-count">
-                                                    {t('channel.topic_videos', { count })}
-                                                </span>
-                                                <div className="channel-page__topic-cover-list">
-                                                    {tagVideos.map(v => (
-                                                        <span key={v.id} className="channel-page__topic-cover-item">{v.title}</span>
-                                                    ))}
-                                                </div>
-                                                <div className="channel-page__topic-cover-footer">
-                                                    <button
-                                                        type="button"
-                                                        className="channel-page__topic-cover-see-all"
-                                                        onClick={e => {
-                                                            e.stopPropagation();
-                                                            scrollToAllVideos({ tags: [tag] });
-                                                        }}
-                                                    >
-                                                        {t('channel.see_all')} →
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            <ChannelTopicGrid
+                                tagSections={sections.tagSections}
+                                onSelectTag={tag => scrollToAllVideos({ tags: [tag] })}
+                            />
                         </div>
                     )}
                 </div>
