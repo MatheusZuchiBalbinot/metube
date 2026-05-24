@@ -1,5 +1,5 @@
-import type { VideoChapter } from '@api/videos';
-import type { VideoCaption } from '@models/video';
+import type { VideoChapter } from '@api';
+import type { VideoCaption } from '@models';
 import { DefaultVideoPlayer } from './playerDefault';
 import { MiniVideoPlayer } from './playerMini';
 import './player.css';

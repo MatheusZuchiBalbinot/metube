@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
-import { ROUTES, videoUrl } from '@utils/routes';
+import { ROUTES, videoUrl } from '@utils';
 import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';

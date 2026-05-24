@@ -16,3 +16,10 @@ export type PopIcon = {
 };
 
 export const KEYBOARD_SKIP_SECONDS = 5 as const;
+
+export interface ShakaLevel {
+    index: number;
+    height: number;
+    bitrate: number;
+    label: string;
+}

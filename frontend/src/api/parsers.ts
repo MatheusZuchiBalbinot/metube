@@ -1,11 +1,4 @@
-import type { Video, VideoId, VideoCaption, VideoStatus } from '@models/video';
-import type { Seconds, ViewCount } from '@models/units';
-import type { User, UserId } from '@models/user';
-import type { ChannelId } from '@models/channel';
-import type { Comment, Cuid, CommentVersion } from '@models/comment';
-import type { Playlist, PlaylistId } from '@models/playlist';
-import type { Tag } from '@models/tag';
-import type { PaginatedResponse } from '@models/common';
+import type { Video, VideoId, VideoCaption, VideoStatus, Seconds, ViewCount, User, UserId, ChannelId, Comment, Cuid, CommentVersion, Playlist, PlaylistId, Tag, PaginatedResponse } from '@models';
 
 // ─── Shared types ──────────────────────────────────────────────────────────────
 

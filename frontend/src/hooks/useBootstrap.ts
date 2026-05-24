@@ -2,12 +2,9 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { playlistActions } from '@store/playlistSlice';
-import { video } from '@api/videos';
-import { interactions } from '@api/interactions';
-import { playlist } from '@api/playlists';
-import { history } from '@api/history';
-import { VideoStatus } from '@models/video';
-import { mergeProgress } from '@utils/mergeProgress';
+import { video, interactions, playlist, history } from '@api';
+import { VideoStatus } from '@models';
+import { mergeProgress } from '@utils';
 import { useAuth } from '@hooks';
 
 export function useBootstrap(): void {
@@ -21,20 +18,20 @@ export function useBootstrap(): void {
         }
 
         video.list({ status: VideoStatus.PUBLISHED }).then(result => {
-            if (result) {
-                dispatch(videoActions.setVideos(result.data));
+            if (result.ok) {
+                dispatch(videoActions.setVideos(result.data.data));
             }
         });
 
         interactions.liked().then(result => {
-            if (result) {
-                dispatch(videoActions.setLikedVideos(result.data.map(v => v.id)));
+            if (result.ok) {
+                dispatch(videoActions.setLikedVideos(result.data.data.map(v => v.id)));
             }
         });
 
         playlist.list().then(result => {
-            if (result) {
-                dispatch(playlistActions.setPlaylists(result));
+            if (result.ok) {
+                dispatch(playlistActions.setPlaylists(result.data));
             }
         });
 

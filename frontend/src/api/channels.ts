@@ -1,18 +1,22 @@
 import { apiClient } from './client';
-import type { User } from '@models/user';
+import type { ApiResult } from './client';
+import type { User } from '@models';
 import { parseUser, parseUserArray, parseVideoList } from './parsers';
 import type { VideoListResponse } from './videos';
 
 export type Uuid = string & { readonly _brand: 'Uuid' };
+export function toUuid(id: string): Uuid {
+    return id as unknown as Uuid;
+}
 
 class ChannelApi {
     private readonly baseUrl = '/channels';
 
-    async get(uuid: Uuid): Promise<User | null> {
+    async get(uuid: Uuid): Promise<ApiResult<User>> {
         return apiClient.getValidated(`${this.baseUrl}/${uuid}`, parseUser);
     }
 
-    async videos(uuid: Uuid): Promise<VideoListResponse | null> {
+    async videos(uuid: Uuid): Promise<ApiResult<VideoListResponse>> {
         return apiClient.getValidated(`${this.baseUrl}/${uuid}/videos`, parseVideoList);
     }
 
@@ -20,7 +24,7 @@ class ChannelApi {
         await apiClient.post(`${this.baseUrl}/${uuid}/subscription`);
     }
 
-    async subscriptions(): Promise<User[] | null> {
+    async subscriptions(): Promise<ApiResult<User[]>> {
         return apiClient.getValidated('/users/me/subscriptions', parseUserArray);
     }
 }

@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { subscriptionActions, selectSubscribedSet } from '@store/subscriptionSlice';
-import type { ChannelId } from '@models/channel';
+import type { ChannelId } from '@models';
 
 export function useSubscription() {
     const dispatch = useAppDispatch();

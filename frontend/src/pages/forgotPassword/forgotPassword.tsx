@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button, Input } from '@ui';
-import { auth } from '@api/auth';
-import { ROUTES } from '@utils/routes';
+import { auth } from '@api';
+import { ROUTES } from '@utils';
 import '../login/login.css';
 
 export default function ForgotPasswordPage() {

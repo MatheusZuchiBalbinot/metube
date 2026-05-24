@@ -2,7 +2,7 @@ export type RemoteData<T> =
     | { kind: 'idle' }
     | { kind: 'loading' }
     | { kind: 'ok'; data: T }
-    | { kind: 'error'; message: string }
+    | { kind: 'error'; message: string };
 
 export const RemoteData = {
     idle: <T = never>(): RemoteData<T> => ({ kind: 'idle' }),

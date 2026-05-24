@@ -1,6 +1,4 @@
-import type { Playlist } from '@models/playlist';
-import type { VideoId } from '@models/video';
-import { PLAYLIST_CONSTANTS } from '@models/playlist';
+import { PLAYLIST_CONSTANTS, type Playlist, type VideoId } from '@models';
 
 function isWatchLater(p: Playlist): boolean {
     return p.name === PLAYLIST_CONSTANTS.WATCH_LATER;

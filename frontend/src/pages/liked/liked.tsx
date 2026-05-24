@@ -5,15 +5,14 @@ import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
-import { VideoFilter } from '@utils/applyFilters';
-import { interactions } from '@api/interactions';
+import { VideoFilter, cn } from '@utils';
+import { interactions } from '@api';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
-import type { Video, VideoId } from '@models/video';
-import type { Tag } from '@models/tag';
 import './liked.css';
 import { ToastType } from '@enums/toastType';
 import { useMediaQuery, useVideo } from '@hooks';
+import type { Video, VideoId, Tag } from '@models';
 
 // eslint-disable-next-line complexity
 export default function LikedPage() {
@@ -27,8 +26,8 @@ export default function LikedPage() {
 
     useEffect(() => {
         interactions.liked().then(result => {
-            if (result) {
-                setLikedVideoList(result.data);
+            if (result.ok) {
+                setLikedVideoList(result.data.data);
             }
         }).finally(() => setLoading(false));
     }, []);
@@ -111,7 +110,7 @@ export default function LikedPage() {
                             actionIcon={<HeartOff size={14} strokeWidth={2} />}
                             actionLabel={t('liked.unlike')}
                             itemClass="liked-page__item"
-                            btnClass={['liked-page__unlike-btn', isTouchDevice ? 'liked-page__unlike-btn--touch' : ''].filter(Boolean).join(' ')}
+                            btnClass={cn('liked-page__unlike-btn', isTouchDevice && 'liked-page__unlike-btn--touch')}
                             onAction={handleUnlike}
                         />
                     ))}

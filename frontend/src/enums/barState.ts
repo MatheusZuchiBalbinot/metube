@@ -3,4 +3,5 @@ export const BarState = {
     LOADING: 'loading',
     DONE: 'done',
 } as const;
+
 export type BarState = typeof BarState[keyof typeof BarState];

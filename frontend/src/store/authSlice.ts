@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { auth } from '../api/auth';
-import type { User } from '@models/user';
+import type { User } from '@models';
 
 interface AuthState {
     user: User | null
@@ -16,8 +16,8 @@ const initialState: AuthState = {
 
 export const fetchMe = createAsyncThunk('auth/fetchMe', async () => {
     await auth.getCsrfCookie();
-    const me = await auth.me();
-    return me;
+    const result = await auth.me();
+    return result.ok ? result.data : null;
 });
 
 export const signInThunk = createAsyncThunk(
@@ -25,10 +25,12 @@ export const signInThunk = createAsyncThunk(
     async (payload: { email: string; password: string }) => {
         await auth.getCsrfCookie();
         const response = await auth.login(payload);
-        if (!response) {
+
+        if (!response.ok) {
             throw new Error('Login failed');
         }
-        return response.user;
+
+        return response.data.user;
     },
 );
 
@@ -37,10 +39,12 @@ export const signUpThunk = createAsyncThunk(
     async (payload: { name: string; email: string; password: string; password_confirmation: string }) => {
         await auth.getCsrfCookie();
         const response = await auth.register(payload);
-        if (!response) {
+
+        if (!response.ok) {
             throw new Error('Registration failed');
         }
-        return response.user;
+
+        return response.data.user;
     },
 );
 

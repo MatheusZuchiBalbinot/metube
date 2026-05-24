@@ -8,4 +8,5 @@ export const NotificationType = {
     VIDEO_TRANSCRIPTION_STARTED: 'video_transcription_started',
     VIDEO_TRANSCRIBED: 'video_transcribed',
 } as const;
+
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];

@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 import type { Vuid } from '@api';
 import type { AnalyticsSource } from '@api';
-import { reportImpression } from '@utils/impressionBatcher';
+import { reportImpression } from '@utils';
 
 interface Options {
     threshold?: number

@@ -2,9 +2,9 @@ import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import type { VideoSummary, VideoTranscription } from '@api/videos';
+import type { VideoSummary, VideoTranscription } from '@api';
 import { Button } from '@ui';
-import { parseChapterTimestamp } from '@utils/parseChapterTimestamp';
+import { parseChapterTimestamp, cn } from '@utils';
 import { domain } from '@domain';
 
 interface ReadingModeProps {
@@ -173,7 +173,7 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                             return (
                                 <li key={i}>
                                     <button
-                                        className={['video-page__chapter', isActive ? 'video-page__chapter--active' : ''].filter(Boolean).join(' ')}
+                                        className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
                                         onClick={() => onSeekToChapter?.(seconds)}
                                         disabled={onSeekToChapter === undefined}
                                     >

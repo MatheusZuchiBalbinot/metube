@@ -1,7 +1,6 @@
 import { apiClient } from './client';
-import type { Video, VideoStatus } from '@models/video';
-import type { Tag } from '@models/tag';
-import { buildProgress, type ProgressCallback } from '@utils/upload';
+import type { ApiResult } from './client';
+import { buildProgress, type ProgressCallback } from '@utils';
 import {
     parseVideo,
     parseVideoList,
@@ -14,8 +13,12 @@ import {
     type VideoListApiResponse,
     type KeyPoint,
 } from './parsers';
+import type { Video, VideoStatus, Tag } from '@models';
 
 export type Vuid = string & { readonly _brand: 'Vuid' };
+export function toVuid(id: string): Vuid {
+    return id as unknown as Vuid;
+}
 export type { VideoSummary, VideoTranscription, AiSuggestion, KeyPoint };
 export type VideoListResponse = VideoListApiResponse;
 export type VideoChapter = VideoSummary['chapters'][number];
@@ -58,15 +61,15 @@ class VideoApi {
         search?: string
         tags?: Tag[]
         status?: VideoStatus
-    }): Promise<VideoListResponse | null> {
+    }): Promise<ApiResult<VideoListResponse>> {
         return apiClient.getValidated(this.baseUrl, parseVideoList, { params });
     }
 
-    async get(vuid: Vuid): Promise<Video | null> {
+    async get(vuid: Vuid): Promise<ApiResult<Video>> {
         return apiClient.getValidated(`${this.baseUrl}/${vuid}`, parseVideo);
     }
 
-    async create(payload: VideoUploadPayload, onProgress?: ProgressCallback): Promise<Video | null> {
+    async create(payload: VideoUploadPayload, onProgress?: ProgressCallback): Promise<ApiResult<Video>> {
         const form = new FormData();
         form.append('title', payload.title);
         form.append('description', payload.description);
@@ -95,7 +98,7 @@ class VideoApi {
         });
     }
 
-    async finalize(payload: VideoFinalizePayload): Promise<Video | null> {
+    async finalize(payload: VideoFinalizePayload): Promise<ApiResult<Video>> {
         return apiClient.postValidated(this.baseUrl, parseVideo, {
             upload_key: payload.uploadKey,
             thumbnail_key: payload.thumbnailKey,
@@ -108,7 +111,7 @@ class VideoApi {
         });
     }
 
-    async update(vuid: Vuid, payload: VideoUpdatePayload): Promise<Video | null> {
+    async update(vuid: Vuid, payload: VideoUpdatePayload): Promise<ApiResult<Video>> {
         return apiClient.patchValidated(`${this.baseUrl}/${vuid}`, parseVideo, payload);
     }
 
@@ -136,11 +139,11 @@ class VideoApi {
         await apiClient.put(`${this.baseUrl}/${vuid}/progress`, { percent });
     }
 
-    async getSummary(vuid: Vuid): Promise<VideoSummary | null> {
+    async getSummary(vuid: Vuid): Promise<ApiResult<VideoSummary>> {
         return apiClient.getValidated(`${this.baseUrl}/${vuid}/summary`, parseVideoSummary);
     }
 
-    async getTranscription(vuid: Vuid): Promise<VideoTranscription | null> {
+    async getTranscription(vuid: Vuid): Promise<ApiResult<VideoTranscription>> {
         return apiClient.getValidated(`${this.baseUrl}/${vuid}/transcription`, parseVideoTranscription);
     }
 
@@ -152,10 +155,10 @@ class VideoApi {
         const result = await apiClient.getValidated('/recommendations', parseVideoList, {
             params: { page },
         });
-        return result?.data ?? [];
+        return result.ok ? result.data.data : [];
     }
 
-    async getAiSuggestion(vuid: Vuid): Promise<AiSuggestion | null> {
+    async getAiSuggestion(vuid: Vuid): Promise<ApiResult<AiSuggestion>> {
         return apiClient.getValidated(`${this.baseUrl}/${vuid}/ai-suggestion`, parseAiSuggestion);
     }
 

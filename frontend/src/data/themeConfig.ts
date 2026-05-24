@@ -1,4 +1,4 @@
-import type { ThemeColor, ThemeMode } from '@utils/themes';
+import type { ThemeColor, ThemeMode } from '@utils';
 
 export const THEME_COLORS: { key: ThemeColor; hex: string; label: string }[] = [
     { key: 'violet', hex: '#7c3aed', label: 'Violet' },

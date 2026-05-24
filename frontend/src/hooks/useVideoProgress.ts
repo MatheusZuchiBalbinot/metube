@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
-import type { Video, VideoId } from '@models/video';
+import { domain } from '@domain';
+import type { Video, VideoId } from '@models';
 
 const PROGRESS_THROTTLE_MS = 3000;
 const BACKEND_SYNC_INTERVAL_MS = 5000;
@@ -90,7 +91,7 @@ export function useVideoProgress({
         }
 
         const existing = videoProgress[id] ?? 0;
-        const isFinished = existing >= 95;
+        const isFinished = domain.video.isWatched(existing);
         if (isFinished) {
             return;
         }

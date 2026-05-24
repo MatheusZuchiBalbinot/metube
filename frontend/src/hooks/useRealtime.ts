@@ -4,14 +4,13 @@ import { useAppDispatch, useAppSelector } from '@store/index';
 import { notificationsActions } from '@store/notificationsSlice';
 import { toastActions } from '@store/toastSlice';
 import { videoActions } from '@store/videoSlice';
-import { notifications as notificationsApi } from '@api/notifications';
-import type { Notification } from '@api/notifications';
+import { notifications as notificationsApi, video as videoApi } from '@api';
+import type { AppNotification as Notification, Vuid } from '@api';
 import { NotificationType } from '@enums/notificationType';
 import { getEcho, destroyEcho } from '@lib/echo';
-import { playNotificationSound } from '@utils/notificationSound';
+import { playNotificationSound } from '@utils';
 import { ToastType } from '@enums/toastType';
-import { VideoStatus } from '@models/video';
-import { video as videoApi, type Vuid } from '@api/videos';
+import { VideoStatus } from '@models';
 
 export function useRealtime(): void {
     const { t } = useTranslation();
@@ -65,8 +64,8 @@ export function useRealtime(): void {
 
                 if (isTerminalStatus) {
                     videoApi.get(data.vuid as Vuid).then(result => {
-                        if (result !== null) {
-                            dispatch(videoActions.updateVideo(result));
+                        if (result.ok) {
+                            dispatch(videoActions.updateVideo(result.data));
                         }
                     });
                 }

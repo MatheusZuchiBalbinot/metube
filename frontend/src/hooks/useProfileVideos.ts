@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppSelector } from '@store';
-import { channel as channelApi } from '@api';
-import type { Uuid } from '@api';
-import type { Video, VideoStatus } from '@models/video';
-import { RemoteData } from '@models/remoteData';
+import { channel as channelApi, toUuid } from '@api';
+import { RemoteData, type Video, type VideoStatus } from '@models';
 
 interface UseProfileVideosResult {
     videosState: RemoteData<Video[]>
@@ -20,9 +18,11 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
     const setVideos = useCallback((updater: (prev: Video[]) => Video[]) => {
         setVideosState(prev => {
             const isLoaded = prev.kind === 'ok';
+
             if (!isLoaded) {
                 return prev;
             }
+
             return RemoteData.ok(updater(prev.data));
         });
     }, []);
@@ -36,23 +36,17 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
             setVideosState(RemoteData.loading());
         }
 
-        channelApi.videos(channelId as unknown as Uuid).then(result => {
-            if (cancelled || !result) {
+        channelApi.videos(toUuid(channelId)).then(result => {
+            if (cancelled || !result.ok) {
                 return;
             }
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setVideosState(RemoteData.ok(result.data));
-        }).catch((err: unknown) => {
-            if (cancelled) {
-                return;
-            }
-            const message = err instanceof Error ? err.message : 'Unknown error';
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setVideosState(RemoteData.error(message));
+
+            setVideosState(RemoteData.ok(result.data.data));
         }).finally(() => {
             if (cancelled) {
                 return;
             }
+
             hasFetchedRef.current = true;
         });
 
@@ -70,6 +64,7 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
             return;
         }
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setVideos(prev => prev.map(v =>
             (v.id as string) === (lastVideoStatusUpdate.vuid as string)
                 ? { ...v, status: lastVideoStatusUpdate.status as VideoStatus }

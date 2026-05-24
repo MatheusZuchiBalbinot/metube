@@ -7,12 +7,11 @@ import VideoRow from '@components/video/row';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { Button } from '@ui';
 import EmptyState from '@ui/empty/empty';
-import { VideoFilter } from '@utils/applyFilters';
 import { analytics, AnalyticsSource } from '@api';
-import { getSessionId } from '@utils/sessionId';
-import type { Tag } from '@models/tag';
+import type { Tag } from '@models';
 import './search.css';
 import { useVideo } from '@hooks';
+import { VideoFilter, getSessionId } from '@utils';
 
 // Estimated height of a VideoRow (px). The virtualizer uses this as a first
 // approximation; actual heights are measured after render via measureElement.

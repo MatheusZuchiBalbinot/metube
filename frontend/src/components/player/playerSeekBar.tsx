@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
-import type { VideoChapter } from '@api/videos';
-import { Format } from '@utils/format';
-import { parseChapterTimestamp } from '@utils/parseChapterTimestamp';
+import type { VideoChapter } from '@api';
+import { formatDuration, parseChapterTimestamp } from '@utils';
 
 // Width of the scrubber thumbnail preview (px).
 const PREVIEW_W = 160;
@@ -205,7 +204,7 @@ export default function PlayerSeekBar({
                     height={90}
                 />
                 <span className="vp__seek-preview-time">
-                    {Format.duration(hoverTime)}
+                    {formatDuration(hoverTime)}
                 </span>
             </div>
         );

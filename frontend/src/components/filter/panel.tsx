@@ -2,13 +2,12 @@ import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { SortBy, SORT_OPTIONS, type FilterState } from '@utils/applyFilters';
-import { TagColors } from '@utils/tagColors';
-import type { Tag } from '@models/tag';
+import type { Tag } from '@models';
 import DatePicker from '@ui/date/picker';
 import { Button } from '@ui';
 import './panel.css';
 import { QuickRangeKind } from '@enums/quickRangeKind';
+import { SortBy, SORT_OPTIONS, TagColors, type FilterState, cn } from '@utils';
 
 export type { FilterState };
 
@@ -23,8 +22,6 @@ const YEAR_OPTIONS = Array.from(
     { length: new Date().getFullYear() - 2019 },
     (_, i) => new Date().getFullYear() - i,
 );
-
-
 
 const QUICK_RANGE_PRESETS: { key: QuickRangeKind; labelKey: string }[] = [
     { key: QuickRangeKind.LAST_7D, labelKey: 'video.filter_last_7d' },
@@ -348,12 +345,12 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
             <button
                 ref={triggerRef}
                 type="button"
-                className={[
+                className={cn(
                     'filter-panel__trigger',
-                    iconOnly ? 'filter-panel__trigger--icon-only' : '',
-                    open ? 'filter-panel__trigger--open' : '',
-                    hasActiveFilters ? 'filter-panel__trigger--active' : '',
-                ].filter(Boolean).join(' ')}
+                    iconOnly && 'filter-panel__trigger--icon-only',
+                    open && 'filter-panel__trigger--open',
+                    hasActiveFilters && 'filter-panel__trigger--active',
+                )}
                 onClick={handleToggleTrigger}
                 aria-expanded={open}
                 aria-haspopup="true"

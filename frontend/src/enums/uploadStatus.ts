@@ -4,4 +4,5 @@ export const UploadStatus = {
     DONE: 'done',
     ERROR: 'error',
 } as const;
+
 export type UploadStatus = typeof UploadStatus[keyof typeof UploadStatus];

@@ -1,14 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { Video } from '@models/video';
 import { domain } from '@domain';
-import type { Tag } from '@models/tag';
-import { videoUrl } from '@utils/routes';
-import { Format } from '@utils/format';
-import { TagColors } from '@utils/tagColors';
 import Badge from '@ui/badge/badge';
 import './hero.css';
 import { useVideo } from '@hooks';
+import { videoUrl, Format, TagColors, formatRelativeDate } from '@utils';
+import type { Video, Tag } from '@models';
 
 interface VideoHeroProps {
     video: Video
@@ -98,7 +95,7 @@ export default function VideoHero({ video }: VideoHeroProps) {
                     <div className="video-hero__meta-sub">
                         <span>{Format.views(video.views)} {t('video.views')}</span>
                         <span className="video-hero__meta-dot" aria-hidden="true">·</span>
-                        <span>{Format.relativeDate(video.publishedAt, i18n.language)}</span>
+                        <span>{formatRelativeDate(video.publishedAt, i18n.language)}</span>
                     </div>
                 </div>
 

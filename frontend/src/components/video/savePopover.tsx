@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
-import type { Playlist, PlaylistId } from '@models/playlist';
-import type { VideoId } from '@models/video';
 import { domain } from '@domain';
 import Button from '@ui/button/button';
 import Checkbox from '@ui/checkbox/checkbox';
@@ -13,6 +11,7 @@ import Modal from '@ui/modal/modal';
 import './savePopover.css';
 import { ToastType } from '@enums/toastType';
 import { usePlaylist } from '@hooks';
+import type { Playlist, PlaylistId, VideoId } from '@models';
 
 interface SavePopoverProps {
     videoId: VideoId

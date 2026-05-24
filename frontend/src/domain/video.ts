@@ -1,6 +1,8 @@
-import type { Video } from '@models/video';
-import { VideoStatus } from '@models/video';
-import type { User } from '@models/user';
+import { VideoStatus, type Video, type User } from '@models';
+
+export const PROGRESS_WATCHED_THRESHOLD = 95;
+export const PROGRESS_ACTIVE_MIN = 5;
+export const PROGRESS_ACTIVE_MAX = 96;
 
 function isPublished(v: Video): boolean {
     return v.status === VideoStatus.PUBLISHED;
@@ -50,7 +52,15 @@ function isOwnedBy(v: Video, user: User): boolean {
     return (v.channelId as string) === user.uuid;
 }
 
-export { isPublished, isProcessing, isFailed, isScheduled, isScheduledAndFuture, isDraft, isScheduledInPast, isVisible, isInteractable, isOwnedBy };
+function isWatched(progress: number): boolean {
+    return progress >= PROGRESS_WATCHED_THRESHOLD;
+}
+
+function hasActiveProgress(progress: number): boolean {
+    return progress >= PROGRESS_ACTIVE_MIN && progress < PROGRESS_ACTIVE_MAX;
+}
+
+export { isPublished, isProcessing, isFailed, isScheduled, isScheduledAndFuture, isDraft, isScheduledInPast, isVisible, isInteractable, isOwnedBy, isWatched, hasActiveProgress };
 
 export const video = {
     isPublished,
@@ -63,4 +73,6 @@ export const video = {
     isVisible,
     isInteractable,
     isOwnedBy,
+    isWatched,
+    hasActiveProgress,
 };

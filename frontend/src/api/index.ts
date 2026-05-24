@@ -1,3 +1,4 @@
+export type { ApiResult } from './client';
 export { auth } from './auth';
 export { comments } from './comments';
 export { video } from './videos';
@@ -11,8 +12,11 @@ export type { Notification as AppNotification } from './notifications';
 
 export type { LoginPayload, LoginResponse, UpdateProfilePayload, User } from './auth';
 export type { Cuid, StoreCommentPayload, ToggleLikeResponse } from './comments';
-export type { VideoListResponse, VideoUploadPayload, VideoUpdatePayload, VideoSummary, VideoTranscription, Vuid } from './videos';
+export type { VideoListResponse, VideoUploadPayload, VideoUpdatePayload, VideoSummary, VideoTranscription, VideoChapter, AiSuggestion, Vuid } from './videos';
+export { toVuid } from './videos';
 export type { HistoryEvent } from './history';
 export type { Uuid } from './channels';
+export { toUuid } from './channels';
 export type { Puid, Playlist } from './playlists';
+export { toPuid } from './playlists';
 export type { ImpressionsPayload, ClickPayload, SearchPayload, SkipPayload } from './analytics';

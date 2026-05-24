@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { video as videoApi, type Vuid, type VideoSummary, type VideoTranscription } from '@api/videos';
-import { VideoStatus } from '@models/video';
+import { video as videoApi, toVuid } from '@api';
+import type { VideoSummary, VideoTranscription } from '@api';
+import { VideoStatus } from '@models';
 import { getEcho } from '@lib/echo';
 
 interface UseVideoContentResult {
@@ -30,9 +31,9 @@ export function useVideoContent(id: string | undefined, videoStatus: VideoStatus
             return;
         }
 
-        const vuid = id as unknown as Vuid;
-        videoApi.getSummary(vuid).then(setSummary);
-        videoApi.getTranscription(vuid).then(setTranscription);
+        const vuid = toVuid(id);
+        videoApi.getSummary(vuid).then(r => setSummary(r.ok ? r.data : null));
+        videoApi.getTranscription(vuid).then(r => setTranscription(r.ok ? r.data : null));
     }, [id, videoStatus]);
 
     useEffect(() => {
@@ -52,8 +53,8 @@ export function useVideoContent(id: string | undefined, videoStatus: VideoStatus
             const ch = echo.channel(`videos.${id}`);
 
             ch.listen('.TranscriptionStatusUpdated', () => {
-                videoApi.getTranscription(id as unknown as Vuid).then(result => {
-                    setTranscription(result);
+                videoApi.getTranscription(toVuid(id)).then(result => {
+                    setTranscription(result.ok ? result.data : null);
                 });
             });
         });

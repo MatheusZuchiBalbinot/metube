@@ -1,11 +1,9 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
-import { STORAGE_KEYS } from '@utils/storageKeys';
-import { loadFromStorage, isArray } from '@utils/loadFromStorage';
-import type { Playlist, PlaylistId } from '@models/playlist';
-import type { VideoId } from '@models/video';
 import { domain } from '@domain';
 import { videoActions } from './videoSlice';
 import type { RootState } from './types';
+import { STORAGE_KEYS, loadFromStorage, isArray } from '@utils';
+import type { Playlist, PlaylistId, VideoId } from '@models';
 
 export type { Playlist, PlaylistId };
 
