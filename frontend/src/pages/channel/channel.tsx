@@ -6,21 +6,16 @@ import VideoCard from '@components/video/card';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
-import { Format } from '@utils/format';
-import { VideoFilter, SortBy } from '@utils/applyFilters';
 import TagBadge from '@components/tag/badge';
-import { TagColors } from '@utils/tagColors';
-import type { Tag } from '@models/tag';
 import Button from '@ui/button/button';
 import Avatar from '@ui/avatar/avatar';
-import { videoUrl } from '@utils/routes';
 import { comments as commentsApi } from '@api';
-import type { Comment } from '@models/comment';
-import type { Vuid } from '@api';
-import type { ChannelId } from '@models/channel';
+import { toVuid } from '@api';
 import './channel.css';
 import { ToastType } from '@enums/toastType';
 import { useVideo, useSubscription } from '@hooks';
+import { Format, VideoFilter, SortBy, TagColors, videoUrl, formatRelativeDate, cn } from '@utils';
+import type { Tag, Comment, ChannelId } from '@models';
 
 const TOP_TAGS_COUNT = 4;
 const SECTIONS_THRESHOLD = 8;
@@ -156,10 +151,9 @@ export default function ChannelPage() {
             setSpotlightComments([]);
             return;
         }
-        commentsApi.list(featuredId as unknown as Vuid, { page: 1 }).then(res => {
-            const hasResult = res !== null;
-            if (hasResult) {
-                setSpotlightComments(res.data.slice(0, 2));
+        commentsApi.list(toVuid(featuredId), { page: 1 }).then(res => {
+            if (res.ok) {
+                setSpotlightComments(res.data.data.slice(0, 2));
             }
         });
     }, [featuredId]);
@@ -209,7 +203,7 @@ export default function ChannelPage() {
                             variant="ghost"
                             size="sm"
                             aria-pressed={isChannelSubscribed}
-                            className={['channel-page__subscribe-btn', isChannelSubscribed ? 'channel-page__subscribe-btn--subscribed' : ''].filter(Boolean).join(' ')}
+                            className={cn('channel-page__subscribe-btn', isChannelSubscribed && 'channel-page__subscribe-btn--subscribed')}
                             onClick={handleSubscribeToggle}
                         >
                             {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
@@ -276,7 +270,7 @@ export default function ChannelPage() {
                                     {sections.featured.publishedAt && (
                                         <>
                                             <span className="channel-page__cover-sep" />
-                                            {Format.relativeDate(sections.featured.publishedAt)}
+                                            {formatRelativeDate(sections.featured.publishedAt)}
                                         </>
                                     )}
                                 </div>
