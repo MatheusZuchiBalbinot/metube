@@ -12,10 +12,11 @@ import {
     type VideoTranscription,
     type AiSuggestion,
     type VideoListApiResponse,
+    type KeyPoint,
 } from './parsers';
 
 export type Vuid = string & { readonly _brand: 'Vuid' };
-export type { VideoSummary, VideoTranscription, AiSuggestion };
+export type { VideoSummary, VideoTranscription, AiSuggestion, KeyPoint };
 export type VideoListResponse = VideoListApiResponse;
 export type VideoChapter = VideoSummary['chapters'][number];
 

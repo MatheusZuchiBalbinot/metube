@@ -9,6 +9,7 @@ import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
 import { ToastType } from '@enums/toastType';
 import type { Video } from '@models/video';
+import { domain } from '@domain';
 import './aiSuggestions.css';
 
 interface Props {
@@ -34,7 +35,7 @@ export default function AiSuggestions({ video }: Props) {
         void fetchSuggestion();
     }, [video.id]);
 
-    const hasSuggestion = suggestion !== null && suggestion.status === 'pending';
+    const hasSuggestion = suggestion !== null && domain.aiSuggestion.isPending(suggestion);
 
     if (loading || !hasSuggestion || accepted) {
         return null;

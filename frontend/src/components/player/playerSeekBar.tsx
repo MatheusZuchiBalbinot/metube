@@ -1,19 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import type { VideoChapter } from '@api/videos';
 import { Format } from '@utils/format';
+import { parseChapterTimestamp } from '@utils/parseChapterTimestamp';
 
 // Width of the scrubber thumbnail preview (px).
 const PREVIEW_W = 160;
 const PREVIEW_HALF_W = PREVIEW_W / 2;
-
-function parseChapterTimestamp(ts: string): number {
-    const parts = ts.split(':').map(Number);
-    const isHMS = parts.length === 3;
-    if (isHMS) {
-        return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
-    return parts[0] * 60 + (parts[1] ?? 0);
-}
 
 interface PlayerSeekBarProps {
     videoRef: React.RefObject<HTMLVideoElement | null>

@@ -100,7 +100,7 @@ export default function HistoryPage() {
     const [selectedPeriod, setSelectedPeriod] = useState<HistoryPeriodType>(HistoryPeriod.ALL);
 
     const videoMap = useMemo(() => {
-        const map = new Map<string, Video>(videos.map((v: Video) => [v.id as string, v]));
+        const map = new Map<VideoId, Video>(videos.map((v: Video) => [v.id, v]));
         return map;
     }, [videos]);
 
@@ -170,9 +170,9 @@ export default function HistoryPage() {
     });
     /* eslint-enable react-hooks/refs */
 
-    function handleRemoveFromHistory(id: string) {
+    function handleRemoveFromHistory(id: VideoId) {
         const snapshot = [...watchHistory];
-        removeFromHistory(id as unknown as VideoId);
+        removeFromHistory(id);
         dispatch(toastActions.addToast({
             message: t('toast.history_removed'),
             type: ToastType.INFO,

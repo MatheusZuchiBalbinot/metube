@@ -17,7 +17,7 @@ import EmptyState from '@ui/empty/empty';
 import { videoActions } from '@store/videoSlice';
 import { video } from '@api/videos';
 import type { Tag } from '@models/tag';
-import type { Video } from '@models/video';
+import type { Video, VideoId } from '@models/video';
 import './home.css';
 
 // 2 years: long enough to include recent uploads but short enough to filter
@@ -53,13 +53,13 @@ export default function HomePage() {
     const [continueScroll, setContinueScroll] = useState({ canScrollLeft: false, canScrollRight: true });
 
     const allTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        for (const v of recommendations) {
-            for (const tag of v.tags) {
+        const tagSet = new Set<Tag>();
+        for (const video of recommendations) {
+            for (const tag of video.tags) {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [recommendations]);
 
     const visibleVideos = useMemo(
@@ -77,15 +77,15 @@ export default function HomePage() {
     }, [publishedVideos]);
 
     const continueWatchingVideos = useMemo(() => {
-        const videoMap = new Map<string, Video>(videos.map((v: Video) => [v.id as string, v]));
+        const videoMap = new Map<VideoId, Video>(videos.map((video: Video) => [video.id, video]));
         return watchHistory
-            .map((id: string) => videoMap.get(id))
-            .filter((v): v is NonNullable<typeof v> => {
-                if (!v) {
+            .map(id => videoMap.get(id))
+            .filter((video): video is NonNullable<typeof video> => {
+                if (!video) {
                     return false;
                 }
-                const p = videoProgress[v.id] ?? 0;
-                const isInProgress = p > CONTINUE_WATCHING_MIN_PROGRESS && p < CONTINUE_WATCHING_MAX_PROGRESS;
+                const progress = videoProgress[video.id] ?? 0;
+                const isInProgress = progress > CONTINUE_WATCHING_MIN_PROGRESS && progress < CONTINUE_WATCHING_MAX_PROGRESS;
                 return isInProgress;
             })
             .slice(0, 8);

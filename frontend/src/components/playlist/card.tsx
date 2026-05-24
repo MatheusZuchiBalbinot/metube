@@ -5,7 +5,7 @@ import { Reorder } from 'framer-motion';
 import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from 'lucide-react';
 import type { Video } from '@models/video';
 import type { Playlist } from '@models/playlist';
-import { PLAYLIST_CONSTANTS } from '@models/playlist';
+import { domain } from '@domain';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { usePlaylist } from '@hooks/usePlaylist';
@@ -103,8 +103,8 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         return videos.reduce((sum: number, v: Video) => sum + (v.duration ?? 0), 0);
     }, [videos]);
     const hasTotalDuration = totalDurationSec > 0;
-    const isWatchLater = playlist.name === PLAYLIST_CONSTANTS.WATCH_LATER;
-    const displayName = isWatchLater ? t('playlist.watch_later_row') : playlist.name;
+    const isWatchLaterPlaylist = domain.playlist.isWatchLater(playlist);
+    const displayName = isWatchLaterPlaylist ? t('playlist.watch_later_row') : playlist.name;
 
     function handleToggleExpand() {
         setExpanded(prev => !prev);
@@ -243,7 +243,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                             )}
                         </div>
                         <div className="playlist-card__actions">
-                            {!isWatchLater && (
+                            {!isWatchLaterPlaylist && (
                                 <>
                                     <Tooltip content={t('playlist.rename')} side="top">
                                         <Button

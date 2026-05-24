@@ -9,15 +9,15 @@ const SIMULATE_DURATION_S = 60;
 const SIMULATE_TICK_MS = 2000;
 
 interface UseVideoProgressOptions {
-    id: string | undefined
+    id: VideoId | undefined
     videoRef: React.RefObject<HTMLVideoElement | null>
     video: Video | undefined
-    videoProgress: Record<string, number>
-    updateProgress: (id: string, pct: number) => void
-    onBackendSync?: (id: string, percent: number) => void
-    consumePendingVideoSeek: (id: string) => number | null
+    videoProgress: Record<VideoId, number>
+    updateProgress: (id: VideoId, pct: number) => void
+    onBackendSync?: (id: VideoId, percent: number) => void
+    consumePendingVideoSeek: (id: VideoId) => number | null
     onCompleted: () => void
-    onFinished?: (id: string) => void
+    onFinished?: (id: VideoId) => void
 }
 
 export function useVideoProgress({
@@ -184,7 +184,7 @@ export function useVideoProgress({
             return;
         }
 
-        const videoId = id as unknown as VideoId;
+        const videoId = id;
         const hasCurrentTime = currentTimeRef.current > 0;
         const currentT = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
         const hasDuration = durationRef.current > 0;
@@ -247,7 +247,7 @@ export function useVideoProgress({
     const handleVideoEnded = useCallback(() => {
         if (id) {
             updateProgress(id, 100);
-            dispatch(videoActions.videoFinished(id as unknown as VideoId));
+            dispatch(videoActions.videoFinished(id));
             onFinished?.(id);
         }
         triggerCompletion();

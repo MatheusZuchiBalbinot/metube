@@ -72,7 +72,7 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
                 <div className="comment-section__list">
                     {comments.map(comment => (
                         <CommentItem
-                            key={comment.id as string}
+                            key={comment.id}
                             comment={comment}
                             loadingReplies={loadingReplies}
                             onToggleLike={toggleLike}

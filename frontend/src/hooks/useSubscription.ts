@@ -7,12 +7,12 @@ export function useSubscription() {
     const subscribedChannelIds = useAppSelector(s => s.subscription.subscribedChannelIds);
     const subscribedSet = useAppSelector(selectSubscribedSet);
 
-    function toggleSubscription(channelId: string) {
-        dispatch(subscriptionActions.toggleSubscription(channelId as unknown as ChannelId));
+    function toggleSubscription(channelId: ChannelId) {
+        dispatch(subscriptionActions.toggleSubscription(channelId));
     }
 
-    function isSubscribed(channelId: string): boolean {
-        return subscribedSet.has(channelId as unknown as ChannelId);
+    function isSubscribed(channelId: ChannelId): boolean {
+        return subscribedSet.has(channelId);
     }
 
     return {

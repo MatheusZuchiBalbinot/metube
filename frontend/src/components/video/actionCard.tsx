@@ -1,4 +1,4 @@
-import type { Video } from '@models/video';
+import type { Video, VideoId } from '@models/video';
 import VideoCard from './card';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
@@ -10,7 +10,7 @@ interface VideoActionCardProps {
     actionLabel: string;
     itemClass: string;
     btnClass: string;
-    onAction: (videoId: string) => void;
+    onAction: (videoId: VideoId) => void;
 }
 
 export default function VideoActionCard({

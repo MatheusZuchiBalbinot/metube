@@ -35,13 +35,13 @@ export default function LikedPage() {
     }, []);
 
     const allTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        for (const v of likedVideoList) {
-            for (const tag of v.tags) {
+        const tagSet = new Set<Tag>();
+        for (const video of likedVideoList) {
+            for (const tag of video.tags) {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [likedVideoList]);
 
     const filteredVideos = useMemo(
@@ -53,8 +53,8 @@ export default function LikedPage() {
     const hasResults = filteredVideos.length > 0;
     const isTouchDevice = useMediaQuery('(hover: none)');
 
-    function handleUnlike(videoId: string) {
-        likeVideo(videoId as unknown as VideoId);
+    function handleUnlike(videoId: VideoId) {
+        likeVideo(videoId);
         setLikedVideoList(prev => prev.filter(v => v.id !== videoId));
         dispatch(toastActions.addToast({ message: t('toast.unliked'), type: ToastType.INFO }));
     }

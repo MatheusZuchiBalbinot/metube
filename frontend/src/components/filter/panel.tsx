@@ -34,10 +34,10 @@ const QUICK_RANGE_PRESETS: { key: QuickRangeKind; labelKey: string }[] = [
 ];
 
 function toIsoDate(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return `${year}-${month}-${day}`;
 }
 
 function computeQuickRange(kind: QuickRangeKind): { from: string; to: string } {
@@ -78,9 +78,9 @@ function detectActiveQuickRange(dateFrom: string | null, dateTo: string | null):
 }
 
 interface TagChipProps {
-    tag: string
+    tag: Tag
     value: FilterState
-    onToggle: (tag: string) => void
+    onToggle: (tag: Tag) => void
 }
 
 function buildTagChipStyle(tag: string, isActive: boolean): React.CSSProperties | undefined {
@@ -96,7 +96,7 @@ function buildTagChipStyle(tag: string, isActive: boolean): React.CSSProperties 
 }
 
 function TagChip({ tag, value, onToggle }: TagChipProps) {
-    const isActive = value.tags.includes(tag as unknown as Tag);
+    const isActive = value.tags.includes(tag);
 
     function handleClick() {
         onToggle(tag);
@@ -198,9 +198,9 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
         };
     }, [open]);
 
-    function toggleTag(tag: string) {
-        const isSelected = value.tags.includes(tag as unknown as Tag);
-        const nextTags = isSelected ? value.tags.filter(t => t !== tag) : [...value.tags, tag as unknown as Tag];
+    function toggleTag(tag: Tag) {
+        const isSelected = value.tags.includes(tag);
+        const nextTags = isSelected ? value.tags.filter(t => t !== tag) : [...value.tags, tag];
         onChange({ ...value, tags: nextTags });
     }
 

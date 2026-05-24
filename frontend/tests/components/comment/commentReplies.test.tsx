@@ -100,7 +100,7 @@ describe('CommentReplies', () => {
         const replies = [makeComment({ id: cuid('r-1'), author: { uuid: ownerUuid, name: 'Owner', avatar: '' } })];
         const state = makeRootState({
             auth: {
-                user: { id: ownerUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, name: 'Owner', email: 'owner@example.com' },
+                user: { id: ownerUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, uuid: ownerUuid, name: 'Owner', email: 'owner@example.com' },
                 loading: false,
                 sessionError: null,
             },
@@ -128,7 +128,7 @@ describe('CommentReplies', () => {
         const replies = [makeComment({ id: cuid('r-1'), author: { uuid: 'u-other', name: 'Other', avatar: '' } })];
         const state = makeRootState({
             auth: {
-                user: { id: 'u-mine' as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, name: 'Me', email: 'me@example.com' },
+                user: { id: 'u-mine' as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, uuid: 'u-mine', name: 'Me', email: 'me@example.com' },
                 loading: false,
                 sessionError: null,
             },
@@ -158,7 +158,7 @@ describe('CommentReplies', () => {
         const replies = [makeComment({ id: cuid('r-1'), content: 'My reply', author: { uuid: ownerUuid, name: 'Owner', avatar: '' } })];
         const state = makeRootState({
             auth: {
-                user: { id: ownerUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, name: 'Owner', email: 'owner@example.com' },
+                user: { id: ownerUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, uuid: ownerUuid, name: 'Owner', email: 'owner@example.com' },
                 loading: false,
                 sessionError: null,
             },

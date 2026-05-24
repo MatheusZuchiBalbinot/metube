@@ -19,6 +19,7 @@ import { videoUrl } from '@utils/routes';
 import { comments as commentsApi } from '@api';
 import type { Comment } from '@models/comment';
 import type { Vuid } from '@api';
+import type { ChannelId } from '@models/channel';
 import './channel.css';
 import { ToastType } from '@enums/toastType';
 
@@ -54,7 +55,7 @@ export default function ChannelPage() {
     );
 
     const topTags = useMemo(() => {
-        const tagCounts = new Map<string, number>();
+        const tagCounts = new Map<Tag, number>();
         for (const video of channelVideos) {
             for (const tag of video.tags) {
                 const isShorts = tag === 'shorts';
@@ -71,13 +72,13 @@ export default function ChannelPage() {
     }, [channelVideos]);
 
     const allTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        for (const v of channelVideos) {
-            for (const tag of v.tags) {
+        const tagSet = new Set<Tag>();
+        for (const video of channelVideos) {
+            for (const tag of video.tags) {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [channelVideos]);
 
     const filteredVideos = useMemo(
@@ -113,12 +114,12 @@ export default function ChannelPage() {
             .filter(v => v.id !== featured?.id)
             .slice(0, 6);
 
-        const tagCounts = new Map<string, number>();
-        for (const v of channelVideos) {
-            for (const tag of v.tags) {
+        const tagCounts = new Map<Tag, number>();
+        for (const video of channelVideos) {
+            for (const tag of video.tags) {
                 const isShorts = tag === 'shorts';
                 if (!isShorts) {
-                    tagCounts.set(tag as unknown as string, (tagCounts.get(tag as unknown as string) ?? 0) + 1);
+                    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
                 }
             }
         }
@@ -130,7 +131,7 @@ export default function ChannelPage() {
                 tag,
                 count,
                 videos: channelVideos
-                    .filter(v => (v.tags as unknown as string[]).includes(tag))
+                    .filter(v => v.tags.includes(tag))
                     .sort((a, b) => b.views - a.views)
                     .slice(0, 3),
             }));
@@ -175,11 +176,11 @@ export default function ChannelPage() {
 
     const hasVideos = channelVideos.length > 0;
     const isNotFound = !hasVideos;
-    const isChannelSubscribed = isSubscribed(id ?? '');
+    const channelId = id as ChannelId | undefined;
+    const isChannelSubscribed = isSubscribed(channelId ?? '' as ChannelId);
 
     function handleSubscribeToggle() {
-        const channelId = id ?? '';
-        toggleSubscription(channelId);
+        toggleSubscription(channelId ?? '' as ChannelId);
         dispatch(toastActions.addToast({
             message: t(isChannelSubscribed ? 'toast.unsubscribed' : 'toast.subscribed'),
             type: ToastType.SUCCESS,
@@ -247,7 +248,7 @@ export default function ChannelPage() {
                     {topTags.length > 0 && (
                         <div className="channel-page__top-tags">
                             {topTags.map(tag => (
-                                <TagBadge key={tag} tag={tag as unknown as Tag} prefix="#" className="channel-page__tag-pill" />
+                                <TagBadge key={tag} tag={tag} prefix="#" className="channel-page__tag-pill" />
                             ))}
                         </div>
                     )}
@@ -283,11 +284,11 @@ export default function ChannelPage() {
                                 {sections.featured.tags.length > 0 && (
                                     <div className="channel-page__cover-tags">
                                         {sections.featured.tags.slice(0, 4).map(tag => {
-                                            const p = TagColors.palette(tag as unknown as string);
-                                            const tagStyle = { background: p.bg, color: p.color };
+                                            const palette = TagColors.palette(tag as string);
+                                            const tagStyle = { background: palette.bg, color: palette.color };
                                             return (
-                                                <span key={tag as unknown as string} className="channel-page__cover-tag" style={tagStyle}>
-                                                    {tag as unknown as string}
+                                                <span key={tag as string} className="channel-page__cover-tag" style={tagStyle}>
+                                                    {tag as string}
                                                 </span>
                                             );
                                         })}
@@ -437,8 +438,8 @@ export default function ChannelPage() {
                                             style={{ backgroundImage: `url(${coverThumb})` }}
                                             role="button"
                                             tabIndex={0}
-                                            onClick={() => scrollToAllVideos({ tags: [tag as unknown as Tag] })}
-                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag as unknown as Tag] })}
+                                            onClick={() => scrollToAllVideos({ tags: [tag] })}
+                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag] })}
                                         >
                                             <div className="channel-page__topic-cover-content">
                                                 <span className="channel-page__topic-cover-tag">#{tag}</span>
@@ -456,7 +457,7 @@ export default function ChannelPage() {
                                                         className="channel-page__topic-cover-see-all"
                                                         onClick={e => {
                                                             e.stopPropagation();
-                                                            scrollToAllVideos({ tags: [tag as unknown as Tag] });
+                                                            scrollToAllVideos({ tags: [tag] });
                                                         }}
                                                     >
                                                         {t('channel.see_all')} →

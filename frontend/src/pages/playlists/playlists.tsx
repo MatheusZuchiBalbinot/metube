@@ -9,7 +9,7 @@ import Button from '@ui/button/button';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
 import type { Playlist } from '@models/playlist';
-import type { Video } from '@models/video';
+import type { Video, VideoId } from '@models/video';
 import './playlists.css';
 
 export default function PlaylistsPage() {
@@ -20,9 +20,9 @@ export default function PlaylistsPage() {
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newName, setNewName] = useState('');
 
-    const resolvePlaylistVideos = useCallback((videoIds: (string | undefined)[]): Video[] => {
+    const resolvePlaylistVideos = useCallback((videoIds: VideoId[]): Video[] => {
         return videoIds
-            .map((id: string | undefined) => videos.find((v: Video) => v.id === (id as unknown as typeof v.id)))
+            .map(id => videos.find((v: Video) => v.id === id))
             .filter((v: Video | undefined): v is Video => v !== undefined);
     }, [videos]);
 
