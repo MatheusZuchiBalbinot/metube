@@ -6,18 +6,16 @@ import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';
 import { Avatar, Tooltip } from '@ui';
-import { Format } from '@utils/format';
 import TagBadge from '@components/tag/badge';
-import { ROUTES } from '@utils/routes';
-import type { Tag } from '@models/tag';
+import type { Tag } from '@models';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { video as videoApi, type Vuid } from '@api';
-import { hasViewed, markViewed } from '@utils/viewedVideos';
+import { video as videoApi, toVuid } from '@api';
 import './shorts.css';
 import { ReactionType } from '@enums/reactionType';
 import { useVideo, useBurstAnimation } from '@hooks';
+import { Format, ROUTES, hasViewed, markViewed, formatRelativeDate, cn } from '@utils';
 
 const MAX_TAGS = 3;
 
@@ -90,7 +88,7 @@ function ShortDescription({ video, visibleTags, isOpen, onClose, onTagClick, onC
     const { t } = useTranslation();
     return (
         <div
-            className={['shorts-page__desc-panel', isOpen ? 'shorts-page__desc-panel--open' : ''].filter(Boolean).join(' ')}
+            className={cn('shorts-page__desc-panel', isOpen && 'shorts-page__desc-panel--open')}
             role="dialog"
             aria-label={t('shorts.description')}
         >
@@ -118,7 +116,7 @@ function ShortDescription({ video, visibleTags, isOpen, onClose, onTagClick, onC
                     <p className="shorts-page__desc-text">{video.description}</p>
                 )}
                 <p className="shorts-page__desc-meta">
-                    {Format.views(video.views)} views · {Format.relativeDate(video.publishedAt, 'en')}
+                    {Format.views(video.views)} views · {formatRelativeDate(video.publishedAt, 'en')}
                 </p>
                 {visibleTags.length > 0 && (
                     <div className="shorts-page__tags">
@@ -354,7 +352,7 @@ const ShortItem = memo(function ShortItem({
                 {/* Description button */}
                 <Tooltip content={t('shorts.description')} side="right">
                     <button
-                        className={['shorts-page__action', showDescription ? 'shorts-page__action--active' : ''].filter(Boolean).join(' ')}
+                        className={cn('shorts-page__action', showDescription && 'shorts-page__action--active')}
                         aria-label={t('shorts.description')}
                         aria-pressed={showDescription}
                         onClick={e => handlePanelToggle(e, 'description')}
@@ -379,7 +377,7 @@ const ShortItem = memo(function ShortItem({
                             </span>
                         </button>
                     </Tooltip>
-                    <div className={['shorts-page__volume-slider-wrap', showVolumeSlider ? 'shorts-page__volume-slider-wrap--open' : ''].filter(Boolean).join(' ')}>
+                    <div className={cn('shorts-page__volume-slider-wrap', showVolumeSlider && 'shorts-page__volume-slider-wrap--open')}>
                         <input
                             type="range"
                             className="shorts-page__volume-slider"
@@ -483,7 +481,7 @@ export default function ShortsPage() {
             watchVideo(shortId);
             if (!hasViewed(shortId)) {
                 markViewed(shortId);
-                videoApi.recordView(shortId as unknown as Vuid);
+                videoApi.recordView(toVuid(shortId));
                 dispatch(videoActions.incrementViews(shortId));
             }
         }
