@@ -1,8 +1,7 @@
 /* eslint-disable complexity */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@utils/routes';
-import { isTypingInInput } from '@utils/dom';
+import { ROUTES, isTypingInInput } from '@utils';
 
 interface KeyboardShortcutsOptions {
     onOpenUpload: () => void

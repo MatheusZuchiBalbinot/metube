@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { ApiResult } from './client';
 import type { NotificationType } from '@enums/notificationType';
 
 export type { NotificationType };
@@ -19,16 +20,16 @@ interface PaginatedNotifications {
 class NotificationsApi {
     private readonly baseUrl = '/notifications';
 
-    async list(page = 1): Promise<PaginatedNotifications | null> {
+    async list(page = 1): Promise<ApiResult<PaginatedNotifications>> {
         return apiClient.get<PaginatedNotifications>(`${this.baseUrl}?page=${page}`);
     }
 
     async unreadCount(): Promise<number> {
         const result = await apiClient.get<{ count: number }>(`${this.baseUrl}/unread-count`);
-        return result?.count ?? 0;
+        return result.ok ? result.data.count : 0;
     }
 
-    async markRead(id: string): Promise<Notification | null> {
+    async markRead(id: string): Promise<ApiResult<Notification>> {
         return apiClient.post<Notification>(`${this.baseUrl}/${id}/read`);
     }
 

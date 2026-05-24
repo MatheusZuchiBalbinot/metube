@@ -1,4 +1,4 @@
-import type { User } from '@models/user';
+import type { User } from '@models';
 
 function isVerified(u: User): boolean {
     return u.emailVerifiedAt !== undefined;

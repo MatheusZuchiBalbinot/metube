@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { default as ShakaNamespace } from 'shaka-player';
+import type { ShakaLevel } from '@components/player/playerTypes';
+
+export type { ShakaLevel };
 
 type ShakaPlayer = InstanceType<typeof ShakaNamespace['Player']>;
-
-export interface ShakaLevel {
-    index: number;
-    height: number;
-    bitrate: number;
-    label: string;
-}
 
 // Polyfills need to be installed once per page
 let polyfillsInstalled = false;

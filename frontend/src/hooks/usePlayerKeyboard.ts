@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { KEYBOARD_SKIP_SECONDS } from '@components/player/playerTypes';
-import { isTypingInInput } from '@utils/dom';
+import { isTypingInInput } from '@utils';
 import { SkipDirection } from '@enums/skipDirection';
 
 interface PlayerKeyboardOptions {

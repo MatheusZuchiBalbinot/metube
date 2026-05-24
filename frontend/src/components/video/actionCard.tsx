@@ -1,4 +1,4 @@
-import type { Video, VideoId } from '@models/video';
+import type { Video, VideoId } from '@models';
 import VideoCard from './card';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';

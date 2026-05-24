@@ -8,12 +8,11 @@ import VideoCardSkeleton from '@components/video/cardSkeleton';
 import { selectWatchLaterIds } from '@store/playlistSlice';
 import { domain } from '@domain';
 import { toastActions } from '@store/toastSlice';
-import { VideoFilter } from '@utils/applyFilters';
-import type { Video, VideoId } from '@models/video';
-import type { Tag } from '@models/tag';
+import { VideoFilter, cn } from '@utils';
 import './later.css';
 import { ToastType } from '@enums/toastType';
 import { useMediaQuery, useVideo, usePlaylist } from '@hooks';
+import type { Video, VideoId, Tag } from '@models';
 
 // eslint-disable-next-line complexity
 export default function WatchLaterPage() {
@@ -115,7 +114,7 @@ export default function WatchLaterPage() {
                             actionIcon={<X size={14} strokeWidth={2} />}
                             actionLabel={t('watch_later.remove')}
                             itemClass="watch-later-page__item"
-                            btnClass={['watch-later-page__remove-btn', isTouchDevice ? 'watch-later-page__remove-btn--touch' : ''].filter(Boolean).join(' ')}
+                            btnClass={cn('watch-later-page__remove-btn', isTouchDevice && 'watch-later-page__remove-btn--touch')}
                             onAction={handleRemove}
                         />
                     ))}

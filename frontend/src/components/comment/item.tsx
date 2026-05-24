@@ -3,18 +3,19 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, Button, Modal, Spinner, Tooltip } from '@ui';
-import { Format } from '@utils/format';
-import { ROUTES } from '@utils/routes';
 import CommentForm from './form';
 import CommentHistory from './history';
 import CommentReplies from './replies';
-import type { Comment, CommentVersion } from '@models/comment';
-import type { Cuid } from '@api/comments';
+import type { Comment, CommentVersion } from '@models';
+import type { Cuid } from '@api';
 import './item.css';
 import { useAuth } from '@hooks';
+import { formatRelativeDate, ROUTES, cn } from '@utils';
+import { domain } from '@domain';
 
 interface CommentItemProps {
     comment: Comment
+    videoChannelId?: string
     loadingReplies: Record<string, boolean>
     onToggleLike: (cuid: Cuid) => Promise<void>
     onEdit: (cuid: Cuid, content: string) => Promise<void>
@@ -26,6 +27,7 @@ interface CommentItemProps {
 
 export default function CommentItem({
     comment,
+    videoChannelId,
     loadingReplies,
     onToggleLike,
     onEdit,
@@ -43,7 +45,12 @@ export default function CommentItem({
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     const displayContent = viewingVersion !== null ? viewingVersion.content : comment.content;
-    const isOwner = user !== null && user.uuid === comment.author.uuid;
+    const canEdit = user !== null && domain.comment.canEdit(comment, user);
+    const canDelete = user !== null && (
+        videoChannelId !== undefined
+            ? domain.comment.canDelete(comment, user, videoChannelId)
+            : domain.comment.isOwnComment(comment, user)
+    );
     const hasReplies = comment.replyCount > 0;
     const isRepliesLoading = loadingReplies[comment.id] ?? false;
 
@@ -54,10 +61,7 @@ export default function CommentItem({
         return showReplies ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
     }
 
-    const likeClass = [
-        'comment-item__like-btn',
-        comment.isLiked ? 'comment-item__like-btn--active' : '',
-    ].filter(Boolean).join(' ');
+    const likeClass = cn('comment-item__like-btn', comment.isLiked && 'comment-item__like-btn--active');
 
     async function handleEdit(content: string) {
         await onEdit(comment.id, content);
@@ -106,7 +110,7 @@ export default function CommentItem({
                         {comment.author.name}
                     </Link>
                     <span className="comment-item__time">
-                        {Format.relativeDate(comment.createdAt, i18n.language)}
+                        {formatRelativeDate(comment.createdAt, i18n.language)}
                     </span>
                     {comment.isEdited && (
                         <CommentHistory
@@ -169,27 +173,31 @@ export default function CommentItem({
                         </button>
                     </Tooltip>
 
-                    {isOwner && (
+                    {(canEdit || canDelete) && (
                         <div className="comment-item__owner-actions">
                             <span className="comment-item__actions-dot" aria-hidden="true" />
-                            <Tooltip content={t('comments.edit')} side="top">
-                                <button
-                                    className="comment-item__action-btn"
-                                    onClick={() => setIsEditing(v => !v)}
-                                    aria-label={t('comments.edit')}
-                                >
-                                    <Pencil size={13} />
-                                </button>
-                            </Tooltip>
-                            <Tooltip content={t('comments.delete')} side="top">
-                                <button
-                                    className="comment-item__action-btn comment-item__action-btn--danger"
-                                    onClick={() => setIsDeleteOpen(true)}
-                                    aria-label={t('comments.delete')}
-                                >
-                                    <Trash2 size={13} />
-                                </button>
-                            </Tooltip>
+                            {canEdit && (
+                                <Tooltip content={t('comments.edit')} side="top">
+                                    <button
+                                        className="comment-item__action-btn"
+                                        onClick={() => setIsEditing(v => !v)}
+                                        aria-label={t('comments.edit')}
+                                    >
+                                        <Pencil size={13} />
+                                    </button>
+                                </Tooltip>
+                            )}
+                            {canDelete && (
+                                <Tooltip content={t('comments.delete')} side="top">
+                                    <button
+                                        className="comment-item__action-btn comment-item__action-btn--danger"
+                                        onClick={() => setIsDeleteOpen(true)}
+                                        aria-label={t('comments.delete')}
+                                    >
+                                        <Trash2 size={13} />
+                                    </button>
+                                </Tooltip>
+                            )}
                         </div>
                     )}
                 </div>
@@ -223,6 +231,7 @@ export default function CommentItem({
                 {showReplies && hasReplies && (
                     <CommentReplies
                         parentCuid={comment.id}
+                        videoChannelId={videoChannelId}
                         isLoading={isRepliesLoading}
                         getReplies={getReplies}
                         loadingReplies={loadingReplies}

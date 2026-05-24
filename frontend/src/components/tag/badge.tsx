@@ -1,5 +1,5 @@
-import type { Tag } from '@models/tag';
-import { TagColors } from '@utils/tagColors';
+import type { Tag } from '@models';
+import { TagColors } from '@utils';
 import './badge.css';
 
 interface TagBadgeProps {

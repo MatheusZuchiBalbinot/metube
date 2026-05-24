@@ -1,4 +1,5 @@
 import { Tooltip } from '@ui';
+import { cn } from '@utils';
 
 interface ReactionBtnProps {
     isActive: boolean
@@ -27,7 +28,7 @@ export default function ReactionBtn({
 }: ReactionBtnProps) {
     const tooltipText = isActive && activeLabel ? activeLabel : label;
 
-    const btnClass = [className, isActive ? activeClass : ''].filter(Boolean).join(' ');
+    const btnClass = cn(className, isActive && activeClass);
 
     return (
         <Tooltip content={tooltipText} side={tooltipSide}>

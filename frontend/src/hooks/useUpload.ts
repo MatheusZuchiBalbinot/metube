@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { video } from '@api/videos';
-import type { VideoUploadPayload } from '@api/videos';
-import type { Video } from '@models/video';
-import type { UploadProgress } from '@utils/upload';
+import { video } from '@api';
+import type { VideoUploadPayload } from '@api';
+import type { Video } from '@models';
+import type { UploadProgress } from '@utils';
 import { UploadStatus } from '@enums/uploadStatus';
 
 export type { UploadStatus } from '@enums/uploadStatus';
@@ -17,13 +17,13 @@ export function useUpload() {
 
         const result = await video.create(payload, setProgress);
 
-        if (result) {
+        if (result.ok) {
             setStatus(UploadStatus.DONE);
-        } else {
-            setStatus(UploadStatus.ERROR);
+            return result.data;
         }
 
-        return result;
+        setStatus(UploadStatus.ERROR);
+        return null;
     }
 
     function reset() {

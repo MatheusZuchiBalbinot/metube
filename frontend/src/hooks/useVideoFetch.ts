@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { video as videoApi, type Vuid } from '@api';
-import type { Video } from '@models/video';
+import { video as videoApi, toVuid } from '@api';
+import type { Video } from '@models';
 import { domain } from '@domain';
 
 export function useVideoFetch(id: string | undefined, storeVideo: Video | undefined): { video: Video | undefined; fetchFailed: boolean } {
@@ -24,13 +24,13 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFetchFailed(false);
 
-        videoApi.get(id as unknown as Vuid).then(result => {
-            if (result !== null) {
-                setFetchedVideo(result);
+        videoApi.get(toVuid(id)).then(result => {
+            if (result.ok) {
+                setFetchedVideo(result.data);
             } else {
                 setFetchFailed(true);
             }
-        }).catch(() => setFetchFailed(true));
+        });
     }, [id, storeVideo]);
 
     // When a VideoStatusUpdated WS event arrives for the current video and the video
@@ -43,9 +43,9 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
             return;
         }
 
-        videoApi.get(id as unknown as Vuid).then(result => {
-            if (result !== null) {
-                setFetchedVideo(result);
+        videoApi.get(toVuid(id)).then(result => {
+            if (result.ok) {
+                setFetchedVideo(result.data);
             }
         });
     }, [lastVideoStatusUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -62,16 +62,16 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
             return;
         }
 
-        const vuid = id as unknown as Vuid;
+        const vuid = toVuid(id);
         const timer = setInterval(() => {
             videoApi.get(vuid).then(result => {
-                const hasTransitioned = result !== null && !domain.video.isProcessing(result);
+                const hasTransitioned = result.ok && !domain.video.isProcessing(result.data);
 
                 if (!hasTransitioned) {
                     return;
                 }
 
-                dispatch(videoActions.updateVideo(result));
+                dispatch(videoActions.updateVideo(result.data));
             });
         }, 5000);
 

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
-import { Format } from '@utils/format';
+import { formatDuration, cn } from '@utils';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerSettings from './playerSettings';
@@ -213,12 +213,12 @@ export function DefaultVideoPlayer({
 
     // ─── Render ───────────────────────────────────────────────────────────────
 
-    const wrapClass = [
+    const wrapClass = cn(
         'vp',
-        showControls ? 'vp--controls-visible' : '',
-        (theaterMode ?? false) ? 'vp--theater' : '',
-        isDragging ? 'vp--seeking' : '',
-    ].filter(Boolean).join(' ');
+        showControls && 'vp--controls-visible',
+        (theaterMode ?? false) && 'vp--theater',
+        isDragging && 'vp--seeking',
+    );
 
     const isTheaterMode = theaterMode ?? false;
 
@@ -303,7 +303,7 @@ export function DefaultVideoPlayer({
                         </div>
 
                         <span className="vp__time">
-                            {Format.duration(currentTime)} / {Format.duration(duration)}
+                            {formatDuration(currentTime)} / {formatDuration(duration)}
                         </span>
                     </div>
 

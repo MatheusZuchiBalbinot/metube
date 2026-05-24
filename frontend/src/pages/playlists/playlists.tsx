@@ -6,10 +6,9 @@ import EmptyState from '@ui/empty/empty';
 import Button from '@ui/button/button';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
-import type { Playlist } from '@models/playlist';
-import type { Video, VideoId } from '@models/video';
 import './playlists.css';
 import { usePlaylist, useVideo } from '@hooks';
+import type { Playlist, Video, VideoId } from '@models';
 
 export default function PlaylistsPage() {
     const { t } = useTranslation();

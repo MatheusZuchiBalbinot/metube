@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { signInThunk, signOutThunk, authActions } from '@store/authSlice';
-import type { User } from '@api/auth';
+import type { User } from '@api';
 
 export type { User };
 

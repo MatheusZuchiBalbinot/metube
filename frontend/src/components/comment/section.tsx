@@ -3,15 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { Avatar, Button, Spinner } from '@ui';
 import CommentForm from './form';
 import CommentItem from './item';
-import type { Vuid } from '@api/videos';
+import type { Vuid } from '@api';
 import './section.css';
 import { useComments, useAuth } from '@hooks';
 
 interface CommentSectionProps {
     vuid: Vuid
+    videoChannelId?: string
 }
 
-export default function CommentSection({ vuid }: CommentSectionProps) {
+export default function CommentSection({ vuid, videoChannelId }: CommentSectionProps) {
     const { t } = useTranslation();
     const { user } = useAuth();
     const {
@@ -73,6 +74,7 @@ export default function CommentSection({ vuid }: CommentSectionProps) {
                         <CommentItem
                             key={comment.id}
                             comment={comment}
+                            videoChannelId={videoChannelId}
                             loadingReplies={loadingReplies}
                             onToggleLike={toggleLike}
                             onEdit={edit}

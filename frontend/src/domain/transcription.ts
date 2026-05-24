@@ -1,4 +1,4 @@
-import type { VideoTranscription } from '@api/videos';
+import type { VideoTranscription } from '@api';
 
 function isProcessing(t: VideoTranscription): boolean {
     return t.status === 'pending' || t.status === 'processing';

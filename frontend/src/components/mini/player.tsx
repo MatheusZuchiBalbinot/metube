@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Maximize2 } from 'lucide-react';
-import { videoUrl } from '@utils/routes';
+import { videoUrl, cn } from '@utils';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import VideoPlayer from '@components/player/player';
-import type { Video } from '@models/video';
+import type { Video } from '@models';
 import './player.css';
 import { useVideo } from '@hooks';
 
@@ -169,7 +169,7 @@ export default function MiniPlayer() {
         return null;
     }
 
-    const outerClass = ['mini-player', isDragging ? 'mini-player--dragging' : ''].filter(Boolean).join(' ');
+    const outerClass = cn('mini-player', isDragging && 'mini-player--dragging');
     const positionStyle = pos !== null
         ? { left: pos.x, top: pos.y }
         : { right: 24, bottom: 24 };

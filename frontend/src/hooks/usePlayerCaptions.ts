@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { VideoCaption } from '@models/video';
+import type { VideoCaption } from '@models';
 
 const STORAGE_KEY = 'captions.preferredLang';
 

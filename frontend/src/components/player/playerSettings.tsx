@@ -1,6 +1,7 @@
 import { Settings, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ShakaLevel } from '@hooks';
+import { cn } from '@utils';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
 
@@ -31,10 +32,7 @@ export default function PlayerSettings({
                         <div className="vp__settings-speeds" role="listbox" aria-label={t('player.speed')}>
                             {SPEED_OPTIONS.map(rate => {
                                 const isActive = playbackRate === rate;
-                                const optClass = [
-                                    'vp__settings-option',
-                                    isActive ? 'vp__settings-option--active' : '',
-                                ].filter(Boolean).join(' ');
+                                const optClass = cn('vp__settings-option', isActive && 'vp__settings-option--active');
                                 return (
                                     <button
                                         key={rate}
@@ -55,7 +53,7 @@ export default function PlayerSettings({
                             <span className="vp__settings-section-label">{t('player.quality')}</span>
                             <div className="vp__settings-speeds" role="listbox" aria-label={t('player.quality')}>
                                 <button
-                                    className={['vp__settings-option', currentQuality === -1 ? 'vp__settings-option--active' : ''].filter(Boolean).join(' ')}
+                                    className={cn('vp__settings-option', currentQuality === -1 && 'vp__settings-option--active')}
                                     onClick={e => onQualityChange(e, -1)}
                                     role="option"
                                     aria-selected={currentQuality === -1}
@@ -68,7 +66,7 @@ export default function PlayerSettings({
                                     return (
                                         <button
                                             key={level.index}
-                                            className={['vp__settings-option', isActive ? 'vp__settings-option--active' : ''].filter(Boolean).join(' ')}
+                                            className={cn('vp__settings-option', isActive && 'vp__settings-option--active')}
                                             onClick={e => onQualityChange(e, level.index)}
                                             role="option"
                                             aria-selected={isActive}

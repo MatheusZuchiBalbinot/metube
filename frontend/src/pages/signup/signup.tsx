@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, User, LogIn, AlertCircle } from 'lucide-react';
 import { Button, Input, Spinner } from '@ui';
-import { ROUTES } from '@utils/routes';
+import { ROUTES } from '@utils';
 import { useAppDispatch } from '@store';
 import { signUpThunk } from '@store/authSlice';
 import '../login/login.css';

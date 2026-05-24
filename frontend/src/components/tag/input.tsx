@@ -2,7 +2,7 @@ import { useRef, useState, useMemo, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, Tooltip } from '@ui';
-import type { Tag } from '@models/tag';
+import type { Tag } from '@models';
 import './input.css';
 
 const MAX_SUGGESTIONS = 6 as const;

@@ -2,8 +2,8 @@ import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store';
 import { notificationsActions } from '@store/notificationsSlice';
-import { notifications as notificationsApi } from '@api/notifications';
-import type { Notification } from '@api/notifications';
+import { notifications as notificationsApi } from '@api';
+import type { AppNotification as Notification } from '@api';
 import NotificationItem from './item';
 import './panel.css';
 

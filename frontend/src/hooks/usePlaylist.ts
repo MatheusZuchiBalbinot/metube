@@ -1,64 +1,77 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { playlistActions } from '@store/playlistSlice';
 import { toastActions } from '@store/toastSlice';
-import { playlist as playlistApi } from '@api/playlists';
+import { playlist as playlistApi, toPuid, toVuid } from '@api';
 import { useTranslation } from 'react-i18next';
-import type { Playlist, PlaylistId } from '@models/playlist';
-import type { VideoId } from '@models/video';
-import type { Puid } from '@api/playlists';
-import type { Vuid } from '@api/videos';
+import { ToastType } from '@enums/toastType';
+import type { Playlist, PlaylistId, VideoId } from '@models';
 
 export type { Playlist };
-import { ToastType } from '@enums/toastType';
 
 export function usePlaylist() {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
     const playlists = useAppSelector(s => s.playlist.playlists);
 
+    function showGenericError() {
+        dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
+    }
+
     async function createPlaylist(name: string): Promise<PlaylistId | null> {
         const result = await playlistApi.create(name);
-        if (!result) {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
+
+        if (!result.ok) {
+            showGenericError();
             return null;
         }
-        dispatch(playlistActions.createPlaylist({ id: result.id, name: result.name }));
-        return result.id;
+
+        dispatch(playlistActions.createPlaylist({ id: result.data.id, name: result.data.name }));
+        return result.data.id;
     }
 
-    function renamePlaylist(id: PlaylistId, name: string): void {
+    async function renamePlaylist(id: PlaylistId, name: string): Promise<void> {
         dispatch(playlistActions.renamePlaylist({ id, name }));
-        playlistApi.update(id as unknown as Puid, name).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
-        });
+        const result = await playlistApi.update(toPuid(id), name);
+
+        if (!result.ok) {
+            showGenericError();
+        }
     }
 
-    function deletePlaylist(id: PlaylistId): void {
+    async function deletePlaylist(id: PlaylistId): Promise<void> {
         dispatch(playlistActions.deletePlaylist(id));
-        playlistApi.delete(id as unknown as Puid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
-        });
+        const result = await playlistApi.delete(toPuid(id));
+
+        if (!result.ok) {
+            showGenericError();
+        }
     }
 
-    function addVideoToPlaylist(playlistId: PlaylistId, videoId: VideoId): void {
+    async function addVideoToPlaylist(playlistId: PlaylistId, videoId: VideoId): Promise<void> {
         dispatch(playlistActions.addVideoToPlaylist({ playlistId, videoId }));
-        playlistApi.addVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
-        });
+        const result = await playlistApi.addVideo(toPuid(playlistId), toVuid(videoId));
+
+        if (!result.ok) {
+            showGenericError();
+        }
     }
 
-    function removeVideoFromPlaylist(playlistId: PlaylistId, videoId: VideoId): void {
+    async function removeVideoFromPlaylist(playlistId: PlaylistId, videoId: VideoId): Promise<void> {
         dispatch(playlistActions.removeVideoFromPlaylist({ playlistId, videoId }));
-        playlistApi.removeVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
-        });
+        const result = await playlistApi.removeVideo(toPuid(playlistId), toVuid(videoId));
+
+        if (!result.ok) {
+            showGenericError();
+        }
     }
 
-    function reorderVideosInPlaylist(playlistId: PlaylistId, videoIds: VideoId[]): void {
+    async function reorderVideosInPlaylist(playlistId: PlaylistId, videoIds: VideoId[]): Promise<void> {
         dispatch(playlistActions.reorderVideosInPlaylist({ playlistId, videoIds }));
-        playlistApi.reorder(playlistId as unknown as Puid, videoIds as unknown as Vuid[]).catch(() => {
-            dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
-        });
+        const result = await playlistApi.reorder(toPuid(playlistId), videoIds.map(toVuid));
+
+        if (!result.ok) {
+            showGenericError();
+        }
     }
 
     function getVideoPlaylistIds(videoId: VideoId): PlaylistId[] {

@@ -1,5 +1,6 @@
 import { apiClient } from './client';
-import type { Video } from '@models/video';
+import type { ApiResult } from './client';
+import type { Video } from '@models';
 import type { Vuid } from './videos';
 
 export interface HistoryEvent {
@@ -11,11 +12,11 @@ class HistoryApi {
     private readonly baseUrl = '/users/me/history';
     private readonly userMeUrl = '/users/me';
 
-    async list(): Promise<Video[] | null> {
+    async list(): Promise<ApiResult<Video[]>> {
         return apiClient.get<Video[]>(this.baseUrl);
     }
 
-    async events(): Promise<HistoryEvent[] | null> {
+    async events(): Promise<ApiResult<HistoryEvent[]>> {
         return apiClient.get<HistoryEvent[]>(`${this.baseUrl}/events`);
     }
 
@@ -29,7 +30,7 @@ class HistoryApi {
 
     async progress(): Promise<Record<string, number> | null> {
         const result = await apiClient.get<{ data: Record<string, number> }>(`${this.userMeUrl}/progress`);
-        return result?.data ?? null;
+        return result.ok ? result.data.data : null;
     }
 }
 

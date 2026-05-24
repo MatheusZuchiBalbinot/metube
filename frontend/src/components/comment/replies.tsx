@@ -1,11 +1,12 @@
 import { Spinner } from '@ui';
 import CommentItem from './item';
-import type { Comment } from '@models/comment';
-import type { Cuid } from '@api/comments';
+import type { Comment } from '@models';
+import type { Cuid } from '@api';
 import './replies.css';
 
 interface CommentRepliesProps {
     parentCuid: Cuid
+    videoChannelId?: string
     isLoading?: boolean
     getReplies: (cuid: Cuid) => Comment[]
     loadingReplies: Record<string, boolean>
@@ -18,6 +19,7 @@ interface CommentRepliesProps {
 
 export default function CommentReplies({
     parentCuid,
+    videoChannelId,
     isLoading = false,
     getReplies,
     loadingReplies,
@@ -43,6 +45,7 @@ export default function CommentReplies({
                 <CommentItem
                     key={reply.id}
                     comment={reply}
+                    videoChannelId={videoChannelId}
                     loadingReplies={loadingReplies}
                     onToggleLike={onToggleLike}
                     onEdit={onEdit}

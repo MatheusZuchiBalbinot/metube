@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X } from 'lucide-react';
-import { video as videoApi, type Vuid, type AiSuggestion } from '@api/videos';
+import { video as videoApi } from '@api';
+import type { Vuid, AiSuggestion } from '@api';
 import { useAppDispatch } from '@store/index';
 import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
 import { ToastType } from '@enums/toastType';
-import type { Video } from '@models/video';
+import type { Video } from '@models';
 import { domain } from '@domain';
 import './aiSuggestions.css';
 import { useVideo } from '@hooks';

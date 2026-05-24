@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, Clapperboard, History, ThumbsUp, User, ListVideo } from 'lucide-react';
-import { ROUTES } from '@utils/routes';
+import { ROUTES, cn } from '@utils';
 import { useAppSelector } from '@store';
 import { Tooltip, Avatar } from '@ui';
 import './sidebar.css';
@@ -133,7 +133,7 @@ export default function AppSidebar({ collapsed, hidden }: AppSidebarProps) {
 
     return (
         <nav
-            className={['app-sidebar', collapsed ? 'app-sidebar--collapsed' : '', hidden ? 'app-sidebar--hidden' : ''].filter(Boolean).join(' ')}
+            className={cn('app-sidebar', collapsed && 'app-sidebar--collapsed', hidden && 'app-sidebar--hidden')}
             aria-label={t('nav.aria_label')}
         >
             <ul className="app-sidebar__list">

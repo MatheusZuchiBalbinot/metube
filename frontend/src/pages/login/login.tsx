@@ -5,7 +5,7 @@ import type { Location } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { Button, Input, Spinner } from '@ui';
-import { ROUTES } from '@utils/routes';
+import { ROUTES } from '@utils';
 import './login.css';
 import { useAuth } from '@hooks';
 

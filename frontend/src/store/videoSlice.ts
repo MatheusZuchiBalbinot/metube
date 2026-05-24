@@ -1,9 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { type Video, type VideoId, type VideoStatus } from '@models/video';
-import type { Tag } from '@models/tag';
-import type { Vuid } from '@api/videos';
-import { STORAGE_KEYS } from '@utils/storageKeys';
-import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
+import type { Vuid } from '@api';
+import { STORAGE_KEYS, loadFromStorage, isArray, isObject, isNumberInRange } from '@utils';
+import type { Video, VideoId, VideoStatus, Tag } from '@models';
 
 export interface TagView {
     tag: Tag

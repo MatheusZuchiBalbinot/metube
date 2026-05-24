@@ -4,4 +4,5 @@ export const QuickRangeKind = {
     LAST_90D: 'last90d',
     THIS_YEAR: 'thisYear',
 } as const;
+
 export type QuickRangeKind = typeof QuickRangeKind[keyof typeof QuickRangeKind];

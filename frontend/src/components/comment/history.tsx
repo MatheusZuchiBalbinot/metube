@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { History, Check } from 'lucide-react';
 import { Spinner } from '@ui';
-import { Format } from '@utils/format';
+import { formatRelativeDate, cn } from '@utils';
 import { comments as commentsApi } from '@api';
-import type { Cuid } from '@api/comments';
-import type { CommentVersion } from '@models/comment';
+import type { Cuid } from '@api';
+import type { CommentVersion } from '@models';
 import './history.css';
 
 interface CommentHistoryProps {
@@ -37,8 +37,8 @@ export default function CommentHistory({ cuid, selectedVersion, onVersionSelect 
             const result = await commentsApi.versions(cuid);
             setIsLoading(false);
 
-            if (result !== null) {
-                setVersions(result);
+            if (result.ok) {
+                setVersions(result.data);
             }
         }
 
@@ -66,10 +66,7 @@ export default function CommentHistory({ cuid, selectedVersion, onVersionSelect 
         };
     }, [isOpen, close]);
 
-    const triggerClass = [
-        'comment-history__trigger',
-        isViewingOldVersion ? 'comment-history__trigger--active' : '',
-    ].filter(Boolean).join(' ');
+    const triggerClass = cn('comment-history__trigger', isViewingOldVersion && 'comment-history__trigger--active');
 
     return (
         <div className="comment-history" ref={containerRef}>
@@ -100,10 +97,7 @@ export default function CommentHistory({ cuid, selectedVersion, onVersionSelect 
                         return (
                             <button
                                 key={v.version}
-                                className={[
-                                    'comment-history__option',
-                                    isSelected ? 'comment-history__option--selected' : '',
-                                ].filter(Boolean).join(' ')}
+                                className={cn('comment-history__option', isSelected && 'comment-history__option--selected')}
                                 role="option"
                                 aria-selected={isSelected}
                                 onClick={() => {
@@ -117,7 +111,7 @@ export default function CommentHistory({ cuid, selectedVersion, onVersionSelect 
                                         : t('comments.history_version', { n: v.version })}
                                 </span>
                                 <span className="comment-history__option-date">
-                                    {Format.relativeDate(v.createdAt, i18n.language)}
+                                    {formatRelativeDate(v.createdAt, i18n.language)}
                                 </span>
                                 {isSelected && <Check size={12} className="comment-history__option-check" />}
                             </button>
