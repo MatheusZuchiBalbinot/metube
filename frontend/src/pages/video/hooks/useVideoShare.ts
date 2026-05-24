@@ -5,7 +5,7 @@ import { toastActions } from '@store/toastSlice';
 import { useBurstAnimation } from '@hooks';
 import { ToastType } from '@enums/toastType';
 
-interface UseVideoShareResult {
+export interface UseVideoShareResult {
     isShareDropdownOpen: boolean
     setIsShareDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>
     isCopied: boolean
