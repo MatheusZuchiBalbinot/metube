@@ -5,11 +5,9 @@ import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
-import { VideoStatus } from '@models/video';
-import { video as videoApi } from '@api/videos';
-import type { Tag } from '@models/tag';
-import type { Vuid } from '@api/videos';
-import { Format } from '@utils/format';
+import { video as videoApi, toVuid } from '@api';
+import type { Vuid } from '@api';
+import { Format, formatEta, cn } from '@utils';
 import TagInput from '@components/tag/input';
 import DatePicker from '@ui/date/picker';
 import Badge from '@ui/badge/badge';
@@ -18,10 +16,9 @@ import { ToastType } from '@enums/toastType';
 import { UploadMode } from '@enums/uploadMode';
 import { UploadStatus } from '@enums/uploadStatus';
 import { useVideo, useTusUpload, useVideoProcessingPoll } from '@hooks';
+import { VideoStatus, type Tag } from '@models';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-
 
 interface FormState {
     title: string
@@ -260,13 +257,13 @@ export default function UploadModal() {
             scheduledAt,
         });
 
-        if (result === null) {
+        if (!result.ok) {
             dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: ToastType.ERROR }));
             return;
         }
 
-        addVideo(result);
-        setPollingVuids(prev => [...prev, result.id as unknown as Vuid]);
+        addVideo(result.data);
+        setPollingVuids(prev => [...prev, toVuid(result.data.id)]);
         dispatch(toastActions.addToast({ message: t('video.processing_toast'), type: ToastType.INFO }));
         closeUploadModal();
         resetSingleForm();
@@ -341,17 +338,17 @@ export default function UploadModal() {
                 is_batch: true,
             });
 
-            if (result) {
+            if (result.ok) {
                 doneCount++;
-                addVideo(result);
-                setPollingVuids(prev => [...prev, result.id as unknown as Vuid]);
+                addVideo(result.data);
+                setPollingVuids(prev => [...prev, toVuid(result.data.id)]);
             } else {
                 errorCount++;
             }
 
             setBatchItems(prev => prev.map(i =>
                 i.id === item.id
-                    ? { ...i, status: result ? 'done' : 'error', progress: result ? 100 : i.progress }
+                    ? { ...i, status: result.ok ? 'done' : 'error', progress: result.ok ? 100 : i.progress }
                     : i,
             ));
         }));
@@ -496,7 +493,7 @@ export default function UploadModal() {
                     size="sm"
                     role="tab"
                     aria-selected={mode === UploadMode.SINGLE}
-                    className={['upload-modal__tab', mode === UploadMode.SINGLE ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
+                    className={cn('upload-modal__tab', mode === UploadMode.SINGLE && 'upload-modal__tab--active')}
                     onClick={handleModeToSingle}
                 >
                     {t('video.upload_mode_single')}
@@ -506,7 +503,7 @@ export default function UploadModal() {
                     size="sm"
                     role="tab"
                     aria-selected={mode === UploadMode.BATCH}
-                    className={['upload-modal__tab', mode === UploadMode.BATCH ? 'upload-modal__tab--active' : ''].filter(Boolean).join(' ')}
+                    className={cn('upload-modal__tab', mode === UploadMode.BATCH && 'upload-modal__tab--active')}
                     onClick={handleModeToBatch}
                 >
                     {t('video.upload_mode_batch')}
@@ -622,7 +619,7 @@ export default function UploadModal() {
                             <div className="upload-modal__progress-info">
                                 <span>{Format.percent(progress.percent)}</span>
                                 <span>{Format.speed(progress.speed)}</span>
-                                <span>{Format.eta(progress.remaining)}</span>
+                                <span>{formatEta(progress.remaining)}</span>
                             </div>
                         </div>
                     )}
@@ -651,7 +648,7 @@ export default function UploadModal() {
                 <div className="upload-modal__batch">
                     {/* Multi-file drop zone */}
                     <div
-                        className={['upload-modal__batch-drop', batchDragging ? 'upload-modal__batch-drop--dragging' : ''].filter(Boolean).join(' ')}
+                        className={cn('upload-modal__batch-drop', batchDragging && 'upload-modal__batch-drop--dragging')}
                         onDragOver={handleBatchDragOver}
                         onDragLeave={handleBatchDragLeave}
                         onDrop={handleBatchDrop}
