@@ -1,4 +1,5 @@
 import type { Video, VideoId, VideoCaption, VideoStatus } from '@models/video';
+import type { Seconds, ViewCount } from '@models/units';
 import type { User, UserId } from '@models/user';
 import type { ChannelId } from '@models/channel';
 import type { Comment, Cuid, CommentVersion } from '@models/comment';
@@ -89,8 +90,8 @@ export function parseVideo(raw: unknown): Video | null {
         title: str(rawData['title']),
         description: str(rawData['description']),
         status: str(rawData['status']) as VideoStatus,
-        views: num(rawData['views']),
-        duration: typeof rawData['duration'] === 'number' ? rawData['duration'] : undefined,
+        views: num(rawData['views']) as unknown as ViewCount,
+        duration: typeof rawData['duration'] === 'number' ? rawData['duration'] as unknown as Seconds : undefined,
         videoUrl: str(rawData['video_url']) || undefined,
         thumbnail: str(rawData['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
         publishedAt: str(rawData['published_at']) || createdAt,

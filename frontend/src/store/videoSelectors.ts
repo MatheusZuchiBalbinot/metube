@@ -42,3 +42,21 @@ export const selectDislikedSet = createSelector(
 );
 
 export const selectRecommendations = (s: WithVideo) => s.video.serverRecommendations;
+
+export const selectWatchedTagFrequency = createSelector(
+    [(s: WithVideo) => s.video.watchHistory, (s: WithVideo) => s.video.videos],
+    (watchHistory, videos): Map<Tag, number> => {
+        const videoMap = new Map(videos.map(v => [v.id, v]));
+        const freq = new Map<Tag, number>();
+        for (const id of watchHistory) {
+            const video = videoMap.get(id);
+            if (!video) {
+                continue;
+            }
+            for (const tag of video.tags) {
+                freq.set(tag, (freq.get(tag) ?? 0) + 1);
+            }
+        }
+        return freq;
+    },
+);

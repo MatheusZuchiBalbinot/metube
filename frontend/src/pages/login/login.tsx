@@ -4,10 +4,10 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react
 import type { Location } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
-import { useAuth } from '@hooks/useAuth';
 import { Button, Input, Spinner } from '@ui';
 import { ROUTES } from '@utils/routes';
 import './login.css';
+import { useAuth } from '@hooks';
 
 export default function LoginPage() {
     const { t } = useTranslation();

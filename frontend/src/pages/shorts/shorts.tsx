@@ -5,12 +5,10 @@ import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX
 import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';
-import { useVideo } from '@hooks/useVideo';
 import { Avatar, Tooltip } from '@ui';
 import { Format } from '@utils/format';
 import TagBadge from '@components/tag/badge';
 import { ROUTES } from '@utils/routes';
-import { useBurstAnimation } from '@hooks/useBurstAnimation';
 import type { Tag } from '@models/tag';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
@@ -19,6 +17,7 @@ import { video as videoApi, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
 import './shorts.css';
 import { ReactionType } from '@enums/reactionType';
+import { useVideo, useBurstAnimation } from '@hooks';
 
 const MAX_TAGS = 3;
 

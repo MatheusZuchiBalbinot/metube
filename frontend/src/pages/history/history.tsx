@@ -1,11 +1,8 @@
 import { useMemo, useState, useRef } from 'react';
-import { useDebounce } from '@hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@hooks/useMediaQuery';
 import { History, Search, Trash2, X } from 'lucide-react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
-import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { videoActions } from '@store/videoSlice';
@@ -17,6 +14,7 @@ import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/
 import './history.css';
 import { ToastType } from '@enums/toastType';
 import { HistoryItemKind } from '@enums/historyItemKind';
+import { useDebounce, useMediaQuery, useVideo } from '@hooks';
 
 // Estimated heights for virtualizer — group headers are shorter than rows.
 const GROUP_HEADER_HEIGHT = 36;

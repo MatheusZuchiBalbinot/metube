@@ -8,7 +8,6 @@ import type { Playlist } from '@models/playlist';
 import { domain } from '@domain';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
-import { usePlaylist } from '@hooks/usePlaylist';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
@@ -17,6 +16,7 @@ import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
 import './card.css';
 import { ToastType } from '@enums/toastType';
+import { usePlaylist } from '@hooks';
 
 interface PlaylistCardProps {
     playlist: Playlist

@@ -1,5 +1,6 @@
 import type { Video } from '@models/video';
 import type { Tag } from '@models/tag';
+import type { Seconds, ViewCount } from '@models/units';
 
 /** Returns the first `count` tags and the number of remaining extras. */
 export function getVisibleTags(tags: Tag[], count = 3): { visible: Tag[]; extra: number } {
@@ -7,18 +8,18 @@ export function getVisibleTags(tags: Tag[], count = 3): { visible: Tag[]; extra:
 }
 
 /** Counts how many videos each tag appears in. */
-export function countTagFrequency(videos: Video[]): Record<string, number> {
-    const freq: Record<string, number> = {};
+export function countTagFrequency(videos: Video[]): Map<Tag, number> {
+    const freq = new Map<Tag, number>();
     for (const video of videos) {
         for (const tag of video.tags) {
-            freq[tag] = (freq[tag] ?? 0) + 1;
+            freq.set(tag, (freq.get(tag) ?? 0) + 1);
         }
     }
     return freq;
 }
 
 export class Format {
-    static duration(seconds: number): string {
+    static duration(seconds: Seconds): string {
         const isInvalid = !Number.isFinite(seconds) || seconds < 0;
         if (isInvalid) {
             return '0:00';
@@ -35,7 +36,7 @@ export class Format {
         return `${minutes}:${String(secs).padStart(2, '0')}`;
     }
 
-    static durationCompact(seconds: number): string {
+    static durationCompact(seconds: Seconds): string {
         const isInvalid = !Number.isFinite(seconds) || seconds <= 0;
         if (isInvalid) {
             return '0m';
@@ -57,7 +58,7 @@ export class Format {
         return '<1m';
     }
 
-    static views(views: number): string {
+    static views(views: ViewCount): string {
         const isMillion = views >= 1_000_000;
         if (isMillion) {
             return `${(views / 1_000_000).toFixed(1)}M`;

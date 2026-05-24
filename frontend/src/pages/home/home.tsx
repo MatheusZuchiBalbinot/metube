@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, type Transition } from 'framer-motion';
 import { useDispatch } from 'react-redux';
-import { useInView } from '@hooks/useInView';
 import { Filter, Flame, PlayCircle, Shuffle } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
-import { useVideo } from '@hooks/useVideo';
-import { useFilterState } from '@hooks/useFilterState';
 import { VideoFilter } from '@utils/applyFilters';
 import { ROUTES, videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
@@ -19,6 +16,7 @@ import { video } from '@api/videos';
 import type { Tag } from '@models/tag';
 import type { Video, VideoId } from '@models/video';
 import './home.css';
+import { useInView, useVideo, useFilterState } from '@hooks';
 
 // 2 years: long enough to include recent uploads but short enough to filter
 // out truly old content from the trending carousel.

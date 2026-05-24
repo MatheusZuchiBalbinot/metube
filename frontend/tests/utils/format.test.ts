@@ -56,8 +56,8 @@ describe('getVisibleTags', () => {
 // ─── countTagFrequency ────────────────────────────────────────────────────────
 
 describe('countTagFrequency', () => {
-    it('returns empty object for no videos', () => {
-        expect(countTagFrequency([])).toEqual({});
+    it('returns empty map for no videos', () => {
+        expect(countTagFrequency([])).toEqual(new Map());
     });
 
     it('counts single tag across multiple videos', () => {
@@ -66,7 +66,7 @@ describe('countTagFrequency', () => {
             makeVideo({ tags: ['react'] }),
             makeVideo({ tags: ['react'] }),
         ];
-        expect(countTagFrequency(videos)).toEqual({ react: 3 });
+        expect(countTagFrequency(videos)).toEqual(new Map([['react', 3]]));
     });
 
     it('counts multiple tags independently', () => {
@@ -75,12 +75,15 @@ describe('countTagFrequency', () => {
             makeVideo({ tags: ['react', 'css'] }),
             makeVideo({ tags: ['typescript'] }),
         ];
-        expect(countTagFrequency(videos)).toEqual({ react: 2, typescript: 2, css: 1 });
+        const result = countTagFrequency(videos);
+        expect(result.get('react')).toBe(2);
+        expect(result.get('typescript')).toBe(2);
+        expect(result.get('css')).toBe(1);
     });
 
     it('handles videos with no tags', () => {
         const videos = [makeVideo({ tags: [] }), makeVideo({ tags: ['go'] })];
-        expect(countTagFrequency(videos)).toEqual({ go: 1 });
+        expect(countTagFrequency(videos)).toEqual(new Map([['go', 1]]));
     });
 });
 

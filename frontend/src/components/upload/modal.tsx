@@ -2,9 +2,6 @@ import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as tus from 'tus-js-client';
 import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
-import { useVideo } from '@hooks/useVideo';
-import { useTusUpload } from '@hooks/useTusUpload';
-import { useVideoProcessingPoll } from '@hooks/useVideoProcessingPoll';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
@@ -20,6 +17,7 @@ import './modal.css';
 import { ToastType } from '@enums/toastType';
 import { UploadMode } from '@enums/uploadMode';
 import { UploadStatus } from '@enums/uploadStatus';
+import { useVideo, useTusUpload, useVideoProcessingPoll } from '@hooks';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

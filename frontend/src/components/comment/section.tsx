@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Button, Spinner } from '@ui';
-import { useComments } from '@hooks/useComments';
-import { useAuth } from '@hooks/useAuth';
 import CommentForm from './form';
 import CommentItem from './item';
 import type { Vuid } from '@api/videos';
 import './section.css';
+import { useComments, useAuth } from '@hooks';
 
 interface CommentSectionProps {
     vuid: Vuid

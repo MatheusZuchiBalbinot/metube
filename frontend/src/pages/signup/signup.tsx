@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, User, LogIn, AlertCircle } from 'lucide-react';
-import { useAuth } from '@hooks/useAuth';
 import { Button, Input, Spinner } from '@ui';
 import { ROUTES } from '@utils/routes';
 import { useAppDispatch } from '@store';
 import { signUpThunk } from '@store/authSlice';
 import '../login/login.css';
+import { useAuth } from '@hooks';
 
 export default function SignupPage() {
     const { t } = useTranslation();

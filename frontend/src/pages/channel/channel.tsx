@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { PlayCircle, Eye, TrendingUp, Play, Clock, Flame, Hash } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
-import { useVideo } from '@hooks/useVideo';
-import { useSubscription } from '@hooks/useSubscription';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { Format } from '@utils/format';
@@ -22,6 +20,7 @@ import type { Vuid } from '@api';
 import type { ChannelId } from '@models/channel';
 import './channel.css';
 import { ToastType } from '@enums/toastType';
+import { useVideo, useSubscription } from '@hooks';
 
 const TOP_TAGS_COUNT = 4;
 const SECTIONS_THRESHOLD = 8;

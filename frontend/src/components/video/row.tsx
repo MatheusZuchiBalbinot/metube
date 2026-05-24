@@ -2,18 +2,17 @@ import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Video } from '@models/video';
-import { isProcessing, isFailed, isScheduled } from '@domain/video';
+import { domain } from '@domain';
 import type { Tag } from '@models/tag';
 import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, getVisibleTags } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
-import { useVideo } from '@hooks/useVideo';
-import { useTrackImpression } from '@hooks/useTrackImpression';
 import { analytics, AnalyticsSource, type Vuid } from '@api';
 import { getSessionId } from '@utils/sessionId';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './row.css';
+import { useVideo, useTrackImpression } from '@hooks';
 
 interface VideoRowProps {
     video: Video
@@ -35,11 +34,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
 
-    const now = new Date();
-    const isScheduledAndFuture =
-        isScheduled(video) &&
-        video.scheduledAt !== undefined &&
-        new Date(video.scheduledAt) > now;
+    const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
 
     const progress = videoProgress[video.id] ?? 0;
     const isWatched = progress >= 95;
@@ -122,8 +117,8 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
                 <VideoStatusBadges
                     isScheduledAndFuture={isScheduledAndFuture}
                     isWatched={isWatched}
-                    isProcessing={isProcessing(video)}
-                    isFailed={isFailed(video)}
+                    isProcessing={domain.video.isProcessing(video)}
+                    isFailed={domain.video.isFailed(video)}
                     classPrefix="video-row"
                 />
             </div>

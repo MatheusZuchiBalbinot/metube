@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { playlistActions } from '@store/playlistSlice';
-import { useAuth } from '@hooks/useAuth';
 import { video } from '@api/videos';
 import { interactions } from '@api/interactions';
 import { playlist } from '@api/playlists';
 import { history } from '@api/history';
 import { VideoStatus } from '@models/video';
 import { mergeProgress } from '@utils/mergeProgress';
+import { useAuth } from '@hooks';
 
 export function useBootstrap(): void {
     const dispatch = useAppDispatch();

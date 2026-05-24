@@ -12,11 +12,10 @@ import NavProgress from '@components/ui/navProgress/navProgress';
 import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
-import { useScrollRestoration } from '@hooks/useScrollRestoration';
 import { useSearch } from '@context/search';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import './layout.css';
+import { useKeyboardShortcuts, useScrollRestoration } from '@hooks';
 
 function getInitialSidebarCollapsed(): boolean {
     const hasWindow = typeof window !== 'undefined';
