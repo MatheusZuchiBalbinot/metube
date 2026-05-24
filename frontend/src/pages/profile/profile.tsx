@@ -1,28 +1,27 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Trash2, Flame, Hash, Clock } from 'lucide-react';
+import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Flame, Hash, Clock } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
-import { VideoFilter, SortBy } from '@utils/applyFilters';
-import { TagColors } from '@utils/tagColors';
-import type { FilterState } from '@utils/applyFilters';
-import type { Video, VideoId } from '@models/video';
 import { domain } from '@domain';
-import type { Tag } from '@models/tag';
-import { Format } from '@utils/format';
-import { videoUrl } from '@utils/routes';
 import { comments as commentsApi } from '@api';
-import type { Comment } from '@models/comment';
-import type { Vuid } from '@api';
-import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
+import { toVuid } from '@api';
+import { Avatar, Button, Tooltip } from '@ui';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
-import TagInput from '@components/tag/input';
 import './profile.css';
 import { useAuth, useVideo, useProfileVideos } from '@hooks';
 import { useAppSelector } from '@store';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
+import { VideoFilter, SortBy, TagColors, Format, videoUrl, type FilterState, formatRelativeDate } from '@utils';
+import type { Video, VideoId, Tag, Comment } from '@models';
+import { useEditVideoModal } from './hooks/useEditVideoModal';
+import { useEditProfileModal } from './hooks/useEditProfileModal';
+import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
+import EditVideoModal from './components/EditVideoModal';
+import EditProfileModal from './components/EditProfileModal';
+import DeleteVideoModal from './components/DeleteVideoModal';
 
 function formatWatchTime(seconds: number): string {
     const totalMinutes = Math.floor(seconds / 60);
@@ -53,17 +52,23 @@ export default function ProfilePage() {
     const watchedTagFrequency = useAppSelector(selectWatchedTagFrequency);
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
-    const [editingVideo, setEditingVideo] = useState<Video | null>(null);
-    const [editTitle, setEditTitle] = useState('');
-    const [editDescription, setEditDescription] = useState('');
-    const [editTags, setEditTags] = useState<Tag[]>([]);
-
-    const [editProfileOpen, setEditProfileOpen] = useState(false);
-    const [editName, setEditName] = useState('');
-    const [editBio, setEditBio] = useState('');
-
-    const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
     const [spotlightComments, setSpotlightComments] = useState<Comment[]>([]);
+
+    const {
+        editingVideo, editTitle, editDescription, editTags,
+        setEditTitle, setEditDescription, setEditTags,
+        handleEditOpen, handleEditClose, handleEditSubmit,
+    } = useEditVideoModal();
+
+    const {
+        editProfileOpen, editName, editBio, setEditName, setEditBio,
+        handleEditProfileOpen, handleEditProfileClose, handleEditProfileSubmit,
+    } = useEditProfileModal();
+
+    const {
+        videoToDelete,
+        handleDeleteClick, handleDeleteById, handleDeleteConfirm, handleDeleteCancel,
+    } = useDeleteVideoModal();
 
     const allTags = useMemo(() => {
         const tagSet = new Set<Tag>(ownVideos.flatMap((v: Video) => v.tags));
@@ -166,10 +171,9 @@ export default function ProfilePage() {
             setSpotlightComments([]);
             return;
         }
-        commentsApi.list(featuredId as unknown as Vuid, { page: 1 }).then(res => {
-            const hasResult = res !== null;
-            if (hasResult) {
-                setSpotlightComments(res.data.slice(0, 2));
+        commentsApi.list(toVuid(featuredId), { page: 1 }).then(res => {
+            if (res.ok) {
+                setSpotlightComments(res.data.data.slice(0, 2));
             }
         });
     }, [featuredId]);
@@ -208,76 +212,6 @@ export default function ProfilePage() {
 
         return { videosWatched, watchTimeStr, topTags, likedCount };
     }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency]);
-
-    function handleEditOpen(video: Video) {
-        setEditingVideo(video);
-        setEditTitle(video.title);
-        setEditDescription(video.description);
-        setEditTags(video.tags);
-    }
-
-    function handleEditClose() {
-        setEditingVideo(null);
-    }
-
-    function handleEditSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        const hasTitleEmpty = editTitle.trim() === '';
-        if (hasTitleEmpty) {
-            return;
-        }
-        const partial = {
-            title: editTitle.trim(),
-            description: editDescription.trim(),
-            tags: editTags,
-        };
-        editVideo(editingVideo!.id, partial);
-        setVideos(prev => prev.map(v => v.id === editingVideo!.id ? { ...v, ...partial } : v));
-        handleEditClose();
-    }
-
-    function handleEditProfileOpen() {
-        setEditName(user?.name ?? '');
-        setEditBio(user?.bio ?? '');
-        setEditProfileOpen(true);
-    }
-
-    function handleEditProfileSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        const hasNameEmpty = editName.trim() === '';
-        if (hasNameEmpty) {
-            return;
-        }
-        updateProfile(editName.trim(), editBio.trim());
-        setEditProfileOpen(false);
-    }
-
-    // UX-11: delete confirmation handlers
-    function handleDeleteClick(video: Video) {
-        setVideoToDelete(video);
-    }
-
-    function handleDeleteConfirm() {
-        const hasVideoToDelete = videoToDelete !== null;
-        if (!hasVideoToDelete) {
-            return;
-        }
-        deleteVideo(videoToDelete.id);
-        setVideos(prev => prev.filter(v => v.id !== videoToDelete.id));
-        setVideoToDelete(null);
-    }
-
-    function handleDeleteCancel() {
-        setVideoToDelete(null);
-    }
-
-    function handleDeleteById(id: VideoId) {
-        const video = ownVideos.find(v => v.id === id);
-        const hasVideo = video !== undefined;
-        if (hasVideo) {
-            handleDeleteClick(video);
-        }
-    }
 
     function handleCoverWatchClick(e: React.MouseEvent) {
         e.stopPropagation();
@@ -318,7 +252,7 @@ export default function ProfilePage() {
                                         size="icon"
                                         variant="ghost"
                                         aria-label={t('profile.edit_profile')}
-                                        onClick={handleEditProfileOpen}
+                                        onClick={() => handleEditProfileOpen(user?.name ?? '', user?.bio ?? '')}
                                     >
                                         <Pencil size={15} />
                                     </Button>
@@ -407,7 +341,7 @@ export default function ProfilePage() {
                                     {sections.featured.publishedAt && (
                                         <>
                                             <span className="profile-page__cover-sep" />
-                                            {Format.relativeDate(sections.featured.publishedAt)}
+                                            {formatRelativeDate(sections.featured.publishedAt)}
                                         </>
                                     )}
                                 </div>
@@ -464,7 +398,7 @@ export default function ProfilePage() {
                             </div>
                             <div className="profile-page__latest-grid">
                                 {sections.latest.map(video => (
-                                    <VideoCard key={video.id} video={video} showActions={isOwnProfile} onEdit={handleEditOpen} onDelete={handleDeleteById} />
+                                    <VideoCard key={video.id} video={video} showActions={isOwnProfile} onEdit={handleEditOpen} onDelete={id => handleDeleteById(id, ownVideos)} />
                                 ))}
                             </div>
                         </div>
@@ -647,7 +581,7 @@ export default function ProfilePage() {
                                     video={pinnedVideo}
                                     showActions={true}
                                     onEdit={handleEditOpen}
-                                    onDelete={handleDeleteById}
+                                    onDelete={id => handleDeleteById(id, ownVideos)}
                                 />
                             </div>
                         </div>
@@ -671,7 +605,7 @@ export default function ProfilePage() {
                                         index={i}
                                         showActions={isOwnProfile}
                                         onEdit={handleEditOpen}
-                                        onDelete={handleDeleteById}
+                                        onDelete={id => handleDeleteById(id, ownVideos)}
                                     />
                                 </div>
                             );
@@ -686,112 +620,39 @@ export default function ProfilePage() {
                 )}
             </main>
 
-            {/* ─── Edit video modal ─── */}
-            <Modal
-                isOpen={editingVideo !== null}
+            <EditVideoModal
+                editingVideo={editingVideo}
+                editTitle={editTitle}
+                editDescription={editDescription}
+                editTags={editTags}
+                onTitleChange={v => setEditTitle(v)}
+                onDescriptionChange={v => setEditDescription(v)}
+                onTagsChange={tags => setEditTags(tags)}
+                onSubmit={e => handleEditSubmit(e, (id, payload) => {
+                    editVideo(id, payload);
+                    setVideos(prev => prev.map(v => v.id === id ? { ...v, ...payload } : v));
+                })}
                 onClose={handleEditClose}
-                title={t('video.edit_video')}
-                size="md"
-            >
-                <form className="profile-page__edit-form" onSubmit={handleEditSubmit}>
-                    <Input
-                        label={t('video.upload_title')}
-                        value={editTitle}
-                        onChange={e => setEditTitle(e.target.value)}
-                        placeholder={t('video.upload_title')}
-                    />
+            />
 
-                    <div className="profile-page__edit-field">
-                        <label className="profile-page__edit-label">{t('video.upload_description')}</label>
-                        <textarea
-                            className="profile-page__edit-textarea"
-                            value={editDescription}
-                            onChange={e => setEditDescription(e.target.value)}
-                            rows={4}
-                        />
-                    </div>
-
-                    <div className="profile-page__edit-field">
-                        <label className="profile-page__edit-label">{t('video.upload_tags')}</label>
-                        <TagInput value={editTags} onChange={setEditTags} />
-                    </div>
-
-                    <div className="profile-page__edit-footer">
-                        <Button type="button" variant="ghost" size="sm" onClick={handleEditClose}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button type="submit" size="sm">
-                            {t('common.save')}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* ─── Edit profile modal ─── */}
-            <Modal
+            <EditProfileModal
                 isOpen={editProfileOpen}
-                onClose={() => setEditProfileOpen(false)}
-                title={t('profile.edit_profile')}
-                size="sm"
-            >
-                <form className="profile-page__edit-form" onSubmit={handleEditProfileSubmit}>
-                    <Input
-                        label={t('profile.name_label')}
-                        value={editName}
-                        onChange={e => setEditName(e.target.value)}
-                        placeholder={t('profile.name_label')}
-                    />
-                    <div className="profile-page__edit-field">
-                        <label className="profile-page__edit-label">{t('profile.bio_label')}</label>
-                        <textarea
-                            className="profile-page__edit-textarea"
-                            value={editBio}
-                            onChange={e => setEditBio(e.target.value)}
-                            rows={3}
-                            placeholder={t('profile.bio_placeholder')}
-                        />
-                    </div>
-                    <div className="profile-page__edit-footer">
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditProfileOpen(false)}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button type="submit" size="sm">
-                            {t('common.save')}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+                editName={editName}
+                editBio={editBio}
+                onNameChange={v => setEditName(v)}
+                onBioChange={v => setEditBio(v)}
+                onSubmit={e => handleEditProfileSubmit(e, (name, bio) => updateProfile(name, bio))}
+                onClose={handleEditProfileClose}
+            />
 
-            {/* ─── UX-11: Delete confirmation modal ─── */}
-            <Modal
-                isOpen={videoToDelete !== null}
-                onClose={handleDeleteCancel}
-                title={t('video.delete')}
-                size="sm"
-                footer={
-                    <div className="profile-page__edit-footer">
-                        <Button type="button" variant="ghost" size="sm" onClick={handleDeleteCancel}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="danger"
-                            size="sm"
-                            onClick={handleDeleteConfirm}
-                            leftIcon={<Trash2 size={13} />}
-                        >
-                            {t('video.delete')}
-                        </Button>
-                    </div>
-                }
-            >
-                <p className="profile-page__delete-confirm-text">
-                    {t('profile.delete_confirm', {
-                        title: videoToDelete?.title ?? '',
-                        defaultValue: 'Delete \'{{title}}\'? This cannot be undone.',
-                    })}
-                </p>
-            </Modal>
+            <DeleteVideoModal
+                videoToDelete={videoToDelete}
+                onConfirm={() => handleDeleteConfirm(id => {
+                    deleteVideo(id);
+                    setVideos(prev => prev.filter(v => v.id !== id));
+                })}
+                onCancel={handleDeleteCancel}
+            />
         </div>
     );
 }
