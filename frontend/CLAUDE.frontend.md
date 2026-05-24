@@ -25,7 +25,7 @@ src/
   app.css                     # Estilos globais de nível app
 
   api/                        # Clientes HTTP por domínio — nunca use axios diretamente nos componentes
-    client.ts                 # ApiClient base (axios + getValidated/postValidated)
+    client.ts                 # ApiClient base — todos os métodos retornam ApiResult<T>: { ok: true; data: T } | { ok: false; error: string }
     analytics.ts              # AnalyticsApi  → /analytics/*
     auth.ts                   # AuthApi       → /sessions, /users, /password-resets
     channels.ts               # ChannelApi    → /channels/*
@@ -66,6 +66,7 @@ src/
     player/
       player.tsx              # Orquestrador do player (roteador: default/mini/short)
       playerDefault.tsx       # Player principal (desktop/vídeo completo)
+      playerControlsBar.tsx   # Barra de controles: play, volume, tempo, legendas, PiP, teatro, fullscreen
       playerMini.tsx          # Player mini (dentro do mini/player.tsx)
       playerShort.tsx         # Player de shorts (scroll vertical)
       playerOverlays.tsx      # Overlays: buffering, pop icon, skip indicator
@@ -89,6 +90,8 @@ src/
       view.tsx                # TagView (exibe tags de um vídeo)
     upload/
       modal.tsx               # UploadModal — lazy-loaded globalmente no App.tsx
+      uploadPreview.tsx        # Tira-teaser de thumbnail + preview de vídeo (sub-componente do modal)
+      batchItemRow.tsx         # Linha de item no modo batch (sub-componente do modal)
     video/
       actionCard.tsx          # VideoActionCard (ações: like/dislike/save/share)
       card.tsx                # VideoCard — thumbnail + metadados
@@ -157,7 +160,12 @@ src/
     echo.ts                   # Singleton Laravel Echo (Reverb/WebSocket) com authorizer axios
 
   pages/
-    channel/channel.tsx       # Página de canal
+    channel/
+      channel.tsx             # Página de canal
+      components/             # Sub-componentes locais da página
+        ChannelCoverStory.tsx  # Capa em destaque com comentários em spotlight
+        ChannelDiamondTiers.tsx # Top vídeos em grade diamante
+        ChannelTopicGrid.tsx   # Grade de tópicos por tag
     forgotPassword/forgotPassword.tsx
     history/history.tsx       # Histórico de vídeos assistidos (com filtro de período)
     home/home.tsx             # Feed principal
@@ -165,12 +173,56 @@ src/
     login/login.tsx           # Login
     notFound/notFound.tsx     # 404
     playlists/playlists.tsx   # Listagem de playlists
-    profile/profile.tsx       # Perfil do usuário (próprio ou alheio)
+    profile/
+      profile.tsx             # Perfil do usuário (próprio ou alheio)
+      hooks/                  # Hooks locais da página
+        useDeleteVideoModal.ts
+        useEditProfileModal.ts
+        useEditVideoModal.ts
+        useProfileSections.ts  # → ProfileSectionsData | null (curated layout ≥8 vídeos)
+        useProfileStats.ts     # → ProfileStats | null (apenas próprio perfil)
+        useSpotlightComments.ts
+      components/             # Sub-componentes locais da página
+        DeleteVideoModal.tsx
+        EditProfileModal.tsx
+        EditVideoModal.tsx
+        ProfileCoverStory.tsx
+        ProfileDiamondTiers.tsx
+        ProfileSections.tsx
+        ProfileStats.tsx
+        ProfileTopicGrid.tsx
+        ProfileVideoGrid.tsx
     resetPassword/resetPassword.tsx
     search/search.tsx         # Resultados de busca (?q=)
-    shorts/shorts.tsx         # Feed de shorts (scroll vertical)
+    shorts/
+      shorts.tsx              # Feed de shorts (scroll vertical)
+      hooks/
+        useShortPanels.ts      # Estado dos painéis (volume slider, description)
+        useShortReactions.ts   # Like/dislike + animações burst por short
+        useShortsFeedObserver.ts # IntersectionObserver que detecta o short ativo
+        useShortsData.ts       # Filtra shorts + fecha mini-player ao montar
+        useShortsNavigation.ts # renderedIndex, activateIndex, scrollToIndex
+        useShortsRefs.ts       # Unifica itemRefs, videoMap e videoRefs
+      components/
+        VolumeIcon.tsx         # Ícone de volume declarativo (VolumeX / Volume1 / Volume2)
     signup/signup.tsx         # Cadastro
-    video/video.tsx           # Página de vídeo (/watch?v=vuid)
+    video/
+      video.tsx               # Página de vídeo (/watch?v=vuid)
+      hooks/                  # Hooks locais da página
+        useSkipAnalytics.ts
+        useVideoReactions.ts
+        useVideoSave.ts
+        useVideoShare.ts
+        useViewTracking.ts
+      components/             # Sub-componentes locais da página
+        AutoplayBanner.tsx
+        ShareMenu.tsx
+        VideoFallback.tsx
+        VideoInfo.tsx
+        VideoNotFound.tsx
+        VideoPlayerArea.tsx
+        VideoProcessingScreen.tsx
+        VideoSidebar.tsx
     watch/later.tsx           # Watch Later
 
   store/                      # Redux Toolkit (ver seção Redux abaixo)
@@ -208,15 +260,17 @@ src/
     video.ts                  # Video, VideoId, VideoStatus, VideoCaption
 
   utils/
+    index.ts                  # Barrel — re-exporta todos os utils; importe de `@utils`
     applyFilters.ts           # Aplica filtros locais à lista de vídeos
     cn.ts                     # Combina classnames (clsx-like)
     dom.ts                    # Helpers de DOM
     events.ts                 # APP_EVENTS: SESSION_EXPIRED | FORBIDDEN | SERVICE_UNAVAILABLE
-    format.ts                 # Formata duração, views, datas
+    format.ts                 # Format.views / Format.duration / getVisibleTags / countTagFrequency
     impressionBatcher.ts      # Acumula impressões e flush em batch (1s debounce, max 50)
     loadFromStorage.ts        # loadFromStorage + type guards (isArray, isObject, isNumberInRange)
     logger.ts                 # Logger com níveis (dev-only)
     mergeProgress.ts          # Mescla progresso local com dados do servidor
+    notificationSound.ts      # Som de notificação
     parse.ts                  # Parsers de resposta da API
     routes.ts                 # ROUTES const + videoUrl() helper
     sessionId.ts              # Gera/persiste session ID de analytics
@@ -224,6 +278,7 @@ src/
     tagColors.ts              # Mapeia tags para cores
     themeRipple.ts            # Efeito ripple na troca de tema
     themes.ts                 # Definições de temas
+    time.ts                   # formatDuration, formatDurationCompact, formatRelativeDate, formatEta, parseTimestamp, secondsToTimestamp, parseChapterTimestamp
     upload.ts                 # UploadProgress interface + buildProgress()
     validate.ts               # Helpers de validação de formulário
     viewedVideos.ts           # Rastreia vídeos visualizados na sessão
@@ -232,7 +287,10 @@ src/
     parsers.ts                # Parse functions: snake_case → camelCase transforms for all API responses
 
 tests/                        # Vitest — espelha src/
+  api/
   components/
+  domain/                     # Testes unitários de todos os módulos domain
+  hooks/
   store/
   utils/
 ```
@@ -241,26 +299,30 @@ tests/                        # Vitest — espelha src/
 
 ## Aliases de importação
 
-| Alias           | Aponta para                  |
-|-----------------|------------------------------|
-| `@api`          | `src/api` (barrel)           |
-| `@context/*`    | `src/context/*`              |
-| `@components/*` | `src/components/*`           |
-| `@ui`           | `src/components/ui` (barrel) |
-| `@ui/*`         | `src/components/ui/*`        |
-| `@pages/*`      | `src/pages/*`                |
-| `@styles/*`     | `src/styles/*`               |
-| `@data/*`       | `src/data/*`                 |
-| `@utils/*`      | `src/utils/*`                |
-| `@hooks/*`      | `src/hooks/*`                |
-| `@hooks`        | `src/hooks` (barrel)         |
-| `@store`        | `src/store` (barrel)         |
-| `@store/*`      | `src/store/*`                |
-| `@models/*`     | `src/types/*`                |
-| `@lib/*`        | `src/lib/*`                  |
-| `@enums/*`      | `src/enums/*`                |
-| `@validation`   | `src/validation` (barrel)    |
-| `@validation/*` | `src/validation/*`           |
+| Alias           | Aponta para                   |
+|-----------------|-------------------------------|
+| `@api`          | `src/api` (barrel)            |
+| `@context/*`    | `src/context/*`               |
+| `@components/*` | `src/components/*`            |
+| `@ui`           | `src/components/ui` (barrel)  |
+| `@ui/*`         | `src/components/ui/*`         |
+| `@pages/*`      | `src/pages/*`                 |
+| `@styles/*`     | `src/styles/*`                |
+| `@data/*`       | `src/data/*`                  |
+| `@utils`        | `src/utils/index.ts` (barrel) |
+| `@utils/*`      | `src/utils/*`                 |
+| `@hooks`        | `src/hooks/index.ts` (barrel) |
+| `@hooks/*`      | `src/hooks/*`                 |
+| `@store`        | `src/store` (barrel)          |
+| `@store/*`      | `src/store/*`                 |
+| `@domain`       | `src/domain/index.ts`         |
+| `@domain/*`     | `src/domain/*`                |
+| `@models`       | `src/types/index.ts` (barrel) |
+| `@models/*`     | `src/types/*`                 |
+| `@lib/*`        | `src/lib/*`                   |
+| `@enums/*`      | `src/enums/*`                 |
+| `@validation`   | `src/validation` (barrel)     |
+| `@validation/*` | `src/validation/*`            |
 
 **Exceção crítica**: dentro de `src/components/ui/`, use caminho relativo (`../button/button`). Usar `@ui` dentro de `ui/` cria dependência circular com o barrel.
 
@@ -338,7 +400,39 @@ await notifications.markAllRead();
 await notifications.remove(id);
 ```
 
-Respostas são parseadas por funções em `src/api/parsers.ts` antes de chegar ao store (via `getValidated`/`postValidated`). Cada função faz a transformação snake_case → camelCase e retorna `T | null`.
+Todos os métodos de `ApiClient` retornam `ApiResult<T>`:
+
+```ts
+type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+const result = await video.list();
+if (result.ok) {
+    // result.data é T
+}
+```
+
+Respostas são parseadas por funções em `src/api/parsers.ts` antes de chegar ao store. Cada função faz a transformação snake_case → camelCase e retorna `T | null`.
+
+---
+
+## Domain
+
+Lógica de domínio pura (sem efeitos colaterais) fica em `src/domain/`. Exposta como um único objeto `domain` via barrel:
+
+```ts
+import { domain } from '@domain';
+
+domain.video.isPublished(v)
+domain.video.isProcessing(v)
+domain.video.isVisible(v)
+domain.playlist.isWatchLater(p)
+domain.comment.canEdit(comment, user)
+domain.transcription.isCompleted(t)
+domain.aiSuggestion.isPending(s)
+domain.user.isVerified(u)
+```
+
+Cada módulo (`domain/video.ts`, `domain/playlist.ts`, etc.) exporta um objeto de mesmo nome com as funções — as funções em si são privadas ao módulo. **Nunca importe funções individuais de `@domain/video`** — use sempre `{ domain } from '@domain'`.
 
 ---
 
@@ -744,6 +838,31 @@ Sinais de que o componente precisa ser dividido:
 - `useRef` para timers manuais inline
 - `document.addEventListener` direto no componente
 - Mais de 250 linhas
+
+### Padrão de hooks e componentes locais de página
+
+Lógica específica de uma página fica em sub-pastas da própria página (nunca em `src/hooks/`):
+
+```
+pages/profile/
+  profile.tsx
+  hooks/
+    useProfileSections.ts   # useMemo pesado → retorna dados para o layout
+    useProfileStats.ts      # métricas do próprio perfil
+    useSpotlightComments.ts # fetch de comentários para a capa
+    useEditVideoModal.ts    # estado do modal de edição
+  components/
+    ProfileSections.tsx     # seção curada (capa + últimos + top + tópicos)
+    ProfileVideoGrid.tsx    # grid principal com skeleton e empty state
+    ProfileCoverStory.tsx   # capa em destaque com comentários
+    ProfileDiamondTiers.tsx # top vídeos em grade diamante
+    ProfileTopicGrid.tsx    # grade de tópicos por tag
+```
+
+Nomeação obrigatória:
+- Hooks: `use<Página><Funcionalidade>.ts` — ex: `useProfileSections.ts`
+- Componentes: `<Página><Funcionalidade>.tsx` — ex: `ProfileSections.tsx`
+- Sempre em PascalCase; nomes multi-palavra sem separador
 
 ### Extraia um hook quando
 
