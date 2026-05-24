@@ -1,18 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Volume1, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
-import { usePlayerControls } from '@hooks/usePlayerControls';
-import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
-import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
-import { usePlayerCaptions } from '@hooks/usePlayerCaptions';
-import { usePictureInPicture } from '@hooks/usePictureInPicture';
-import { useShaka } from '@hooks/useShaka';
-import { usePopIcon } from '@hooks/usePopIcon';
-import { useSkipIndicator } from '@hooks/useSkipIndicator';
-import { useFullscreen } from '@hooks/useFullscreen';
-import { useVolumeWheel } from '@hooks/useVolumeWheel';
-import { useClickDoubleClick } from '@hooks/useClickDoubleClick';
-import { useOutsideClick } from '@hooks/useOutsideClick';
 import { Format } from '@utils/format';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
@@ -23,6 +11,20 @@ import CaptionsButton from './captionsButton';
 import type { VideoPlayerProps } from './player';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import { PopIconType } from '@enums/popIconType';
+import {
+    usePlayerControls,
+    usePlayerPlayback,
+    usePlayerKeyboard,
+    usePlayerCaptions,
+    usePictureInPicture,
+    useShaka,
+    usePopIcon,
+    useSkipIndicator,
+    useFullscreen,
+    useVolumeWheel,
+    useClickDoubleClick,
+    useOutsideClick,
+} from '@hooks';
 
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({

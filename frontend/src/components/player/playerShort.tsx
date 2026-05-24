@@ -1,15 +1,17 @@
 import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
-import { useShaka } from '@hooks/useShaka';
-import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
-import { usePlayerKeyboard } from '@hooks/usePlayerKeyboard';
-import { usePopIcon } from '@hooks/usePopIcon';
-import { useSkipIndicator } from '@hooks/useSkipIndicator';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import './player.css';
 import { SkipDirection } from '@enums/skipDirection';
 import { PopIconType } from '@enums/popIconType';
+import {
+    useShaka,
+    usePlayerPlayback,
+    usePlayerKeyboard,
+    usePopIcon,
+    useSkipIndicator,
+} from '@hooks';
 
 export interface ShortPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>

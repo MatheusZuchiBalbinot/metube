@@ -2,10 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
-import { useAuth } from '@hooks/useAuth';
-import { useVideo } from '@hooks/useVideo';
 import { ROUTES, videoUrl } from '@utils/routes';
-import { useClickOutside } from '@hooks/useClickOutside';
 import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
@@ -14,6 +11,7 @@ import PreferencesPanel from '@components/preferences/preferences';
 import NotificationsBell from '@components/notifications/bell';
 import './header.css';
 import { SuggestionKind } from '@enums/suggestionKind';
+import { useAuth, useVideo, useClickOutside } from '@hooks';
 
 interface AppHeaderProps {
     onToggleSidebar: () => void

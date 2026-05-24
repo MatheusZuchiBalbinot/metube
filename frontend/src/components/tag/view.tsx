@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
-import { useVideo } from '@hooks/useVideo';
 import { TagColors } from '@utils/tagColors';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
 import type { Video } from '@models/video';
 import './view.css';
+import { useVideo } from '@hooks';
 
 export default function TagView() {
     const { t } = useTranslation();

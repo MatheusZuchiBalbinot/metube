@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X } from 'lucide-react';
 import { video as videoApi, type Vuid, type AiSuggestion } from '@api/videos';
-import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store/index';
 import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
@@ -11,6 +10,7 @@ import { ToastType } from '@enums/toastType';
 import type { Video } from '@models/video';
 import { domain } from '@domain';
 import './aiSuggestions.css';
+import { useVideo } from '@hooks';
 
 interface Props {
     video: Video

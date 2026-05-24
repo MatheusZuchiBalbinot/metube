@@ -13,8 +13,6 @@ import AppLayout from '@components/layout/layout';
 import Spinner from '@components/ui/spinner/spinner';
 import ErrorBoundary from '@components/error/boundary';
 import { useTranslation } from 'react-i18next';
-import { useBootstrap } from '@hooks/useBootstrap';
-import { useRealtime } from '@hooks/useRealtime';
 import { ToastType } from '@enums/toastType';
 
 const LoginPage = React.lazy(() => import('@pages/login/login'));
@@ -25,6 +23,7 @@ const UploadModal = React.lazy(() => import('@components/upload/modal'));
 import { ROUTES } from '@utils/routes';
 import { TooltipProvider } from '@ui';
 import { BoundaryLevel } from '@enums/boundaryLevel';
+import { useBootstrap, useRealtime } from '@hooks';
 
 const HomePage = React.lazy(() => import('@pages/home/home'));
 const HistoryPage = React.lazy(() => import('@pages/history/history'));

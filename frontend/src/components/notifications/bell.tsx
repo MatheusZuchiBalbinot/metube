@@ -2,10 +2,10 @@ import { useState, useRef } from 'react';
 import { Bell as BellIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@store';
-import { useClickOutside } from '@hooks/useClickOutside';
 import { Tooltip } from '@ui';
 import NotificationsPanel from './panel';
 import './bell.css';
+import { useClickOutside } from '@hooks';
 
 export default function NotificationsBell() {
     const { t } = useTranslation();

@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react';
-import { useTheme } from '@hooks/useTheme';
-import { useVideo } from '@hooks/useVideo';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { Button, Tooltip } from '@ui';
 import { THEME_COLORS, THEME_MODES, LANGUAGES } from '@data/themeConfig';
 import './preferences.css';
+import { useTheme, useVideo } from '@hooks';
 
 interface PreferencesPanelProps {
     inline?: boolean;

@@ -22,6 +22,11 @@ function isDraft(v: Video): boolean {
     return v.status === VideoStatus.DRAFT;
 }
 
+function isScheduledAndFuture(v: Video): boolean {
+    const hasScheduledAt = v.scheduledAt !== undefined;
+    return isScheduled(v) && hasScheduledAt && new Date(v.scheduledAt!) > new Date();
+}
+
 function isScheduledInPast(v: Video): boolean {
     const hasScheduledAt = v.scheduledAt !== undefined;
     if (!isScheduled(v) || !hasScheduledAt) {
@@ -45,13 +50,14 @@ function isOwnedBy(v: Video, user: User): boolean {
     return (v.channelId as string) === user.uuid;
 }
 
-export { isPublished, isProcessing, isFailed, isScheduled, isDraft, isScheduledInPast, isVisible, isInteractable, isOwnedBy };
+export { isPublished, isProcessing, isFailed, isScheduled, isScheduledAndFuture, isDraft, isScheduledInPast, isVisible, isInteractable, isOwnedBy };
 
 export const video = {
     isPublished,
     isProcessing,
     isFailed,
     isScheduled,
+    isScheduledAndFuture,
     isDraft,
     isScheduledInPast,
     isVisible,

@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Maximize2 } from 'lucide-react';
-import { useVideo } from '@hooks/useVideo';
 import { videoUrl } from '@utils/routes';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import VideoPlayer from '@components/player/player';
 import type { Video } from '@models/video';
 import './player.css';
+import { useVideo } from '@hooks';
 
 // eslint-disable-next-line complexity
 export default function MiniPlayer() {
