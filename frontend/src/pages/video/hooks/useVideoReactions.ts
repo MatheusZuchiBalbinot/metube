@@ -13,7 +13,7 @@ interface UseVideoReactionsParams {
     dislikeVideo: (id: VideoId) => void
 }
 
-interface UseVideoReactionsResult {
+export interface UseVideoReactionsResult {
     isLiked: boolean
     isDisliked: boolean
     likeAnimating: boolean
