@@ -46,7 +46,9 @@ export function useEditVideoModal(): UseEditVideoModalResult {
     ) {
         e.preventDefault();
         const isTitleEmpty = editTitle.trim() === '';
-        if (isTitleEmpty || editingVideo === null) { return; }
+        if (isTitleEmpty || editingVideo === null) {
+            return;
+        }
         const payload = {
             title: editTitle.trim(),
             description: editDescription.trim(),

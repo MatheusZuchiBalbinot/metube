@@ -152,7 +152,9 @@ export default function VideoPage() {
     const videoUrl = video.videoUrl ?? '';
 
     function handleRetryTranscription() {
-        if (!video) { return; }
+        if (!video) {
+            return;
+        }
         const vuid = toVuid(video.id);
         videoApi.retryTranscription(vuid).then(didSucceed => {
             if (!didSucceed) {
