@@ -10,8 +10,8 @@ vi.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
 }));
 
-vi.mock('@utils/format', () => ({
-    Format: { relativeDate: () => '1 hour ago' },
+vi.mock('@utils/time', () => ({
+    formatRelativeDate: () => '1 hour ago',
 }));
 
 const noop = vi.fn().mockResolvedValue(undefined);

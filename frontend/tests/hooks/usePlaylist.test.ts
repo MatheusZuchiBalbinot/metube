@@ -18,14 +18,18 @@ vi.mock('react-i18next', () => ({
 vi.mock('@api/playlists', () => ({
     playlist: {
         create: vi.fn(),
-        update: vi.fn().mockResolvedValue(null),
-        delete: vi.fn().mockResolvedValue(null),
-        addVideo: vi.fn().mockResolvedValue(null),
-        removeVideo: vi.fn().mockResolvedValue(null),
-        reorder: vi.fn().mockResolvedValue(null),
-        list: vi.fn().mockResolvedValue(null),
+        update: vi.fn().mockResolvedValue({ ok: true, data: null }),
+        delete: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        addVideo: vi.fn().mockResolvedValue({ ok: true, data: null }),
+        removeVideo: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        reorder: vi.fn().mockResolvedValue({ ok: true, data: null }),
+        list: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     },
+    toPuid: (id: string) => id,
 }));
+
+const ok = <T>(data: T) => ({ ok: true as const, data });
+const fail = () => ({ ok: false as const, error: 'fail' });
 
 import { playlist as playlistApi } from '@api/playlists';
 
@@ -69,7 +73,7 @@ describe('usePlaylist', () => {
     describe('createPlaylist', () => {
         it('calls playlistApi.create and adds to store on success', async () => {
             const created = makePlaylist({ id: pid('pl-new'), name: 'New' });
-            vi.mocked(playlistApi.create).mockResolvedValue(created);
+            vi.mocked(playlistApi.create).mockResolvedValue(ok(created));
             const store = makeStore();
             const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
 
@@ -82,7 +86,7 @@ describe('usePlaylist', () => {
         });
 
         it('returns null and does not add when API fails', async () => {
-            vi.mocked(playlistApi.create).mockResolvedValue(null);
+            vi.mocked(playlistApi.create).mockResolvedValue(fail());
             const store = makeStore();
             const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
 

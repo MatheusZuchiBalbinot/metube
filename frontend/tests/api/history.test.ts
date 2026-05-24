@@ -10,6 +10,9 @@ vi.mock('@api/client', () => ({
     },
 }));
 
+const ok = <T>(data: T) => ({ ok: true as const, data });
+const fail = () => ({ ok: false as const, error: 'fail' });
+
 const vuid = 'abc12345678' as Parameters<typeof history.remove>[0];
 
 beforeEach(() => {
@@ -19,7 +22,7 @@ beforeEach(() => {
 describe('HistoryApi', () => {
     describe('list', () => {
         it('calls get on /users/me/history', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+            vi.mocked(apiClient.get).mockResolvedValue(ok([]));
             await history.list();
             expect(apiClient.get).toHaveBeenCalledWith('/users/me/history');
         });
@@ -27,7 +30,7 @@ describe('HistoryApi', () => {
 
     describe('events', () => {
         it('calls get on /users/me/history/events', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+            vi.mocked(apiClient.get).mockResolvedValue(ok([]));
             await history.events();
             expect(apiClient.get).toHaveBeenCalledWith('/users/me/history/events');
         });
@@ -35,7 +38,7 @@ describe('HistoryApi', () => {
 
     describe('remove', () => {
         it('deletes /users/me/history/:vuid', async () => {
-            vi.mocked(apiClient.delete).mockResolvedValue(null);
+            vi.mocked(apiClient.delete).mockResolvedValue(ok(undefined));
             await history.remove(vuid);
             expect(apiClient.delete).toHaveBeenCalledWith(`/users/me/history/${vuid}`);
         });
@@ -43,7 +46,7 @@ describe('HistoryApi', () => {
 
     describe('clear', () => {
         it('deletes /users/me/history', async () => {
-            vi.mocked(apiClient.delete).mockResolvedValue(null);
+            vi.mocked(apiClient.delete).mockResolvedValue(ok(undefined));
             await history.clear();
             expect(apiClient.delete).toHaveBeenCalledWith('/users/me/history');
         });
@@ -51,19 +54,19 @@ describe('HistoryApi', () => {
 
     describe('progress', () => {
         it('calls get on /users/me/progress', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+            vi.mocked(apiClient.get).mockResolvedValue(ok({ data: {} }));
             await history.progress();
             expect(apiClient.get).toHaveBeenCalledWith('/users/me/progress');
         });
 
         it('returns data from response', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue({ data: { 'abc12345678': 75 } });
+            vi.mocked(apiClient.get).mockResolvedValue(ok({ data: { 'abc12345678': 75 } }));
             const result = await history.progress();
             expect(result).toEqual({ 'abc12345678': 75 });
         });
 
-        it('returns null when response is null', async () => {
-            vi.mocked(apiClient.get).mockResolvedValue(null);
+        it('returns null when response fails', async () => {
+            vi.mocked(apiClient.get).mockResolvedValue(fail());
             const result = await history.progress();
             expect(result).toBeNull();
         });
