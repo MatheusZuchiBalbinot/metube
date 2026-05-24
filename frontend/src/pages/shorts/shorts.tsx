@@ -1,21 +1,25 @@
-import { memo, useEffect, useMemo, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, Volume1, Volume2, VolumeX, ChevronDown, Info, X } from 'lucide-react';
+import { Clapperboard, ThumbsUp, ThumbsDown, Bookmark, ChevronDown, Info, X } from 'lucide-react';
 import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';
 import { Avatar, Tooltip } from '@ui';
 import TagBadge from '@components/tag/badge';
 import type { Tag } from '@models';
-import { useAppDispatch, useAppSelector } from '@store';
-import { videoActions } from '@store/videoSlice';
+import { useAppSelector } from '@store';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { video as videoApi, toVuid } from '@api';
 import './shorts.css';
-import { ReactionType } from '@enums/reactionType';
-import { useVideo, useBurstAnimation } from '@hooks';
-import { Format, ROUTES, hasViewed, markViewed, formatRelativeDate, cn } from '@utils';
+import { useVideo } from '@hooks';
+import { Format, ROUTES, cn, formatRelativeDate } from '@utils';
+import { useShortReactions } from './hooks/useShortReactions';
+import { useShortPanels } from './hooks/useShortPanels';
+import { useShortsData } from './hooks/useShortsData';
+import { useShortsRefs } from './hooks/useShortsRefs';
+import { useShortsNavigation } from './hooks/useShortsNavigation';
+import { useShortsFeedObserver } from './hooks/useShortsFeedObserver';
+import VolumeIcon from './components/VolumeIcon';
 
 const MAX_TAGS = 3;
 
@@ -136,7 +140,6 @@ function ShortDescription({ video, visibleTags, isOpen, onClose, onTagClick, onC
     );
 }
 
-// eslint-disable-next-line complexity
 const ShortItem = memo(function ShortItem({
     video, index, total, isActive, videoRef, onVideoMounted,
     onEnded, onScrollNext,
@@ -144,31 +147,22 @@ const ShortItem = memo(function ShortItem({
 }: ShortItemProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { likedVideos, dislikedVideos, likeVideo, dislikeVideo, openTagView } = useVideo();
+    const { openTagView } = useVideo();
+    const { isLiked, isDisliked, likeAnimating, dislikeAnimating, handleLike, handleDislike } = useShortReactions(video.id);
+    const { showVolumeSlider, showDescription, handlePanelToggle, closeAll } = useShortPanels();
 
-    const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
-    const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
-    const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-    const [showDescription, setShowDescription] = useState(false);
-
-    // Derived state
-    const isLiked = likedVideos.has(video.id);
-    const isDisliked = dislikedVideos.has(video.id);
     const isSaved = watchLaterIds.has(video.id);
     const isLast = index === total - 1;
     const effectiveVolume = muted ? 0 : volume;
-
-    // Event handlers - grouped by type
-    function handleVolumeToggle(e: React.MouseEvent) {
-        e.stopPropagation();
-        setShowVolumeSlider(v => !v);
-    }
+    const volumeFill = `${effectiveVolume * 100}%`;
+    const muteLabel = muted ? t('shorts.unmute') : t('shorts.mute');
 
     function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
         e.stopPropagation();
         const val = parseFloat(e.target.value);
         const el = videoRef.current;
         const nextMuted = val === 0;
+
         if (el) {
             el.volume = val === 0 ? 0 : val;
             el.muted = nextMuted;
@@ -177,20 +171,8 @@ const ShortItem = memo(function ShortItem({
         if (val > 0) {
             onVolumeChange(val);
         }
-        onMuteChange(nextMuted);
-    }
 
-    function handleReaction(action: ReactionType) {
-        switch (action) {
-            case ReactionType.LIKE:
-                likeVideo(video.id);
-                triggerLikeAnimation();
-                break;
-            case ReactionType.DISLIKE:
-                dislikeVideo(video.id);
-                triggerDislikeAnimation();
-                break;
-        }
+        onMuteChange(nextMuted);
     }
 
     function handleNavigation(dest: 'channel' | 'tag', value: string | Tag) {
@@ -201,51 +183,7 @@ const ShortItem = memo(function ShortItem({
         }
     }
 
-    function handlePanelToggle(e: React.MouseEvent | React.KeyboardEvent, panel: 'volume' | 'description') {
-        if (e) {
-            e.stopPropagation();
-        }
-
-        if (panel === 'volume') {
-            setShowVolumeSlider(v => !v);
-        } else {
-            setShowDescription(v => !v);
-        }
-    }
-
-    // Tap closes side panels
-    function handleTap() {
-        setShowVolumeSlider(false);
-        setShowDescription(false);
-    }
-
-    // Escape key closes description panel
-    useEffect(() => {
-        if (!showDescription) {
-            return;
-        }
-
-        function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === 'Escape') {
-                setShowDescription(false);
-            }
-        }
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showDescription]);
-
     const visibleTags = video.tags.filter(tag => tag !== 'shorts').slice(0, MAX_TAGS);
-    const volumeFill = `${effectiveVolume * 100}%`;
-
-    let volumeIcon;
-    if (effectiveVolume === 0) {
-        volumeIcon = <VolumeX size={20} strokeWidth={1.75} />;
-    } else if (effectiveVolume < 0.5) {
-        volumeIcon = <Volume1 size={20} strokeWidth={1.75} />;
-    } else {
-        volumeIcon = <Volume2 size={20} strokeWidth={1.75} />;
-    }
 
     return (
         <div className="shorts-page__item">
@@ -261,7 +199,7 @@ const ShortItem = memo(function ShortItem({
                     onVolumeChange={onVolumeChange}
                     onVideoMounted={onVideoMounted}
                     onEnded={onEnded}
-                    onTap={handleTap}
+                    onTap={closeAll}
                 >
                     {/* Counter */}
                     <span className="shorts-page__counter">
@@ -319,7 +257,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--liked"
                     tooltipSide="right"
-                    onClick={() => handleReaction(ReactionType.LIKE)}
+                    onClick={handleLike}
                 />
 
                 <ReactionBtn
@@ -332,7 +270,7 @@ const ShortItem = memo(function ShortItem({
                     className="shorts-page__action"
                     activeClass="shorts-page__action--disliked"
                     tooltipSide="right"
-                    onClick={() => handleReaction(ReactionType.DISLIKE)}
+                    onClick={handleDislike}
                 />
 
                 <SavePopover videoId={video.id}>
@@ -366,14 +304,14 @@ const ShortItem = memo(function ShortItem({
 
                 {/* Volume control: icon toggles slider visibility */}
                 <div className="shorts-page__volume">
-                    <Tooltip content={muted ? t('shorts.unmute') : t('shorts.mute')} side="right">
+                    <Tooltip content={muteLabel} side="right">
                         <button
                             className="shorts-page__action"
-                            aria-label={muted ? t('shorts.unmute') : t('shorts.mute')}
-                            onClick={handleVolumeToggle}
+                            aria-label={muteLabel}
+                            onClick={e => handlePanelToggle(e, 'volume')}
                         >
                             <span className="rbtn__icon">
-                                {volumeIcon}
+                                <VolumeIcon volume={effectiveVolume} />
                             </span>
                         </button>
                     </Tooltip>
@@ -415,126 +353,12 @@ const ShortItem = memo(function ShortItem({
 
 export default function ShortsPage() {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
-    const {
-        publishedVideos, watchVideo, closeMiniPlayer,
-        shortsMuted: muted, shortsVolume: volume,
-        setShortsMuted: setMuted, setShortsVolume: setVolume,
-    } = useVideo();
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
+    const { shorts, muted, volume, setMuted, setVolume } = useShortsData();
+    const { itemRefs, videoMap, videoRefs, mountVideo } = useShortsRefs(shorts.length);
+    const { renderedIndex, activateIndex, scrollToIndex } = useShortsNavigation(shorts, videoMap, itemRefs);
     const feedRef = useRef<HTMLDivElement>(null);
-    const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const videoRefsMap = useRef<Map<number, HTMLVideoElement>>(new Map());
-    const [activeIndex, setActiveIndex] = useState(0);
-    const activeIndexRef = useRef(0);
-
-    // Close mini player when shorts page opens
-    useEffect(() => {
-        closeMiniPlayer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const shorts = useMemo(
-        () => publishedVideos.filter(v => v.tags.includes('shorts' as Tag)),
-        [publishedVideos],
-    );
-
-    // One stable ref per short item, created once
-    const videoRefsArray = useRef<React.RefObject<HTMLVideoElement | null>[]>([]);
-
-    // Ensure we have enough refs for the current shorts list
-    useLayoutEffect(() => {
-        while (videoRefsArray.current.length < shorts.length) {
-            videoRefsArray.current.push({ current: null });
-        }
-    }, [shorts.length]);
-
-    function handleVideoMounted(index: number, el: HTMLVideoElement | null) {
-        const isRemoving = el === null;
-        if (isRemoving) {
-            videoRefsMap.current.delete(index);
-            return;
-        }
-        videoRefsMap.current.set(index, el);
-    }
-
-    const activateIndex = useCallback((newIndex: number) => {
-        const isAlreadyActive = newIndex === activeIndexRef.current;
-        const isPlaying = !(videoRefsMap.current.get(newIndex)?.paused ?? true);
-        if (isAlreadyActive && isPlaying) {
-            return;
-        }
-
-        videoRefsMap.current.forEach((el, i) => {
-            const isCurrent = i === newIndex;
-            if (isCurrent) {
-                el.currentTime = 0;
-                el.play().catch(() => undefined);
-            } else {
-                el.pause();
-            }
-        });
-
-        const shortId = shorts[newIndex]?.id;
-        const hasId = shortId !== undefined;
-        if (hasId) {
-            watchVideo(shortId);
-            if (!hasViewed(shortId)) {
-                markViewed(shortId);
-                videoApi.recordView(toVuid(shortId));
-                dispatch(videoActions.incrementViews(shortId));
-            }
-        }
-
-        setActiveIndex(newIndex);
-        activeIndexRef.current = newIndex;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shorts.length]);
-
-    const scrollToIndex = useCallback((index: number) => {
-        const isOutOfBounds = index < 0 || index >= shorts.length;
-        if (isOutOfBounds) {
-            return;
-        }
-        itemRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
-    }, [shorts.length]);
-
-    useEffect(() => {
-        const feed = feedRef.current;
-        const isNoShorts = shorts.length === 0;
-        if (!feed || isNoShorts) {
-            return;
-        }
-
-        const observer = new IntersectionObserver(
-            entries => {
-                for (const entry of entries) {
-                    const isVisible = entry.intersectionRatio >= 0.6;
-                    if (!isVisible) {
-                        continue;
-                    }
-                    const idx = itemRefs.current.indexOf(entry.target as HTMLDivElement);
-                    const isValidIndex = idx !== -1;
-                    if (isValidIndex) {
-                        activateIndex(idx);
-                    }
-                }
-            },
-            { root: feed, threshold: 0.6 },
-        );
-
-        itemRefs.current.forEach(el => {
-            const isMounted = el !== null;
-            if (isMounted) {
-                observer.observe(el);
-            }
-        });
-
-        return () => observer.disconnect();
-    }, [shorts.length, activateIndex]);
-
-    // Silence unused variable warning — activeIndex drives side effects, not rendering directly
-    void activeIndex;
+    useShortsFeedObserver(feedRef, itemRefs, activateIndex, shorts.length);
 
     const isEmpty = shorts.length === 0;
 
@@ -554,11 +378,7 @@ export default function ShortsPage() {
         <div className="shorts-page">
             <div className="shorts-page__feed" ref={feedRef}>
                 {shorts.map((video, index) => {
-                    // Ensure ref slot exists
-                    if (!videoRefsArray.current[index]) {
-                        videoRefsArray.current[index] = { current: null };
-                    }
-                    const isWithinWindow = Math.abs(index - activeIndex) <= 2;
+                    const isWithinWindow = Math.abs(index - renderedIndex) <= 2;
                     return (
                         <div
                             key={video.id}
@@ -572,9 +392,9 @@ export default function ShortsPage() {
                                     video={video}
                                     index={index}
                                     total={shorts.length}
-                                    isActive={index === activeIndex}
-                                    videoRef={videoRefsArray.current[index]}
-                                    onVideoMounted={el => handleVideoMounted(index, el)}
+                                    isActive={index === renderedIndex}
+                                    videoRef={videoRefs.current[index]}
+                                    onVideoMounted={el => mountVideo(index, el)}
                                     onEnded={() => scrollToIndex(index + 1)}
                                     onScrollNext={() => scrollToIndex(index + 1)}
                                     muted={muted}
