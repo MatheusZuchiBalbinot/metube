@@ -41,7 +41,7 @@ export default function CommentReplies({
         <div className="comment-replies">
             {replies.map(reply => (
                 <CommentItem
-                    key={reply.id as string}
+                    key={reply.id}
                     comment={reply}
                     loadingReplies={loadingReplies}
                     onToggleLike={onToggleLike}

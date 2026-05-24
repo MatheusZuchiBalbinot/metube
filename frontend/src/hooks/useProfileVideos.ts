@@ -58,7 +58,7 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
 
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setOwnVideos(prev => prev.map(v =>
-            v.id === (lastVideoStatusUpdate.vuid as unknown as typeof v.id)
+            (v.id as string) === (lastVideoStatusUpdate.vuid as string)
                 ? { ...v, status: lastVideoStatusUpdate.status as VideoStatus }
                 : v,
         ));

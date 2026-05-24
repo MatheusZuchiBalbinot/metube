@@ -338,7 +338,7 @@ const ShortItem = memo(function ShortItem({
                     onClick={() => handleReaction(ReactionType.DISLIKE)}
                 />
 
-                <SavePopover videoId={video.id as unknown as string}>
+                <SavePopover videoId={video.id}>
                     <ReactionBtn
                         isActive={isSaved}
                         icon={<Bookmark size={22} strokeWidth={1.75} fill="none" />}
@@ -438,7 +438,7 @@ export default function ShortsPage() {
     }, []);
 
     const shorts = useMemo(
-        () => publishedVideos.filter(v => v.tags.includes('shorts' as unknown as Tag)),
+        () => publishedVideos.filter(v => v.tags.includes('shorts' as Tag)),
         [publishedVideos],
     );
 

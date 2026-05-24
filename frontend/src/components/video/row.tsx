@@ -1,7 +1,8 @@
 import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VideoStatus, type Video } from '@models/video';
+import type { Video } from '@models/video';
+import { isProcessing, isFailed, isScheduled } from '@domain/video';
 import type { Tag } from '@models/tag';
 import { ROUTES, videoUrl } from '@utils/routes';
 import { Format, getVisibleTags } from '@utils/format';
@@ -28,7 +29,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
     const { openTagView, videoProgress } = useVideo();
     const rowRef = useRef<HTMLElement>(null);
     const vuid = video.id as unknown as Vuid;
-    const hasValidVuid = vuid !== undefined && (vuid as unknown as string) !== '';
+    const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(rowRef, vuid, source, { enabled: hasValidVuid });
 
@@ -36,7 +37,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
 
     const now = new Date();
     const isScheduledAndFuture =
-        video.status === VideoStatus.SCHEDULED &&
+        isScheduled(video) &&
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 
@@ -121,8 +122,8 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
                 <VideoStatusBadges
                     isScheduledAndFuture={isScheduledAndFuture}
                     isWatched={isWatched}
-                    isProcessing={video.status === VideoStatus.PROCESSING}
-                    isFailed={video.status === VideoStatus.FAILED}
+                    isProcessing={isProcessing(video)}
+                    isFailed={isFailed(video)}
                     classPrefix="video-row"
                 />
             </div>

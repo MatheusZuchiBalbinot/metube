@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { VideoStatus } from '@models/video';
+import { domain } from '@domain';
+import type { Tag } from '@models/tag';
 import type { VideoState } from './videoSlice';
 
 interface WithVideo { video: VideoState }
@@ -8,7 +9,7 @@ export const selectHistoryTags = createSelector(
     [(s: WithVideo) => s.video.watchHistory, (s: WithVideo) => s.video.videos],
     (watchHistory, videos) => {
         const watchedIds = new Set(watchHistory);
-        const tagSet = new Set<string>();
+        const tagSet = new Set<Tag>();
 
         for (const video of videos) {
             const isWatched = watchedIds.has(video.id);
@@ -26,15 +27,7 @@ export const selectHistoryTags = createSelector(
 export const selectPublishedVideos = createSelector(
     [(s: WithVideo) => s.video.videos],
     (videos) => {
-        const now = new Date();
-        return videos.filter(v => {
-            const isPublished = v.status === VideoStatus.PUBLISHED;
-            const isScheduledAndPast =
-                v.status === VideoStatus.SCHEDULED &&
-                v.scheduledAt !== undefined &&
-                new Date(v.scheduledAt) <= now;
-            return isPublished || isScheduledAndPast;
-        });
+        return videos.filter(v => domain.video.isVisible(v));
     },
 );
 

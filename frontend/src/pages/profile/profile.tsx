@@ -8,7 +8,7 @@ import { VideoFilter, SortBy } from '@utils/applyFilters';
 import { TagColors } from '@utils/tagColors';
 import type { FilterState } from '@utils/applyFilters';
 import type { Video, VideoId } from '@models/video';
-import { VideoStatus } from '@models/video';
+import { domain } from '@domain';
 import type { Tag } from '@models/tag';
 import { Format } from '@utils/format';
 import { videoUrl } from '@utils/routes';
@@ -63,8 +63,8 @@ export default function ProfilePage() {
     const [spotlightComments, setSpotlightComments] = useState<Comment[]>([]);
 
     const allTags = useMemo(() => {
-        const tagSet = new Set(ownVideos.flatMap((v: Video) => v.tags));
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        const tagSet = new Set<Tag>(ownVideos.flatMap((v: Video) => v.tags));
+        return Array.from(tagSet).sort();
     }, [ownVideos]);
 
     const pinnedVideo = useMemo(
@@ -83,7 +83,7 @@ export default function ProfilePage() {
         }
 
         return ownVideos
-            .filter(v => v.status === VideoStatus.PUBLISHED && v.id !== pinnedVideo.id)
+            .filter(v => domain.video.isPublished(v) && v.id !== pinnedVideo.id)
             .sort((a, b) => b.views - a.views)
             .slice(0, 2);
     }, [isOwnProfile, pinnedVideo, ownVideos]);
@@ -99,7 +99,7 @@ export default function ProfilePage() {
     const SECTIONS_THRESHOLD = 8;
     const sections = useMemo(() => {
         const isFiltered = !VideoFilter.isEmpty(filterState);
-        const published = ownVideos.filter(v => v.status === VideoStatus.PUBLISHED);
+        const published = ownVideos.filter(v => domain.video.isPublished(v));
         const hasEnough = published.length >= SECTIONS_THRESHOLD;
 
         if (isFiltered || !hasEnough) {
@@ -120,12 +120,12 @@ export default function ProfilePage() {
             .filter(v => v.id !== featured?.id)
             .slice(0, 6);
 
-        const tagCounts = new Map<string, number>();
-        for (const v of published) {
-            for (const tag of v.tags) {
+        const tagCounts = new Map<Tag, number>();
+        for (const video of published) {
+            for (const tag of video.tags) {
                 const isShorts = tag === 'shorts';
                 if (!isShorts) {
-                    tagCounts.set(tag as unknown as string, (tagCounts.get(tag as unknown as string) ?? 0) + 1);
+                    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
                 }
             }
         }
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                 tag,
                 count,
                 videos: published
-                    .filter(v => (v.tags as unknown as string[]).includes(tag))
+                    .filter(v => v.tags.includes(tag))
                     .sort((a, b) => b.views - a.views)
                     .slice(0, 3),
             }));
@@ -187,8 +187,8 @@ export default function ProfilePage() {
         const videosWatched = watchHistory.length;
 
         // VISUAL-11: accurate watch time using video duration
-        const totalWatchSeconds = watchHistory.reduce((sum: number, id: string) => {
-            const video = videos.find((v: Video) => v.id === (id as unknown as typeof v.id));
+        const totalWatchSeconds = watchHistory.reduce((sum: number, id: VideoId) => {
+            const video = videos.find((v: Video) => v.id === id);
             const duration = video?.duration ?? 600;
             const progress = videoProgress[id] ?? 0;
             return sum + (progress / 100) * duration;
@@ -196,9 +196,9 @@ export default function ProfilePage() {
 
         const watchTimeStr = formatWatchTime(totalWatchSeconds);
 
-        const tagFreq = new Map<string, number>();
+        const tagFreq = new Map<Tag, number>();
         for (const id of watchHistory) {
-            const video = videos.find((v: Video) => v.id === (id as unknown as typeof v.id));
+            const video = videos.find((v: Video) => v.id === id);
             if (!video) {
                 continue;
             }
@@ -364,12 +364,12 @@ export default function ProfilePage() {
                                     <TagIcon size={13} className="profile-page__stat-icon" />
                                     <div className="profile-page__top-tags">
                                         {stats.topTags.map(tag => {
-                                            const p = TagColors.palette(tag);
+                                            const palette = TagColors.palette(tag);
                                             return (
                                                 <span
                                                     key={tag}
                                                     className="profile-page__top-tag"
-                                                    style={{ background: p.bg, color: p.color }}
+                                                    style={{ background: palette.bg, color: palette.color }}
                                                 >
                                                     {tag}
                                                 </span>
@@ -421,11 +421,11 @@ export default function ProfilePage() {
                                 {sections.featured.tags.length > 0 && (
                                     <div className="profile-page__cover-tags">
                                         {sections.featured.tags.slice(0, 4).map(tag => {
-                                            const p = TagColors.palette(tag as unknown as string);
-                                            const tagStyle = { background: p.bg, color: p.color };
+                                            const palette = TagColors.palette(tag as string);
+                                            const tagStyle = { background: palette.bg, color: palette.color };
                                             return (
-                                                <span key={tag as unknown as string} className="profile-page__cover-tag" style={tagStyle}>
-                                                    {tag as unknown as string}
+                                                <span key={tag as string} className="profile-page__cover-tag" style={tagStyle}>
+                                                    {tag as string}
                                                 </span>
                                             );
                                         })}
@@ -575,8 +575,8 @@ export default function ProfilePage() {
                                             style={{ backgroundImage: `url(${coverThumb})` }}
                                             role="button"
                                             tabIndex={0}
-                                            onClick={() => scrollToAllVideos({ tags: [tag as unknown as Tag] })}
-                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag as unknown as Tag] })}
+                                            onClick={() => scrollToAllVideos({ tags: [tag] })}
+                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag] })}
                                         >
                                             <div className="profile-page__topic-cover-content">
                                                 <span className="profile-page__topic-cover-tag">#{tag}</span>
@@ -594,7 +594,7 @@ export default function ProfilePage() {
                                                         className="profile-page__topic-cover-see-all"
                                                         onClick={e => {
                                                             e.stopPropagation();
-                                                            scrollToAllVideos({ tags: [tag as unknown as Tag] });
+                                                            scrollToAllVideos({ tags: [tag] });
                                                         }}
                                                     >
                                                         {t('channel.see_all')} →

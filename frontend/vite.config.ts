@@ -21,6 +21,7 @@ export default defineConfig({
             '@validation': resolve(__dirname, 'src/validation'),
             '@lib': resolve(__dirname, 'src/lib'),
             '@enums': resolve(__dirname, 'src/enums'),
+            '@domain': resolve(__dirname, 'src/domain'),
         },
     },
     plugins: [
@@ -72,6 +73,7 @@ export default defineConfig({
             '@validation': resolve(__dirname, 'src/validation'),
             '@lib': resolve(__dirname, 'src/lib'),
             '@enums': resolve(__dirname, 'src/enums'),
+            '@domain': resolve(__dirname, 'src/domain'),
         },
     },
     server: {

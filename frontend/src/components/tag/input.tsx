@@ -36,11 +36,11 @@ export default function TagInput({
             return [] as Tag[];
         }
 
-        const selectedSet = new Set(value.map(t => (t as string).toLowerCase()));
+        const selectedSet = new Set(value.map(tag => tag.toLowerCase()));
 
         return suggestions
             .filter(tag => {
-                const normalized = (tag as string).toLowerCase();
+                const normalized = tag.toLowerCase();
                 const matches = normalized.includes(trimmed);
                 const isAlreadySelected = selectedSet.has(normalized);
                 return matches && !isAlreadySelected;
@@ -76,7 +76,7 @@ export default function TagInput({
     }
 
     function selectSuggestion(tag: Tag) {
-        addTag(tag as string);
+        addTag(tag);
 
         if (inputRef.current) {
             inputRef.current.value = '';

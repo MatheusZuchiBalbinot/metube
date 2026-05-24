@@ -4,8 +4,9 @@ import { Plus } from 'lucide-react';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks/usePlaylist';
-import type { Playlist } from '@models/playlist';
-import { PLAYLIST_CONSTANTS } from '@models/playlist';
+import type { Playlist, PlaylistId } from '@models/playlist';
+import type { VideoId } from '@models/video';
+import { domain } from '@domain';
 import Button from '@ui/button/button';
 import Checkbox from '@ui/checkbox/checkbox';
 import Input from '@ui/input/input';
@@ -14,7 +15,7 @@ import './savePopover.css';
 import { ToastType } from '@enums/toastType';
 
 interface SavePopoverProps {
-    videoId: string
+    videoId: VideoId
     children: React.ReactNode
 }
 
@@ -34,10 +35,10 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
     const [newPlaylist, setNewPlaylist] = useState('');
     const [creating, setCreating] = useState(false);
 
-    const watchLaterPlaylist = playlists.find((pl: Playlist) => pl.name === PLAYLIST_CONSTANTS.WATCH_LATER);
+    const watchLaterPlaylist = playlists.find((pl: Playlist) => domain.playlist.isWatchLater(pl));
     const videoPlaylistIds = getVideoPlaylistIds(videoId);
-    const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id as string);
-    const visiblePlaylists = playlists.filter((pl: Playlist) => pl.name !== PLAYLIST_CONSTANTS.WATCH_LATER);
+    const isInWatchLater = watchLaterPlaylist !== undefined && videoPlaylistIds.includes(watchLaterPlaylist.id);
+    const visiblePlaylists = playlists.filter((pl: Playlist) => !domain.playlist.isWatchLater(pl));
 
     function handleTriggerClick(e: React.MouseEvent) {
         e.stopPropagation();
@@ -56,15 +57,15 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
         }
 
         if (isInWatchLater) {
-            removeVideoFromPlaylist(watchLaterPlaylist.id as string, videoId);
+            removeVideoFromPlaylist(watchLaterPlaylist.id, videoId);
             dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: ToastType.INFO }));
         } else {
-            addVideoToPlaylist(watchLaterPlaylist.id as string, videoId);
+            addVideoToPlaylist(watchLaterPlaylist.id, videoId);
             dispatch(toastActions.addToast({ message: t('toast.saved'), type: ToastType.SUCCESS }));
         }
     }
 
-    function handlePlaylistChange(playlistId: string, playlistName: string) {
+    function handlePlaylistChange(playlistId: PlaylistId, playlistName: string) {
         const isInPlaylist = videoPlaylistIds.includes(playlistId);
         if (isInPlaylist) {
             removeVideoFromPlaylist(playlistId, videoId);
@@ -96,7 +97,7 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
             return;
         }
 
-        addVideoToPlaylist(newId as string, videoId);
+        addVideoToPlaylist(newId, videoId);
         dispatch(toastActions.addToast({
             message: t('toast.playlist_created'),
             type: ToastType.SUCCESS,
@@ -149,12 +150,12 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
                     )}
 
                     {visiblePlaylists.map((pl: Playlist) => {
-                        const isInPlaylist = videoPlaylistIds.includes(pl.id as string);
+                        const isInPlaylist = videoPlaylistIds.includes(pl.id);
                         return (
-                            <label key={pl.id as string} className="save-modal__row">
+                            <label key={pl.id} className="save-modal__row">
                                 <Checkbox
                                     checked={isInPlaylist}
-                                    onChange={() => handlePlaylistChange(pl.id as string, pl.name)}
+                                    onChange={() => handlePlaylistChange(pl.id, pl.name)}
                                 />
                                 <span className="save-modal__label">{pl.name}</span>
                             </label>

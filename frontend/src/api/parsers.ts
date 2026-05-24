@@ -8,8 +8,10 @@ import type { PaginatedResponse } from '@models/common';
 
 // ─── Shared types ──────────────────────────────────────────────────────────────
 
+export type KeyPoint = string & { readonly _brand: 'KeyPoint' };
+
 export interface VideoSummary {
-    keyPoints: string[]
+    keyPoints: KeyPoint[]
     chapters: { timestamp: string; title: string }[]
     readingMode: string
 }
@@ -24,7 +26,7 @@ export interface AiSuggestion {
     status: 'pending' | 'accepted' | 'dismissed'
     suggestedTitle: string
     suggestedDescription: string
-    suggestedTags: string[]
+    suggestedTags: Tag[]
 }
 
 export interface LoginApiResponse {
@@ -43,78 +45,83 @@ export type CommentListApiResponse = PaginatedResponse<Comment>;
 
 type Raw = Record<string, unknown>;
 
-function toRaw(v: unknown): Raw | null {
-    const isNonArrayObject = v !== null && typeof v === 'object' && !Array.isArray(v);
-    return isNonArrayObject ? (v as Raw) : null;
+function toRaw(value: unknown): Raw | null {
+    const isNonArrayObject = value !== null && typeof value === 'object' && !Array.isArray(value);
+    return isNonArrayObject ? (value as Raw) : null;
 }
 
-function str(v: unknown): string {
-    return typeof v === 'string' ? v : '';
+function str(value: unknown): string {
+    return typeof value === 'string' ? value : '';
 }
 
-function num(v: unknown): number {
-    return typeof v === 'number' ? v : 0;
+function num(value: unknown): number {
+    return typeof value === 'number' ? value : 0;
 }
 
-function bool(v: unknown): boolean {
-    return typeof v === 'boolean' ? v : false;
+function bool(value: unknown): boolean {
+    return typeof value === 'boolean' ? value : false;
+}
+
+/** Single-cast helper for branded types constructed at the API boundary. */
+function brand<T>(value: string | number): T {
+    return value as unknown as T;
 }
 
 // ─── Video ─────────────────────────────────────────────────────────────────────
 
 export function parseVideo(raw: unknown): Video | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const vuid = str(r['vuid']);
+    const vuid = str(rawData['vuid']);
 
     if (!vuid) {
         return null;
     }
 
-    const createdAt = str(r['created_at']) || str(r['published_at']) || new Date().toISOString();
+    const createdAt = str(rawData['created_at']) || str(rawData['published_at']) || new Date().toISOString();
 
     return {
-        id: vuid as unknown as VideoId,
-        title: str(r['title']),
-        description: str(r['description']),
-        status: str(r['status']) as VideoStatus,
-        views: num(r['views']),
-        duration: typeof r['duration'] === 'number' ? r['duration'] : undefined,
-        videoUrl: str(r['video_url']) || undefined,
-        thumbnail: str(r['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
-        publishedAt: str(r['published_at']) || createdAt,
+        id: brand<VideoId>(vuid),
+        title: str(rawData['title']),
+        description: str(rawData['description']),
+        status: str(rawData['status']) as VideoStatus,
+        views: num(rawData['views']),
+        duration: typeof rawData['duration'] === 'number' ? rawData['duration'] : undefined,
+        videoUrl: str(rawData['video_url']) || undefined,
+        thumbnail: str(rawData['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
+        publishedAt: str(rawData['published_at']) || createdAt,
         createdAt,
-        scheduledAt: str(r['scheduled_at']) || undefined,
-        tags: Array.isArray(r['tags']) ? (r['tags'] as Tag[]) : [],
-        captions: Array.isArray(r['captions']) ? (r['captions'] as VideoCaption[]) : [],
-        channel: str(r['channel']),
-        channelId: str(r['channel_id']) as unknown as ChannelId,
+        scheduledAt: str(rawData['scheduled_at']) || undefined,
+        tags: Array.isArray(rawData['tags']) ? (rawData['tags'] as Tag[]) : [],
+        captions: Array.isArray(rawData['captions']) ? (rawData['captions'] as VideoCaption[]) : [],
+        channel: str(rawData['channel']),
+        channelId: brand<ChannelId>(str(rawData['channel_id'])),
     };
 }
 
 export function parseVideoList(raw: unknown): VideoListApiResponse | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const meta = toRaw(r['meta']);
+    const meta = toRaw(rawData['meta']);
 
     if (!meta) {
         return null;
     }
 
-    const data = Array.isArray(r['data'])
-        ? r['data'].map(parseVideo).filter((v): v is Video => v !== null)
+    const videos = Array.isArray(rawData['data'])
+        ? rawData['data'].map(parseVideo).filter((video): video is Video => video !== null)
         : [];
 
     return {
-        data,
+        data: videos,
         meta: {
             total: num(meta['total']),
             page: num(meta['current_page']),
@@ -127,27 +134,27 @@ export function parseVideoList(raw: unknown): VideoListApiResponse | null {
 // ─── User ──────────────────────────────────────────────────────────────────────
 
 export function parseUser(raw: unknown): User | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const uuid = str(r['uuid']);
+    const uuid = str(rawData['uuid']);
 
     if (!uuid) {
         return null;
     }
 
     return {
-        id: uuid as unknown as UserId,
+        id: brand<UserId>(uuid),
         uuid,
-        name: str(r['name']),
-        email: str(r['email']),
-        bio: str(r['bio']) || undefined,
-        avatar: str(r['avatar']) || undefined,
-        emailVerifiedAt: str(r['email_verified_at']) || undefined,
-        createdAt: str(r['created_at']),
+        name: str(rawData['name']),
+        email: str(rawData['email']),
+        bio: str(rawData['bio']) || undefined,
+        avatar: str(rawData['avatar']) || undefined,
+        emailVerifiedAt: str(rawData['email_verified_at']) || undefined,
+        createdAt: str(rawData['created_at']),
     };
 }
 
@@ -156,17 +163,17 @@ export function parseUserArray(raw: unknown): User[] | null {
         return null;
     }
 
-    return raw.map(parseUser).filter((u): u is User => u !== null);
+    return raw.map(parseUser).filter((user): user is User => user !== null);
 }
 
 export function parseLoginResponse(raw: unknown): LoginApiResponse | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const user = parseUser(r['user']);
+    const user = parseUser(rawData['user']);
 
     if (!user) {
         return null;
@@ -178,62 +185,62 @@ export function parseLoginResponse(raw: unknown): LoginApiResponse | null {
 // ─── Comment ───────────────────────────────────────────────────────────────────
 
 function parseCommentAuthor(raw: unknown): Comment['author'] {
-    const r = toRaw(raw) ?? {};
+    const rawData = toRaw(raw) ?? {};
 
     return {
-        uuid: str(r['uuid']),
-        name: str(r['name']),
-        avatar: str(r['avatar']),
+        uuid: str(rawData['uuid']),
+        name: str(rawData['name']),
+        avatar: str(rawData['avatar']),
     };
 }
 
 export function parseComment(raw: unknown): Comment | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const cuid = str(r['cuid']);
+    const cuid = str(rawData['cuid']);
 
     if (!cuid) {
         return null;
     }
 
-    const rawParentCuid = str(r['parent_cuid']) || undefined;
+    const rawParentCuid = str(rawData['parent_cuid']) || undefined;
 
     return {
-        id: cuid as unknown as Cuid,
-        content: str(r['content']),
-        author: parseCommentAuthor(r['author']),
-        likesCount: num(r['likes_count']),
-        isLiked: bool(r['is_liked']),
-        isEdited: bool(r['is_edited']),
-        replyCount: num(r['replies_count']),
-        parentCuid: rawParentCuid as unknown as Cuid | undefined,
-        createdAt: str(r['created_at']),
+        id: brand<Cuid>(cuid),
+        content: str(rawData['content']),
+        author: parseCommentAuthor(rawData['author']),
+        likesCount: num(rawData['likes_count']),
+        isLiked: bool(rawData['is_liked']),
+        isEdited: bool(rawData['is_edited']),
+        replyCount: num(rawData['replies_count']),
+        parentCuid: rawParentCuid !== undefined ? brand<Cuid>(rawParentCuid) : undefined,
+        createdAt: str(rawData['created_at']),
     };
 }
 
 export function parseCommentList(raw: unknown): CommentListApiResponse | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const meta = toRaw(r['meta']);
+    const meta = toRaw(rawData['meta']);
 
     if (!meta) {
         return null;
     }
 
-    const data = Array.isArray(r['data'])
-        ? r['data'].map(parseComment).filter((c): c is Comment => c !== null)
+    const comments = Array.isArray(rawData['data'])
+        ? rawData['data'].map(parseComment).filter((comment): comment is Comment => comment !== null)
         : [];
 
     return {
-        data,
+        data: comments,
         meta: {
             total: num(meta['total']),
             page: num(meta['current_page']),
@@ -244,135 +251,136 @@ export function parseCommentList(raw: unknown): CommentListApiResponse | null {
 }
 
 export function parseCommentReplies(raw: unknown): Comment[] | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r || !Array.isArray(r['data'])) {
+    if (!rawData || !Array.isArray(rawData['data'])) {
         return null;
     }
 
-    return r['data'].map(parseComment).filter((c): c is Comment => c !== null);
+    return rawData['data'].map(parseComment).filter((comment): comment is Comment => comment !== null);
 }
 
 export function parseToggleLike(raw: unknown): ToggleLikeApiResponse | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
     return {
-        liked: bool(r['liked']),
-        likesCount: num(r['likes_count']),
+        liked: bool(rawData['liked']),
+        likesCount: num(rawData['likes_count']),
     };
 }
 
 export function parseCommentVersion(raw: unknown): CommentVersion | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
     return {
-        version: num(r['version']),
-        content: str(r['content']),
-        createdAt: str(r['created_at']),
+        version: num(rawData['version']),
+        content: str(rawData['content']),
+        createdAt: str(rawData['created_at']),
     };
 }
 
 export function parseCommentVersions(raw: unknown): CommentVersion[] | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r || !Array.isArray(r['data'])) {
+    if (!rawData || !Array.isArray(rawData['data'])) {
         return null;
     }
 
-    return r['data'].map(parseCommentVersion).filter((v): v is CommentVersion => v !== null);
+    return rawData['data'].map(parseCommentVersion).filter((version): version is CommentVersion => version !== null);
 }
 
 // ─── Playlist ──────────────────────────────────────────────────────────────────
 
 export function parsePlaylist(raw: unknown): Playlist | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const puid = str(r['puid']);
+    const puid = str(rawData['puid']);
 
     if (!puid) {
         return null;
     }
 
     return {
-        id: puid as unknown as PlaylistId,
-        name: str(r['name']),
-        videoIds: Array.isArray(r['video_ids']) ? (r['video_ids'] as Playlist['videoIds']) : [],
-        createdAt: str(r['created_at']),
+        id: brand<PlaylistId>(puid),
+        name: str(rawData['name']),
+        videoIds: Array.isArray(rawData['video_ids']) ? (rawData['video_ids'] as Playlist['videoIds']) : [],
+        createdAt: str(rawData['created_at']),
     };
 }
 
 export function parsePlaylistList(raw: unknown): Playlist[] | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r || !Array.isArray(r['data'])) {
+    if (!rawData || !Array.isArray(rawData['data'])) {
         return null;
     }
 
-    return r['data'].map(parsePlaylist).filter((p): p is Playlist => p !== null);
+    return rawData['data'].map(parsePlaylist).filter((playlist): playlist is Playlist => playlist !== null);
 }
 
 // ─── Video Summary ─────────────────────────────────────────────────────────────
 
 export function parseVideoSummary(raw: unknown): VideoSummary | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
     return {
-        keyPoints: Array.isArray(r['key_points']) ? (r['key_points'] as string[]) : [],
-        chapters: Array.isArray(r['chapters']) ? (r['chapters'] as VideoSummary['chapters']) : [],
-        readingMode: str(r['reading_mode']),
+        keyPoints: Array.isArray(rawData['key_points']) ? (rawData['key_points'] as unknown as KeyPoint[]) : [],
+        chapters: Array.isArray(rawData['chapters']) ? (rawData['chapters'] as VideoSummary['chapters']) : [],
+        readingMode: str(rawData['reading_mode']),
     };
 }
 
 // ─── Transcription ─────────────────────────────────────────────────────────────
 
 export function parseVideoTranscription(raw: unknown): VideoTranscription | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
     return {
-        status: str(r['status']) as VideoTranscription['status'],
-        language: typeof r['language'] === 'string' ? r['language'] : null,
-        content: typeof r['content'] === 'string' ? r['content'] : null,
+        status: str(rawData['status']) as VideoTranscription['status'],
+        language: typeof rawData['language'] === 'string' ? rawData['language'] : null,
+        content: typeof rawData['content'] === 'string' ? rawData['content'] : null,
     };
 }
 
 // ─── AI Suggestion ─────────────────────────────────────────────────────────────
 
 export function parseAiSuggestion(raw: unknown): AiSuggestion | null {
-    const r = toRaw(raw);
+    const rawData = toRaw(raw);
 
-    if (!r) {
+    if (!rawData) {
         return null;
     }
 
-    const status = str(r['status']);
+    const status = str(rawData['status']);
+
     if (!status) {
         return null;
     }
 
     return {
         status: status as AiSuggestion['status'],
-        suggestedTitle: str(r['suggested_title']),
-        suggestedDescription: str(r['suggested_description']),
-        suggestedTags: Array.isArray(r['suggested_tags']) ? (r['suggested_tags'] as string[]) : [],
+        suggestedTitle: str(rawData['suggested_title']),
+        suggestedDescription: str(rawData['suggested_description']),
+        suggestedTags: Array.isArray(rawData['suggested_tags']) ? (rawData['suggested_tags'] as unknown as Tag[]) : [],
     };
 }

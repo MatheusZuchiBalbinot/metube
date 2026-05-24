@@ -43,9 +43,9 @@ export default function CommentItem({
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     const displayContent = viewingVersion !== null ? viewingVersion.content : comment.content;
-    const isOwner = user !== null && (user.id as unknown as string) === comment.author.uuid;
+    const isOwner = user !== null && user.uuid === comment.author.uuid;
     const hasReplies = comment.replyCount > 0;
-    const isRepliesLoading = loadingReplies[comment.id as string] ?? false;
+    const isRepliesLoading = loadingReplies[comment.id] ?? false;
 
     function getToggleIcon() {
         if (isRepliesLoading && showReplies) {

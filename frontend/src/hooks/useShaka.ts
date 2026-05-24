@@ -45,40 +45,39 @@ export function useShaka(
             }
 
             player = new shaka.Player() as ShakaPlayer;
-            const p = player;
-            playerRef.current = p;
+            playerRef.current = player;
 
-            p.addEventListener('error', (e: Event) => {
+            player.addEventListener('error', (e: Event) => {
                 const detail = (e as CustomEvent).detail;
                 // eslint-disable-next-line no-console
                 console.warn('[Shaka Error]', detail);
             });
 
-            await p.attach(el);
+            await player.attach(el);
 
             if (destroyed) {
                 return;
             }
 
-            await p.load(src);
+            await player.load(src);
 
             if (destroyed) {
                 return;
             }
 
-            const tracks = p.getVariantTracks();
+            const tracks = player.getVariantTracks();
             const seenHeights = new Set<number>();
             const uniqueLevels: ShakaLevel[] = [];
 
-            tracks.forEach((t, i) => {
-                const h = t.height ?? 0;
-                if (!seenHeights.has(h)) {
-                    seenHeights.add(h);
+            tracks.forEach((track, index) => {
+                const trackHeight = track.height ?? 0;
+                if (!seenHeights.has(trackHeight)) {
+                    seenHeights.add(trackHeight);
                     uniqueLevels.push({
-                        index: i,
-                        height: h,
-                        bitrate: t.bandwidth,
-                        label: h > 0 ? `${h}p` : 'auto',
+                        index,
+                        height: trackHeight,
+                        bitrate: track.bandwidth,
+                        label: trackHeight > 0 ? `${trackHeight}p` : 'auto',
                     });
                 }
             });

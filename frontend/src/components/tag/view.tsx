@@ -24,7 +24,7 @@ export default function TagView() {
         }
 
         const matched = videos.filter((v: Video) =>
-            v.tags.some((vt: string) => vt.toLowerCase() === lowerTag),
+            v.tags.some(vt => vt.toLowerCase() === lowerTag),
         );
 
         const isFromVideoFirst = fromVideoId !== null && matched[0]?.id === fromVideoId;

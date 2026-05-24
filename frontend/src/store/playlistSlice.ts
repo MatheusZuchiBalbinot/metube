@@ -2,8 +2,8 @@ import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolki
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray } from '@utils/loadFromStorage';
 import type { Playlist, PlaylistId } from '@models/playlist';
-import { PLAYLIST_CONSTANTS } from '@models/playlist';
 import type { VideoId } from '@models/video';
+import { domain } from '@domain';
 import { videoActions } from './videoSlice';
 import type { RootState } from './types';
 
@@ -56,7 +56,7 @@ const playlistSlice = createSlice({
             if (!isFound) {
                 return;
             }
-            const isAlreadyIn = playlist.videoIds.includes(videoId);
+            const isAlreadyIn = domain.playlist.containsVideo(playlist, videoId);
             if (isAlreadyIn) {
                 return;
             }
@@ -104,7 +104,7 @@ export default playlistSlice;
 export const selectWatchLaterIds = createSelector(
     (state: RootState) => state.playlist.playlists,
     (playlists) => {
-        const wl = playlists.find(p => p.name === PLAYLIST_CONSTANTS.WATCH_LATER);
-        return new Set((wl?.videoIds ?? []) as string[]);
+        const wl = playlists.find(p => domain.playlist.isWatchLater(p));
+        return new Set<VideoId>(wl?.videoIds ?? []);
     },
 );

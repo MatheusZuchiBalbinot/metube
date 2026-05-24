@@ -4,7 +4,7 @@ import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { video } from '@api/videos';
 import type { Vuid } from '@api/videos';
-import { VideoStatus } from '@models/video';
+import { domain } from '@domain';
 
 const POLL_INITIAL_MS = 3_000;
 const POLL_SLOW_MS = 5_000;
@@ -77,7 +77,7 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
 
             dispatch(videoActions.updateVideo(result));
 
-            const isStillProcessing = result.status === VideoStatus.PROCESSING;
+            const isStillProcessing = domain.video.isProcessing(result);
             if (!isStillProcessing) {
                 dispatch(videoActions.updateVideoStatus({ vuid, status: result.status }));
                 clearEntry(vuid);

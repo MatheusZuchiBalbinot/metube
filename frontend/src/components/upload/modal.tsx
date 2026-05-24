@@ -116,15 +116,15 @@ export default function UploadModal() {
     const allVideos = useAppSelector(s => s.video.videos);
 
     const existingTags = useMemo(() => {
-        const tagSet = new Set<string>();
+        const tagSet = new Set<Tag>();
 
-        for (const v of allVideos) {
-            for (const tag of v.tags) {
-                tagSet.add(tag as string);
+        for (const video of allVideos) {
+            for (const tag of video.tags) {
+                tagSet.add(tag);
             }
         }
 
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [allVideos]);
 
     const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);

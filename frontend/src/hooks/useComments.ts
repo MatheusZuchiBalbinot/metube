@@ -6,14 +6,14 @@ import type { Comment } from '@models/comment';
 import type { Cuid } from '@api/comments';
 import type { Vuid } from '@api/videos';
 
-const EMPTY_IDS: string[] = [];
+const EMPTY_IDS: Cuid[] = [];
 
 export function useComments(vuid: Vuid) {
     const dispatch = useAppDispatch();
-    const commentIds = useAppSelector(s => s.comment.byVideo[vuid as string] ?? EMPTY_IDS);
+    const commentIds = useAppSelector(s => s.comment.byVideo[vuid] ?? EMPTY_IDS);
     const byId = useAppSelector(s => s.comment.byId);
-    const pagination = useAppSelector(s => s.comment.pagination[vuid as string]);
-    const isLoading = useAppSelector(s => s.comment.loadingVideos[vuid as string] ?? false);
+    const pagination = useAppSelector(s => s.comment.pagination[vuid]);
+    const isLoading = useAppSelector(s => s.comment.loadingVideos[vuid] ?? false);
 
     const commentList = commentIds
         .map(id => byId[id])
@@ -75,7 +75,7 @@ export function useComments(vuid: Vuid) {
     }, [dispatch, vuid]);
 
     const edit = useCallback(async (cuid: Cuid, content: string) => {
-        const result = await commentsApi.update(cuid as string, content);
+        const result = await commentsApi.update(cuid, content);
 
         if (result === null) {
             return;
@@ -85,16 +85,16 @@ export function useComments(vuid: Vuid) {
     }, [dispatch]);
 
     const remove = useCallback(async (cuid: Cuid, parentCuid?: Cuid) => {
-        await commentsApi.delete(cuid as string);
+        await commentsApi.delete(cuid);
         const isTopLevel = parentCuid === undefined;
         dispatch(commentActions.removeComment({ cuid, vuid: isTopLevel ? vuid : undefined, parentCuid }));
     }, [dispatch, vuid]);
 
     const toggleLike = useCallback(async (cuid: Cuid) => {
-        const before = byId[cuid as string];
+        const before = byId[cuid];
         dispatch(commentActions.toggleLikeOptimistic(cuid));
 
-        const result = await commentsApi.toggleLike(cuid as string);
+        const result = await commentsApi.toggleLike(cuid);
 
         const isFailure = result === null;
 
@@ -106,7 +106,7 @@ export function useComments(vuid: Vuid) {
     const loadReplies = useCallback(async (cuid: Cuid) => {
         dispatch(commentActions.setLoadingReplies({ cuid, loading: true }));
 
-        const result = await commentsApi.replies(cuid as string);
+        const result = await commentsApi.replies(cuid);
 
         dispatch(commentActions.setLoadingReplies({ cuid, loading: false }));
 
@@ -120,10 +120,10 @@ export function useComments(vuid: Vuid) {
     const repliesById = useAppSelector(s => s.comment.repliesById);
 
     const getReplies = useCallback((cuid: Cuid): Comment[] => {
-        const replyIds = repliesById[cuid as string] ?? [];
+        const replyIds = repliesById[cuid] ?? [];
 
         return replyIds
-            .map((id: string) => byId[id])
+            .map(id => byId[id])
             .filter((c): c is Comment => c !== undefined);
     }, [byId, repliesById]);
 
