@@ -123,12 +123,15 @@ npm run stop    # docker compose down
 
 ## CI/CD
 
-Dois workflows independentes no GitHub Actions, disparados apenas quando os arquivos relevantes mudam:
+Cinco workflows independentes no GitHub Actions, cada um disparado apenas quando os arquivos da sua área mudam:
 
-| Workflow       | Checks                                              |
-|----------------|-----------------------------------------------------|
-| `frontend.yml` | `tsc --noEmit` → ESLint → Vitest → `npm audit`      |
-| `backend.yml`  | PHPStan nível 8 + Pint → Pest (SQLite in-memory)    |
+| Workflow                | Área      | O que faz                                              |
+|-------------------------|-----------|--------------------------------------------------------|
+| `frontend.yml`          | Frontend  | `tsc --noEmit` + ESLint                                |
+| `frontend-test.yml`     | Frontend  | Vitest (testes unitários)                              |
+| `frontend-security.yml` | Frontend  | `npm audit --audit-level=high`                         |
+| `backend-lint.yml`      | Backend   | PHPStan nível 8 + Pint                                 |
+| `backend-tests.yml`     | Backend   | Pest — apenas `tests/Unit/` com SQLite in-memory       |
 
 PRs só mergem com todos os checks verdes. PHPStan nível 8 significa tipagem estrita: sem `mixed` implícito, sem `@var` inline, sem elvis operator.
 
