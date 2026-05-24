@@ -9,12 +9,12 @@ import { videoActions } from '@store/videoSlice';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import EmptyState from '@ui/empty/empty';
-import type { Video, VideoId } from '@models/video';
-import { HistoryPeriod, type HistoryPeriod as HistoryPeriodType } from '@models/history';
 import './history.css';
 import { ToastType } from '@enums/toastType';
 import { HistoryItemKind } from '@enums/historyItemKind';
 import { useDebounce, useMediaQuery, useVideo } from '@hooks';
+import { HistoryPeriod, type Video, type VideoId, type HistoryPeriod as HistoryPeriodType } from '@models';
+import { cn } from '@utils';
 
 // Estimated heights for virtualizer — group headers are shorter than rows.
 const GROUP_HEADER_HEIGHT = 36;
@@ -247,7 +247,7 @@ export default function HistoryPage() {
                                 <button
                                     key={p.value}
                                     type="button"
-                                    className={['history-page__period-btn', isActive ? 'history-page__period-btn--active' : ''].filter(Boolean).join(' ')}
+                                    className={cn('history-page__period-btn', isActive && 'history-page__period-btn--active')}
                                     onClick={() => setSelectedPeriod(p.value)}
                                     aria-pressed={isActive}
                                 >
@@ -300,10 +300,7 @@ export default function HistoryPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className={[
-                                                        'history-page__remove-btn',
-                                                        isTouchDevice ? 'history-page__remove-btn--touch' : '',
-                                                    ].filter(Boolean).join(' ')}
+                                                    className={cn('history-page__remove-btn', isTouchDevice && 'history-page__remove-btn--touch')}
                                                     onClick={() => handleRemoveFromHistory(item.id)}
                                                     aria-label={t('history.remove')}
                                                 >

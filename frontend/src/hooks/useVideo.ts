@@ -9,10 +9,9 @@ import {
     selectDislikedSet,
     selectRecommendations,
 } from '@store/videoSelectors';
-import { video as videoApi, type Vuid } from '@api/videos';
-import type { Video, VideoId } from '@models/video';
-import type { Tag } from '@models/tag';
+import { video as videoApi, toVuid } from '@api';
 import type { TagView, MiniPlayerState } from '@store/videoSlice';
+import type { Video, VideoId, Tag } from '@models';
 
 export type { TagView, MiniPlayerState };
 
@@ -54,13 +53,13 @@ export function useVideo() {
     );
     const likeVideo = useCallback((id: VideoId) => {
         dispatch(videoActions.likeVideo(id));
-        videoApi.toggleLike(id as unknown as Vuid).catch(() => {
+        videoApi.toggleLike(toVuid(id)).catch(() => {
             dispatch(videoActions.likeVideo(id));
         });
     }, [dispatch]);
     const dislikeVideo = useCallback((id: VideoId) => {
         dispatch(videoActions.dislikeVideo(id));
-        videoApi.toggleDislike(id as unknown as Vuid).catch(() => {
+        videoApi.toggleDislike(toVuid(id)).catch(() => {
             dispatch(videoActions.dislikeVideo(id));
         });
     }, [dispatch]);

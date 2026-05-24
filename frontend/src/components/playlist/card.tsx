@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
 import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from 'lucide-react';
-import type { Video } from '@models/video';
-import type { Playlist } from '@models/playlist';
 import { domain } from '@domain';
-import { videoUrl } from '@utils/routes';
-import { Format } from '@utils/format';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import Button from '@ui/button/button';
@@ -17,6 +13,8 @@ import Input from '@ui/input/input';
 import './card.css';
 import { ToastType } from '@enums/toastType';
 import { usePlaylist } from '@hooks';
+import { videoUrl, formatDuration, formatDurationCompact, cn } from '@utils';
+import type { Video, Playlist } from '@models';
 
 interface PlaylistCardProps {
     playlist: Playlist
@@ -63,7 +61,7 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
                 <p className="playlist-video-row__title">{video.title}</p>
                 <span className="playlist-video-row__channel">{video.channel}</span>
                 {video.duration !== undefined && video.duration > 0 && (
-                    <span className="playlist-video-row__duration">{Format.duration(video.duration)}</span>
+                    <span className="playlist-video-row__duration">{formatDuration(video.duration)}</span>
                 )}
             </div>
             <Tooltip content={t('playlist.remove_video')} side="left">
@@ -128,7 +126,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         setRenameName(e.target.value);
     }
 
-    function handleRenameConfirm(e: React.MouseEvent) {
+    function handleRenameConfirm(e: React.SyntheticEvent) {
         e.stopPropagation();
         const trimmed = renameName.trim();
         const isTitleEmpty = trimmed === '';
@@ -140,7 +138,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         setRenaming(false);
     }
 
-    function handleRenameCancel(e: React.MouseEvent) {
+    function handleRenameCancel(e: React.SyntheticEvent) {
         e.stopPropagation();
         setRenameName(playlist.name);
         setRenaming(false);
@@ -150,11 +148,11 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
         const isEnter = e.key === 'Enter';
         const isEscape = e.key === 'Escape';
         if (isEnter) {
-            handleRenameConfirm(e as unknown as React.MouseEvent);
+            handleRenameConfirm(e);
         }
 
         if (isEscape) {
-            handleRenameCancel(e as unknown as React.MouseEvent);
+            handleRenameCancel(e);
         }
     }
 
@@ -174,9 +172,9 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
     }
 
     return (
-        <div className={['playlist-card', isEmpty ? 'playlist-card--empty' : ''].filter(Boolean).join(' ')}>
+        <div className={cn('playlist-card', isEmpty && 'playlist-card--empty')}>
             <div className="playlist-card__header" onClick={handleToggleExpand}>
-                <div className={['playlist-card__cover', hasMultipleVideos ? 'playlist-card__cover--stacked' : ''].filter(Boolean).join(' ')} aria-hidden="true">
+                <div className={cn('playlist-card__cover', hasMultipleVideos && 'playlist-card__cover--stacked')} aria-hidden="true">
                     {latestVideo ? (
                         <img
                             className="playlist-card__cover-img"
@@ -229,7 +227,7 @@ export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
                                         {hasTotalDuration && (
                                             <>
                                                 <span className="playlist-card__stats-dot" aria-hidden="true">·</span>
-                                                <span>{Format.durationCompact(totalDurationSec)}</span>
+                                                <span>{formatDurationCompact(totalDurationSec)}</span>
                                             </>
                                         )}
                                     </>

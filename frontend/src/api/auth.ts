@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { apiClient } from './client';
-import type { User } from '@models/user';
+import type { ApiResult } from './client';
+import type { User } from '@models';
 import type { Uuid } from './channels';
 import { parseUser, parseLoginResponse, type LoginApiResponse } from './parsers';
 
-export type { User } from '@models/user';
+export type { User } from '@models';
 
 export type LoginResponse = LoginApiResponse;
 
@@ -43,7 +44,7 @@ class AuthApi {
         await axios.get(this.csrfUrl, { withCredentials: true });
     }
 
-    async login(payload: LoginPayload): Promise<LoginResponse | null> {
+    async login(payload: LoginPayload): Promise<ApiResult<LoginResponse>> {
         return apiClient.postValidated('/sessions', parseLoginResponse, payload);
     }
 
@@ -51,15 +52,15 @@ class AuthApi {
         await apiClient.delete('/sessions/current');
     }
 
-    async me(): Promise<User | null> {
+    async me(): Promise<ApiResult<User>> {
         return apiClient.getValidated('/sessions/current', parseUser);
     }
 
-    async updateProfile(uuid: Uuid, payload: UpdateProfilePayload): Promise<User | null> {
+    async updateProfile(uuid: Uuid, payload: UpdateProfilePayload): Promise<ApiResult<User>> {
         return apiClient.patchValidated(`/users/${uuid}`, parseUser, payload);
     }
 
-    async register(payload: RegisterPayload): Promise<LoginResponse | null> {
+    async register(payload: RegisterPayload): Promise<ApiResult<LoginResponse>> {
         return apiClient.postValidated('/users', parseLoginResponse, payload);
     }
 

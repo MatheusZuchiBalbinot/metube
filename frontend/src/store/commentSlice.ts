@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Comment } from '@models/comment';
-import type { Cuid } from '@api/comments';
-import type { Vuid } from '@api/videos';
+import type { Comment } from '@models';
+import type { Cuid, Vuid } from '@api';
 
 export interface CommentPagination {
     currentPage: number

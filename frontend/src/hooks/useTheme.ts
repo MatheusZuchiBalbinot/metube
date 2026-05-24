@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { themeActions } from '@store/themeSlice';
-import type { ThemeMode, ThemeColor } from '@utils/themes';
+import type { ThemeMode, ThemeColor } from '@utils';
 
 export type { ThemeMode, ThemeColor };
 

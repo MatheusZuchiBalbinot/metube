@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic } from 'lucide-react';
-import type { Notification } from '@api/notifications';
+import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
-import { videoUrl } from '@utils/routes';
-import { Format } from '@utils/format';
+import { videoUrl, formatRelativeDate } from '@utils';
 import './item.css';
 
 interface NotificationItemProps {
@@ -87,7 +86,7 @@ export default function NotificationItem({ notification, onRead }: NotificationI
                     <span className="notification-item__subtitle">{subtitle}</span>
                 )}
                 <span className="notification-item__time">
-                    {Format.relativeDate(notification.created_at, i18n.language)}
+                    {formatRelativeDate(notification.created_at, i18n.language)}
                 </span>
             </span>
             {isUnread && <span className="notification-item__dot" aria-hidden="true" />}

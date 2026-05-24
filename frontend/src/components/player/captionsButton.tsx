@@ -1,7 +1,8 @@
 import { Captions, CaptionsOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '@ui/tooltip/tooltip';
-import type { VideoCaption } from '@models/video';
+import type { VideoCaption } from '@models';
+import { cn } from '@utils';
 
 interface CaptionsButtonProps {
     captions: VideoCaption[]
@@ -36,7 +37,7 @@ export default function CaptionsButton({ captions, activeTrack, onSelect }: Capt
         <div className="vp__captions">
             <Tooltip content={label} side="top">
                 <button
-                    className={['vp__btn', isActive ? 'vp__btn--active' : ''].filter(Boolean).join(' ')}
+                    className={cn('vp__btn', isActive && 'vp__btn--active')}
                     aria-label={label}
                     aria-pressed={isActive}
                     aria-haspopup="true"
@@ -46,7 +47,7 @@ export default function CaptionsButton({ captions, activeTrack, onSelect }: Capt
             </Tooltip>
             <div className="vp__captions-menu" role="listbox" aria-label={label}>
                 <button
-                    className={['vp__captions-option', activeTrack === null ? 'vp__captions-option--active' : ''].filter(Boolean).join(' ')}
+                    className={cn('vp__captions-option', activeTrack === null && 'vp__captions-option--active')}
                     role="option"
                     aria-selected={activeTrack === null}
                     onClick={handleSelectOff}
@@ -56,7 +57,7 @@ export default function CaptionsButton({ captions, activeTrack, onSelect }: Capt
                 {captions.map(c => (
                     <button
                         key={c.lang}
-                        className={['vp__captions-option', activeTrack === c.lang ? 'vp__captions-option--active' : ''].filter(Boolean).join(' ')}
+                        className={cn('vp__captions-option', activeTrack === c.lang && 'vp__captions-option--active')}
                         role="option"
                         aria-selected={activeTrack === c.lang}
                         onClick={makeSelectHandler(c.lang)}

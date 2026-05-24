@@ -2,18 +2,11 @@ import { memo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
-import type { Video } from '@models/video';
 import { domain } from '@domain';
-import type { Tag } from '@models/tag';
-import type { VideoId } from '@models/video';
-import { ROUTES, videoUrl } from '@utils/routes';
-import { Format, getVisibleTags } from '@utils/format';
-import { TagColors } from '@utils/tagColors';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { analytics, AnalyticsSource, type Vuid } from '@api';
-import { getSessionId } from '@utils/sessionId';
+import { analytics, toVuid, AnalyticsSource } from '@api';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import SavePopover from './savePopover';
@@ -21,6 +14,8 @@ import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './card.css';
 import { useMediaQuery, useTrackImpression } from '@hooks';
+import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatDuration, formatRelativeDate, cn } from '@utils';
+import type { Video, Tag, VideoId } from '@models';
 
 interface VideoCardProps {
     video: Video
@@ -49,7 +44,7 @@ const VideoCard = memo(function VideoCard({
     const isPriority = index === 0;
     const navigate = useNavigate();
     const cardRef = useRef<HTMLElement>(null);
-    const vuid = video.id as unknown as Vuid;
+    const vuid = toVuid(video.id);
     const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(cardRef, vuid, source, { enabled: hasValidVuid });
@@ -64,8 +59,8 @@ const VideoCard = memo(function VideoCard({
     const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags);
     const hasExtraTags = extraTagCount > 0;
 
-    const hasProgress = progress > 4 && progress < 96;
-    const isWatched = progress >= 95;
+    const hasProgress = domain.video.hasActiveProgress(progress);
+    const isWatched = domain.video.isWatched(progress);
 
     const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
 
@@ -185,11 +180,11 @@ const VideoCard = memo(function VideoCard({
                 )}
                 {video.duration !== undefined && video.duration > 0 && (
                     <div className="video-card__duration-badge">
-                        {Format.duration(video.duration)}
+                        {formatDuration(video.duration)}
                     </div>
                 )}
                 <div
-                    className={['video-card__save-trigger', isTouchDevice ? 'video-card__save-trigger--touch' : ''].filter(Boolean).join(' ')}
+                    className={cn('video-card__save-trigger', isTouchDevice && 'video-card__save-trigger--touch')}
                     onClick={handleSaveTriggerClick}
                 >
                     <SavePopover videoId={video.id}>
@@ -199,7 +194,7 @@ const VideoCard = memo(function VideoCard({
                                 variant="ghost"
                                 aria-label={t('video.save')}
                                 aria-pressed={isSaved}
-                                className={['video-card__save-btn', isSaved ? 'video-card__save-btn--active' : ''].filter(Boolean).join(' ')}
+                                className={cn('video-card__save-btn', isSaved && 'video-card__save-btn--active')}
                             >
                                 {isSaved ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
                             </Button>
@@ -222,7 +217,7 @@ const VideoCard = memo(function VideoCard({
                     <div className="video-card__meta-sub">
                         <span className="video-card__meta-views">{Format.views(video.views)} {t('video.views')}</span>
                         <span className="video-card__meta-dot" aria-hidden="true">·</span>
-                        <span className="video-card__meta-date">{Format.relativeDate(video.publishedAt ?? video.createdAt, i18n.language)}</span>
+                        <span className="video-card__meta-date">{formatRelativeDate(video.publishedAt ?? video.createdAt, i18n.language)}</span>
                     </div>
                 </div>
 

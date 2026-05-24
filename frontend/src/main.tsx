@@ -5,7 +5,7 @@ import './styles/base.css';
 import './styles/animations.css';
 import './styles/tailwind.css';
 import App from './App';
-import { STORAGE_KEYS } from '@utils/storageKeys';
+import { STORAGE_KEYS } from '@utils';
 
 const initialMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE) ?? 'dark';
 const initialColor = localStorage.getItem(STORAGE_KEYS.THEME_COLOR) ?? 'violet';

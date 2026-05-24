@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MailCheck, X } from 'lucide-react';
-import { auth } from '@api/auth';
+import { auth } from '@api';
 import './verificationBanner.css';
 
 export default function EmailVerificationBanner() {

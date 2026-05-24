@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
-import { TagColors } from '@utils/tagColors';
+import { TagColors } from '@utils';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
-import type { Video } from '@models/video';
+import type { Video } from '@models';
 import './view.css';
 import { useVideo } from '@hooks';
 

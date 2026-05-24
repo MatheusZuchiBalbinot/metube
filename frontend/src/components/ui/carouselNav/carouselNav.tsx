@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../button/button';
+import { cn } from '@utils';
 import Tooltip from '../tooltip/tooltip';
 import './carouselNav.css';
 
@@ -15,7 +16,7 @@ interface CarouselNavProps {
 export default function CarouselNav({ onPrev, onNext, canScrollLeft, canScrollRight, className }: CarouselNavProps) {
     const { t } = useTranslation();
 
-    const cls = ['carousel-nav', className].filter(Boolean).join(' ');
+    const cls = cn('carousel-nav', className);
 
     return (
         <div className={cls}>

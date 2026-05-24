@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { domain } from '@domain';
-import type { Tag } from '@models/tag';
+import type { Tag } from '@models';
 import type { VideoState } from './videoSlice';
 
 interface WithVideo { video: VideoState }

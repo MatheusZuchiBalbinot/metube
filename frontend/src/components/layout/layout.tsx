@@ -1,7 +1,6 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ROUTES } from '@utils/routes';
 import AppHeader from '@components/header/header';
 import AppSidebar from '@components/sidebar/sidebar';
 import TagView from '@components/tag/view';
@@ -13,9 +12,9 @@ import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { useSearch } from '@context/search';
-import { STORAGE_KEYS } from '@utils/storageKeys';
 import './layout.css';
 import { useKeyboardShortcuts, useScrollRestoration } from '@hooks';
+import { ROUTES, STORAGE_KEYS, cn } from '@utils';
 
 function getInitialSidebarCollapsed(): boolean {
     const hasWindow = typeof window !== 'undefined';
@@ -110,7 +109,7 @@ export default function AppLayout() {
                         onClick={handleCloseSidebar}
                     />
                 )}
-                <main id="main-content" className={['app-layout__content', isFullHeightPage ? 'app-layout__content--full' : ''].filter(Boolean).join(' ')}>
+                <main id="main-content" className={cn('app-layout__content', isFullHeightPage && 'app-layout__content--full')}>
                     <Suspense fallback={<PageSkeleton pathname={pathname} />}>
                         {activeTagView ? <TagView /> : <Outlet />}
                     </Suspense>

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FileQuestion } from 'lucide-react';
 import { Button } from '@ui';
-import { ROUTES } from '@utils/routes';
+import { ROUTES } from '@utils';
 import './notFound.css';
 
 export default function NotFoundPage() {

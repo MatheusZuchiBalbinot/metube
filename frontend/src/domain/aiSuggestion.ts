@@ -1,4 +1,4 @@
-import type { AiSuggestion } from '@api/videos';
+import type { AiSuggestion } from '@api';
 
 function isPending(s: AiSuggestion): boolean {
     return s.status === 'pending';

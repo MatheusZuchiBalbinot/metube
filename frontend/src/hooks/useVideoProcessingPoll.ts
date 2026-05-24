@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { video } from '@api/videos';
-import type { Vuid } from '@api/videos';
+import { video } from '@api';
+import type { Vuid } from '@api';
 import { domain } from '@domain';
 
 const POLL_INITIAL_MS = 3_000;
@@ -70,16 +70,16 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
 
             const result = await video.get(vuid);
 
-            if (result === null) {
+            if (!result.ok) {
                 clearEntry(vuid);
                 return;
             }
 
-            dispatch(videoActions.updateVideo(result));
+            dispatch(videoActions.updateVideo(result.data));
 
-            const isStillProcessing = domain.video.isProcessing(result);
+            const isStillProcessing = domain.video.isProcessing(result.data);
             if (!isStillProcessing) {
-                dispatch(videoActions.updateVideoStatus({ vuid, status: result.status }));
+                dispatch(videoActions.updateVideoStatus({ vuid, status: result.data.status }));
                 clearEntry(vuid);
                 return;
             }

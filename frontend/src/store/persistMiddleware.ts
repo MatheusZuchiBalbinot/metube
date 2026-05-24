@@ -1,5 +1,5 @@
 import { createListenerMiddleware, type ListenerEffectAPI } from '@reduxjs/toolkit';
-import { STORAGE_KEYS } from '@utils/storageKeys';
+import { STORAGE_KEYS } from '@utils';
 import type { RootState, AppDispatch } from './types';
 
 export const persistMiddleware = createListenerMiddleware<RootState, AppDispatch>();

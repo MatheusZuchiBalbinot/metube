@@ -1,8 +1,7 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
-import { STORAGE_KEYS } from '@utils/storageKeys';
-import { loadFromStorage, isArray } from '@utils/loadFromStorage';
-import type { ChannelId } from '@models/channel';
+import type { ChannelId } from '@models';
 import type { RootState } from './types';
+import { STORAGE_KEYS, loadFromStorage, isArray } from '@utils';
 
 interface SubscriptionState {
     subscribedChannelIds: ChannelId[]

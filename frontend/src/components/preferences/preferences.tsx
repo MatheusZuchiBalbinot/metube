@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react';
-import { STORAGE_KEYS } from '@utils/storageKeys';
+import { STORAGE_KEYS, cn } from '@utils';
 import { Button, Tooltip } from '@ui';
 import { THEME_COLORS, THEME_MODES, LANGUAGES } from '@data/themeConfig';
 import './preferences.css';
@@ -105,7 +105,7 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                     <button
                         role="switch"
                         aria-checked={autoplay}
-                        className={['prefs-autoplay-toggle', autoplay ? 'prefs-autoplay-toggle--on' : ''].filter(Boolean).join(' ')}
+                        className={cn('prefs-autoplay-toggle', autoplay && 'prefs-autoplay-toggle--on')}
                         onClick={handleAutoplayToggle}
                         aria-label={t('preferences.autoplay')}
                     >

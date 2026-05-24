@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui';
+import { cn } from '@utils';
 import './form.css';
 
 interface CommentFormProps {
@@ -33,10 +34,7 @@ export default function CommentForm({
     const charCount = content.length;
     const isNearLimit = charCount > CHAR_WARN_THRESHOLD;
 
-    const charCountClass = [
-        'comment-form__char-count',
-        isNearLimit ? 'comment-form__char-count--warn' : '',
-    ].filter(Boolean).join(' ');
+    const charCountClass = cn('comment-form__char-count', isNearLimit && 'comment-form__char-count--warn');
 
     function handleFormBlur(e: React.FocusEvent<HTMLFormElement>) {
         const focusMovedInside = e.currentTarget.contains(e.relatedTarget);
@@ -71,10 +69,7 @@ export default function CommentForm({
         }
     }
 
-    const formClass = [
-        'comment-form',
-        expanded ? 'comment-form--expanded' : '',
-    ].filter(Boolean).join(' ');
+    const formClass = cn('comment-form', expanded && 'comment-form--expanded');
 
     return (
         <form

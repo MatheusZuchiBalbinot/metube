@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { Spinner } from '@ui';
-import { ROUTES } from '@utils/routes';
+import { ROUTES } from '@utils';
 import { useAuth } from '@hooks';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {

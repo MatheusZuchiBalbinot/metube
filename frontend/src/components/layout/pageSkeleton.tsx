@@ -1,7 +1,7 @@
 import Skeleton from '@ui/skeleton/skeleton';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import VideoRowSkeleton from '@components/video/rowSkeleton';
-import { ROUTES } from '@utils/routes';
+import { ROUTES } from '@utils';
 import './pageSkeleton.css';
 
 // ─── Shared building blocks ────────────────────────────────────────────────

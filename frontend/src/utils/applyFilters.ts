@@ -1,5 +1,4 @@
-import type { Video } from '@models/video';
-import type { Tag } from '@models/tag';
+import type { Video, Tag } from '@models';
 
 export const SortBy = {
     RECENT: 'recent',

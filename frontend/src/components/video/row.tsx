@@ -1,18 +1,14 @@
 import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { Video } from '@models/video';
 import { domain } from '@domain';
-import type { Tag } from '@models/tag';
-import { ROUTES, videoUrl } from '@utils/routes';
-import { Format, getVisibleTags } from '@utils/format';
-import { TagColors } from '@utils/tagColors';
-import { analytics, AnalyticsSource, type Vuid } from '@api';
-import { getSessionId } from '@utils/sessionId';
+import { analytics, toVuid, AnalyticsSource } from '@api';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './row.css';
 import { useVideo, useTrackImpression } from '@hooks';
+import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatRelativeDate } from '@utils';
+import type { Video, Tag } from '@models';
 
 interface VideoRowProps {
     video: Video
@@ -27,7 +23,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
     const { t, i18n } = useTranslation();
     const { openTagView, videoProgress } = useVideo();
     const rowRef = useRef<HTMLElement>(null);
-    const vuid = video.id as unknown as Vuid;
+    const vuid = toVuid(video.id);
     const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(rowRef, vuid, source, { enabled: hasValidVuid });
@@ -37,7 +33,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
     const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
 
     const progress = videoProgress[video.id] ?? 0;
-    const isWatched = progress >= 95;
+    const isWatched = domain.video.isWatched(progress);
 
     const rowClass = ['video-row', highlighted ? 'video-row--highlighted' : '']
         .filter(Boolean)
@@ -143,7 +139,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
                     <div className="video-row__meta-sub">
                         <span className="video-row__meta-views">{Format.views(video.views)} {t('video.views')}</span>
                         <span className="video-row__meta-dot" aria-hidden="true">·</span>
-                        <span className="video-row__meta-date">{Format.relativeDate(video.publishedAt, i18n.language)}</span>
+                        <span className="video-row__meta-date">{formatRelativeDate(video.publishedAt, i18n.language)}</span>
                     </div>
                 </div>
 

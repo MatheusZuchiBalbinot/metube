@@ -10,15 +10,12 @@
  */
 
 import type { AppDispatch } from './types';
-import type { ChannelId } from '@models/channel';
-import type { VideoId } from '@models/video';
 import { themeActions } from './themeSlice';
 import { videoActions } from './videoSlice';
 import { playlistActions } from './playlistSlice';
 import { subscriptionActions } from './subscriptionSlice';
-import { STORAGE_KEYS } from '@utils/storageKeys';
-import type { ThemeColor, ThemeMode } from '@utils/themes';
-import type { Playlist } from '@models/playlist';
+import { STORAGE_KEYS, type ThemeColor, type ThemeMode } from '@utils';
+import type { ChannelId, VideoId, Playlist } from '@models';
 
 function parseJSON<T>(raw: string): T | null {
     try {

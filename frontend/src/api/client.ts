@@ -3,7 +3,9 @@ import i18n from '../i18n';
 import { APP_EVENTS } from '../utils/events';
 import { logger } from '../utils/logger';
 
-type ApiResponse<T> = T | null;
+export type ApiResult<T> =
+    | { ok: true; data: T }
+    | { ok: false; error: string };
 
 class ApiClient {
     private axiosInstance: AxiosInstance;
@@ -50,9 +52,11 @@ class ApiClient {
 
     private startGet(url: string): AbortSignal {
         const existing = this.pendingGets.get(url);
+
         if (existing) {
             existing.abort('Deduplicated');
         }
+
         const controller = new AbortController();
         this.pendingGets.set(url, controller);
         return controller.signal;
@@ -63,22 +67,18 @@ class ApiClient {
     }
 
     private isValidResponse<T>(data: unknown): data is T {
-        // Null/undefined are not valid responses
         if (data === null || data === undefined) {
             return false;
         }
 
-        // For empty arrays, that's valid
         if (Array.isArray(data)) {
             return true;
         }
 
-        // For objects, ensure it has at least one property (not empty object)
         if (typeof data === 'object') {
             return Object.keys(data).length > 0;
         }
 
-        // For primitives, they're valid unless null/undefined (already checked)
         return true;
     }
 
@@ -90,23 +90,34 @@ class ApiClient {
         logger.error('[ApiClient]', { message, url, method });
     }
 
-    async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    private extractErrorMessage(error: unknown): string {
+        if (error instanceof AxiosError) {
+            return error.message;
+        }
+
+        return String(error);
+    }
+
+    async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         const signal = this.startGet(url);
+
         try {
             const { data } = await this.axiosInstance.get<T>(url, { ...config, signal });
 
             if (!this.isValidResponse<T>(data)) {
                 this.logError(url, 'GET', 'Invalid response: empty or null data');
-                return null;
+                return { ok: false, error: 'Invalid response' };
             }
 
-            return data;
+            return { ok: true, data };
         } catch (error) {
             const isAborted = axios.isCancel(error);
+
             if (!isAborted) {
                 this.logError(url, 'GET', error);
             }
-            return null;
+
+            return { ok: false, error: this.extractErrorMessage(error) };
         } finally {
             this.finishGet(url);
         }
@@ -122,132 +133,130 @@ class ApiClient {
         }
     }
 
-    async post<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    async post<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         try {
             const { data } = await this.axiosInstance.post<T>(url, payload, config);
 
             if (!this.isValidResponse<T>(data)) {
                 this.logError(url, 'POST', 'Invalid response: empty or null data');
-                return null;
+                return { ok: false, error: 'Invalid response' };
             }
 
-            return data;
+            return { ok: true, data };
         } catch (error) {
             this.logError(url, 'POST', error);
-            return null;
+            return { ok: false, error: this.extractErrorMessage(error) };
         }
     }
 
-    async patch<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    async patch<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         try {
             const { data } = await this.axiosInstance.patch<T>(url, payload, config);
 
             if (!this.isValidResponse<T>(data)) {
                 this.logError(url, 'PATCH', 'Invalid response: empty or null data');
-                return null;
+                return { ok: false, error: 'Invalid response' };
             }
 
-            return data;
+            return { ok: true, data };
         } catch (error) {
             this.logError(url, 'PATCH', error);
-            return null;
+            return { ok: false, error: this.extractErrorMessage(error) };
         }
     }
 
-    async put<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    async put<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         try {
             const { data } = await this.axiosInstance.put<T>(url, payload, config);
 
             if (!this.isValidResponse<T>(data)) {
                 this.logError(url, 'PUT', 'Invalid response: empty or null data');
-                return null;
+                return { ok: false, error: 'Invalid response' };
             }
 
-            return data;
+            return { ok: true, data };
         } catch (error) {
             this.logError(url, 'PUT', error);
-            return null;
+            return { ok: false, error: this.extractErrorMessage(error) };
         }
     }
 
-    async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    async delete(url: string, config?: AxiosRequestConfig): Promise<ApiResult<void>> {
         try {
-            const { data } = await this.axiosInstance.delete<T>(url, config);
-
-            if (!this.isValidResponse<T>(data)) {
-                this.logError(url, 'DELETE', 'Invalid response: empty or null data');
-                return null;
-            }
-
-            return data;
+            await this.axiosInstance.delete(url, config);
+            return { ok: true, data: undefined };
         } catch (error) {
             this.logError(url, 'DELETE', error);
-            return null;
+            return { ok: false, error: this.extractErrorMessage(error) };
         }
     }
 
-    async getValidated<T>(url: string, parse: (raw: unknown) => T | null, config?: AxiosRequestConfig): Promise<T | null> {
+    async getValidated<T>(url: string, parse: (raw: unknown) => T | null, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         const raw = await this.get<unknown>(url, config);
 
-        if (raw === null) {
-            return null;
+        if (!raw.ok) {
+            return raw;
         }
 
-        const result = parse(raw);
+        const result = parse(raw.data);
 
         if (result === null) {
             this.logError(url, 'GET', 'Parse failed: unexpected response shape');
+            return { ok: false, error: 'Parse failed' };
         }
 
-        return result;
+        return { ok: true, data: result };
     }
 
-    async postValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async postValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         const raw = await this.post<unknown>(url, payload, config);
 
-        if (raw === null) {
-            return null;
+        if (!raw.ok) {
+            return raw;
         }
 
-        const result = parse(raw);
+        const result = parse(raw.data);
 
         if (result === null) {
             this.logError(url, 'POST', 'Parse failed: unexpected response shape');
+            return { ok: false, error: 'Parse failed' };
         }
 
-        return result;
+        return { ok: true, data: result };
     }
 
-    async patchValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async patchValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         const raw = await this.patch<unknown>(url, payload, config);
 
-        if (raw === null) {
-            return null;
+        if (!raw.ok) {
+            return raw;
         }
 
-        const result = parse(raw);
+        const result = parse(raw.data);
 
         if (result === null) {
             this.logError(url, 'PATCH', 'Parse failed: unexpected response shape');
+            return { ok: false, error: 'Parse failed' };
         }
 
-        return result;
+        return { ok: true, data: result };
     }
 
-    async putValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<T | null> {
+    async putValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
         const raw = await this.put<unknown>(url, payload, config);
 
-        if (raw === null) {
-            return null;
+        if (!raw.ok) {
+            return raw;
         }
 
-        const result = parse(raw);
+        const result = parse(raw.data);
 
         if (result === null) {
             this.logError(url, 'PUT', 'Parse failed: unexpected response shape');
+            return { ok: false, error: 'Parse failed' };
         }
 
-        return result;
+        return { ok: true, data: result };
     }
 
     getAxiosInstance(): AxiosInstance {

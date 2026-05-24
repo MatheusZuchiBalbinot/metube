@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { VideoFilter, SortBy, type FilterState } from '@utils/applyFilters';
+import { VideoFilter, SortBy, type FilterState } from '@utils';
 
 export interface UseFilterStateReturn {
     filterState: FilterState

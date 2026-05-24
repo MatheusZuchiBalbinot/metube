@@ -7,3 +7,5 @@ export * from './user';
 export * from './video';
 export * from './playlist';
 export * from './common';
+export * from './history';
+export * from './reaction';

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import * as tus from 'tus-js-client';
 import { UploadStatus } from '@enums/uploadStatus';
-import type { UploadProgress } from '@utils/upload';
+import type { UploadProgress } from '@utils';
 
 export type { UploadStatus };
 
