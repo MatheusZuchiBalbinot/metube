@@ -26,54 +26,45 @@ export function usePlaylist() {
         return result.id;
     }
 
-    function renamePlaylist(id: string, name: string): void {
-        dispatch(playlistActions.renamePlaylist({ id: id as unknown as PlaylistId, name }));
+    function renamePlaylist(id: PlaylistId, name: string): void {
+        dispatch(playlistActions.renamePlaylist({ id, name }));
         playlistApi.update(id as unknown as Puid, name).catch(() => {
             dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
-    function deletePlaylist(id: string): void {
-        dispatch(playlistActions.deletePlaylist(id as unknown as PlaylistId));
+    function deletePlaylist(id: PlaylistId): void {
+        dispatch(playlistActions.deletePlaylist(id));
         playlistApi.delete(id as unknown as Puid).catch(() => {
             dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
-    function addVideoToPlaylist(playlistId: string, videoId: string): void {
-        dispatch(playlistActions.addVideoToPlaylist({
-            playlistId: playlistId as unknown as PlaylistId,
-            videoId: videoId as unknown as VideoId,
-        }));
+    function addVideoToPlaylist(playlistId: PlaylistId, videoId: VideoId): void {
+        dispatch(playlistActions.addVideoToPlaylist({ playlistId, videoId }));
         playlistApi.addVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
             dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
-    function removeVideoFromPlaylist(playlistId: string, videoId: string): void {
-        dispatch(playlistActions.removeVideoFromPlaylist({
-            playlistId: playlistId as unknown as PlaylistId,
-            videoId: videoId as unknown as VideoId,
-        }));
+    function removeVideoFromPlaylist(playlistId: PlaylistId, videoId: VideoId): void {
+        dispatch(playlistActions.removeVideoFromPlaylist({ playlistId, videoId }));
         playlistApi.removeVideo(playlistId as unknown as Puid, videoId as unknown as Vuid).catch(() => {
             dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
-    function reorderVideosInPlaylist(playlistId: string, videoIds: string[]): void {
-        dispatch(playlistActions.reorderVideosInPlaylist({
-            playlistId: playlistId as unknown as PlaylistId,
-            videoIds: videoIds as unknown as VideoId[],
-        }));
+    function reorderVideosInPlaylist(playlistId: PlaylistId, videoIds: VideoId[]): void {
+        dispatch(playlistActions.reorderVideosInPlaylist({ playlistId, videoIds }));
         playlistApi.reorder(playlistId as unknown as Puid, videoIds as unknown as Vuid[]).catch(() => {
             dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));
         });
     }
 
-    function getVideoPlaylistIds(videoId: string): string[] {
+    function getVideoPlaylistIds(videoId: VideoId): PlaylistId[] {
         return playlists
-            .filter((p: Playlist) => p.videoIds?.includes(videoId as unknown as VideoId))
-            .map((p: Playlist) => p.id as string);
+            .filter((p: Playlist) => p.videoIds?.includes(videoId))
+            .map((p: Playlist) => p.id);
     }
 
     return {

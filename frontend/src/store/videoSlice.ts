@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { type Video, type VideoId, type VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
+import type { Vuid } from '@api/videos';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import { loadFromStorage, isArray, isObject, isNumberInRange } from '@utils/loadFromStorage';
 
@@ -20,7 +21,7 @@ export interface VideoState {
     watchHistory: VideoId[]
     likedVideos: VideoId[]
     dislikedVideos: VideoId[]
-    videoProgress: Record<string, number>
+    videoProgress: Record<VideoId, number>
     autoplay: boolean
     uploadModalOpen: boolean
     activeTagView: TagView | null
@@ -32,7 +33,7 @@ export interface VideoState {
     shortsVolume: number
     loading: boolean
     error: string | null
-    lastVideoStatusUpdate: { vuid: string; status: string } | null
+    lastVideoStatusUpdate: { vuid: Vuid; status: VideoStatus } | null
     serverRecommendations: Video[]
     recommendationsLoading: boolean
 }
@@ -42,7 +43,7 @@ const initialState: VideoState = {
     watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, [], isArray),
     likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
-    videoProgress: loadFromStorage<Record<string, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
+    videoProgress: loadFromStorage<Record<VideoId, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
     uploadModalOpen: false,
     activeTagView: null,
@@ -75,12 +76,12 @@ const videoSlice = createSlice({
             state.videos.unshift(action.payload);
         },
 
-        updateVideoStatus(state, action: PayloadAction<{ vuid: string; status: string }>) {
+        updateVideoStatus(state, action: PayloadAction<{ vuid: Vuid; status: VideoStatus }>) {
             state.lastVideoStatusUpdate = action.payload;
-            const idx = state.videos.findIndex(v => (v.id as unknown as string) === action.payload.vuid);
+            const idx = state.videos.findIndex(v => (v.id as string) === (action.payload.vuid as string));
             const isFound = idx !== -1;
             if (isFound) {
-                state.videos[idx].status = action.payload.status as VideoStatus;
+                state.videos[idx].status = action.payload.status;
             }
         },
 
@@ -172,7 +173,7 @@ const videoSlice = createSlice({
             state.videoProgress[action.payload.videoId] = action.payload.percent;
         },
 
-        setVideoProgress(state, action: PayloadAction<Record<string, number>>) {
+        setVideoProgress(state, action: PayloadAction<Record<VideoId, number>>) {
             state.videoProgress = action.payload;
         },
 

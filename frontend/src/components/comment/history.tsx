@@ -34,7 +34,7 @@ export default function CommentHistory({ cuid, selectedVersion, onVersionSelect 
 
         async function load() {
             setIsLoading(true);
-            const result = await commentsApi.versions(cuid as string);
+            const result = await commentsApi.versions(cuid);
             setIsLoading(false);
 
             if (result !== null) {

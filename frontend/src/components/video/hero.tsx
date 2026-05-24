@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VideoStatus, type Video } from '@models/video';
+import type { Video } from '@models/video';
+import { domain } from '@domain';
 import type { Tag } from '@models/tag';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
@@ -25,7 +26,7 @@ export default function VideoHero({ video }: VideoHeroProps) {
 
     const now = new Date();
     const isScheduledAndFuture =
-        video.status === VideoStatus.SCHEDULED &&
+        domain.video.isScheduled(video) &&
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 

@@ -22,7 +22,7 @@ function renderItem(overrides = {}, authUuid?: string) {
     const state = makeRootState({
         auth: {
             user: authUuid !== undefined
-                ? { id: authUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, name: 'Me', email: 'me@example.com' }
+                ? { id: authUuid as unknown as ReturnType<typeof makeRootState>['auth']['user'] extends { id: infer T } ? T : never, uuid: authUuid, name: 'Me', email: 'me@example.com' }
                 : null,
             loading: false,
             sessionError: null,

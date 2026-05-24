@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { video as videoApi, type Vuid } from '@api';
-import { VideoStatus } from '@models/video';
 import type { Video } from '@models/video';
+import { domain } from '@domain';
 
 export function useVideoFetch(id: string | undefined, storeVideo: Video | undefined): { video: Video | undefined; fetchFailed: boolean } {
     const dispatch = useAppDispatch();
@@ -56,7 +56,7 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
     // nor the upload-modal poll resolves it (e.g. user closed modal early, Reverb down),
     // check every 5 s until the status transitions.
     useEffect(() => {
-        const isVideoProcessing = video !== undefined && video.status === VideoStatus.PROCESSING;
+        const isVideoProcessing = video !== undefined && domain.video.isProcessing(video);
 
         if (!isVideoProcessing || id === undefined) {
             return;
@@ -65,7 +65,7 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
         const vuid = id as unknown as Vuid;
         const timer = setInterval(() => {
             videoApi.get(vuid).then(result => {
-                const hasTransitioned = result !== null && result.status !== VideoStatus.PROCESSING;
+                const hasTransitioned = result !== null && !domain.video.isProcessing(result);
 
                 if (!hasTransitioned) {
                     return;

@@ -56,16 +56,16 @@ export default function DragAndDrop({
     function handleDrop(e: DragEvent<HTMLDivElement>) {
         e.preventDefault();
         setDragging(false);
-        const f = e.dataTransfer.files[0];
-        if (f) {
-            handleFile(f);
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handleFile(file);
         }
     }
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
-        const f = e.target.files?.[0];
-        if (f) {
-            handleFile(f);
+        const file = e.target.files?.[0];
+        if (file) {
+            handleFile(file);
         }
     }
 

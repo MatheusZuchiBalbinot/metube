@@ -4,12 +4,16 @@ import { RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { VideoSummary, VideoTranscription } from '@api/videos';
 import { Button } from '@ui';
+import { parseChapterTimestamp } from '@utils/parseChapterTimestamp';
+import { domain } from '@domain';
 
 interface ReadingModeProps {
     summary: VideoSummary | null
     transcription: VideoTranscription
     isOwner: boolean
     onRetryTranscription: () => void
+    currentTime?: number
+    onSeekToChapter?: (seconds: number) => void
 }
 
 interface TranscriptionBodyProps {
@@ -47,7 +51,7 @@ function ProcessingScreen() {
 function TranscriptionBody({ transcription, isOwner, onRetry }: TranscriptionBodyProps) {
     const { t } = useTranslation();
 
-    if (transcription.status === 'failed') {
+    if (domain.transcription.isFailed(transcription)) {
         return (
             <div className="video-page__transcription-failed">
                 <p className="video-page__transcription-error">{t('video.transcription_failed')}</p>
@@ -81,7 +85,7 @@ function TranscriptionBody({ transcription, isOwner, onRetry }: TranscriptionBod
     );
 }
 
-export default function ReadingMode({ summary, transcription, isOwner, onRetryTranscription }: ReadingModeProps) {
+export default function ReadingMode({ summary, transcription, isOwner, onRetryTranscription, currentTime, onSeekToChapter }: ReadingModeProps) {
     const { t } = useTranslation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [readingProgress, setReadingProgress] = useState(0);
@@ -97,9 +101,11 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
         setReadingProgress(Math.min(100, pct));
     }
 
-    const isProcessing = transcription.status === 'pending' || transcription.status === 'processing';
+    const isProcessing = domain.transcription.isProcessing(transcription);
 
     const hasSummaryContent = summary !== null && summary.readingMode.trim() !== '';
+    const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
+    const hasChapters = summary !== null && summary.chapters.length > 0;
 
     const html = hasSummaryContent
         ? DOMPurify.sanitize(
@@ -139,6 +145,46 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                     className="video-page__reading-content"
                     dangerouslySetInnerHTML={{ __html: html }}
                 />
+            )}
+
+            {hasKeyPoints && (
+                <section className="video-page__summary-section">
+                    <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>
+                    <ul className="video-page__key-points">
+                        {summary!.keyPoints.map((point, i) => (
+                            <li key={i} className="video-page__key-point">{point}</li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+
+            {hasChapters && (
+                <section className="video-page__summary-section">
+                    <h3 className="video-page__summary-heading">{t('video.chapters')}</h3>
+                    <ol className="video-page__chapters">
+                        {summary!.chapters.map((ch, i) => {
+                            const seconds = parseChapterTimestamp(ch.timestamp);
+                            const nextSeconds = summary!.chapters[i + 1] !== undefined
+                                ? parseChapterTimestamp(summary!.chapters[i + 1].timestamp)
+                                : Infinity;
+                            const isActive = currentTime !== undefined
+                                && currentTime >= seconds
+                                && currentTime < nextSeconds;
+                            return (
+                                <li key={i}>
+                                    <button
+                                        className={['video-page__chapter', isActive ? 'video-page__chapter--active' : ''].filter(Boolean).join(' ')}
+                                        onClick={() => onSeekToChapter?.(seconds)}
+                                        disabled={onSeekToChapter === undefined}
+                                    >
+                                        <span className="video-page__chapter-time">{ch.timestamp}</span>
+                                        <span className="video-page__chapter-title">{ch.title}</span>
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                </section>
             )}
 
             <div className="video-page__transcription">

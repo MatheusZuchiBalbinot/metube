@@ -22,7 +22,7 @@ import { useVideoContent } from '@hooks/useVideoContent';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
-import { PLAYLIST_CONSTANTS } from '@models/playlist';
+import { domain } from '@domain';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, analytics, AnalyticsSource, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
@@ -38,7 +38,6 @@ import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
 import { Avatar, Button, Tooltip } from '@ui';
 import type { Video, VideoId } from '@models/video';
-import { VideoStatus } from '@models/video';
 import type { Tag } from '@models/tag';
 import './video.css';
 import { ToastType } from '@enums/toastType';
@@ -67,14 +66,14 @@ export default function VideoPage() {
     const [readingMode, setReadingMode] = useState(false);
     const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
-    const storeVideo = videos.find((v: Video) => v.id === (id as unknown as VideoId));
+    const storeVideo = videos.find((v: Video) => v.id === (id as VideoId));
 
     const { video, fetchFailed } = useVideoFetch(id, storeVideo);
     const { relatedVideos, loadingRelated } = useRelatedVideos(video?.id, video?.tags ?? []);
     const { summary, transcription, setTranscription } = useVideoContent(id, video?.status);
 
     const hasVideo = video !== undefined;
-    const isOwner = authUser !== null && video !== undefined && authUser.uuid === video.channelId;
+    const isOwner = authUser !== null && video !== undefined && domain.video.isOwnedBy(video, authUser);
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -93,27 +92,27 @@ export default function VideoPage() {
         showCompletion,
         handleLoadedMetadata, handleTimeUpdate, handleVideoEnded, getCurrentTime,
     } = useVideoProgress({
-        id,
+        id: id as VideoId | undefined,
         videoRef,
         video,
         videoProgress,
-        updateProgress: (vid: string, pct: number) => updateProgress(vid as unknown as VideoId, pct),
-        onBackendSync: (vid: string, pct: number) => videoApi.updateProgress(vid as unknown as Vuid, pct).catch(() => { }),
-        consumePendingVideoSeek: (vid: string) => consumePendingVideoSeek(vid as unknown as VideoId),
+        updateProgress: (vid, pct) => updateProgress(vid, pct),
+        onBackendSync: (vid, pct) => videoApi.updateProgress(vid as unknown as Vuid, pct).catch(() => { }),
+        consumePendingVideoSeek: (vid) => consumePendingVideoSeek(vid),
         onCompleted: startAutoplayCountdown,
-        onFinished: (vuid: string) => videoApi.recordView(vuid as unknown as Vuid),
+        onFinished: (vid) => videoApi.recordView(vid as unknown as Vuid),
     });
 
     const allRelatedTags = useMemo(() => {
-        const tagSet = new Set<string>();
+        const tagSet = new Set<Tag>();
 
-        for (const v of relatedVideos) {
-            for (const tag of v.tags) {
-                tagSet.add(tag as string);
+        for (const video of relatedVideos) {
+            for (const tag of video.tags) {
+                tagSet.add(tag);
             }
         }
 
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [relatedVideos]);
 
     const filteredRelated = useMemo(
@@ -133,10 +132,11 @@ export default function VideoPage() {
             return;
         }
 
+        const videoId = id as VideoId;
         markViewed(id);
-        watchVideo(id as unknown as VideoId);
-        videoApi.recordView(id as unknown as Vuid);
-        dispatch(videoActions.incrementViews(id as unknown as VideoId));
+        watchVideo(videoId);
+        videoApi.recordView(videoId as unknown as Vuid);
+        dispatch(videoActions.incrementViews(videoId));
     }, [id, hasVideo, watchVideo, dispatch]);
 
     // Skip detection: reports an early abandon when leaving the page below 10%
@@ -194,22 +194,22 @@ export default function VideoPage() {
     }, [video?.id, likedVideos, likeVideo, dispatch, t, triggerLikeAnimation]);
 
     const handleSaveShortcut = useCallback(() => {
-        const watchLater = playlists.find(p => p.name === PLAYLIST_CONSTANTS.WATCH_LATER);
+        const watchLater = playlists.find(p => domain.playlist.isWatchLater(p));
 
         if (!watchLater || !video?.id) {
             return;
         }
 
-        const isCurrentlySaved = watchLaterIds.has(video.id as string);
+        const isCurrentlySaved = watchLaterIds.has(video.id);
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: ToastType.SUCCESS,
         }));
 
         if (isCurrentlySaved) {
-            removeVideoFromPlaylist(watchLater.id as string, video.id as string);
+            removeVideoFromPlaylist(watchLater.id, video.id);
         } else {
-            addVideoToPlaylist(watchLater.id as string, video.id as string);
+            addVideoToPlaylist(watchLater.id, video.id);
         }
 
         triggerSaveAnimation();
@@ -234,7 +234,7 @@ export default function VideoPage() {
         );
     }
 
-    if (video.status === VideoStatus.PROCESSING) {
+    if (domain.video.isProcessing(video)) {
         return (
             <div className="video-page">
                 <div className="video-page__processing">
@@ -268,9 +268,9 @@ export default function VideoPage() {
     }
 
     const isLiked = likedVideos.has(video.id);
-    const isSaved = watchLaterIds.has(video.id as string);
+    const isSaved = watchLaterIds.has(video.id);
     const isDisliked = dislikedVideos.has(video.id);
-    const isChannelSubscribed = isSubscribed(video.channel);
+    const isChannelSubscribed = isSubscribed(video.channelId);
     const hasLongDesc = (video.description ?? '').length > 220;
     const hasVideoFile = video.videoUrl !== undefined && video.videoUrl !== '';
     const isAutoplayActive = autoplayCountdown !== null;
@@ -347,6 +347,12 @@ export default function VideoPage() {
                             transcription={transcription}
                             isOwner={isOwner}
                             onRetryTranscription={handleRetryTranscription}
+                            currentTime={getCurrentTime()}
+                            onSeekToChapter={(seconds) => {
+                                if (videoRef.current) {
+                                    videoRef.current.currentTime = seconds;
+                                }
+                            }}
                         />
                     ) : (
                         <div className="video-page__player-wrap">
@@ -422,7 +428,7 @@ export default function VideoPage() {
                                 <button
                                     type="button"
                                     className={['video-page__subscribe-btn', isChannelSubscribed ? 'video-page__subscribe-btn--active' : ''].filter(Boolean).join(' ')}
-                                    onClick={() => toggleSubscription(video.channel)}
+                                    onClick={() => toggleSubscription(video.channelId)}
                                     aria-pressed={isChannelSubscribed}
                                 >
                                     {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
@@ -454,7 +460,7 @@ export default function VideoPage() {
                                     onClick={handleDislike}
                                 />
 
-                                <SavePopover videoId={videoId as unknown as string}>
+                                <SavePopover videoId={videoId}>
                                     <ReactionBtn
                                         isActive={isSaved}
                                         icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}

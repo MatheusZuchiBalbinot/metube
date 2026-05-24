@@ -4,7 +4,8 @@ import { useMediaQuery } from '@hooks/useMediaQuery';
 import { useTrackImpression } from '@hooks/useTrackImpression';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
-import { VideoStatus, type Video } from '@models/video';
+import type { Video } from '@models/video';
+import { isProcessing, isFailed, isScheduled } from '@domain/video';
 import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
 import { ROUTES, videoUrl } from '@utils/routes';
@@ -50,7 +51,7 @@ const VideoCard = memo(function VideoCard({
     const navigate = useNavigate();
     const cardRef = useRef<HTMLElement>(null);
     const vuid = video.id as unknown as Vuid;
-    const hasValidVuid = vuid !== undefined && (vuid as unknown as string) !== '';
+    const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(cardRef, vuid, source, { enabled: hasValidVuid });
     const { t, i18n } = useTranslation();
@@ -58,7 +59,7 @@ const VideoCard = memo(function VideoCard({
     const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
     const isPinned = useAppSelector(s => s.video.pinnedVideoId === video.id);
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
-    const isSaved = watchLaterIds.has(video.id as string);
+    const isSaved = watchLaterIds.has(video.id);
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
     const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags);
@@ -69,12 +70,12 @@ const VideoCard = memo(function VideoCard({
 
     const now = new Date();
     const isScheduledAndFuture =
-        video.status === VideoStatus.SCHEDULED &&
+        isScheduled(video) &&
         video.scheduledAt !== undefined &&
         new Date(video.scheduledAt) > now;
 
-    const isProcessing = video.status === VideoStatus.PROCESSING;
-    const isFailed = video.status === VideoStatus.FAILED;
+    const isVideoProcessing = isProcessing(video);
+    const isVideoFailed = isFailed(video);
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const isTouchDevice = useMediaQuery('(hover: none)');
@@ -96,7 +97,7 @@ const VideoCard = memo(function VideoCard({
         }).catch(() => {});
     }
 
-    const isNotInteractive = isProcessing || isFailed;
+    const isNotInteractive = isVideoProcessing || isVideoFailed;
 
     function handleCardClick() {
         if (isNotInteractive) {
@@ -175,8 +176,8 @@ const VideoCard = memo(function VideoCard({
                 <VideoStatusBadges
                     isScheduledAndFuture={isScheduledAndFuture}
                     isWatched={isWatched}
-                    isProcessing={isProcessing}
-                    isFailed={isFailed}
+                    isProcessing={isVideoProcessing}
+                    isFailed={isVideoFailed}
                     classPrefix="video-card"
                 />
                 {hasProgress && (

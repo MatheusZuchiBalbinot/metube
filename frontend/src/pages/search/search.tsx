@@ -61,24 +61,24 @@ export default function SearchPage() {
             return publishedVideos;
         }
 
-        const q = query.toLowerCase();
-        return publishedVideos.filter(v => {
-            const matchesTitle = v.title.toLowerCase().includes(q);
-            const matchesDesc = v.description.toLowerCase().includes(q);
-            const matchesChannel = v.channel.toLowerCase().includes(q);
-            const matchesTags = v.tags.some(tag => tag.toLowerCase().includes(q));
+        const queryLower = query.toLowerCase();
+        return publishedVideos.filter(video => {
+            const matchesTitle = video.title.toLowerCase().includes(queryLower);
+            const matchesDesc = video.description.toLowerCase().includes(queryLower);
+            const matchesChannel = video.channel.toLowerCase().includes(queryLower);
+            const matchesTags = video.tags.some(tag => tag.toLowerCase().includes(queryLower));
             return matchesTitle || matchesDesc || matchesChannel || matchesTags;
         });
     }, [publishedVideos, query]);
 
     const allTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        for (const v of baseResults) {
-            for (const tag of v.tags) {
+        const tagSet = new Set<Tag>();
+        for (const video of baseResults) {
+            for (const tag of video.tags) {
                 tagSet.add(tag);
             }
         }
-        return Array.from(tagSet).sort() as unknown as Tag[];
+        return Array.from(tagSet).sort();
     }, [baseResults]);
 
     const results = useMemo(

@@ -10,12 +10,12 @@ export interface CommentPagination {
 }
 
 export interface CommentState {
-    byId: Record<string, Comment>
-    byVideo: Record<string, string[]>
-    repliesById: Record<string, string[]>
-    pagination: Record<string, CommentPagination>
-    loadingVideos: Record<string, boolean>
-    loadingReplies: Record<string, boolean>
+    byId: Record<Cuid, Comment>
+    byVideo: Record<Vuid, Cuid[]>
+    repliesById: Record<Cuid, Cuid[]>
+    pagination: Record<Vuid, CommentPagination>
+    loadingVideos: Record<Vuid, boolean>
+    loadingReplies: Record<Cuid, boolean>
     error: string | null
 }
 
@@ -34,11 +34,11 @@ const commentSlice = createSlice({
     initialState,
     reducers: {
         setLoading(state, action: PayloadAction<{ vuid: Vuid; loading: boolean }>) {
-            state.loadingVideos[action.payload.vuid as string] = action.payload.loading;
+            state.loadingVideos[action.payload.vuid] = action.payload.loading;
         },
 
         setLoadingReplies(state, action: PayloadAction<{ cuid: Cuid; loading: boolean }>) {
-            state.loadingReplies[action.payload.cuid as string] = action.payload.loading;
+            state.loadingReplies[action.payload.cuid] = action.payload.loading;
         },
 
         setComments(
@@ -48,11 +48,11 @@ const commentSlice = createSlice({
             const { vuid, comments, pagination } = action.payload;
 
             comments.forEach(c => {
-                state.byId[c.id as string] = c;
+                state.byId[c.id] = c;
             });
 
-            state.byVideo[vuid as string] = comments.map(c => c.id as string);
-            state.pagination[vuid as string] = pagination;
+            state.byVideo[vuid] = comments.map(c => c.id);
+            state.pagination[vuid] = pagination;
         },
 
         appendComments(
@@ -60,44 +60,38 @@ const commentSlice = createSlice({
             action: PayloadAction<{ vuid: Vuid; comments: Comment[]; pagination: CommentPagination }>,
         ) {
             const { vuid, comments, pagination } = action.payload;
-            const vuidKey = vuid as string;
 
             comments.forEach(c => {
-                state.byId[c.id as string] = c;
+                state.byId[c.id] = c;
             });
 
-            const existing = state.byVideo[vuidKey] ?? [];
-            const newIds = comments.map(c => c.id as string);
-            state.byVideo[vuidKey] = [...existing, ...newIds];
-            state.pagination[vuidKey] = pagination;
+            const existing = state.byVideo[vuid] ?? [];
+            state.byVideo[vuid] = [...existing, ...comments.map(c => c.id)];
+            state.pagination[vuid] = pagination;
         },
 
         addComment(state, action: PayloadAction<{ vuid: Vuid; comment: Comment }>) {
             const { vuid, comment } = action.payload;
-            const cuidKey = comment.id as string;
-            const vuidKey = vuid as string;
 
-            state.byId[cuidKey] = comment;
+            state.byId[comment.id] = comment;
 
-            const existing = state.byVideo[vuidKey] ?? [];
-            state.byVideo[vuidKey] = [cuidKey, ...existing];
+            const existing = state.byVideo[vuid] ?? [];
+            state.byVideo[vuid] = [comment.id, ...existing];
 
-            if (state.pagination[vuidKey] !== undefined) {
-                state.pagination[vuidKey].total += 1;
+            if (state.pagination[vuid] !== undefined) {
+                state.pagination[vuid].total += 1;
             }
         },
 
         addReply(state, action: PayloadAction<{ parentCuid: Cuid; comment: Comment }>) {
             const { parentCuid, comment } = action.payload;
-            const cuidKey = comment.id as string;
-            const parentKey = parentCuid as string;
 
-            state.byId[cuidKey] = comment;
+            state.byId[comment.id] = comment;
 
-            const existing = state.repliesById[parentKey] ?? [];
-            state.repliesById[parentKey] = [...existing, cuidKey];
+            const existing = state.repliesById[parentCuid] ?? [];
+            state.repliesById[parentCuid] = [...existing, comment.id];
 
-            const parent = state.byId[parentKey];
+            const parent = state.byId[parentCuid];
 
             if (parent !== undefined) {
                 parent.replyCount += 1;
@@ -106,21 +100,19 @@ const commentSlice = createSlice({
 
         setReplies(state, action: PayloadAction<{ parentCuid: Cuid; comments: Comment[] }>) {
             const { parentCuid, comments } = action.payload;
-            const parentKey = parentCuid as string;
 
             comments.forEach(c => {
-                state.byId[c.id as string] = c;
+                state.byId[c.id] = c;
             });
 
-            state.repliesById[parentKey] = comments.map(c => c.id as string);
+            state.repliesById[parentCuid] = comments.map(c => c.id);
         },
 
         updateComment(state, action: PayloadAction<Comment>) {
-            const cuidKey = action.payload.id as string;
-            const existing = state.byId[cuidKey];
+            const existing = state.byId[action.payload.id];
 
             if (existing !== undefined) {
-                state.byId[cuidKey] = action.payload;
+                state.byId[action.payload.id] = action.payload;
             }
         },
 
@@ -129,24 +121,21 @@ const commentSlice = createSlice({
             action: PayloadAction<{ cuid: Cuid; vuid?: Vuid; parentCuid?: Cuid }>,
         ) {
             const { cuid, vuid, parentCuid } = action.payload;
-            const cuidKey = cuid as string;
 
-            delete state.byId[cuidKey];
+            delete state.byId[cuid];
 
             if (vuid !== undefined) {
-                const vuidKey = vuid as string;
-                state.byVideo[vuidKey] = (state.byVideo[vuidKey] ?? []).filter(id => id !== cuidKey);
+                state.byVideo[vuid] = (state.byVideo[vuid] ?? []).filter(id => id !== cuid);
 
-                if (state.pagination[vuidKey] !== undefined) {
-                    state.pagination[vuidKey].total = Math.max(0, state.pagination[vuidKey].total - 1);
+                if (state.pagination[vuid] !== undefined) {
+                    state.pagination[vuid].total = Math.max(0, state.pagination[vuid].total - 1);
                 }
             }
 
             if (parentCuid !== undefined) {
-                const parentKey = parentCuid as string;
-                state.repliesById[parentKey] = (state.repliesById[parentKey] ?? []).filter(id => id !== cuidKey);
+                state.repliesById[parentCuid] = (state.repliesById[parentCuid] ?? []).filter(id => id !== cuid);
 
-                const parent = state.byId[parentKey];
+                const parent = state.byId[parentCuid];
 
                 if (parent !== undefined) {
                     parent.replyCount = Math.max(0, parent.replyCount - 1);
@@ -155,7 +144,7 @@ const commentSlice = createSlice({
         },
 
         toggleLikeOptimistic(state, action: PayloadAction<Cuid>) {
-            const comment = state.byId[action.payload as string];
+            const comment = state.byId[action.payload];
 
             if (comment === undefined) {
                 return;
