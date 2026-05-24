@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Eye, Heart, Tag as TagIcon, Pencil, Upload, VideoOff, Pin, Flame, Hash, Clock } from 'lucide-react';
+import { Play, Pencil, Upload, VideoOff, Pin, Flame, Hash, Clock } from 'lucide-react';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import { domain } from '@domain';
@@ -14,7 +14,7 @@ import './profile.css';
 import { useAuth, useVideo, useProfileVideos } from '@hooks';
 import { useAppSelector } from '@store';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
-import { VideoFilter, SortBy, TagColors, Format, videoUrl, type FilterState, formatRelativeDate } from '@utils';
+import { VideoFilter, SortBy, videoUrl, type FilterState } from '@utils';
 import type { Video, VideoId, Tag, Comment } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
 import { useEditProfileModal } from './hooks/useEditProfileModal';
@@ -22,6 +22,10 @@ import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
 import EditVideoModal from './components/EditVideoModal';
 import EditProfileModal from './components/EditProfileModal';
 import DeleteVideoModal from './components/DeleteVideoModal';
+import ProfileStats from './components/ProfileStats';
+import ProfileCoverStory from './components/ProfileCoverStory';
+import ProfileDiamondTiers from './components/ProfileDiamondTiers';
+import ProfileTopicGrid from './components/ProfileTopicGrid';
 
 function formatWatchTime(seconds: number): string {
     const totalMinutes = Math.floor(seconds / 60);
@@ -67,7 +71,7 @@ export default function ProfilePage() {
 
     const {
         videoToDelete,
-        handleDeleteClick, handleDeleteById, handleDeleteConfirm, handleDeleteCancel,
+        handleDeleteById, handleDeleteConfirm, handleDeleteCancel,
     } = useDeleteVideoModal();
 
     const allTags = useMemo(() => {
@@ -157,6 +161,7 @@ export default function ProfilePage() {
         if (newFilter) {
             setFilterState({ ...VideoFilter.emptyState(), ...newFilter });
         }
+
         setTimeout(() => {
             allVideosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 50);
@@ -269,44 +274,7 @@ export default function ProfilePage() {
                         <p className="profile-page__bio">{profileBio}</p>
                     )}
 
-                    {stats && (
-                        <div className="profile-page__stats-grid">
-                            <div className="profile-page__stat">
-                                <Play size={13} className="profile-page__stat-icon" />
-                                <span className="profile-page__stat-value">{stats.videosWatched}</span>
-                                <span className="profile-page__stat-label">{t('profile.videos_watched')}</span>
-                            </div>
-                            <div className="profile-page__stat">
-                                <Clock size={13} className="profile-page__stat-icon" />
-                                <span className="profile-page__stat-value">{stats.watchTimeStr}</span>
-                                <span className="profile-page__stat-label">{t('profile.watch_time')}</span>
-                            </div>
-                            <div className="profile-page__stat">
-                                <Heart size={13} className="profile-page__stat-icon" />
-                                <span className="profile-page__stat-value">{stats.likedCount}</span>
-                                <span className="profile-page__stat-label">{t('profile.liked_count')}</span>
-                            </div>
-                            {stats.topTags.length > 0 && (
-                                <div className="profile-page__stat profile-page__stat--tags">
-                                    <TagIcon size={13} className="profile-page__stat-icon" />
-                                    <div className="profile-page__top-tags">
-                                        {stats.topTags.map(tag => {
-                                            const palette = TagColors.palette(tag);
-                                            return (
-                                                <span
-                                                    key={tag}
-                                                    className="profile-page__top-tag"
-                                                    style={{ background: palette.bg, color: palette.color }}
-                                                >
-                                                    {tag}
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {stats && <ProfileStats stats={stats} />}
 
                 </div>
             </div>
@@ -323,65 +291,12 @@ export default function ProfilePage() {
                 <div className="profile-page__sections">
                     {/* ─── Cover Story ─── */}
                     {sections.featured !== null && (
-                        <div
-                            className="profile-page__cover"
-                            style={{ backgroundImage: `url(${sections.featured.thumbnail})` }}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={sections.featured.title}
-                            onClick={() => navigate(videoUrl(sections.featured!.id))}
-                            onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.featured!.id))}
-                        >
-                            <div className="profile-page__cover-content">
-                                <span className="profile-page__cover-badge">{t('channel.cover_badge')}</span>
-                                <h2 className="profile-page__cover-title">{sections.featured.title}</h2>
-                                <div className="profile-page__cover-meta">
-                                    <Eye size={13} />
-                                    {Format.views(sections.featured.views)} {t('video.views')}
-                                    {sections.featured.publishedAt && (
-                                        <>
-                                            <span className="profile-page__cover-sep" />
-                                            {formatRelativeDate(sections.featured.publishedAt)}
-                                        </>
-                                    )}
-                                </div>
-                                {sections.featured.tags.length > 0 && (
-                                    <div className="profile-page__cover-tags">
-                                        {sections.featured.tags.slice(0, 4).map(tag => {
-                                            const palette = TagColors.palette(tag as string);
-                                            const tagStyle = { background: palette.bg, color: palette.color };
-                                            return (
-                                                <span key={tag as string} className="profile-page__cover-tag" style={tagStyle}>
-                                                    {tag as string}
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                                {spotlightComments.length > 0 && (
-                                    <>
-                                        <div className="profile-page__cover-divider" />
-                                        <div className="profile-page__cover-comments">
-                                            {spotlightComments.map(c => (
-                                                <p key={c.id} className="profile-page__cover-comment-text">
-                                                    "{c.content}" — {c.author.name}
-                                                </p>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                                <div className="profile-page__cover-bottom">
-                                    <button
-                                        type="button"
-                                        className="profile-page__cover-watch btn btn--primary btn--sm"
-                                        onClick={handleCoverWatchClick}
-                                    >
-                                        <Play size={13} fill="currentColor" />
-                                        {t('video.watch_now')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <ProfileCoverStory
+                            featured={sections.featured}
+                            spotlightComments={spotlightComments}
+                            onNavigate={id => navigate(videoUrl(id))}
+                            onWatchClick={handleCoverWatchClick}
+                        />
                     )}
 
                     {/* ─── Latest Uploads (asymmetric 5-up mosaic) ─── */}
@@ -416,70 +331,10 @@ export default function ProfilePage() {
                                     {t('channel.see_all')}
                                 </button>
                             </div>
-                            <div className="profile-page__diamond-tiers">
-                                <div className="profile-page__diamond-tier">
-                                    <div
-                                        className="profile-page__diamond"
-                                        style={{ backgroundImage: `url(${sections.mostViewed[0].thumbnail})` }}
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => navigate(videoUrl(sections.mostViewed[0].id))}
-                                        onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(sections.mostViewed[0].id))}
-                                    >
-                                        <div className="profile-page__diamond-overlay">
-                                            <div className="profile-page__diamond-info">
-                                                <span className="profile-page__diamond-rank">#1</span>
-                                                <span className="profile-page__diamond-title">{sections.mostViewed[0].title}</span>
-                                                <span className="profile-page__diamond-views">{Format.views(sections.mostViewed[0].views)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {sections.mostViewed.length >= 3 && (
-                                    <div className="profile-page__diamond-tier">
-                                        {sections.mostViewed.slice(1, 3).map((video, i) => (
-                                            <div
-                                                key={video.id}
-                                                className="profile-page__diamond"
-                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={() => navigate(videoUrl(video.id))}
-                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
-                                            >
-                                                <div className="profile-page__diamond-overlay">
-                                                    <div className="profile-page__diamond-info">
-                                                        <span className="profile-page__diamond-rank">#{i + 2}</span>
-                                                        <span className="profile-page__diamond-title">{video.title}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {sections.mostViewed.length >= 6 && (
-                                    <div className="profile-page__diamond-tier">
-                                        {sections.mostViewed.slice(3, 6).map((video, i) => (
-                                            <div
-                                                key={video.id}
-                                                className="profile-page__diamond"
-                                                style={{ backgroundImage: `url(${video.thumbnail})` }}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={() => navigate(videoUrl(video.id))}
-                                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
-                                            >
-                                                <div className="profile-page__diamond-overlay">
-                                                    <div className="profile-page__diamond-info">
-                                                        <span className="profile-page__diamond-rank">#{i + 4}</span>
-                                                        <span className="profile-page__diamond-title">{video.title}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <ProfileDiamondTiers
+                                videos={sections.mostViewed}
+                                onNavigate={id => navigate(videoUrl(id))}
+                            />
                         </div>
                     )}
 
@@ -492,46 +347,10 @@ export default function ProfilePage() {
                                     {t('channel.by_topic')}
                                 </h3>
                             </div>
-                            <div className="profile-page__topics">
-                                {sections.tagSections.map(({ tag, count, videos: tagVideos }) => {
-                                    const coverThumb = tagVideos[0]?.thumbnail ?? '';
-                                    return (
-                                        <div
-                                            key={tag}
-                                            className="profile-page__topic-cover"
-                                            style={{ backgroundImage: `url(${coverThumb})` }}
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => scrollToAllVideos({ tags: [tag] })}
-                                            onKeyDown={e => e.key === 'Enter' && scrollToAllVideos({ tags: [tag] })}
-                                        >
-                                            <div className="profile-page__topic-cover-content">
-                                                <span className="profile-page__topic-cover-tag">#{tag}</span>
-                                                <span className="profile-page__topic-cover-count">
-                                                    {t('channel.topic_videos', { count })}
-                                                </span>
-                                                <div className="profile-page__topic-cover-list">
-                                                    {tagVideos.map(v => (
-                                                        <span key={v.id} className="profile-page__topic-cover-item">{v.title}</span>
-                                                    ))}
-                                                </div>
-                                                <div className="profile-page__topic-cover-footer">
-                                                    <button
-                                                        type="button"
-                                                        className="profile-page__topic-cover-see-all"
-                                                        onClick={e => {
-                                                            e.stopPropagation();
-                                                            scrollToAllVideos({ tags: [tag] });
-                                                        }}
-                                                    >
-                                                        {t('channel.see_all')} →
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            <ProfileTopicGrid
+                                tagSections={sections.tagSections}
+                                onSelectTag={tag => scrollToAllVideos({ tags: [tag] })}
+                            />
                         </div>
                     )}
                 </div>
