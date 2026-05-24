@@ -35,7 +35,9 @@ export function useEditProfileModal(): UseEditProfileModalResult {
     ) {
         e.preventDefault();
         const isNameEmpty = editName.trim() === '';
-        if (isNameEmpty) { return; }
+        if (isNameEmpty) {
+            return;
+        }
         onSave(editName.trim(), editBio.trim());
         handleEditProfileClose();
     }

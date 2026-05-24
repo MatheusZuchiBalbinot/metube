@@ -24,7 +24,9 @@ export function useDeleteVideoModal(): UseDeleteVideoModalResult {
     }
 
     function handleDeleteConfirm(onDelete: (id: VideoId) => void) {
-        if (videoToDelete === null) { return; }
+        if (videoToDelete === null) {
+            return;
+        }
         onDelete(videoToDelete.id);
         setVideoToDelete(null);
     }
