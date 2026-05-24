@@ -1,11 +1,9 @@
 import { memo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMediaQuery } from '@hooks/useMediaQuery';
-import { useTrackImpression } from '@hooks/useTrackImpression';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
 import type { Video } from '@models/video';
-import { isProcessing, isFailed, isScheduled } from '@domain/video';
+import { domain } from '@domain';
 import type { Tag } from '@models/tag';
 import type { VideoId } from '@models/video';
 import { ROUTES, videoUrl } from '@utils/routes';
@@ -22,6 +20,7 @@ import SavePopover from './savePopover';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './card.css';
+import { useMediaQuery, useTrackImpression } from '@hooks';
 
 interface VideoCardProps {
     video: Video
@@ -68,14 +67,10 @@ const VideoCard = memo(function VideoCard({
     const hasProgress = progress > 4 && progress < 96;
     const isWatched = progress >= 95;
 
-    const now = new Date();
-    const isScheduledAndFuture =
-        isScheduled(video) &&
-        video.scheduledAt !== undefined &&
-        new Date(video.scheduledAt) > now;
+    const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
 
-    const isVideoProcessing = isProcessing(video);
-    const isVideoFailed = isFailed(video);
+    const isVideoProcessing = domain.video.isProcessing(video);
+    const isVideoFailed = domain.video.isFailed(video);
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const isTouchDevice = useMediaQuery('(hover: none)');

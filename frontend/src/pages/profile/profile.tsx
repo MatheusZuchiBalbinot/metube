@@ -15,14 +15,14 @@ import { videoUrl } from '@utils/routes';
 import { comments as commentsApi } from '@api';
 import type { Comment } from '@models/comment';
 import type { Vuid } from '@api';
-import { useAuth } from '@hooks/useAuth';
-import { useVideo } from '@hooks/useVideo';
-import { useProfileVideos } from '@hooks/useProfileVideos';
 import { Avatar, Button, Input, Modal, Tooltip } from '@ui';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import TagInput from '@components/tag/input';
 import './profile.css';
+import { useAuth, useVideo, useProfileVideos } from '@hooks';
+import { useAppSelector } from '@store';
+import { selectWatchedTagFrequency } from '@store/videoSelectors';
 
 function formatWatchTime(seconds: number): string {
     const totalMinutes = Math.floor(seconds / 60);
@@ -47,7 +47,10 @@ export default function ProfilePage() {
     const isOwnProfile = !idParam || String(user!.id) === idParam;
     const channelId = isOwnProfile ? String(user!.id) : idParam!;
 
-    const { ownVideos, setOwnVideos, loadingOwnVideos } = useProfileVideos(channelId, isOwnProfile);
+    const { videosState, setVideos } = useProfileVideos(channelId, isOwnProfile);
+    const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
+    const isLoadingVideos = videosState.kind === 'loading';
+    const watchedTagFrequency = useAppSelector(selectWatchedTagFrequency);
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
@@ -196,17 +199,7 @@ export default function ProfilePage() {
 
         const watchTimeStr = formatWatchTime(totalWatchSeconds);
 
-        const tagFreq = new Map<Tag, number>();
-        for (const id of watchHistory) {
-            const video = videos.find((v: Video) => v.id === id);
-            if (!video) {
-                continue;
-            }
-            for (const tag of video.tags) {
-                tagFreq.set(tag, (tagFreq.get(tag) ?? 0) + 1);
-            }
-        }
-        const topTags = [...tagFreq.entries()]
+        const topTags = [...watchedTagFrequency.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3)
             .map(([tag]) => tag);
@@ -214,7 +207,7 @@ export default function ProfilePage() {
         const likedCount = likedVideos.size;
 
         return { videosWatched, watchTimeStr, topTags, likedCount };
-    }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos]);
+    }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency]);
 
     function handleEditOpen(video: Video) {
         setEditingVideo(video);
@@ -239,7 +232,7 @@ export default function ProfilePage() {
             tags: editTags,
         };
         editVideo(editingVideo!.id, partial);
-        setOwnVideos(prev => prev.map(v => v.id === editingVideo!.id ? { ...v, ...partial } : v));
+        setVideos(prev => prev.map(v => v.id === editingVideo!.id ? { ...v, ...partial } : v));
         handleEditClose();
     }
 
@@ -270,7 +263,7 @@ export default function ProfilePage() {
             return;
         }
         deleteVideo(videoToDelete.id);
-        setOwnVideos(prev => prev.filter(v => v.id !== videoToDelete.id));
+        setVideos(prev => prev.filter(v => v.id !== videoToDelete.id));
         setVideoToDelete(null);
     }
 
@@ -392,7 +385,7 @@ export default function ProfilePage() {
                 />
             </div>
 
-            {sections !== null && !loadingOwnVideos && (
+            {sections !== null && !isLoadingVideos && (
                 <div className="profile-page__sections">
                     {/* ─── Cover Story ─── */}
                     {sections.featured !== null && (
@@ -611,7 +604,7 @@ export default function ProfilePage() {
             )}
 
             <main className="profile-page__main">
-                {loadingOwnVideos && (
+                {isLoadingVideos && (
                     <div className="profile-page__grid">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <VideoCardSkeleton key={i} />
@@ -619,7 +612,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {sections !== null && !loadingOwnVideos && (
+                {sections !== null && !isLoadingVideos && (
                     <div className="profile-page__all-videos-header" ref={allVideosRef}>
                         <h3 className="profile-page__section-title">
                             <Play size={15} strokeWidth={2} />
@@ -628,7 +621,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {sections === null && !loadingOwnVideos && pinnedVideo && (
+                {sections === null && !isLoadingVideos && pinnedVideo && (
                     <div className="profile-page__pinned">
                         <div className="profile-page__pinned-header">
                             <Pin size={13} />
@@ -661,7 +654,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {!loadingOwnVideos && hasVideos && (
+                {!isLoadingVideos && hasVideos && (
                     <div className="profile-page__grid">
                         {filteredVideos.map((video, i) => {
                             const isPinned = video.id === pinnedVideoId;
@@ -685,7 +678,7 @@ export default function ProfilePage() {
                         })}
                     </div>
                 )}
-                {!loadingOwnVideos && !hasVideos && (
+                {!isLoadingVideos && !hasVideos && (
                     <EmptyState
                         icon={<VideoOff size={36} strokeWidth={1.5} />}
                         title={t('video.no_own_videos')}

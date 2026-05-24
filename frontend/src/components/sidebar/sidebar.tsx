@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Home, Clapperboard, History, ThumbsUp, User, ListVideo } from 'lucide-react';
 import { ROUTES } from '@utils/routes';
 import { useAppSelector } from '@store';
-import { useSubscription } from '@hooks/useSubscription';
 import { Tooltip, Avatar } from '@ui';
 import './sidebar.css';
+import { useSubscription } from '@hooks';
 
 /**
  * Wrapper com forwardRef para que o Radix Tooltip (asChild / Slot) consiga

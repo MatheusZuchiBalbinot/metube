@@ -1,8 +1,7 @@
 import { Play, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { usePlayerPlayback } from '@hooks/usePlayerPlayback';
-import { useShaka } from '@hooks/useShaka';
 import type { VideoPlayerProps } from './player';
+import { usePlayerPlayback, useShaka } from '@hooks';
 
 export function MiniVideoPlayer({
     videoRef,

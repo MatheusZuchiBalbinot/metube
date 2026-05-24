@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppSelector } from '@store';
 import { channel as channelApi } from '@api';
 import type { Uuid } from '@api';
 import type { Video, VideoStatus } from '@models/video';
+import { RemoteData } from '@models/remoteData';
 
 interface UseProfileVideosResult {
-    ownVideos: Video[]
-    setOwnVideos: React.Dispatch<React.SetStateAction<Video[]>>
-    loadingOwnVideos: boolean
+    videosState: RemoteData<Video[]>
+    setVideos: (updater: (prev: Video[]) => Video[]) => void
 }
 
 export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseProfileVideosResult {
@@ -15,8 +15,17 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
     const reduxVideosCount = useAppSelector(state => state.video.videos.length);
     const hasFetchedRef = useRef(false);
 
-    const [ownVideos, setOwnVideos] = useState<Video[]>([]);
-    const [loadingOwnVideos, setLoadingOwnVideos] = useState(true);
+    const [videosState, setVideosState] = useState<RemoteData<Video[]>>(RemoteData.loading());
+
+    const setVideos = useCallback((updater: (prev: Video[]) => Video[]) => {
+        setVideosState(prev => {
+            const isLoaded = prev.kind === 'ok';
+            if (!isLoaded) {
+                return prev;
+            }
+            return RemoteData.ok(updater(prev.data));
+        });
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -24,22 +33,27 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
 
         if (isInitial) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setLoadingOwnVideos(true);
+            setVideosState(RemoteData.loading());
         }
 
         channelApi.videos(channelId as unknown as Uuid).then(result => {
             if (cancelled || !result) {
                 return;
             }
-
-            setOwnVideos(result.data);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setVideosState(RemoteData.ok(result.data));
+        }).catch((err: unknown) => {
+            if (cancelled) {
+                return;
+            }
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setVideosState(RemoteData.error(message));
         }).finally(() => {
             if (cancelled) {
                 return;
             }
-
             hasFetchedRef.current = true;
-            setLoadingOwnVideos(false);
         });
 
         return () => {
@@ -56,13 +70,12 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
             return;
         }
 
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setOwnVideos(prev => prev.map(v =>
+        setVideos(prev => prev.map(v =>
             (v.id as string) === (lastVideoStatusUpdate.vuid as string)
                 ? { ...v, status: lastVideoStatusUpdate.status as VideoStatus }
                 : v,
         ));
-    }, [lastVideoStatusUpdate, isOwnProfile]);
+    }, [lastVideoStatusUpdate, isOwnProfile, setVideos]);
 
-    return { ownVideos, setOwnVideos, loadingOwnVideos };
+    return { videosState, setVideos };
 }

@@ -5,13 +5,13 @@ import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-
 import { Avatar, Button, Modal, Spinner, Tooltip } from '@ui';
 import { Format } from '@utils/format';
 import { ROUTES } from '@utils/routes';
-import { useAuth } from '@hooks/useAuth';
 import CommentForm from './form';
 import CommentHistory from './history';
 import CommentReplies from './replies';
 import type { Comment, CommentVersion } from '@models/comment';
 import type { Cuid } from '@api/comments';
 import './item.css';
+import { useAuth } from '@hooks';
 
 interface CommentItemProps {
     comment: Comment

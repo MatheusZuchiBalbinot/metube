@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@hooks/useMediaQuery';
 import { Heart, HeartOff } from 'lucide-react';
 import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
-import { useVideo } from '@hooks/useVideo';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter } from '@utils/applyFilters';
@@ -15,6 +13,7 @@ import type { Video, VideoId } from '@models/video';
 import type { Tag } from '@models/tag';
 import './liked.css';
 import { ToastType } from '@enums/toastType';
+import { useMediaQuery, useVideo } from '@hooks';
 
 // eslint-disable-next-line complexity
 export default function LikedPage() {

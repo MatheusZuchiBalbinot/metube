@@ -12,13 +12,6 @@ import SavePopover from '@components/video/savePopover';
 import ReadingMode from '@components/video/readingMode';
 import AiSuggestions from '@components/video/aiSuggestions';
 import type { FilterState } from '@components/filter/panel';
-import { useAuth } from '@hooks/useAuth';
-import { useVideo } from '@hooks/useVideo';
-import { usePlaylist } from '@hooks/usePlaylist';
-import { useSubscription } from '@hooks/useSubscription';
-import { useVideoFetch } from '@hooks/useVideoFetch';
-import { useRelatedVideos } from '@hooks/useRelatedVideos';
-import { useVideoContent } from '@hooks/useVideoContent';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { selectWatchLaterIds } from '@store/playlistSlice';
@@ -28,13 +21,9 @@ import { video as videoApi, analytics, AnalyticsSource, type Vuid } from '@api';
 import { hasViewed, markViewed } from '@utils/viewedVideos';
 import { VideoFilter } from '@utils/applyFilters';
 import { Format } from '@utils/format';
-import { useBurstAnimation } from '@hooks/useBurstAnimation';
-import { useVideoProgress } from '@hooks/useVideoProgress';
-import { useAutoplay } from '@hooks/useAutoplay';
 import { TagColors } from '@utils/tagColors';
 import { ROUTES } from '@utils/routes';
 import TagBadge from '@components/tag/badge';
-import { useKeyboardShortcuts } from '@hooks/useKeyboardShortcuts';
 import * as Popover from '@radix-ui/react-popover';
 import { Avatar, Button, Tooltip } from '@ui';
 import type { Video, VideoId } from '@models/video';
@@ -42,6 +31,19 @@ import type { Tag } from '@models/tag';
 import './video.css';
 import { ToastType } from '@enums/toastType';
 import { SidebarTab } from '@enums/sidebarTab';
+import {
+    useAuth,
+    useVideo,
+    usePlaylist,
+    useSubscription,
+    useVideoFetch,
+    useRelatedVideos,
+    useVideoContent,
+    useBurstAnimation,
+    useVideoProgress,
+    useAutoplay,
+    useKeyboardShortcuts,
+} from '@hooks';
 
 export default function VideoPage() {
     const { t, i18n } = useTranslation();

@@ -1,8 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListVideo, Plus } from 'lucide-react';
-import { usePlaylist } from '@hooks/usePlaylist';
-import { useVideo } from '@hooks/useVideo';
 import PlaylistCard from '@components/playlist/card';
 import EmptyState from '@ui/empty/empty';
 import Button from '@ui/button/button';
@@ -11,6 +9,7 @@ import Input from '@ui/input/input';
 import type { Playlist } from '@models/playlist';
 import type { Video, VideoId } from '@models/video';
 import './playlists.css';
+import { usePlaylist, useVideo } from '@hooks';
 
 export default function PlaylistsPage() {
     const { t } = useTranslation();

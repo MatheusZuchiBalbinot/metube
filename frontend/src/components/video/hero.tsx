@@ -6,9 +6,9 @@ import type { Tag } from '@models/tag';
 import { videoUrl } from '@utils/routes';
 import { Format } from '@utils/format';
 import { TagColors } from '@utils/tagColors';
-import { useVideo } from '@hooks/useVideo';
 import Badge from '@ui/badge/badge';
 import './hero.css';
+import { useVideo } from '@hooks';
 
 interface VideoHeroProps {
     video: Video
@@ -24,11 +24,7 @@ export default function VideoHero({ video }: VideoHeroProps) {
     const extraTagCount = video.tags.length - 5;
     const hasExtraTags = extraTagCount > 0;
 
-    const now = new Date();
-    const isScheduledAndFuture =
-        domain.video.isScheduled(video) &&
-        video.scheduledAt !== undefined &&
-        new Date(video.scheduledAt) > now;
+    const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
 
     function handleClick() {
         navigate(videoUrl(video.id));

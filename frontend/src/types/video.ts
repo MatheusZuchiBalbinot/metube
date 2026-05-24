@@ -1,5 +1,6 @@
 import type { ChannelId } from './channel';
 import type { Tag } from './tag';
+import type { Seconds, ViewCount } from './units';
 
 export type VideoId = string & { readonly _brand: 'VideoId' };
 
@@ -29,9 +30,9 @@ export interface Video {
     createdAt: string
     channel: string
     channelId: ChannelId
-    views: number
+    views: ViewCount
     status: VideoStatus
-    duration?: number
+    duration?: Seconds
     videoUrl?: string
     captions?: VideoCaption[]
 }
