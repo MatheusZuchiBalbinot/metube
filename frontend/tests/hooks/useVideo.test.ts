@@ -21,6 +21,7 @@ vi.mock('@api/videos', () => ({
         toggleLike: vi.fn().mockResolvedValue(undefined),
         toggleDislike: vi.fn().mockResolvedValue(undefined),
     },
+    toVuid: (id: string) => id,
 }));
 
 import { video as videoApi } from '@api/videos';
