@@ -7,15 +7,14 @@ Plataforma de vídeo full-stack com pipeline de IA integrado — transcrição a
 ## Funcionalidades
 
 - Upload de vídeos com retomada automática via protocolo tus — a conexão pode cair no meio e o upload continua do byte exato onde parou
-- Processamento assíncrono com feedback em tempo real via WebSocket — o usuário acompanha cada etapa sem polling
-- Transcrição automática do áudio com Whisper ASR self-hosted e estimativa de tempo restante
-- Sugestões de título, descrição e tags geradas por IA (Gemini) — o dono aceita ou descarta
+- Processamento assíncrono com feedback em tempo real via WebSocket
+- Transcrição automática do áudio com Whisper ASR
+- Sugestões de título, descrição e tags geradas por IA
 - Resumos estruturados por IA: pontos-chave, capítulos com timestamp e modo leitura
 - Recomendações server-side com scoring por afinidade de tags e histórico do usuário
-- Player com streaming adaptativo HLS/DASH (Shaka Player), legendas e picture-in-picture
+- Player com streaming adaptativo HLS/DASH, legendas e picture-in-picture
 - Feed de Shorts — scroll vertical estilo YouTube Shorts com volume persistente entre vídeos
-- Sistema de reações (like/dislike/save), inscrições em canais, histórico de visualizações
-- Playlists com reordenação via drag-and-drop
+- Sistema de reações (like/dislike/save), inscrições em canais, histórico de visualizações, playlists e mais
 - Busca com full-text search (PostgreSQL `tsvector` + índice GIN)
 - Notificações em tempo real: novo inscrito, like, vídeo publicado, transcrição concluída
 - Analytics passiva: impressões em batch, cliques, buscas, tempo assistido, skips
@@ -26,34 +25,30 @@ Plataforma de vídeo full-stack com pipeline de IA integrado — transcrição a
 
 ## Backend
 
-Arquitetura em camadas com responsabilidades bem separadas:
+Segue arquitetura **MVC** com **Service Layer**, aplicando princípios **SOLID** e **Clean Code**:
 
-- **Controllers thin** — parse → authorize → service → resource. Nenhum controller acessa o banco diretamente ou contém lógica de negócio
-- **Service layer** — toda lógica de negócio centralizada em services injetados via DI, testados em isolamento
-- **DTOs tipados** (`app/Data/`) — o controller passa `$request->validated()` para um DTO antes de chamar o service
-- **Event-driven para side effects** — `VideoService` dispara `VideoPublished`; listeners reagem sem que o service precise conhecê-los. Novo side effect = novo listener, sem tocar no service
-- **Eloquent Observers para cache** — `VideoObserver`, `PlaylistObserver`, `UserObserver` invalidam cache ao detectar mudanças nos models, independente de quem os alterou
-- **Authorization via Policies** — `VideoPolicy`, `PlaylistPolicy`, `CommentPolicy` centralizam regras de ownership
-- **Views bufferizadas no Redis** — `INCR` por visualização + flush periódico em batch, sem lock em `UPDATE` concorrente em vídeos virais
-- **PHPStan nível 8** — zero `mixed` implícito, todo método público documentado com `@param`/`@return`/`@throws`, propriedades de model com `@property` tipados
-
-**Testes:** 422 testes unitários, 811 assertions, SQLite in-memory. Todo service, model e job crítico tem cobertura dedicada.
+- **MVC com controllers thin** — única responsabilidade: receber, autorizar e delegar ao service
+- **Service Layer** com toda a lógica de negócio, injetada via **Dependency Injection**
+- **Observer Pattern** para invalidação de cache — models notificam o cache automaticamente ao mudar
+- **Event/Subscriber Pattern** para side effects — eventos de domínio desacoplam o disparo da reação
+- **DTOs** tipados entre controller e service — o `$request` nunca atravessa camadas
+- **Policy-based Authorization** — regras de ownership centralizadas, fora dos controllers
+- PHPStan nível 8 com documentação obrigatória em todos os métodos públicos
+- +90% de cobertura nos services, models e jobs críticos — 422 testes, 811 assertions
 
 ---
 
 ## Frontend
 
-Arquitetura orientada a hooks com separação clara entre lógica e renderização:
+Segue arquitetura **orientada a hooks** com separação estrita entre lógica e renderização:
 
-- **Componentes como orquestradores** — chamam hooks e renderizam JSX. Qualquer lógica que não seja renderização fica em um hook
-- **Hooks locais de página** — lógica específica de uma página fica em `pages/[page]/hooks/`, nunca em `src/hooks/` global. Evita acoplamento falso e deixa claro o escopo de cada abstração
-- **Redux para estado global** — vídeos, likes, playlists, user. Estado de UI local (`useState`) para tudo que é específico de um componente
-- **Branded types** — `VideoId`, `Vuid`, `Puid`, `Cuid` são tipos distintos em compile time. Impossível passar um ID de playlist onde se espera um ID de vídeo
-- **Domain puro em `src/domain/`** — lógica de negócio sem efeitos colaterais, 100% de cobertura de testes, exposta como namespace object (`domain.video.isPublished(v)`)
-- **ApiResult\<T\>** — todos os métodos de API retornam `{ ok: true; data: T } | { ok: false; error: string }`. Sem try/catch espalhado, sem propagação de erros como throw
-- **ESLint com complexidade máxima 8** por função, `no-explicit-any` como erro, `react-hooks/exhaustive-deps` obrigatório, zero single-line blocks
-
-**Testes:** 1.026 testes em 81 arquivos. Domínio em 100%, store Redux em ~92% de statements.
+- **Container/Presenter** adaptado ao React — componentes orquestram hooks e renderizam JSX
+- **Domain Layer** puro em `src/domain/` — lógica de negócio sem efeitos colaterais, 100% coberta por testes
+- **Flux/Redux** para estado global com seletores memoizados; estado de UI local fica em `useState`
+- **Branded types** (`VideoId`, `Vuid`, `Puid`) — segurança de tipos em compile time, sem overhead em runtime
+- **ApiResult\<T\>** como contrato de API — tratamento de erro uniforme, sem `try/catch` espalhado
+- ESLint com complexidade ciclomática máxima de 8 e `no-explicit-any` como erro
+- +90% de cobertura nas partes críticas — domínio em 100%, store em ~92% — 1.026 testes em 81 arquivos
 
 ---
 
