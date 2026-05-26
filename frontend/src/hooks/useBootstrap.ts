@@ -13,15 +13,15 @@ export function useBootstrap(): void {
     const localProgress = useAppSelector(s => s.video.videoProgress);
 
     useEffect(() => {
-        if (!user) {
-            return;
-        }
-
         video.list({ status: VideoStatus.PUBLISHED }).then(result => {
             if (result.ok) {
                 dispatch(videoActions.setVideos(result.data.data));
             }
         });
+
+        if (!user) {
+            return;
+        }
 
         interactions.liked().then(result => {
             if (result.ok) {
@@ -41,7 +41,8 @@ export function useBootstrap(): void {
             }
             dispatch(videoActions.setVideoProgress(mergeProgress(localProgress, backendProgress)));
         });
-    // Re-fetch whenever the authenticated user changes (logout → login)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        // Re-fetch whenever the authenticated user changes (logout → login → guest)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 }

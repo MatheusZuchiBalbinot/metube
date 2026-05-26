@@ -35,17 +35,22 @@ const ChannelPage = React.lazy(() => import('@pages/channel/channel'));
 const ShortsPage = React.lazy(() => import('@pages/shorts/shorts'));
 const NotFoundPage = React.lazy(() => import('@pages/notFound/notFound'));
 
-const PROTECTED_ROUTES: { path: string; Page: React.LazyExoticComponent<() => React.ReactElement> }[] = [
+type RouteDef = { path: string; Page: React.LazyExoticComponent<() => React.ReactElement> };
+
+const GUEST_ROUTES: RouteDef[] = [
     { path: ROUTES.HOME, Page: HomePage },
     { path: ROUTES.SHORTS, Page: ShortsPage },
+    { path: ROUTES.VIDEO, Page: VideoPage },
+    { path: ROUTES.SEARCH, Page: SearchPage },
+    { path: ROUTES.CHANNEL, Page: ChannelPage },
+    { path: ROUTES.USER, Page: ProfilePage },
+];
+
+const AUTH_ROUTES: RouteDef[] = [
     { path: ROUTES.HISTORY, Page: HistoryPage },
     { path: ROUTES.PLAYLISTS, Page: PlaylistsPage },
     { path: ROUTES.LIKED, Page: LikedPage },
     { path: ROUTES.PROFILE, Page: ProfilePage },
-    { path: ROUTES.USER, Page: ProfilePage },
-    { path: ROUTES.VIDEO, Page: VideoPage },
-    { path: ROUTES.SEARCH, Page: SearchPage },
-    { path: ROUTES.CHANNEL, Page: ChannelPage },
 ];
 
 function PageSpinner() {
@@ -67,25 +72,31 @@ function AppInit({ children }: { children: React.ReactNode }) {
 
         function onSessionExpired(e: Event) {
             const isValid = isEventWithMessage(e);
+
             if (!isValid) {
                 return;
             }
+
             dispatch(authActions.sessionExpired(e.detail.message));
         }
 
         function onForbidden(e: Event) {
             const isValid = isEventWithMessage(e);
+
             if (!isValid) {
                 return;
             }
+
             dispatch(toastActions.addToast({ message: e.detail.message, type: ToastType.ERROR }));
         }
 
         function onServiceUnavailable(e: Event) {
             const isValid = isEventWithMessage(e);
+
             if (!isValid) {
                 return;
             }
+
             dispatch(toastActions.addToast({ message: e.detail.message, type: ToastType.ERROR }));
         }
 
@@ -115,6 +126,20 @@ function AppInit({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
 }
 
+function renderRoutes(routes: RouteDef[]) {
+    return routes.map(({ path, Page }) => (
+        <Route
+            key={path}
+            path={path}
+            element={
+                <ErrorBoundary level={BoundaryLevel.SECTION} key={path}>
+                    <Page />
+                </ErrorBoundary>
+            }
+        />
+    ));
+}
+
 export default function App() {
     return (
         <Provider store={store}>
@@ -131,10 +156,11 @@ export default function App() {
                                     <Route path={ROUTES.SIGNUP} element={<Suspense fallback={<PageSpinner />}><SignupPage /></Suspense>} />
                                     <Route path={ROUTES.FORGOT_PASSWORD} element={<Suspense fallback={<PageSpinner />}><ForgotPasswordPage /></Suspense>} />
                                     <Route path={ROUTES.RESET_PASSWORD} element={<Suspense fallback={<PageSpinner />}><ResetPasswordPage /></Suspense>} />
+                                    <Route element={<Guard required={false}><AppLayout /></Guard>}>
+                                        {renderRoutes(GUEST_ROUTES)}
+                                    </Route>
                                     <Route element={<Guard><AppLayout /></Guard>}>
-                                        {PROTECTED_ROUTES.map(({ path, Page }) => (
-                                            <Route key={path} path={path} element={<ErrorBoundary level={BoundaryLevel.SECTION} key={path}><Page /></ErrorBoundary>} />
-                                        ))}
+                                        {renderRoutes(AUTH_ROUTES)}
                                     </Route>
                                     <Route path="*" element={<Suspense fallback={null}><NotFoundPage /></Suspense>} />
                                 </Routes>
@@ -146,4 +172,3 @@ export default function App() {
         </Provider>
     );
 }
-

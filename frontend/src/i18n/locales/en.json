@@ -32,6 +32,8 @@
         "session_expired": "Your session has expired. Please sign in again.",
         "forgot_password": "Forgot password?",
         "no_account": "Don't have an account?",
+        "have_account": "Already have an account?",
+        "continue_as_guest": "Continue as guest",
         "signup": {
             "title": "Create account",
             "subtitle": "Join Vidsum to start watching and uploading videos",

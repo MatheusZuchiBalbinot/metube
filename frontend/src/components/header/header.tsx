@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
+import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon, LogIn } from 'lucide-react';
 import { ROUTES, videoUrl } from '@utils';
 import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
@@ -299,57 +299,71 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             </div>
 
             <div className="app-header__right">
-                <NotificationsBell />
+                {user ? (
+                    <>
+                        <NotificationsBell />
 
-                <Tooltip content={t('header.create')} side="bottom">
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        className="app-header__create-btn"
-                        leftIcon={<Plus size={14} strokeWidth={2.5} />}
-                        onClick={openUploadModal}
-                        aria-label={t('header.create')}
-                    >
-                        {t('header.create')}
-                    </Button>
-                </Tooltip>
+                        <Tooltip content={t('header.create')} side="bottom">
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                className="app-header__create-btn"
+                                leftIcon={<Plus size={14} strokeWidth={2.5} />}
+                                onClick={openUploadModal}
+                                aria-label={t('header.create')}
+                            >
+                                {t('header.create')}
+                            </Button>
+                        </Tooltip>
 
-                <div className="app-header__avatar-wrap" ref={dropdownRef}>
-                    <Tooltip content={user?.name ?? ''} side="bottom">
-                        <Button
-                            variant="ghost"
-                            className={`app-header__avatar-btn${dropdownOpen ? ' open' : ''}`}
-                            onClick={handleAvatarClick}
-                            aria-label={user?.name}
-                            aria-expanded={dropdownOpen}
-                            aria-haspopup="true"
-                        >
-                            <Avatar name={user?.name ?? '?'} size="sm" />
-                        </Button>
-                    </Tooltip>
-
-                    {dropdownOpen && (
-                        <div className="app-header__dropdown">
-                            <div className="app-header__dropdown-user">
-                                <span className="app-header__dropdown-name">{user?.name}</span>
-                                <span className="app-header__dropdown-email">{user?.email}</span>
-                            </div>
-
-                            <div className="app-header__dropdown-sep" />
-
-                            <PreferencesPanel inline />
-
-                            <div className="app-header__dropdown-sep" />
-
-                            <Tooltip content={t('common.sign_out')} side="left">
-                                <Button variant="ghost" className="app-header__dropdown-logout" onClick={handleLogout} aria-label={t('common.sign_out')}>
-                                    <LogOut size={14} strokeWidth={1.75} />
-                                    {t('common.sign_out')}
+                        <div className="app-header__avatar-wrap" ref={dropdownRef}>
+                            <Tooltip content={user.name} side="bottom">
+                                <Button
+                                    variant="ghost"
+                                    className={`app-header__avatar-btn${dropdownOpen ? ' open' : ''}`}
+                                    onClick={handleAvatarClick}
+                                    aria-label={user.name}
+                                    aria-expanded={dropdownOpen}
+                                    aria-haspopup="true"
+                                >
+                                    <Avatar name={user.name} size="sm" />
                                 </Button>
                             </Tooltip>
+
+                            {dropdownOpen && (
+                                <div className="app-header__dropdown">
+                                    <div className="app-header__dropdown-user">
+                                        <span className="app-header__dropdown-name">{user.name}</span>
+                                        <span className="app-header__dropdown-email">{user.email}</span>
+                                    </div>
+
+                                    <div className="app-header__dropdown-sep" />
+
+                                    <PreferencesPanel inline />
+
+                                    <div className="app-header__dropdown-sep" />
+
+                                    <Tooltip content={t('common.sign_out')} side="left">
+                                        <Button variant="ghost" className="app-header__dropdown-logout" onClick={handleLogout} aria-label={t('common.sign_out')}>
+                                            <LogOut size={14} strokeWidth={1.75} />
+                                            {t('common.sign_out')}
+                                        </Button>
+                                    </Tooltip>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </>
+                ) : (
+                    <Link to={ROUTES.LOGIN} className="app-header__sign-in-btn">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={<LogIn size={14} strokeWidth={2} />}
+                        >
+                            {t('auth.sign_in')}
+                        </Button>
+                    </Link>
+                )}
             </div>
 
         </header>

@@ -382,3 +382,7 @@
         padding: 0 10px;
     }
 }
+
+.app-header__sign-in-btn {
+    text-decoration: none;
+}

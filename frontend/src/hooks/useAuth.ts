@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from '@store';
-import { signInThunk, signOutThunk, authActions } from '@store/authSlice';
+import { signInThunk, signOutThunk, signUpThunk, authActions } from '@store/authSlice';
 import type { User } from '@api';
 
 export type { User };
@@ -12,6 +12,10 @@ export function useAuth() {
         await dispatch(signInThunk({ email, password })).unwrap();
     }
 
+    async function signUp(name: string, email: string, password: string, passwordConfirmation: string): Promise<void> {
+        await dispatch(signUpThunk({ name, email, password, password_confirmation: passwordConfirmation })).unwrap();
+    }
+
     async function signOut(): Promise<void> {
         await dispatch(signOutThunk()).unwrap();
     }
@@ -20,5 +24,5 @@ export function useAuth() {
         dispatch(authActions.updateProfile({ name, bio }));
     }
 
-    return { user, loading, sessionError, signIn, signOut, updateProfile };
+    return { user, loading, sessionError, signIn, signUp, signOut, updateProfile };
 }
