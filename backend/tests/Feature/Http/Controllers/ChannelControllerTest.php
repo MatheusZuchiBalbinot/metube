@@ -50,4 +50,28 @@ describe('ChannelController', function () {
         $response->assertNoContent();
         expect($subscriber->subscriptions()->where('channel_id', $channel->id)->exists())->toBeFalse();
     });
+
+    test('show returns 401 for unauthenticated request', function () {
+        $channel = User::factory()->create();
+        $response = $this->getJson("/api/channels/{$channel->uuid}");
+        $response->assertUnauthorized();
+    });
+
+    test('videos returns 401 for unauthenticated request', function () {
+        $channel = User::factory()->create();
+        $response = $this->getJson("/api/channels/{$channel->uuid}/videos");
+        $response->assertUnauthorized();
+    });
+
+    test('show returns 404 for non-existent channel', function () {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->getJson('/api/channels/00000000-0000-0000-0000-000000000000');
+        $response->assertNotFound();
+    });
+
+    test('toggle subscription returns 401 for unauthenticated request', function () {
+        $channel = User::factory()->create();
+        $response = $this->postJson("/api/channels/{$channel->uuid}/subscription");
+        $response->assertUnauthorized();
+    });
 });

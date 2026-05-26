@@ -275,4 +275,138 @@ describe('VideoController', function () {
             'status' => TranscriptionStatus::PENDING->value,
         ]);
     });
+
+    test('index returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/videos');
+        $response->assertUnauthorized();
+    });
+
+    test('show returns 401 for unauthenticated request', function () {
+        $video = Video::factory()->create(['status' => VideoStatus::PUBLISHED]);
+        $response = $this->getJson("/api/videos/{$video->vuid}");
+        $response->assertUnauthorized();
+    });
+
+    test('show returns 404 for non-existent video', function () {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->getJson('/api/videos/nonexistent-vuid');
+        $response->assertNotFound();
+    });
+
+    test('update returns 401 for unauthenticated request', function () {
+        $video = Video::factory()->create();
+        $response = $this->patchJson("/api/videos/{$video->vuid}", ['title' => 'X']);
+        $response->assertUnauthorized();
+    });
+
+    test('update returns 403 when non-owner tries to edit', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->for($owner, 'channel')->create();
+
+        $response = $this->actingAs($other)->patchJson("/api/videos/{$video->vuid}", [
+            'title' => 'Hijacked',
+        ]);
+
+        $response->assertForbidden();
+    });
+
+    test('update returns 404 for non-existent video', function () {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->patchJson('/api/videos/nonexistent-vuid', ['title' => 'X']);
+        $response->assertNotFound();
+    });
+
+    test('destroy returns 401 for unauthenticated request', function () {
+        $video = Video::factory()->create();
+        $response = $this->deleteJson("/api/videos/{$video->vuid}");
+        $response->assertUnauthorized();
+    });
+
+    test('destroy returns 403 when non-owner tries to delete', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->for($owner, 'channel')->create();
+
+        $response = $this->actingAs($other)->deleteJson("/api/videos/{$video->vuid}");
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('videos', ['id' => $video->id]);
+    });
+
+    test('destroy returns 404 for non-existent video', function () {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->deleteJson('/api/videos/nonexistent-vuid');
+        $response->assertNotFound();
+    });
+
+    test('store returns 422 when title is missing', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/videos', [
+            'status' => 'draft',
+            'upload_key' => 'some-key',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['title']);
+    });
+
+    test('store returns 422 when status is invalid', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/videos', [
+            'title' => 'Test',
+            'status' => 'invalid-status',
+            'upload_key' => 'some-key',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['status']);
+    });
+
+    test('store returns 422 when neither video_file nor upload_key provided', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/videos', [
+            'title' => 'Test',
+            'status' => 'draft',
+        ]);
+
+        $response->assertUnprocessable();
+    });
+
+    test('updateProgress returns 422 when percent exceeds 100', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+
+        $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", [
+            'percent' => 101,
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['percent']);
+    });
+
+    test('updateProgress returns 422 when percent is negative', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+
+        $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", [
+            'percent' => -1,
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['percent']);
+    });
+
+    test('updateProgress returns 422 when percent is missing', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->create();
+
+        $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", []);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['percent']);
+    });
 });

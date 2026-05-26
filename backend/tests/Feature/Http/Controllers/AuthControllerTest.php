@@ -145,4 +145,50 @@ describe('AuthController', function () {
 
         $response->assertUnauthorized();
     });
+
+    test('login returns 422 when email is missing', function () {
+        $response = $this->postJson('/api/sessions', [
+            'password' => 'password123',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['email']);
+    });
+
+    test('login returns 422 when password is missing', function () {
+        $response = $this->postJson('/api/sessions', [
+            'email' => 'user@example.com',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['password']);
+    });
+
+    test('login returns 422 when email format is invalid', function () {
+        $response = $this->postJson('/api/sessions', [
+            'email' => 'not-an-email',
+            'password' => 'password123',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['email']);
+    });
+
+    test('login returns 429 after too many attempts from same IP', function () {
+        $user = User::factory()->create(['password' => bcrypt('password123')]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/sessions', [
+                'email' => $user->email,
+                'password' => 'wrongpassword',
+            ]);
+        }
+
+        $response = $this->postJson('/api/sessions', [
+            'email' => $user->email,
+            'password' => 'wrongpassword',
+        ]);
+
+        $response->assertStatus(429);
+    });
 });
