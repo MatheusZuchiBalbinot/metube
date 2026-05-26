@@ -235,4 +235,34 @@ describe('UserController', function () {
         $response->assertOk();
         $response->assertJson(['data' => []]);
     });
+
+    test('likes returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/users/me/likes');
+        $response->assertUnauthorized();
+    });
+
+    test('saved returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/users/me/saved');
+        $response->assertUnauthorized();
+    });
+
+    test('subscriptions returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/users/me/subscriptions');
+        $response->assertUnauthorized();
+    });
+
+    test('progress returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/users/me/progress');
+        $response->assertUnauthorized();
+    });
+
+    test('history returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/users/me/history');
+        $response->assertUnauthorized();
+    });
+
+    test('clearHistory returns 401 for unauthenticated request', function () {
+        $response = $this->deleteJson('/api/users/me/history');
+        $response->assertUnauthorized();
+    });
 });

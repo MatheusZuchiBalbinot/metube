@@ -191,4 +191,62 @@ describe('PlaylistController', function () {
 
         $response->assertForbidden();
     });
+
+    test('index returns 401 for unauthenticated request', function () {
+        $response = $this->getJson('/api/playlists');
+        $response->assertUnauthorized();
+    });
+
+    test('store returns 401 for unauthenticated request', function () {
+        $response = $this->postJson('/api/playlists', ['name' => 'Test']);
+        $response->assertUnauthorized();
+    });
+
+    test('store returns 422 when name is missing', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/playlists', []);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['name']);
+    });
+
+    test('store returns 422 when name exceeds 255 characters', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/playlists', [
+            'name' => str_repeat('a', 256),
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['name']);
+    });
+
+    test('update returns 401 for unauthenticated request', function () {
+        $user = User::factory()->create();
+        $playlist = Playlist::factory()->for($user)->create();
+
+        $response = $this->patchJson("/api/playlists/{$playlist->puid}", ['name' => 'New Name']);
+
+        $response->assertUnauthorized();
+    });
+
+    test('update returns 422 when name is missing', function () {
+        $user = User::factory()->create();
+        $playlist = Playlist::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->patchJson("/api/playlists/{$playlist->puid}", []);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['name']);
+    });
+
+    test('destroy returns 401 for unauthenticated request', function () {
+        $user = User::factory()->create();
+        $playlist = Playlist::factory()->for($user)->create();
+
+        $response = $this->deleteJson("/api/playlists/{$playlist->puid}");
+
+        $response->assertUnauthorized();
+    });
 });
