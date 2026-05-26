@@ -7,7 +7,7 @@ import TagBadge from '@components/tag/badge';
 import { Avatar } from '@ui';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { Format, TagColors, ROUTES, formatRelativeDate, cn } from '@utils';
+import { Format, ROUTES, formatRelativeDate, cn } from '@utils';
 import type { Video, VideoId } from '@models';
 import type { VideoTranscription } from '@api';
 import ShareMenu from './ShareMenu';

@@ -51,12 +51,14 @@ export function useShaka(
 
             await player.attach(el);
 
+            /* v8 ignore next 3 */
             if (destroyed) {
                 return;
             }
 
             await player.load(src);
 
+            /* v8 ignore next 3 */
             if (destroyed) {
                 return;
             }

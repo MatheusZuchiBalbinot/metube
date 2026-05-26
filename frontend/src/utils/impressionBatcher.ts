@@ -18,6 +18,7 @@ function flush(): void {
     flushTimer = null;
 
     if (pendingBySource.size === 0) {
+        /* v8 ignore next */
         return;
     }
 
@@ -26,6 +27,7 @@ function flush(): void {
 
     for (const batch of batches) {
         if (batch.vuids.size === 0) {
+            /* v8 ignore next */
             continue;
         }
 

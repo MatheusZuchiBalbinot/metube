@@ -155,3 +155,34 @@ describe('VideoFilter.apply — sortBy', () => {
         expect(result.map(v => v.id)).toEqual(['a', 'b', 'c']);
     });
 });
+
+describe('VideoFilter.isEmpty', () => {
+    it('returns true for the default empty state', () => {
+        expect(VideoFilter.isEmpty(VideoFilter.emptyState())).toBe(true);
+    });
+
+    it('returns false when a tag is set', () => {
+        const state = { ...VideoFilter.emptyState(), tags: ['react'] as unknown as never };
+        expect(VideoFilter.isEmpty(state)).toBe(false);
+    });
+
+    it('returns false when a year is set', () => {
+        const state = { ...VideoFilter.emptyState(), year: 2024 };
+        expect(VideoFilter.isEmpty(state)).toBe(false);
+    });
+
+    it('returns false when a dateFrom is set', () => {
+        const state = { ...VideoFilter.emptyState(), dateFrom: '2024-01-01' };
+        expect(VideoFilter.isEmpty(state)).toBe(false);
+    });
+
+    it('returns false when a dateTo is set', () => {
+        const state = { ...VideoFilter.emptyState(), dateTo: '2024-12-31' };
+        expect(VideoFilter.isEmpty(state)).toBe(false);
+    });
+
+    it('returns false when sortBy is not RECENT', () => {
+        const state = { ...VideoFilter.emptyState(), sortBy: SortBy.VIEWS };
+        expect(VideoFilter.isEmpty(state)).toBe(false);
+    });
+});

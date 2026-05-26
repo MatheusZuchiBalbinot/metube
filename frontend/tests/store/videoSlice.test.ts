@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import videoSlice, { videoActions } from '@store/videoSlice';
-import type { Video, VideoId } from '@models/video';
+import type { Video, VideoId, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
+import type { Vuid } from '@api';
 
 // ─── Brand cast helpers ───────────────────────────────────────────────────────
 
@@ -53,6 +54,68 @@ function makeState(overrides: object = {}) {
         ...overrides,
     };
 }
+
+// ─── updateVideoStatus ────────────────────────────────────────────────────────
+
+describe('videoSlice — updateVideoStatus', () => {
+    it('updates the status of a matching video', () => {
+        const vuid = (s: string) => s as unknown as Vuid;
+        const state = makeState({ videos: [makeVideo({ id: vid('v1'), status: 'published' })] });
+        const next = reducer(state, videoActions.updateVideoStatus({ vuid: vuid('v1'), status: 'processing' as VideoStatus }));
+        expect(next.videos[0].status).toBe('processing');
+    });
+
+    it('sets lastVideoStatusUpdate regardless of whether video is found', () => {
+        const vuid = (s: string) => s as unknown as Vuid;
+        const state = makeState();
+        const next = reducer(state, videoActions.updateVideoStatus({ vuid: vuid('vXX'), status: 'published' as VideoStatus }));
+        expect(next.lastVideoStatusUpdate?.vuid).toBe('vXX');
+    });
+});
+
+// ─── updateVideo ─────────────────────────────────────────────────────────────
+
+describe('videoSlice — updateVideo', () => {
+    it('replaces the matching video entirely', () => {
+        const state = makeState({ videos: [makeVideo({ id: vid('v1'), title: 'Old' })] });
+        const next = reducer(state, videoActions.updateVideo(makeVideo({ id: vid('v1'), title: 'New' })));
+        expect(next.videos[0].title).toBe('New');
+    });
+
+    it('does nothing when video id is not found', () => {
+        const state = makeState();
+        const next = reducer(state, videoActions.updateVideo(makeVideo({ id: vid('vXX'), title: 'Ghost' })));
+        expect(next.videos).toHaveLength(state.videos.length);
+    });
+});
+
+// ─── cross-tab sync reducers ──────────────────────────────────────────────────
+
+describe('videoSlice — xTab reducers', () => {
+    it('xTabSetLikedVideos replaces likedVideos', () => {
+        const state = makeState({ likedVideos: [vid('old')] });
+        const next = reducer(state, videoActions.xTabSetLikedVideos([vid('v1'), vid('v2')]));
+        expect(next.likedVideos).toEqual([vid('v1'), vid('v2')]);
+    });
+
+    it('xTabSetDislikedVideos replaces dislikedVideos', () => {
+        const state = makeState({ dislikedVideos: [vid('old')] });
+        const next = reducer(state, videoActions.xTabSetDislikedVideos([vid('vD')]));
+        expect(next.dislikedVideos).toEqual([vid('vD')]);
+    });
+
+    it('xTabSetPinnedVideoId sets pinnedVideoId', () => {
+        const state = makeState();
+        const next = reducer(state, videoActions.xTabSetPinnedVideoId(vid('vP')));
+        expect(next.pinnedVideoId).toBe(vid('vP'));
+    });
+
+    it('xTabSetPinnedVideoId accepts null', () => {
+        const state = makeState({ pinnedVideoId: vid('v1') });
+        const next = reducer(state, videoActions.xTabSetPinnedVideoId(null));
+        expect(next.pinnedVideoId).toBeNull();
+    });
+});
 
 // ─── deleteVideo ──────────────────────────────────────────────────────────────
 
@@ -473,5 +536,42 @@ describe('videoSlice — setRecommendationsLoading', () => {
         const state = makeState();
         const next = reducer(state, videoActions.setRecommendationsLoading(true));
         expect(next.recommendationsLoading).toBe(true);
+    });
+});
+
+// ─── initialState from localStorage ──────────────────────────────────────────
+
+describe('videoSlice — initialState from localStorage', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.resetModules();
+    });
+
+    it('reads pinnedVideoId from localStorage when set', async () => {
+        localStorage.setItem('vidsum:pinned-video', 'vid-pinned');
+        const { default: slice } = await import('@store/videoSlice');
+        expect(slice.getInitialState().pinnedVideoId).toBe('vid-pinned');
+    });
+
+    it('boolean validator passes for a valid stored boolean', async () => {
+        localStorage.setItem('vidsum:autoplay', 'false');
+        const { default: slice } = await import('@store/videoSlice');
+        expect(slice.getInitialState().autoplay).toBe(false);
+    });
+
+    it('boolean validator rejects a non-boolean and resets to seed', async () => {
+        localStorage.setItem('vidsum:autoplay', '"not-a-bool"');
+        const { default: slice } = await import('@store/videoSlice');
+        expect(slice.getInitialState().autoplay).toBe(true);
+    });
+
+    it('shortsMuted boolean validator passes for stored false', async () => {
+        localStorage.setItem('vidsum:shorts-muted', 'false');
+        const { default: slice } = await import('@store/videoSlice');
+        expect(slice.getInitialState().shortsMuted).toBe(false);
     });
 });

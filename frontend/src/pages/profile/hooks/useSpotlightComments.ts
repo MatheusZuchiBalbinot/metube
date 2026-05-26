@@ -8,7 +8,6 @@ export function useSpotlightComments(featuredId: VideoId | null): Comment[] {
 
     useEffect(() => {
         if (featuredId === null) {
-            setSpotlightComments([]);
             return;
         }
 
@@ -17,6 +16,10 @@ export function useSpotlightComments(featuredId: VideoId | null): Comment[] {
                 setSpotlightComments(res.data.data.slice(0, 2));
             }
         });
+
+        return () => {
+            setSpotlightComments([]);
+        };
     }, [featuredId]);
 
     return spotlightComments;

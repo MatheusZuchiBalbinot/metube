@@ -141,6 +141,14 @@ describe('commentSlice — addComment', () => {
         const next = reducer(state, commentActions.addComment({ vuid: vuid('v-1'), comment: c1 }));
         expect(next.byId['c-1']).toEqual(c1);
     });
+
+    it('increments pagination total when pagination exists for the video', () => {
+        const c1 = makeComment({ id: cuid('c-1') });
+        const paginationBefore = { currentPage: 1, lastPage: 1, total: 5 };
+        const state = makeState({ pagination: { 'v-1': paginationBefore } });
+        const next = reducer(state, commentActions.addComment({ vuid: vuid('v-1'), comment: c1 }));
+        expect(next.pagination['v-1'].total).toBe(6);
+    });
 });
 
 // ─── addReply ─────────────────────────────────────────────────────────────────
@@ -216,6 +224,13 @@ describe('commentSlice — removeComment', () => {
         const state = makeState({ byId: { 'c-1': c1 }, byVideo: { 'v-1': ['c-1', 'c-2'] } });
         const next = reducer(state, commentActions.removeComment({ cuid: cuid('c-1'), vuid: vuid('v-1') }));
         expect(next.byVideo['v-1']).toEqual(['c-2']);
+    });
+
+    it('handles remove when byVideo has no entry for the given vuid', () => {
+        const c1 = makeComment({ id: cuid('c-1') });
+        const state = makeState({ byId: { 'c-1': c1 } });
+        const next = reducer(state, commentActions.removeComment({ cuid: cuid('c-1'), vuid: vuid('v-empty') }));
+        expect(next.byVideo['v-empty']).toEqual([]);
     });
 
     it('removes the reply id from repliesById and decrements parent replyCount', () => {

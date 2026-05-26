@@ -1,7 +1,18 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import authSlice, { authActions, fetchMe, signInThunk, signOutThunk } from '@store/authSlice';
 import type { User } from '@models/user';
+
+vi.mock('@api/auth', () => ({
+    auth: {
+        getCsrfCookie: vi.fn().mockResolvedValue(undefined),
+        me: vi.fn(),
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
+    },
+}));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -127,8 +138,9 @@ describe('authSlice — signOutThunk', () => {
 // ─── signUpThunk ──────────────────────────────────────────────────────────────
 
 import { signUpThunk } from '@store/authSlice';
+import { auth } from '@api/auth';
 
-describe('authSlice — signUpThunk', () => {
+describe('authSlice — signUpThunk (reducer)', () => {
     it('sets user on fulfilled', () => {
         const user = makeUser();
         const state = makeState();
@@ -140,5 +152,62 @@ describe('authSlice — signUpThunk', () => {
         }));
         expect(next.user).toEqual(user);
         expect(next.sessionError).toBeNull();
+    });
+});
+
+describe('authSlice — fetchMe (execution)', () => {
+    it('sets user when me() returns ok:true', async () => {
+        const user = makeUser({ name: 'Logged' });
+        vi.mocked(auth.me).mockResolvedValue({ ok: true, data: user } as never);
+
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        await store.dispatch(fetchMe());
+
+        expect(store.getState().auth.user).toEqual(user);
+        expect(store.getState().auth.loading).toBe(false);
+    });
+
+    it('sets user to null when me() returns ok:false', async () => {
+        vi.mocked(auth.me).mockResolvedValue({ ok: false, error: 'Unauthenticated' } as never);
+
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        await store.dispatch(fetchMe());
+
+        expect(store.getState().auth.user).toBeNull();
+        expect(store.getState().auth.loading).toBe(false);
+    });
+});
+
+describe('authSlice — signUpThunk (execution)', () => {
+    it('calls register and sets user in the store on success', async () => {
+        const user = makeUser({ name: 'Bob' });
+        vi.mocked(auth.register).mockResolvedValue({ ok: true, data: { user } } as never);
+
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        await store.dispatch(signUpThunk({
+            name: 'Bob',
+            email: 'bob@example.com',
+            password: 'pass123',
+            password_confirmation: 'pass123',
+        }));
+
+        expect(auth.getCsrfCookie).toHaveBeenCalled();
+        expect(auth.register).toHaveBeenCalled();
+        expect(store.getState().auth.user).toEqual(user);
+    });
+
+    it('throws when register returns ok:false', async () => {
+        vi.mocked(auth.register).mockResolvedValue({ ok: false, error: 'Email taken' } as never);
+
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        const result = await store.dispatch(signUpThunk({
+            name: 'Bob',
+            email: 'bob@example.com',
+            password: 'pass123',
+            password_confirmation: 'pass123',
+        }));
+
+        expect(result.type).toBe('auth/signUp/rejected');
+        expect(store.getState().auth.user).toBeNull();
     });
 });

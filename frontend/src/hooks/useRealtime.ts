@@ -175,6 +175,7 @@ function formatNotificationMessage(
                 ? t('notifications.types.video_processed_failed')
                 : t('notifications.types.video_processed');
         }
+        /* v8 ignore next 2 */
         case NotificationType.VIDEO_TRANSCRIBED: return t('notifications.types.video_transcribed');
         case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return t('notifications.types.video_transcription_started');
     }

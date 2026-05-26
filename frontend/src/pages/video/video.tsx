@@ -60,7 +60,9 @@ export default function VideoPage() {
 
     useViewTracking(id, hasVideo, watchVideo);
     useSkipAnalytics(id, currentPercent);
-    useEffect(() => { closeMiniPlayer(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        closeMiniPlayer();
+    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const { autoplayCountdown, startAutoplayCountdown, cancelAutoplay } = useAutoplay({ id, autoplay, relatedVideos });
     const {
@@ -105,7 +107,9 @@ export default function VideoPage() {
     const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
 
     function handleRetryTranscription() {
-        if (!video) { return; }
+        if (!video) {
+            return;
+        }
         const vuid = toVuid(video.id);
         videoApi.retryTranscription(vuid).then(didSucceed => {
             if (!didSucceed) {

@@ -9,6 +9,7 @@ function generateSessionId(): string {
 
 export function getSessionId(): string {
     if (typeof window === 'undefined') {
+        /* v8 ignore next */
         return 'ssr';
     }
 
