@@ -56,13 +56,13 @@ describe('useBootstrap', () => {
         vi.mocked(history.progress).mockResolvedValue(null as Awaited<ReturnType<typeof history.progress>>);
     });
 
-    it('does nothing when no user is authenticated', async () => {
+    it('fetches public videos but skips user-specific data when no user is authenticated', async () => {
         const store = makeStore(null);
         renderHook(() => useBootstrap(), { wrapper: makeWrapper(store) });
 
         await new Promise(res => setTimeout(res, 10));
 
-        expect(videoApi.list).not.toHaveBeenCalled();
+        expect(videoApi.list).toHaveBeenCalledWith({ status: 'published' });
         expect(interactions.liked).not.toHaveBeenCalled();
         expect(playlist.list).not.toHaveBeenCalled();
         expect(history.progress).not.toHaveBeenCalled();

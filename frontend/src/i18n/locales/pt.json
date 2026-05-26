@@ -32,6 +32,8 @@
         "session_expired": "Sua sessão expirou. Por favor, entre novamente.",
         "forgot_password": "Esqueceu a senha?",
         "no_account": "Não tem uma conta?",
+        "have_account": "Já tem uma conta?",
+        "continue_as_guest": "Continuar como visitante",
         "signup": {
             "title": "Criar conta",
             "subtitle": "Junte-se ao Vidsum para assistir e enviar vídeos",

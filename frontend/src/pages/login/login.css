@@ -1,4 +1,4 @@
-/* ─── Login page ─────────────────────────────────────────────────────────── */
+/* ─── Login / Signup pages ───────────────────────────────────────────────── */
 
 .login-bg {
     min-height: 100dvh;
@@ -17,80 +17,197 @@
     position: absolute;
     border-radius: 50%;
     pointer-events: none;
-    filter: blur(100px);
 }
 
 .login-bg::before {
-    width: 700px; height: 700px;
-    top: -200px; left: -100px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%);
-    filter: blur(80px);
+    width: 800px; height: 800px;
+    top: -300px; left: -180px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 65%);
+    filter: blur(72px);
 }
 
 .login-bg::after {
-    width: 600px; height: 600px;
-    bottom: -180px; right: -80px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 70%);
-    filter: blur(80px);
+    width: 700px; height: 700px;
+    bottom: -260px; right: -140px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 13%, transparent), transparent 65%);
+    filter: blur(72px);
 }
 
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+
 .login-card {
-    position: relative; z-index: 1;
-    width: 100%; max-width: 420px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border);
-    border-top: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    border-top: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
     border-radius: var(--radius-xl);
-    padding: 44px 40px 40px;
-    box-shadow: 0 0 0 1px var(--border), 0 40px 100px var(--shadow-lg);
-    animation: modal-in 0.22s var(--ease-out) both;
+    padding: 56px 48px 48px;
+    box-shadow: 0 0 0 1px var(--border), 0 48px 120px var(--shadow-lg);
+    animation: modal-in 0.25s var(--ease-out) both;
 }
 
 :root[data-mode='light'] .login-card {
     background: var(--surface);
     backdrop-filter: none;
-    box-shadow: 0 2px 8px var(--shadow), 0 16px 48px var(--shadow);
+    border-top: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow: 0 4px 16px var(--shadow), 0 24px 64px var(--shadow);
+}
+
+/* ─── Header (logo + title + subtitle) ──────────────────────────────────── */
+
+.login-header {
+    margin-bottom: 40px;
 }
 
 .login-logo-mark {
-    width: 52px; height: 52px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px var(--accent-glow);
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: var(--gradient-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent),
+        0 12px 40px var(--accent-glow);
 }
 
 .login-title {
-    font-size: 1.375rem; font-weight: 700;
-    letter-spacing: -0.03em; color: var(--text);
-    margin-bottom: 6px; line-height: 1.2;
+    font-size: 1.625rem;
+    font-weight: var(--font-bold);
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    color: var(--text);
+    background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .login-subtitle {
-    font-size: 0.875rem; color: var(--text-2); margin-bottom: 32px;
+    font-size: var(--text-base);
+    color: var(--text-2);
+    line-height: var(--leading-relaxed);
 }
 
+/* ─── Error / success banner ─────────────────────────────────────────────── */
+
 .login-error {
-    display: flex; align-items: flex-start; gap: 10px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    color: #f87171;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--color-error-subtle);
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+    color: var(--color-error-fg);
     border-radius: var(--radius-sm);
-    padding: 11px 14px; font-size: 0.8125rem;
-    margin-bottom: 20px; line-height: 1.45;
+    padding: 12px 14px;
+    font-size: var(--text-sm);
+    margin-bottom: 4px;
+    line-height: var(--leading-relaxed);
 }
 
 :root[data-mode='light'] .login-error {
-    color: #dc2626;
-    background: rgba(220, 38, 38, 0.06);
-    border-color: rgba(220, 38, 38, 0.2);
+    color: var(--color-error);
 }
+
+.login-error__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.login-error--success {
+    background: var(--color-success-subtle);
+    border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+    color: var(--color-success-fg);
+}
+
+:root[data-mode='light'] .login-error--success {
+    color: var(--color-success);
+}
+
+/* ─── Form ───────────────────────────────────────────────────────────────── */
 
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
+}
+
+.login-password-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-forgot-link {
+    font-size: var(--text-sm);
+    color: var(--text-2);
+    text-decoration: none;
+    align-self: flex-end;
+    transition: color var(--duration-default);
+}
+
+.login-forgot-link:hover {
+    color: var(--accent);
+}
+
+.login-submit {
+    margin-top: 4px;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+
+.login-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.login-footer__text {
+    font-size: var(--text-sm);
+    color: var(--text-2);
+    margin: 0;
+}
+
+.login-footer__link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: var(--font-medium);
+}
+
+.login-footer__link:hover {
+    text-decoration: underline;
+}
+
+.login-divider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-3);
+    font-size: var(--text-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.login-guest-btn {
+    width: 100%;
+    color: var(--text-2);
 }
