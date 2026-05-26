@@ -124,7 +124,7 @@ export default function LoginPage() {
                             {t('auth.signup.title')}
                         </Link>
                     </p>
-                    <div className="login-divider">{t('common.or', 'or')}</div>
+                    <div className="login-divider">{t('common.or')}</div>
                     <Button
                         type="button"
                         variant="ghost"

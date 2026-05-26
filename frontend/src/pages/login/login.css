@@ -46,7 +46,7 @@
     border: 1px solid var(--border);
     border-top: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
     border-radius: var(--radius-xl);
-    padding: 56px 48px 48px;
+    padding: 40px 36px 36px;
     box-shadow: 0 0 0 1px var(--border), 0 48px 120px var(--shadow-lg);
     animation: modal-in 0.25s var(--ease-out) both;
 }
@@ -61,7 +61,7 @@
 /* ─── Header (logo + title + subtitle) ──────────────────────────────────── */
 
 .login-header {
-    margin-bottom: 40px;
+    margin-bottom: 28px;
 }
 
 .login-logo-mark {
@@ -72,7 +72,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     box-shadow:
         0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent),
         0 12px 40px var(--accent-glow);
@@ -137,7 +137,7 @@
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .login-password-row {
@@ -168,8 +168,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    margin-top: 28px;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .login-footer__text {
