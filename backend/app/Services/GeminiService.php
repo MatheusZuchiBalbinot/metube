@@ -41,7 +41,7 @@ class GeminiService
     {
         $url = "{$this->baseUrl}/{$this->model}:generateContent";
 
-        $response = Http::withToken($this->apiKey)
+        $response = Http::withQueryParameters(['key' => $this->apiKey])
             ->timeout(60)
             ->post($url, [
                 'contents' => [

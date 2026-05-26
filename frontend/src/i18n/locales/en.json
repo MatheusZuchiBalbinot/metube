@@ -18,7 +18,8 @@
         "not_found_title": "404",
         "not_found_message": "This page does not exist.",
         "go_home": "Go home",
-        "dismiss": "Dismiss"
+        "dismiss": "Dismiss",
+        "or": "or"
     },
     "auth": {
         "sign_in": "Sign In",

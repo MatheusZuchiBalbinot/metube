@@ -34,8 +34,8 @@ describe('AiSuggestionReady', function () {
 
         $channel = $event->broadcastOn();
 
-        expect($channel)->toBeInstanceOf(Channel::class)
-            ->and($channel->name)->toBe("users.{$user->uuid}");
+        expect($channel)->toBeInstanceOf(PrivateChannel::class)
+            ->and($channel->name)->toContain($user->uuid);
     });
 
     test('broadcastWith contains vuid and title', function () {
