@@ -12,3 +12,5 @@ docker-compose.override.yml
 .claude/settings.local.json
 
 frontend/coverage/
+
+todo.md
