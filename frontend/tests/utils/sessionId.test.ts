@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getSessionId } from '@utils/sessionId';
 
 describe('getSessionId', () => {
@@ -30,14 +30,18 @@ describe('getSessionId', () => {
 });
 
 describe('getSessionId — crypto fallback', () => {
-    it('falls back to manual id when crypto.randomUUID is not available', () => {
-        const originalUUID = crypto.randomUUID;
-        // @ts-expect-error — intentionally removing for test
-        delete crypto.randomUUID;
+    it('falls back to manual id when crypto.randomUUID is not available', async () => {
+        const orig = crypto.randomUUID;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (crypto as any).randomUUID;
         window.sessionStorage.clear();
-        const id = getSessionId();
+
+        vi.resetModules();
+        const { getSessionId: fresh } = await import('@utils/sessionId');
+        const id = fresh();
+
         expect(id.length).toBeGreaterThan(0);
-        // Restore
-        crypto.randomUUID = originalUUID;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (crypto as any).randomUUID = orig;
     });
 });

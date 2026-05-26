@@ -111,6 +111,12 @@ describe('playlistSlice — removeVideoFromPlaylist', () => {
         const next = reducer(state, playlistActions.removeVideoFromPlaylist({ playlistId: 'pl-1', videoId: 'v1' }));
         expect(next.playlists[0].videoIds).toEqual(['v2']);
     });
+
+    it('does nothing when playlist not found', () => {
+        const state = makeState([makePlaylist({ id: 'pl-1', videoIds: ['v1'] })]);
+        const next = reducer(state, playlistActions.removeVideoFromPlaylist({ playlistId: 'pl-99', videoId: 'v1' }));
+        expect(next.playlists[0].videoIds).toEqual(['v1']);
+    });
 });
 
 // ─── reorderVideosInPlaylist ──────────────────────────────────────────────────
@@ -120,6 +126,12 @@ describe('playlistSlice — reorderVideosInPlaylist', () => {
         const state = makeState([makePlaylist({ id: 'pl-1', videoIds: ['v1', 'v2', 'v3'] })]);
         const next = reducer(state, playlistActions.reorderVideosInPlaylist({ playlistId: 'pl-1', videoIds: ['v3', 'v1', 'v2'] }));
         expect(next.playlists[0].videoIds).toEqual(['v3', 'v1', 'v2']);
+    });
+
+    it('does nothing when playlist not found', () => {
+        const state = makeState([makePlaylist({ id: 'pl-1', videoIds: ['v1'] })]);
+        const next = reducer(state, playlistActions.reorderVideosInPlaylist({ playlistId: 'pl-99', videoIds: ['v2'] }));
+        expect(next.playlists[0].videoIds).toEqual(['v1']);
     });
 });
 

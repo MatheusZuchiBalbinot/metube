@@ -158,4 +158,16 @@ describe('useInView — cleanup', () => {
 
         expect(mockHandle.disconnected).toBe(true);
     });
+
+    it('unobserves the element after first intersection when once = true', () => {
+        const { result } = renderHook(() => useInViewWithElement({ once: true }));
+        const el = result.current.ref.current;
+
+        act(() => {
+            mockHandle.trigger(true);
+        });
+
+        expect(mockHandle.unobserved).toBe(el);
+    });
 });
+

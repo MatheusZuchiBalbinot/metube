@@ -51,4 +51,38 @@ describe('impressionBatcher', () => {
 
         expect(analytics.impressions).toHaveBeenCalledTimes(2);
     });
+
+    it('flushes immediately when batch reaches MAX_BATCH (50)', () => {
+        for (let i = 0; i < 50; i++) {
+            reportImpression(`v-${i}` as unknown as Vuid, AnalyticsSource.HOME);
+        }
+
+        expect(analytics.impressions).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not double-flush when called again before the debounce fires', () => {
+        reportImpression('x1' as unknown as Vuid, AnalyticsSource.HOME);
+        reportImpression('x2' as unknown as Vuid, AnalyticsSource.HOME);
+
+        vi.advanceTimersByTime(1000);
+        expect(analytics.impressions).toHaveBeenCalledTimes(1);
+
+        // No new impressions, no extra flush
+        vi.advanceTimersByTime(5000);
+        expect(analytics.impressions).toHaveBeenCalledTimes(1);
+    });
+
+    it('resetImpressionBatcher cancels pending flush and clears reported keys', () => {
+        reportImpression('reset-1' as unknown as Vuid, AnalyticsSource.HOME);
+        resetImpressionBatcher();
+        vi.advanceTimersByTime(1000);
+
+        expect(analytics.impressions).not.toHaveBeenCalled();
+
+        // After reset, the same vuid should be reportable again
+        reportImpression('reset-1' as unknown as Vuid, AnalyticsSource.HOME);
+        vi.advanceTimersByTime(1000);
+
+        expect(analytics.impressions).toHaveBeenCalledTimes(1);
+    });
 });

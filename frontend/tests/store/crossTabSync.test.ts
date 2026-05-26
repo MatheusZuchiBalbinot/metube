@@ -112,6 +112,15 @@ describe('crossTabSync', () => {
                 videoActions.xTabSetLikedVideos(expect.arrayContaining(['v-liked'])),
             );
         });
+
+        it('ignores a malformed JSON value', () => {
+            fireStorageEvent(STORAGE_KEYS.LIKED_VIDEOS, 'not-json{{{');
+
+            const calls = (dispatch as ReturnType<typeof vi.fn>).mock.calls.filter(
+                ([action]: [{ type: string }]) => action.type === 'video/xTabSetLikedVideos',
+            );
+            expect(calls).toHaveLength(0);
+        });
     });
 
     describe('disliked videos', () => {
@@ -121,6 +130,15 @@ describe('crossTabSync', () => {
             expect(dispatch).toHaveBeenCalledWith(
                 videoActions.xTabSetDislikedVideos(expect.arrayContaining(['v-dis'])),
             );
+        });
+
+        it('ignores a malformed JSON value', () => {
+            fireStorageEvent(STORAGE_KEYS.DISLIKED_VIDEOS, 'not-json{{{');
+
+            const calls = (dispatch as ReturnType<typeof vi.fn>).mock.calls.filter(
+                ([action]: [{ type: string }]) => action.type === 'video/xTabSetDislikedVideos',
+            );
+            expect(calls).toHaveLength(0);
         });
     });
 
@@ -213,6 +231,16 @@ describe('crossTabSync', () => {
 
         it('does not dispatch for WATCH_HISTORY when newValue is null', () => {
             fireStorageEvent(STORAGE_KEYS.WATCH_HISTORY, null);
+
+            expect(dispatch).not.toHaveBeenCalled();
+        });
+    });
+
+    // ─── Null event key ───────────────────────────────────────────────────────
+
+    describe('null event key', () => {
+        it('does not dispatch when event key is null (localStorage.clear() case)', () => {
+            window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: 'some-value' }));
 
             expect(dispatch).not.toHaveBeenCalled();
         });

@@ -173,4 +173,101 @@ describe('usePlaylist', () => {
             expect(ids).not.toContain('pl-b');
         });
     });
+
+    describe('error toasts', () => {
+        it('createPlaylist shows a toast and returns null when API fails', async () => {
+            vi.mocked(playlistApi.create).mockResolvedValue(fail());
+            const store = makeStore();
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            let returned: unknown;
+            await act(async () => {
+                returned = await result.current.createPlaylist('Nope');
+            });
+
+            expect(returned).toBeNull();
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+
+        it('renamePlaylist shows a toast when API fails', async () => {
+            vi.mocked(playlistApi.update).mockResolvedValue(fail());
+            const pl = makePlaylist({ id: pid('pl-r') });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.renamePlaylist(pid('pl-r'), 'New');
+            });
+
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+
+        it('deletePlaylist shows a toast when API fails', async () => {
+            vi.mocked(playlistApi.delete).mockResolvedValue(fail());
+            const pl = makePlaylist({ id: pid('pl-d') });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.deletePlaylist(pid('pl-d'));
+            });
+
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+
+        it('addVideoToPlaylist shows a toast when API fails', async () => {
+            vi.mocked(playlistApi.addVideo).mockResolvedValue(fail());
+            const pl = makePlaylist({ id: pid('pl-av') });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.addVideoToPlaylist(pid('pl-av'), vid('v-x'));
+            });
+
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+
+        it('removeVideoFromPlaylist shows a toast when API fails', async () => {
+            vi.mocked(playlistApi.removeVideo).mockResolvedValue(fail());
+            const pl = makePlaylist({ id: pid('pl-rv'), videoIds: [vid('v-x')] });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.removeVideoFromPlaylist(pid('pl-rv'), vid('v-x'));
+            });
+
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+
+        it('reorderVideosInPlaylist shows a toast when API fails', async () => {
+            vi.mocked(playlistApi.reorder).mockResolvedValue(fail());
+            const pl = makePlaylist({ id: pid('pl-ord'), videoIds: [vid('v-a'), vid('v-b')] });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.reorderVideosInPlaylist(pid('pl-ord'), [vid('v-b'), vid('v-a')]);
+            });
+
+            expect(store.getState().toast.toasts.length).toBe(1);
+        });
+    });
+
+    describe('reorderVideosInPlaylist (success)', () => {
+        it('reorders videoIds optimistically', async () => {
+            vi.mocked(playlistApi.reorder).mockResolvedValue(ok(null));
+            const pl = makePlaylist({ id: pid('pl-ok'), videoIds: [vid('v-a'), vid('v-b')] });
+            const store = makeStore([pl]);
+            const { result } = renderHook(() => usePlaylist(), { wrapper: wrapper(store) });
+
+            await act(async () => {
+                await result.current.reorderVideosInPlaylist(pid('pl-ok'), [vid('v-b'), vid('v-a')]);
+            });
+
+            const updated = result.current.playlists.find(p => p.id === pid('pl-ok'));
+            expect(updated?.videoIds?.[0]).toBe('v-b');
+        });
+    });
 });
