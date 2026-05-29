@@ -51,16 +51,16 @@ describe('ChannelController', function () {
         expect($subscriber->subscriptions()->where('channel_id', $channel->id)->exists())->toBeFalse();
     });
 
-    test('show returns 401 for unauthenticated request', function () {
+    test('show is accessible to guests', function () {
         $channel = User::factory()->create();
         $response = $this->getJson("/api/channels/{$channel->uuid}");
-        $response->assertUnauthorized();
+        $response->assertOk();
     });
 
-    test('videos returns 401 for unauthenticated request', function () {
+    test('videos is accessible to guests', function () {
         $channel = User::factory()->create();
         $response = $this->getJson("/api/channels/{$channel->uuid}/videos");
-        $response->assertUnauthorized();
+        $response->assertOk();
     });
 
     test('show returns 404 for non-existent channel', function () {

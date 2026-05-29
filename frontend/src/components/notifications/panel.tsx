@@ -20,10 +20,10 @@ export default function NotificationsPanel({ onClose }: NotificationsPanelProps)
         const load = async (): Promise<void> => {
             dispatch(notificationsActions.setLoading(true));
             const result = await notificationsApi.list();
-            if (result) {
+            if (result.ok) {
                 dispatch(notificationsActions.setNotifications({
-                    items: result.data,
-                    hasMore: result.meta.current_page < result.meta.last_page,
+                    items: result.data.data,
+                    hasMore: result.data.meta.current_page < result.data.meta.last_page,
                 }));
             }
             dispatch(notificationsActions.setLoading(false));

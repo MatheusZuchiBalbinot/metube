@@ -22,10 +22,10 @@ class CommentService
      * Attaches is_liked as a virtual attribute resolved in bulk.
      *
      * @param  string  $vuid  Public video identifier
-     * @param  User  $user  Authenticated user
+     * @param  User|null  $user  Authenticated user, or null for guests
      * @param  int  $page  Page number
      */
-    public function list(string $vuid, User $user, int $page = 1): LengthAwarePaginator
+    public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
     {
         $video = Video::where('vuid', $vuid)->firstOrFail();
 
@@ -236,13 +236,23 @@ class CommentService
     /**
      * Bulk-resolve is_liked for a collection of comments and attach as virtual attribute.
      *
+     * Guests (null user) always get is_liked = false.
+     *
      * @param  BaseCollection<int, mixed>  $comments
      */
-    private function attachIsLiked(BaseCollection $comments, User $user): void
+    private function attachIsLiked(BaseCollection $comments, ?User $user): void
     {
         $isEmpty = $comments->isEmpty();
 
         if ($isEmpty) {
+            return;
+        }
+
+        if ($user === null) {
+            foreach ($comments as $comment) {
+                $comment->is_liked = false;
+            }
+
             return;
         }
 

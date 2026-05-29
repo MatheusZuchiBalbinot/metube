@@ -21,15 +21,21 @@ class VideoPolicy
 
     /**
      * Determine if user can view this video.
+     *
+     * Guests (null user) may only view published videos.
      */
-    public function view(User $user, Video $video): bool
+    public function view(?User $user, Video $video): bool
     {
+        if ($user === null) {
+            return $video->status === VideoStatus::PUBLISHED;
+        }
+
         // Owner can view any status
-        if ($user->id === $video->channel_id) {
+        $isOwner = $user->id === $video->channel_id;
+        if ($isOwner) {
             return true;
         }
 
-        // Others can only view published videos
         return $video->status === VideoStatus::PUBLISHED;
     }
 
