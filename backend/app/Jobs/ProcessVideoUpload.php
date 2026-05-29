@@ -35,6 +35,9 @@ class ProcessVideoUpload implements ShouldQueue
 
     /**
      * Move files from temp storage to public storage and update the video record.
+     *
+     * Single (non-batch) uploads land in DRAFT so the creator can review AI
+     * suggestions before publishing. Batch uploads publish immediately.
      */
     public function handle(VideoStorageService $storage): void
     {
@@ -50,6 +53,25 @@ class ProcessVideoUpload implements ShouldQueue
             ? $storage->publishThumbnail($this->tmpThumbnailPath, $video->vuid)
             : null;
 
+        $videoUrl = $storage->publishVideo($this->tmpPath, $video->vuid);
+
+        $isBatch = $video->is_batch;
+
+        if ($isBatch) {
+            $this->finalizeBatch($video, $videoUrl, $thumbnailUrl);
+        } else {
+            $this->finalizeSingle($video, $videoUrl, $thumbnailUrl);
+        }
+    }
+
+    /**
+     * Finalize a batch upload: publish immediately and notify subscribers.
+     *
+     * @param  string  $videoUrl  Public URL of the published video file
+     * @param  string|null  $thumbnailUrl  Public URL of the thumbnail, or null
+     */
+    private function finalizeBatch(Video $video, string $videoUrl, ?string $thumbnailUrl): void
+    {
         $newStatus = $this->resolveStatus($video);
         $publishedAt = $newStatus === VideoStatus::PUBLISHED ? $video->created_at : $video->scheduled_at;
 
@@ -57,7 +79,7 @@ class ProcessVideoUpload implements ShouldQueue
 
         $video->update([
             'thumbnail_url' => $thumbnailUrl,
-            'video_url' => $storage->publishVideo($this->tmpPath, $video->vuid),
+            'video_url' => $videoUrl,
             'status' => $newStatus,
             'published_at' => $publishedAt,
         ]);
@@ -72,6 +94,28 @@ class ProcessVideoUpload implements ShouldQueue
         if ($isPublished && $statusChanged) {
             event(new VideoPublished($video));
         }
+    }
+
+    /**
+     * Finalize a single upload: move to DRAFT and kick off transcription.
+     *
+     * Does NOT fire VideoPublished — that happens later when the creator
+     * explicitly publishes from the staging page.
+     *
+     * @param  string  $videoUrl  Public URL of the published video file
+     * @param  string|null  $thumbnailUrl  Public URL of the thumbnail, or null
+     */
+    private function finalizeSingle(Video $video, string $videoUrl, ?string $thumbnailUrl): void
+    {
+        $video->update([
+            'thumbnail_url' => $thumbnailUrl,
+            'video_url' => $videoUrl,
+            'status' => VideoStatus::DRAFT,
+        ]);
+
+        event(new VideoStatusUpdated($video, VideoStatus::DRAFT));
+
+        TranscribeVideo::dispatch($video);
     }
 
     /**

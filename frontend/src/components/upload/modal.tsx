@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type DragEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as tus from 'tus-js-client';
 import { useAppDispatch, useAppSelector } from '@store';
@@ -6,10 +7,8 @@ import { toastActions } from '@store/toastSlice';
 import { Button, DragAndDrop, Input, Modal } from '@ui';
 import { video as videoApi, toVuid } from '@api';
 import type { Vuid } from '@api';
-import { Format, formatEta, cn } from '@utils';
+import { Format, formatEta, cn, videoUrl } from '@utils';
 import TagInput from '@components/tag/input';
-import DatePicker from '@ui/date/picker';
-import Badge from '@ui/badge/badge';
 import './modal.css';
 import { ToastType } from '@enums/toastType';
 import { UploadMode } from '@enums/uploadMode';
@@ -29,7 +28,6 @@ interface FormState {
     thumbnailFile: File | null
     thumbnailPreviewUrl: string | null
     videoObjectUrl: string | null
-    publishAt: string | null
     titleError: string | null
 }
 
@@ -80,19 +78,8 @@ const INITIAL_FORM: FormState = {
     thumbnailFile: null,
     thumbnailPreviewUrl: null,
     videoObjectUrl: null,
-    publishAt: null,
     titleError: null,
 };
-
-function computeStatus(publishAt: string | null): VideoStatus {
-    const isPublishAtEmpty = publishAt === null;
-    if (isPublishAtEmpty) {
-        return VideoStatus.PUBLISHED;
-    }
-
-    const isInFuture = new Date(`${publishAt}T00:00:00`) > new Date();
-    return isInFuture ? VideoStatus.SCHEDULED : VideoStatus.PUBLISHED;
-}
 
 function titleFromFilename(file: File): string {
     const base = file.name.replace(/\.[^.]+$/, '');
@@ -107,6 +94,7 @@ function titleFromFilename(file: File): string {
 export default function UploadModal() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
     const { progress, status: tusStatus, uploadFile, reset: resetTus } = useTusUpload();
     const allVideos = useAppSelector(s => s.video.videos);
@@ -138,8 +126,6 @@ export default function UploadModal() {
     const [batchDragging, setBatchDragging] = useState(false);
     const batchInputRef = useRef<HTMLInputElement>(null);
 
-    const previewStatus = computeStatus(form.publishAt);
-    const isScheduled = previewStatus === VideoStatus.SCHEDULED;
     const isUploading = tusStatus === UploadStatus.UPLOADING;
     const hasPreview = form.thumbnailPreviewUrl !== null || form.videoObjectUrl !== null;
     const isBusy = isUploading || isBatchUploading;
@@ -242,20 +228,13 @@ export default function UploadModal() {
             thumbnailKey = thumbResult?.uploadKey;
         }
 
-        const status = computeStatus(form.publishAt);
-        const isScheduledStatus = status === VideoStatus.SCHEDULED;
-        const scheduledAt = isScheduledStatus
-            ? new Date(`${form.publishAt!}T00:00:00`).toISOString()
-            : undefined;
-
         const result = await videoApi.finalize({
             uploadKey: videoResult.uploadKey,
             thumbnailKey,
             title: form.title.trim(),
             description: form.description.trim(),
             tags: form.tags,
-            status,
-            scheduledAt,
+            status: VideoStatus.DRAFT,
         });
 
         if (!result.ok) {
@@ -268,6 +247,7 @@ export default function UploadModal() {
         dispatch(toastActions.addToast({ message: t('video.processing_toast'), type: ToastType.INFO }));
         closeUploadModal();
         resetSingleForm();
+        navigate(videoUrl(result.data.id));
     }
 
     async function handleSingleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -389,10 +369,6 @@ export default function UploadModal() {
 
     function handleTagsChange(tags: Tag[]) {
         setForm(prev => ({ ...prev, tags }));
-    }
-
-    function handlePublishAtChange(v: string | null) {
-        setForm(prev => ({ ...prev, publishAt: v }));
     }
 
     function handleModeToSingle() {
@@ -601,22 +577,6 @@ export default function UploadModal() {
                         </div>
                     )}
 
-                    <div className="upload-modal__field">
-                        <label className="upload-modal__label" htmlFor="um-publish-at">
-                            {t('video.upload_publish_at')}
-                        </label>
-                        <DatePicker
-                            id="um-publish-at"
-                            value={form.publishAt}
-                            onChange={handlePublishAtChange}
-                        />
-                        <div className="upload-modal__status-preview">
-                            <span className="upload-modal__status-label">{t('video.status_label')}:</span>
-                            <Badge variant={isScheduled ? 'warning' : 'success'}>
-                                {isScheduled ? t('video.scheduled') : t('video.published_now')}
-                            </Badge>
-                        </div>
-                    </div>
                 </form>
             )}
 

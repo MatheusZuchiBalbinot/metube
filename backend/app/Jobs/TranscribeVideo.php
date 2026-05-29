@@ -52,6 +52,13 @@ class TranscribeVideo implements ShouldQueue
             return;
         }
 
+        $video->loadMissing('transcription');
+        $isAlreadyDone = $video->transcription !== null && $video->transcription->status === TranscriptionStatus::COMPLETED;
+
+        if ($isAlreadyDone) {
+            return;
+        }
+
         $startedAt = Carbon::now();
         $estimatedSeconds = $video->duration !== null
             ? round($video->duration / self::SPEED_FACTOR)

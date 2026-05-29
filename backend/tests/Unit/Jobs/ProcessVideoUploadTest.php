@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\VideoStatus;
+use App\Events\VideoPublished;
 use App\Jobs\ProcessVideoUpload;
+use App\Jobs\TranscribeVideo;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
@@ -30,9 +33,9 @@ describe('ProcessVideoUpload', function () {
         Queue::fake();
     });
 
-    describe('handle — happy path', function () {
-        test('publishes the video and sets status to PUBLISHED when not scheduled', function () {
-            $video = Video::factory()->processing()->create(['scheduled_at' => null]);
+    describe('handle — batch happy path', function () {
+        test('publishes batch video and sets status to PUBLISHED when not scheduled', function () {
+            $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
 
             $storage = mockStorage('videos/'.$video->vuid.'.mp4');
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
@@ -42,26 +45,75 @@ describe('ProcessVideoUpload', function () {
                 ->and($video->video_url)->toBe('videos/'.$video->vuid.'.mp4');
         });
 
-        test('sets status to SCHEDULED when scheduled_at is in the future', function () {
-            $video = Video::factory()->processing()->create(['scheduled_at' => now()->addDay()]);
+        test('sets batch video to SCHEDULED when scheduled_at is in the future', function () {
+            $video = Video::factory()->processing()->create(['scheduled_at' => now()->addDay(), 'is_batch' => true]);
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
 
             expect($video->fresh()->status)->toBe(VideoStatus::SCHEDULED);
         });
 
-        test('sets status to PUBLISHED when scheduled_at is in the past', function () {
-            $video = Video::factory()->processing()->create(['scheduled_at' => now()->subDay()]);
+        test('sets batch video to PUBLISHED when scheduled_at is in the past', function () {
+            $video = Video::factory()->processing()->create(['scheduled_at' => now()->subDay(), 'is_batch' => true]);
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
 
             expect($video->fresh()->status)->toBe(VideoStatus::PUBLISHED);
         });
+
+        test('fires VideoPublished for batch video', function () {
+            Event::fake([VideoPublished::class]);
+
+            $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            Event::assertDispatched(VideoPublished::class);
+        });
+    });
+
+    describe('handle — single (non-batch) upload', function () {
+        test('sets status to DRAFT for non-batch video', function () {
+            $video = Video::factory()->processing()->create(['is_batch' => false]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            expect($video->fresh()->status)->toBe(VideoStatus::DRAFT);
+        });
+
+        test('dispatches TranscribeVideo for non-batch video', function () {
+            $video = Video::factory()->processing()->create(['is_batch' => false]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            Queue::assertPushed(TranscribeVideo::class);
+        });
+
+        test('does not fire VideoPublished for non-batch video', function () {
+            Event::fake([VideoPublished::class]);
+
+            $video = Video::factory()->processing()->create(['is_batch' => false]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            Event::assertNotDispatched(VideoPublished::class);
+        });
+
+        test('ignores scheduled_at for non-batch video — always goes DRAFT', function () {
+            $video = Video::factory()->processing()->create([
+                'scheduled_at' => now()->addDay(),
+                'is_batch' => false,
+            ]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            expect($video->fresh()->status)->toBe(VideoStatus::DRAFT);
+        });
     });
 
     describe('handle — thumbnail', function () {
         test('publishes thumbnail and stores its path when provided', function () {
-            $video = Video::factory()->processing()->create();
+            $video = Video::factory()->processing()->create(['is_batch' => true]);
 
             $storage = Mockery::mock(VideoStorageService::class);
             $storage->shouldReceive('publishVideo')->andReturn('videos/test.mp4');
@@ -76,7 +128,7 @@ describe('ProcessVideoUpload', function () {
         });
 
         test('leaves thumbnail_url unchanged when no thumbnail is provided', function () {
-            $video = Video::factory()->processing()->create(['thumbnail_url' => null]);
+            $video = Video::factory()->processing()->create(['thumbnail_url' => null, 'is_batch' => true]);
 
             $storage = Mockery::mock(VideoStorageService::class);
             $storage->shouldReceive('publishVideo')->andReturn('videos/test.mp4');

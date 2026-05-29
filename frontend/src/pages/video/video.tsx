@@ -26,6 +26,7 @@ import { useVideoShare } from './hooks/useVideoShare';
 import { useVideoSave } from './hooks/useVideoSave';
 import VideoNotFound from './components/VideoNotFound';
 import VideoProcessingScreen from './components/VideoProcessingScreen';
+import StagingBanner from '@components/video/stagingBanner';
 import AutoplayBanner from './components/AutoplayBanner';
 import VideoPlayerArea from './components/VideoPlayerArea';
 import VideoInfo from './components/VideoInfo';
@@ -101,6 +102,7 @@ export default function VideoPage() {
         return <VideoProcessingScreen video={video} />;
     }
 
+    const isStaging = isOwner && domain.video.isDraft(video);
     const isChannelSubscribed = isSubscribed(video.channelId);
     const isAutoplayActive = autoplayCountdown !== null;
     const nextVideo = relatedVideos[0];
@@ -125,6 +127,8 @@ export default function VideoPage() {
         <div className="video-page">
             <div className="video-page__layout">
                 <main className="video-page__main">
+                    {isStaging && <StagingBanner video={video} />}
+
                     <VideoPlayerArea
                         readingMode={readingMode}
                         transcription={transcription}

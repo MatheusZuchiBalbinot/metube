@@ -132,6 +132,12 @@
         "scheduled": "Scheduled",
         "published": "Published",
         "processing_toast": "Your video is being processed…",
+        "staging": {
+            "draft_label": "Draft — not published yet",
+            "publish_btn": "Publish",
+            "publishing": "Publishing...",
+            "published_toast": "Video published successfully"
+        },
         "failed_toast": "Video processing failed. Please try again.",
         "transcription_started_toast": "Transcription started for your video.",
         "transcription_completed_toast": "Transcription complete — your video has been transcribed.",

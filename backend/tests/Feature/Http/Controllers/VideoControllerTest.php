@@ -409,4 +409,45 @@ describe('VideoController', function () {
         $response->assertUnprocessable();
         $response->assertJsonValidationErrors(['percent']);
     });
+
+    test('publish returns 200 and sets status to PUBLISHED for owner of draft video', function () {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $video = Video::factory()->draft()->for($user, 'channel')->create();
+
+        $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/publish");
+
+        $response->assertOk();
+        $response->assertJsonPath('status', VideoStatus::PUBLISHED->value);
+        $this->assertDatabaseHas('videos', [
+            'id' => $video->id,
+            'status' => VideoStatus::PUBLISHED->value,
+        ]);
+    });
+
+    test('publish returns 401 for unauthenticated request', function () {
+        $video = Video::factory()->draft()->create();
+
+        $this->postJson("/api/videos/{$video->vuid}/publish")->assertUnauthorized();
+    });
+
+    test('publish returns 403 for non-owner', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->postJson("/api/videos/{$video->vuid}/publish")
+            ->assertForbidden();
+    });
+
+    test('publish returns 409 when video is not in draft status', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->for($user, 'channel')->create();
+
+        $this->actingAs($user)
+            ->postJson("/api/videos/{$video->vuid}/publish")
+            ->assertStatus(409);
+    });
 });

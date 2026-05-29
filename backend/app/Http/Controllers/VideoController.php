@@ -337,6 +337,25 @@ class VideoController extends Controller
     }
 
     /**
+     * Publish a draft video, making it publicly visible.
+     *
+     * @param  string  $vuid  Video public identifier
+     * @return JsonResponse Published video resource
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function publish(string $vuid): JsonResponse
+    {
+        $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('update', $video);
+
+        $this->videoService->publishVideo($video);
+
+        return $this->json(new VideoResource($video->fresh('channel')));
+    }
+
+    /**
      * Dismiss pending AI suggestions without applying them.
      *
      * @param  string  $vuid  Video public identifier
