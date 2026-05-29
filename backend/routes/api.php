@@ -22,6 +22,24 @@ Route::prefix('users')->group(function (): void {
     Route::post('/', [AuthController::class, 'register']);
 });
 
+// Guest-accessible reads (no auth required; auth()->user() is null for guests)
+Route::get('/recommendations', [VideoController::class, 'recommendations']);
+
+Route::prefix('videos')->group(function (): void {
+    Route::get('/', [VideoController::class, 'index']);
+    Route::get('/{vuid}', [VideoController::class, 'show']);
+    Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
+    Route::get('/{vuid}/transcription', [VideoController::class, 'transcription']);
+    Route::prefix('{vuid}/comments')->group(function (): void {
+        Route::get('/', [CommentController::class, 'index']);
+    });
+});
+
+Route::prefix('channels/{uuid}')->group(function (): void {
+    Route::get('/', [ChannelController::class, 'show']);
+    Route::get('/videos', [ChannelController::class, 'videos']);
+});
+
 Route::prefix('password-resets')->middleware('throttle:password-reset')->group(function (): void {
     Route::post('/', [AuthController::class, 'forgotPassword']);
     Route::patch('/{token}', [AuthController::class, 'resetPassword']);
@@ -67,12 +85,8 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
             ->where('suffix', '.*');
     });
 
-    Route::get('/recommendations', [VideoController::class, 'recommendations']);
-
     Route::prefix('videos')->group(function (): void {
-        Route::get('/', [VideoController::class, 'index']);
         Route::post('/', [VideoController::class, 'store']);
-        Route::get('/{vuid}', [VideoController::class, 'show']);
         Route::patch('/{vuid}', [VideoController::class, 'update']);
         Route::delete('/{vuid}', [VideoController::class, 'destroy']);
 
@@ -81,15 +95,12 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{vuid}/dislike', [VideoController::class, 'toggleDislike']);
         Route::post('/{vuid}/save', [VideoController::class, 'toggleSave']);
         Route::put('/{vuid}/progress', [VideoController::class, 'updateProgress']);
-        Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
-        Route::get('/{vuid}/transcription', [VideoController::class, 'transcription']);
         Route::post('/{vuid}/transcription/retry', [VideoController::class, 'retryTranscription']);
         Route::get('/{vuid}/ai-suggestion', [VideoController::class, 'aiSuggestion']);
         Route::post('/{vuid}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion']);
         Route::post('/{vuid}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion']);
 
         Route::prefix('{vuid}/comments')->group(function (): void {
-            Route::get('/', [CommentController::class, 'index']);
             Route::post('/', [CommentController::class, 'store']);
         });
     });
@@ -103,8 +114,6 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
     });
 
     Route::prefix('channels/{uuid}')->group(function (): void {
-        Route::get('/', [ChannelController::class, 'show']);
-        Route::get('/videos', [ChannelController::class, 'videos']);
         Route::post('/subscription', [ChannelController::class, 'toggleSubscription']);
     });
 

@@ -276,15 +276,15 @@ describe('VideoController', function () {
         ]);
     });
 
-    test('index returns 401 for unauthenticated request', function () {
+    test('index is accessible to guests', function () {
         $response = $this->getJson('/api/videos');
-        $response->assertUnauthorized();
+        $response->assertOk();
     });
 
-    test('show returns 401 for unauthenticated request', function () {
+    test('show is accessible for published videos as guest', function () {
         $video = Video::factory()->create(['status' => VideoStatus::PUBLISHED]);
         $response = $this->getJson("/api/videos/{$video->vuid}");
-        $response->assertUnauthorized();
+        $response->assertOk();
     });
 
     test('show returns 404 for non-existent video', function () {

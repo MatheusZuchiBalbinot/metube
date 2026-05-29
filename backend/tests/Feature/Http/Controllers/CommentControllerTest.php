@@ -195,11 +195,15 @@ describe('CommentController', function () {
         $response->assertJsonCount(3, 'data');
     });
 
-    test('comment endpoints require authentication', function () {
+    test('listing comments is accessible to guests', function () {
+        $video = Video::factory()->create();
+        $this->getJson("/api/videos/{$video->vuid}/comments")->assertOk();
+    });
+
+    test('comment write endpoints require authentication', function () {
         $video = Video::factory()->create();
         $comment = Comment::factory()->for(User::factory())->for($video)->create();
 
-        $this->getJson("/api/videos/{$video->vuid}/comments")->assertUnauthorized();
         $this->postJson("/api/videos/{$video->vuid}/comments", [])->assertUnauthorized();
         $this->patchJson("/api/comments/{$comment->cuid}", [])->assertUnauthorized();
         $this->deleteJson("/api/comments/{$comment->cuid}")->assertUnauthorized();
