@@ -124,6 +124,22 @@ describe('TranscribeVideo', function () {
 
             Http::assertNothingSent();
         });
+
+        test('skips transcription when transcription is already COMPLETED', function () {
+            $video = Video::factory()->draft()->create(['video_url' => 'videos/abc.mp4']);
+            \App\Models\Transcription::create([
+                'video_id' => $video->id,
+                'status' => \App\Enums\TranscriptionStatus::COMPLETED,
+                'content' => 'Already done.',
+                'language' => 'en',
+            ]);
+
+            Http::fake();
+
+            (new TranscribeVideo($video))->handle();
+
+            Http::assertNothingSent();
+        });
     });
 
     describe('failed', function () {

@@ -69,4 +69,15 @@ class VideoFactory extends Factory
             'published_at' => null,
         ]);
     }
+
+    /**
+     * Indicate that the video is in draft (awaiting creator review before publish).
+     */
+    public function draft(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => VideoStatus::DRAFT,
+            'published_at' => null,
+        ]);
+    }
 }

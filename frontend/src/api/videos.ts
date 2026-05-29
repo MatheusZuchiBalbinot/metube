@@ -169,6 +169,10 @@ class VideoApi {
     async dismissAiSuggestion(vuid: Vuid): Promise<void> {
         await apiClient.post(`${this.baseUrl}/${vuid}/ai-suggestion/dismiss`);
     }
+
+    async publish(vuid: Vuid): Promise<ApiResult<Video>> {
+        return apiClient.postValidated(`${this.baseUrl}/${vuid}/publish`, parseVideo);
+    }
 }
 
 export const video = new VideoApi();

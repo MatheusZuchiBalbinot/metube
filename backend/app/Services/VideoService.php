@@ -12,8 +12,10 @@ use App\Enums\VideoSource;
 use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
 use App\Events\VideoLiked;
+use App\Events\VideoPublished;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
+use App\Events\VideoStatusUpdated;
 use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
@@ -148,6 +150,34 @@ class VideoService
 
             return $video->load('channel');
         });
+    }
+
+    /**
+     * Publish a draft video immediately.
+     *
+     * Sets status to PUBLISHED, records published_at, fires VideoPublished
+     * for subscriber notifications, and invalidates the video cache.
+     *
+     * @param  Video  $video  Video in DRAFT status to publish
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException When video is not in DRAFT
+     */
+    public function publishVideo(Video $video): void
+    {
+        $isNotDraft = $video->status !== VideoStatus::DRAFT;
+
+        if ($isNotDraft) {
+            abort(409, 'Video is not in draft status.');
+        }
+
+        $video->update([
+            'status' => VideoStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        event(new VideoPublished($video));
+        event(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
+        $this->cache->forgetVideo($video->vuid);
     }
 
     /**

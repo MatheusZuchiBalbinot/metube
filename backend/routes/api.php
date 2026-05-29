@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{vuid}/dislike', [VideoController::class, 'toggleDislike']);
         Route::post('/{vuid}/save', [VideoController::class, 'toggleSave']);
         Route::put('/{vuid}/progress', [VideoController::class, 'updateProgress']);
+        Route::post('/{vuid}/publish', [VideoController::class, 'publish']);
         Route::post('/{vuid}/transcription/retry', [VideoController::class, 'retryTranscription']);
         Route::get('/{vuid}/ai-suggestion', [VideoController::class, 'aiSuggestion']);
         Route::post('/{vuid}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion']);
