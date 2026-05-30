@@ -96,6 +96,54 @@
     }
 }
 
+/* ─── AI border — spinning conic-gradient ────────────────────────────────── */
+
+@property --ai-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes ai-border-spin {
+    to { --ai-angle: 360deg; }
+}
+
+/*
+ * Usage:
+ *   <span class="ai-border">          — pill/rounded-rect wrapper
+ *     <button class="ai-border__btn"> — inner button that provides its own bg
+ *   </span>
+ *
+ *   <span class="ai-border ai-border--circle"> — circle variant (icon buttons)
+ *     <button>...</button>
+ *   </span>
+ */
+.ai-border {
+    display: inline-flex;
+    padding: 1.5px;
+    border-radius: calc(var(--radius) + 1.5px);
+    background: conic-gradient(from var(--ai-angle),
+        #9333ea 0%,
+        #6366f1 30%,
+        #06b6d4 60%,
+        #9333ea 100%);
+    animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-border--circle {
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.ai-border__btn {
+    border-radius: var(--radius) !important;
+    background: var(--surface) !important;
+}
+
+.ai-border__btn:hover {
+    background: var(--surface-2) !important;
+}
+
 /* ─── Animation helpers ──────────────────────────────────────────────────── */
 .animate-modal-in {
     animation: modal-in 0.18s var(--ease-out) both;

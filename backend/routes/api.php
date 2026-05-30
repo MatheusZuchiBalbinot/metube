@@ -8,6 +8,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\TusController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VideoChatController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -100,6 +101,8 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::get('/{vuid}/ai-suggestion', [VideoController::class, 'aiSuggestion']);
         Route::post('/{vuid}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion']);
         Route::post('/{vuid}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion']);
+
+        Route::post('/{vuid}/chat', VideoChatController::class)->middleware('throttle:20,1');
 
         Route::prefix('{vuid}/comments')->group(function (): void {
             Route::post('/', [CommentController::class, 'store']);

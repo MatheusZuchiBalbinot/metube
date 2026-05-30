@@ -1,16 +1,5 @@
-/* ─── AI glow — spinning conic-gradient border ───────────────────────────── */
-
-@property --ai-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-}
-
-@keyframes ai-border-spin {
-    to {
-        --ai-angle: 360deg;
-    }
-}
+/* ai-border, @property --ai-angle, and @keyframes ai-border-spin live in
+ * src/styles/animations.css (global) — no need to redefine here. */
 
 @keyframes ai-bar-shift {
     0% {
@@ -20,27 +9,6 @@
     100% {
         background-position: -200% center;
     }
-}
-
-.ai-border {
-    display: inline-flex;
-    padding: 1.5px;
-    border-radius: calc(var(--radius) + 1.5px);
-    background: conic-gradient(from var(--ai-angle),
-            #9333ea 0%,
-            #6366f1 30%,
-            #06b6d4 60%,
-            #9333ea 100%);
-    animation: ai-border-spin 4s linear infinite;
-}
-
-.ai-border__btn {
-    border-radius: var(--radius) !important;
-    background: var(--surface) !important;
-}
-
-.ai-border__btn:hover {
-    background: var(--surface-2) !important;
 }
 
 /* ─── Banner ─────────────────────────────────────────────────────────────── */
