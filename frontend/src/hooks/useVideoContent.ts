@@ -21,9 +21,11 @@ export function useVideoContent(id: string | undefined, videoStatus: VideoStatus
             return;
         }
 
-        const isPublished = videoStatus === VideoStatus.PUBLISHED || videoStatus === VideoStatus.SCHEDULED;
+        const hasContent = videoStatus === VideoStatus.PUBLISHED
+            || videoStatus === VideoStatus.SCHEDULED
+            || videoStatus === VideoStatus.DRAFT;
 
-        if (!isPublished) {
+        if (!hasContent) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSummary(null);
             // eslint-disable-next-line react-hooks/set-state-in-effect

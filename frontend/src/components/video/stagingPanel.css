@@ -1,0 +1,193 @@
+/* ─── AI glow — spinning conic-gradient border ───────────────────────────── */
+
+@property --ai-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes ai-border-spin {
+    to {
+        --ai-angle: 360deg;
+    }
+}
+
+@keyframes ai-bar-shift {
+    0% {
+        background-position: 0% center;
+    }
+
+    100% {
+        background-position: -200% center;
+    }
+}
+
+.ai-border {
+    display: inline-flex;
+    padding: 1.5px;
+    border-radius: calc(var(--radius) + 1.5px);
+    background: conic-gradient(from var(--ai-angle),
+            #9333ea 0%,
+            #6366f1 30%,
+            #06b6d4 60%,
+            #9333ea 100%);
+    animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-border__btn {
+    border-radius: var(--radius) !important;
+    background: var(--surface) !important;
+}
+
+.ai-border__btn:hover {
+    background: var(--surface-2) !important;
+}
+
+/* ─── Banner ─────────────────────────────────────────────────────────────── */
+
+.staging-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.staging-panel__badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-2);
+}
+
+.staging-panel__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.staging-panel__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Pulsing dot while AI is loading */
+.staging-panel__ai-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.7;
+    animation: staging-ai-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes staging-ai-pulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(0.75);
+    }
+}
+
+/* ─── Modal body ─────────────────────────────────────────────────────────── */
+
+/* Aurora bar at top of modal — negative margin bleeds to modal-body edges */
+.staging-modal__ai-bar {
+    height: 2px;
+    margin: -20px -24px 20px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: linear-gradient(90deg, #9333ea, #6366f1, #06b6d4, #9333ea);
+    background-size: 200% 100%;
+    animation: ai-bar-shift 3s linear infinite;
+}
+
+.staging-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.staging-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.staging-modal__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.01em;
+}
+
+.staging-modal__textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.9375rem;
+    padding: 13px 14px;
+    outline: none;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color var(--duration-default), background var(--duration-default), box-shadow var(--duration-default);
+}
+
+.staging-modal__textarea::placeholder {
+    color: var(--text-3);
+}
+
+.staging-modal__textarea:hover {
+    border-color: var(--border-2);
+    background: var(--surface-3);
+}
+
+.staging-modal__textarea:focus {
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+
+/* ─── Key points (read-only, inside modal) ───────────────────────────────── */
+
+.staging-modal__key-points {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.staging-modal__key-point {
+    display: flex;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+    color: var(--text-2);
+    line-height: 1.5;
+}
+
+.staging-modal__key-point::before {
+    content: '·';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ─── Modal footer ───────────────────────────────────────────────────────── */
+
+.staging-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
