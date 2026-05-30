@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { List, BookOpen } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import VideoRow from '@components/video/row';
 import VideoRowSkeleton from '@components/video/rowSkeleton';
 import FilterPanel from '@components/filter/panel';
@@ -66,6 +67,19 @@ export default function VideoSidebar({
 
     const hasKeyPoints = hasSummary && summary.keyPoints.length > 0;
     const hasChapters = hasSummary && summary.chapters.length > 0;
+    const hasSummaryProse = hasSummary && summary.readingMode.trim() !== '';
+
+    const summaryHtml = hasSummaryProse
+        ? DOMPurify.sanitize(
+            summary.readingMode
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^/, '<p>')
+                .replace(/$/, '</p>'),
+        )
+        : '';
 
     return (
         <aside className="video-page__sidebar">
@@ -119,6 +133,16 @@ export default function VideoSidebar({
 
             {sidebarTab === SidebarTab.SUMMARY && hasSummary && (
                 <div className="video-page__summary">
+                    {hasSummaryProse && (
+                        <section className="video-page__summary-section">
+                            <h3 className="video-page__summary-heading">{t('video.summary')}</h3>
+                            <div
+                                className="video-page__summary-prose"
+                                dangerouslySetInnerHTML={{ __html: summaryHtml }}
+                            />
+                        </section>
+                    )}
+
                     {hasKeyPoints && (
                         <section className="video-page__summary-section">
                             <h3 className="video-page__summary-heading">{t('video.key_points')}</h3>

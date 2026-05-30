@@ -93,6 +93,20 @@
     margin-left: 4px;
 }
 
+.profile-page__subscribe-btn {
+    margin-left: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    color: var(--text);
+}
+
+.profile-page__subscribe-btn--subscribed {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
 .profile-page__subtitle {
     font-size: 0.875rem;
     color: var(--text-2);
@@ -176,7 +190,12 @@
 /* ─── Filters bar ───────────────────────────────────────────────────────────── */
 
 .profile-page__filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: var(--page-padding-y) var(--page-padding-x) 0;
+    overflow: hidden;
 }
 
 /* ─── Quick filter chips ────────────────────────────────────────────────────── */
@@ -186,6 +205,8 @@
     flex-wrap: nowrap;
     gap: 8px;
     overflow-x: auto;
+    flex: 1;
+    min-width: 0;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -229,6 +250,23 @@
     color: var(--accent-fg);
     border-color: var(--accent);
     opacity: 0.9;
+}
+
+/* ─── Latest uploads carousel ───────────────────────────────────────────────── */
+
+.profile-page__latest-carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scroll-snap-type: x mandatory;
+}
+
+.profile-page__latest-carousel .video-card {
+    flex-shrink: 0;
+    width: 250px;
+    scroll-snap-align: start;
 }
 
 /* ─── Main content ──────────────────────────────────────────────────────────── */
@@ -851,6 +889,110 @@
 
 .profile-page__section-see-all:hover {
     background: var(--accent-subtle);
+}
+
+.profile-page__section-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.profile-page__section-header-actions .profile-page__section-see-all {
+    margin-left: 0;
+}
+
+.profile-page__layout-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    color: var(--text-3);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--duration-fast), color var(--duration-fast);
+    flex-shrink: 0;
+}
+
+.profile-page__layout-toggle:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+/* ─── Most-viewed list layout ───────────────────────────────────────────────── */
+
+.profile-page__most-viewed-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.profile-page__most-viewed-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background var(--duration-fast);
+}
+
+.profile-page__most-viewed-item:hover {
+    background: var(--surface-2);
+}
+
+.profile-page__most-viewed-rank {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-3);
+    width: 28px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.profile-page__most-viewed-thumb {
+    width: 72px;
+    height: 43px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    background: var(--surface-3);
+}
+
+.profile-page__most-viewed-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.profile-page__most-viewed-title {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-page__most-viewed-views {
+    font-size: var(--text-xs);
+    color: var(--text-3);
 }
 
 .profile-page__section-row {

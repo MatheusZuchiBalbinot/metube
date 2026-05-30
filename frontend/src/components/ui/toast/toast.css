@@ -28,45 +28,66 @@
 .toast {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 11px 14px;
+    gap: 11px;
+    padding: 12px 14px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.28),
-        0 2px 8px rgba(0, 0, 0, 0.16),
+        0 12px 36px rgba(0, 0, 0, 0.32),
+        0 2px 8px rgba(0, 0, 0, 0.18),
         inset 0 1px 0 rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 500;
-    min-width: 240px;
-    max-width: 340px;
+    min-width: 256px;
+    max-width: 360px;
     pointer-events: all;
-    animation: toast-slide-in 0.28s var(--ease-out) both;
+    animation: toast-slide-in 0.3s var(--ease-out) both;
     position: relative;
     overflow: hidden;
 }
+
+/* Type accent bar on the leading edge */
+.toast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.toast--success::before { background: #34d399; }
+.toast--error::before   { background: #f87171; }
+.toast--info::before    { background: var(--accent); }
 
 /* ─── Media toast (with thumbnail) ──────────────────────────────────────── */
 
 .toast--media {
     padding: 0;
     gap: 0;
-    max-width: 380px;
-    min-width: 300px;
+    max-width: 384px;
+    min-width: 320px;
     align-items: stretch;
 }
 
+.toast--media::before {
+    display: none;
+}
+
 .toast__thumb {
-    width: 88px;
+    width: 96px;
     flex-shrink: 0;
     object-fit: cover;
     display: block;
     border-radius: 0;
+    align-self: stretch;
 }
 
 .toast--media .toast__body {
-    padding: 11px 12px;
+    padding: 11px 13px;
+    justify-content: center;
 }
 
 .toast--media .toast__action {
@@ -100,7 +121,17 @@
 
 .toast__icon {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
 }
+
+.toast--success .toast__icon { background: rgba(52, 211, 153, 0.14); }
+.toast--error   .toast__icon { background: rgba(248, 113, 113, 0.14); }
+.toast--info    .toast__icon { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 
 /* ─── Body ────────────────────────────────────────────────────────────────── */
 
