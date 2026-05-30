@@ -1,31 +1,46 @@
-/* ─── App Sidebar ─────────────────────────────────────────────────────────── */
+/* ─── App Sidebar (offcanvas drawer) ────────────────────────────────────────── */
 
 .app-sidebar {
-    width: var(--sidebar-width, 220px);
-    flex-shrink: 0;
+    width: 220px;
+    position: fixed;
+    top: 58px;
+    left: 0;
+    height: calc(100dvh - 58px);
     background: var(--surface);
     border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
     padding: 10px 0;
-    position: sticky;
-    top: 58px;
-    z-index: var(--z-sidebar);
-    height: calc(100dvh - 58px);
+    z-index: var(--z-modal);
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    will-change: width;
-    transition: width 0.24s var(--ease-out);
+    box-shadow: var(--elevation-3);
+    transform: translateX(-100%);
+    transition: transform 0.24s var(--ease-out);
+    visibility: hidden;
 }
 
 :root[data-mode='light'] .app-sidebar {
-    background: color-mix(in srgb, var(--surface) 40%, transparent);
+    background: var(--surface);
 }
 
-/* ─── Collapsed state ─────────────────────────────────────────────────────── */
+/* ─── Open state ─────────────────────────────────────────────────────────────── */
 
-.app-sidebar--collapsed {
-    width: 60px;
+.app-sidebar--open {
+    transform: translateX(0);
+    visibility: visible;
+}
+
+/* ─── Permanent (non-offcanvas) mode ──────────────────────────────────────── */
+
+.app-sidebar--permanent {
+    position: sticky;
+    top: 58px;
+    flex-shrink: 0;
+    box-shadow: none;
+    border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    transform: none !important;
+    visibility: visible !important;
 }
 
 /* ─── Nav list ────────────────────────────────────────────────────────────── */
@@ -55,9 +70,7 @@
     overflow: hidden;
     transition:
         color var(--duration-default),
-        background var(--duration-default),
-        padding 0.24s var(--ease-out),
-        gap 0.24s var(--ease-out);
+        background var(--duration-default);
 }
 
 /* Hover */
@@ -154,80 +167,16 @@
     text-transform: uppercase;
     color: var(--text-3);
     white-space: nowrap;
-    overflow: hidden;
-    max-height: 40px;
-    opacity: 1;
-    transition:
-        opacity 0.18s var(--ease-out),
-        max-height 0.24s var(--ease-out),
-        padding 0.24s var(--ease-out),
-        margin 0.24s var(--ease-out);
 }
 
 /* ─── Label ───────────────────────────────────────────────────────────────── */
 
 .app-sidebar__label {
     overflow: hidden;
-    max-width: 160px;
-    opacity: 1;
-    transition:
-        opacity 0.15s var(--ease-out),
-        max-width 0.24s var(--ease-out);
 }
 
-/* ─── Collapsed — icon only ───────────────────────────────────────────────── */
-
-.app-sidebar--collapsed .app-sidebar__label {
-    max-width: 0;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.app-sidebar--collapsed .app-sidebar__section-label {
-    max-height: 0;
-    padding: 0;
-    margin: 0;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.app-sidebar--collapsed .app-sidebar__item {
-    justify-content: center;
-    padding: 6px;
-    gap: 0;
-}
-
-/* ─── Responsive ──────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-
-    /* Quando aberta em mobile: vira overlay sobre o conteúdo (não empurra) */
-    .app-sidebar:not(.app-sidebar--collapsed) {
-        position: fixed;
-        top: 58px;
-        left: 0;
-        height: calc(100dvh - 58px);
-        z-index: var(--z-modal);
-        background: var(--surface);
-        box-shadow: var(--elevation-3);
-        border-right: 1px solid var(--border);
-    }
-
-    /* Quando colapsada em mobile: some completamente para liberar espaço */
-    .app-sidebar--collapsed {
-        width: 0;
-        padding: 0;
-        border-right: none;
-        overflow: hidden;
-    }
-}
-
-/* ─── Hidden state (theater mode) — sem transição para ser instantâneo ───── */
+/* ─── Hidden state (theater mode) ────────────────────────────────────────── */
 
 .app-sidebar--hidden {
-    width: 0;
-    padding: 0;
-    border: none;
-    overflow: hidden;
-    transition: none;
+    display: none;
 }
