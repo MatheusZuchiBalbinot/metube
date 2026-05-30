@@ -27,6 +27,7 @@ class VideoResource extends JsonResource
             'captions' => $this->captions ?? [],
             'channel' => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
             'channel_id' => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),
+            'channel_subscribers' => $this->whenLoaded('channel', fn () => $this->channel->subscribers_count),
         ];
     }
 }

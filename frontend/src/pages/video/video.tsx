@@ -30,6 +30,7 @@ import AutoplayBanner from './components/AutoplayBanner';
 import VideoPlayerArea from './components/VideoPlayerArea';
 import VideoInfo from './components/VideoInfo';
 import VideoSidebar from './components/VideoSidebar';
+import ChatSection from '@components/chat/section';
 
 export default function VideoPage() {
     const { i18n } = useTranslation();
@@ -48,6 +49,18 @@ export default function VideoPage() {
     const [descExpanded, setDescExpanded] = useState(false);
     const [readingMode, setReadingMode] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const chatRef = useRef<HTMLDivElement>(null);
+
+    function handleScrollToChat() {
+        const el = chatRef.current;
+        if (!el) {
+            return;
+        }
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.remove('chat-wrapper--flash');
+        void el.offsetHeight; // force reflow to restart the CSS animation
+        el.classList.add('chat-wrapper--flash');
+    }
 
     const storeVideo = videos.find((v: Video) => v.id === (id as VideoId));
     const { video, fetchFailed } = useVideoFetch(id, storeVideo);
@@ -167,7 +180,14 @@ export default function VideoPage() {
                         descExpanded={descExpanded}
                         onDescExpandToggle={() => setDescExpanded(v => !v)}
                         language={i18n.language}
+                        onScrollToChat={authUser !== null ? handleScrollToChat : undefined}
                     />
+
+                    {authUser !== null && (
+                        <div ref={chatRef} className="chat-wrapper">
+                            <ChatSection vuid={toVuid(video.id)} transcription={transcription} summary={summary} />
+                        </div>
+                    )}
 
                     <CommentSection vuid={toVuid(video.id)} videoChannelId={video.channelId} />
                 </main>
@@ -176,6 +196,7 @@ export default function VideoPage() {
                     relatedVideos={relatedVideos}
                     loadingRelated={loadingRelated}
                     summary={summary}
+                    transcription={transcription}
                     getCurrentTime={getCurrentTime}
                     videoRef={videoRef}
                     onSeekToChapter={(seconds) => {

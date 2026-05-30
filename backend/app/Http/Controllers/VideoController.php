@@ -89,7 +89,10 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('view', $video);
 
-        return $this->json(new VideoResource($video->load('channel')));
+        $video->load('channel');
+        $video->channel->loadCount('subscribers');
+
+        return $this->json(new VideoResource($video));
     }
 
     /**
