@@ -1,3 +1,4 @@
+import { t } from 'i18next';
 import type { Seconds } from '@models';
 
 export function formatDuration(seconds: Seconds): string {
@@ -87,24 +88,22 @@ export function formatRelativeDate(isoDate: string | null | undefined, locale = 
     return rtf.format(-diffY, 'year');
 }
 
-export function formatEta(seconds: number, locale = 'en'): string {
+export function formatEta(seconds: number): string {
     const isInvalid = seconds <= 0 || !Number.isFinite(seconds);
 
     if (isInvalid) {
         return '';
     }
 
-    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
-
     if (seconds < 60) {
-        return `${rtf.format(Math.ceil(seconds), 'second').replace('in ', '')} left`;
+        return t('time.seconds_left', { count: Math.ceil(seconds) });
     }
 
     if (seconds < 3600) {
-        return `${rtf.format(Math.ceil(seconds / 60), 'minute').replace('in ', '')} left`;
+        return t('time.minutes_left', { count: Math.ceil(seconds / 60) });
     }
 
-    return `${rtf.format(Math.ceil(seconds / 3600), 'hour').replace('in ', '')} left`;
+    return t('time.hours_left', { count: Math.ceil(seconds / 3600) });
 }
 
 export function parseTimestamp(timestamp: string): number {

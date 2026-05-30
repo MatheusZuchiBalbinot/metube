@@ -128,19 +128,19 @@ describe('formatEta', () => {
     });
 
     it('returns seconds remaining for < 60s', () => {
-        const result = formatEta(30, 'en');
+        const result = formatEta(30);
         expect(result).toMatch(/second/i);
         expect(result).toContain('left');
     });
 
     it('returns minutes remaining for < 3600s', () => {
-        const result = formatEta(120, 'en');
+        const result = formatEta(120);
         expect(result).toMatch(/minute/i);
         expect(result).toContain('left');
     });
 
     it('returns hours remaining for >= 3600s', () => {
-        const result = formatEta(7200, 'en');
+        const result = formatEta(7200);
         expect(result).toMatch(/hour/i);
         expect(result).toContain('left');
     });

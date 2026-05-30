@@ -21,6 +21,14 @@
         "dismiss": "Dispensar",
         "or": "ou"
     },
+    "time": {
+        "seconds_left_one": "{{count}} segundo restante",
+        "seconds_left_other": "{{count}} segundos restantes",
+        "minutes_left_one": "{{count}} minuto restante",
+        "minutes_left_other": "{{count}} minutos restantes",
+        "hours_left_one": "{{count}} hora restante",
+        "hours_left_other": "{{count}} horas restantes"
+    },
     "auth": {
         "sign_in": "Entrar",
         "sign_in_subtitle": "Entre na sua conta para continuar",
@@ -215,6 +223,8 @@
         "transcription_processing": "Transcrição em andamento...",
         "transcription_processing_title": "Transcrevendo o áudio",
         "transcription_processing_sub": "Estamos convertendo o áudio do vídeo em texto. Isso pode levar alguns minutos.",
+        "summary_processing_title": "Gerando o resumo",
+        "summary_processing_sub": "Nossa IA está lendo a transcrição para escrever o resumo, os pontos-chave e os capítulos. Isso pode levar um instante.",
         "transcription_failed": "A transcrição falhou.",
         "transcription_retry": "Tentar novamente",
         "transcription_language": "Idioma: {{lang}}",
@@ -399,7 +409,10 @@
         "filter_all": "Todos",
         "filter_trending": "Em alta",
         "filter_recent": "Recentes",
-        "filter_shorts": "Shorts"
+        "filter_shorts": "Shorts",
+        "filter_topic": "Por tema",
+        "view_list": "Ver como lista",
+        "view_diamond": "Ver como diamantes"
     },
     "mini_player": {
         "label": "Mini player",
@@ -492,7 +505,8 @@
             "video_processed": "Seu vídeo está no ar",
             "video_processed_failed": "Falha no processamento do vídeo",
             "video_transcription_started": "Transcrição iniciada",
-            "video_transcribed": "Transcrição disponível"
+            "video_transcribed": "Transcrição disponível",
+            "video_ai_summary_ready": "Resumo da IA está pronto"
         }
     }
 }

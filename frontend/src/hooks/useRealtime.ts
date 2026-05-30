@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store/index';
 import { notificationsActions } from '@store/notificationsSlice';
@@ -12,6 +12,7 @@ import { playNotificationSound } from '@utils';
 import { ToastType } from '@enums/toastType';
 import { VideoStatus } from '@models';
 import type { Video } from '@models';
+import type { Toast } from '@store/toastSlice';
 
 export function useRealtime(): void {
     const { t } = useTranslation();
@@ -19,7 +20,16 @@ export function useRealtime(): void {
     const user = useAppSelector(state => state.auth.user);
     const videos = useAppSelector(state => state.video.videos);
     const videosRef = useRef<Video[]>(videos);
-    videosRef.current = videos;
+    useLayoutEffect(() => {
+        videosRef.current = videos;
+    });
+
+    // Every realtime notification toast also plays the notification sound,
+    // regardless of which broadcast handler produced it.
+    const notify = useCallback((toast: Omit<Toast, 'id'>) => {
+        dispatch(toastActions.addToast(toast));
+        void playNotificationSound();
+    }, [dispatch]);
 
     useEffect(() => {
         if (user === null) {
@@ -53,11 +63,14 @@ export function useRealtime(): void {
                 const hasDedicatedBroadcastHandler = BROADCAST_HANDLED_TYPES.has(notification.type);
 
                 if (!hasDedicatedBroadcastHandler) {
-                    dispatch(toastActions.addToast({
+                    const thumbnail = notification.data.thumbnail_url as string | undefined;
+                    const subtitle = notification.data.video_title as string | undefined;
+                    notify({
                         message: formatNotificationMessage(notification, t),
                         type: ToastType.INFO,
-                    }));
-                    void playNotificationSound();
+                        thumbnail: thumbnail ?? undefined,
+                        subtitle,
+                    });
                 }
             });
 
@@ -76,12 +89,12 @@ export function useRealtime(): void {
 
                 if (data.status === VideoStatus.PROCESSING) {
                     const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
-                    dispatch(toastActions.addToast({
+                    notify({
                         message: t('video.processing_toast'),
                         type: ToastType.INFO,
                         thumbnail: video?.thumbnail,
                         subtitle: video?.title,
-                    }));
+                    });
                 }
             });
 
@@ -91,37 +104,37 @@ export function useRealtime(): void {
                 const subtitle = video?.title;
 
                 if (data.status === 'processing') {
-                    dispatch(toastActions.addToast({
+                    notify({
                         message: t('video.transcription_started_toast'),
                         type: ToastType.INFO,
                         thumbnail,
                         subtitle,
-                    }));
+                    });
                 } else if (data.status === 'completed') {
-                    dispatch(toastActions.addToast({
+                    notify({
                         message: t('video.transcription_completed_toast'),
                         type: ToastType.SUCCESS,
                         thumbnail,
                         subtitle,
-                    }));
+                    });
                 } else if (data.status === 'failed') {
-                    dispatch(toastActions.addToast({
+                    notify({
                         message: t('video.transcription_failed_toast'),
                         type: ToastType.ERROR,
                         thumbnail,
                         subtitle,
-                    }));
+                    });
                 }
             });
 
             channel.listen('.AiSuggestionReady', (payload: { vuid: string; title: string }) => {
                 const video = videosRef.current.find(v => v.videoUrl?.includes(payload.vuid));
-                dispatch(toastActions.addToast({
+                notify({
                     message: t('ai_suggestion.pending_toast', { title: payload.title }),
                     type: ToastType.SUCCESS,
                     thumbnail: video?.thumbnail,
                     subtitle: video?.title,
-                }));
+                });
             });
         });
 
@@ -129,7 +142,7 @@ export function useRealtime(): void {
             isCancelled = true;
             void getEcho().then(echo => echo?.leave(`users.${user.uuid}`));
         };
-    }, [dispatch, user, t]);
+    }, [dispatch, user, t, notify]);
 
     useEffect(() => {
         const isLoggedIn = user !== null;
@@ -147,12 +160,16 @@ export function useRealtime(): void {
 const BROADCAST_HANDLED_TYPES = new Set<NotificationType>([
     NotificationType.VIDEO_TRANSCRIBED,
     NotificationType.VIDEO_TRANSCRIPTION_STARTED,
+    // AI summary toast is shown by the .AiSuggestionReady listener (single uploads);
+    // batch uploads still get the persisted bell entry, just no toast.
+    NotificationType.VIDEO_AI_SUMMARY_READY,
 ]);
 
 const NOTIFICATION_CLASS_MAP: Record<string, NotificationType> = {
     'App\\Notifications\\VideoProcessedNotification': NotificationType.VIDEO_PROCESSED,
     'App\\Notifications\\VideoTranscribedNotification': NotificationType.VIDEO_TRANSCRIBED,
     'App\\Notifications\\VideoTranscriptionStartedNotification': NotificationType.VIDEO_TRANSCRIPTION_STARTED,
+    'App\\Notifications\\VideoAiSummaryReadyNotification': NotificationType.VIDEO_AI_SUMMARY_READY,
     'App\\Notifications\\VideoFromSubscriptionNotification': NotificationType.VIDEO_FROM_SUBSCRIPTION,
     'App\\Notifications\\VideoLikedNotification': NotificationType.VIDEO_LIKED,
     'App\\Notifications\\NewSubscriberNotification': NotificationType.NEW_SUBSCRIBER,
