@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { List, BookOpen } from 'lucide-react';
+import { List, BookOpen, Tv2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import VideoRow from '@components/video/row';
 import VideoRowSkeleton from '@components/video/rowSkeleton';
@@ -8,25 +8,33 @@ import FilterPanel from '@components/filter/panel';
 import type { FilterState } from '@components/filter/panel';
 import { SidebarTab } from '@enums/sidebarTab';
 import { AnalyticsSource } from '@api';
-import type { VideoSummary } from '@api';
+import type { VideoSummary, VideoTranscription } from '@api';
 import { VideoFilter, cn, parseChapterTimestamp } from '@utils';
 import type { Video, Tag } from '@models';
-import { Spinner } from '@ui';
+import { Spinner, EmptyState } from '@ui';
+import { domain } from '@domain';
+
+const WAVEFORM_BARS = [0, 1, 2, 3, 4, 5, 6];
 
 interface VideoSidebarProps {
     relatedVideos: Video[]
     loadingRelated: boolean
     summary: VideoSummary | null
+    transcription: VideoTranscription | null
     getCurrentTime: () => number
     onSeekToChapter: (seconds: number) => void
     videoRef: React.RefObject<HTMLVideoElement | null>
 }
 
 export default function VideoSidebar({
-    relatedVideos, loadingRelated, summary, getCurrentTime, onSeekToChapter, videoRef,
+    relatedVideos, loadingRelated, summary, transcription, getCurrentTime, onSeekToChapter, videoRef,
 }: VideoSidebarProps) {
     const { t } = useTranslation();
     const hasSummary = summary !== null;
+    const isSummaryGenerating = transcription !== null
+        && domain.transcription.isCompleted(transcription)
+        && !hasSummary;
+    const showSummaryTab = hasSummary || isSummaryGenerating;
     const [sidebarTab, setSidebarTab] = useState<SidebarTab>(
         hasSummary ? SidebarTab.SUMMARY : SidebarTab.RELATED,
     );
@@ -94,7 +102,7 @@ export default function VideoSidebar({
                     {t('video.related')}
                 </button>
 
-                {hasSummary && (
+                {showSummaryTab && (
                     <button
                         role="tab"
                         aria-selected={sidebarTab === SidebarTab.SUMMARY}
@@ -106,33 +114,55 @@ export default function VideoSidebar({
                     </button>
                 )}
 
-                {sidebarTab === SidebarTab.RELATED && (
-                    <div className="video-page__sidebar-filter-slot">
-                        <FilterPanel
-                            allTags={allRelatedTags}
-                            value={filterState}
-                            onChange={setFilterState}
-                            iconOnly
-                        />
-                    </div>
-                )}
+                <div className="video-page__sidebar-filter-slot" aria-hidden={sidebarTab !== SidebarTab.RELATED || undefined} style={sidebarTab !== SidebarTab.RELATED ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
+                    <FilterPanel
+                        allTags={allRelatedTags}
+                        value={filterState}
+                        onChange={setFilterState}
+                        iconOnly
+                    />
+                </div>
             </div>
 
             {sidebarTab === SidebarTab.RELATED && (
                 <div className="video-page__sidebar-list">
-                    {loadingRelated
-                        ? Array.from({ length: 5 }).map((_, i) => (
-                            <VideoRowSkeleton key={i} />
-                        ))
-                        : filteredRelated.map((v, idx) => (
-                            <VideoRow key={v.id} video={v} source={AnalyticsSource.RECOMMENDED} position={idx} />
-                        ))
-                    }
+                    {loadingRelated && Array.from({ length: 5 }).map((_, i) => (
+                        <VideoRowSkeleton key={i} />
+                    ))}
+                    {!loadingRelated && filteredRelated.map((v, idx) => (
+                        <VideoRow key={v.id} video={v} source={AnalyticsSource.RECOMMENDED} position={idx} />
+                    ))}
+                    {!loadingRelated && filteredRelated.length === 0 && (
+                        <EmptyState
+                            icon={<Tv2 size={32} strokeWidth={1.5} />}
+                            title={relatedVideos.length === 0 ? t('video.related_empty') : t('video.related_filtered_empty')}
+                            description={relatedVideos.length === 0 ? t('video.related_empty_desc') : undefined}
+                        />
+                    )}
                 </div>
             )}
 
-            {sidebarTab === SidebarTab.SUMMARY && hasSummary && (
+            {sidebarTab === SidebarTab.SUMMARY && showSummaryTab && (
                 <div className="video-page__summary">
+                    {isSummaryGenerating && (
+                        <div className="video-page__transcription-processing">
+                            <div className="video-page__transcription-waveform" aria-hidden="true">
+                                {WAVEFORM_BARS.map(i => (
+                                    <span
+                                        key={i}
+                                        className="video-page__transcription-waveform-bar"
+                                        style={{ animationDelay: `${i * 0.14}s` }}
+                                    />
+                                ))}
+                            </div>
+                            <h3 className="video-page__transcription-processing-title">
+                                {t('video.summary_processing_title')}
+                            </h3>
+                            <p className="video-page__transcription-processing-sub">
+                                {t('video.summary_processing_sub')}
+                            </p>
+                        </div>
+                    )}
                     {hasSummaryProse && (
                         <section className="video-page__summary-section">
                             <h3 className="video-page__summary-heading">{t('video.summary')}</h3>
