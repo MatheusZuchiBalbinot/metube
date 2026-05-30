@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
@@ -17,6 +17,19 @@ interface FilterPanelProps {
     onChange: (f: FilterState) => void
     iconOnly?: boolean
 }
+
+interface DropdownPos {
+    top?: number
+    bottom?: number
+    left: number
+    maxHeight: number
+}
+
+const DROPDOWN_WIDTH = 340;
+const VIEWPORT_MARGIN = 12;
+const TRIGGER_GAP = 8;
+// Below this much free space under the trigger we flip the panel above it.
+const FLIP_THRESHOLD = 360;
 
 const YEAR_OPTIONS = Array.from(
     { length: new Date().getFullYear() - 2019 },
@@ -117,7 +130,7 @@ function TagChip({ tag, value, onToggle }: TagChipProps) {
 export default function FilterPanel({ allTags, value, onChange, iconOnly = false }: FilterPanelProps) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
-    const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+    const [dropdownPos, setDropdownPos] = useState<DropdownPos | null>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -132,26 +145,41 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
     const hasActiveFilters = activeCount > 0;
     const hasTags = allTags.length > 0;
 
+    const updatePosition = useCallback(() => {
+        const triggerEl = triggerRef.current;
+        if (!triggerEl) {
+            return;
+        }
+
+        const rect = triggerEl.getBoundingClientRect();
+
+        let left = rect.left;
+        if (left + DROPDOWN_WIDTH > window.innerWidth - VIEWPORT_MARGIN) {
+            left = window.innerWidth - DROPDOWN_WIDTH - VIEWPORT_MARGIN;
+        }
+        left = Math.max(VIEWPORT_MARGIN, left);
+
+        const spaceBelow = window.innerHeight - rect.bottom - TRIGGER_GAP - VIEWPORT_MARGIN;
+        const spaceAbove = rect.top - TRIGGER_GAP - VIEWPORT_MARGIN;
+        const shouldFlipUp = spaceBelow < FLIP_THRESHOLD && spaceAbove > spaceBelow;
+
+        if (shouldFlipUp) {
+            setDropdownPos({ bottom: window.innerHeight - rect.top + TRIGGER_GAP, left, maxHeight: Math.max(160, spaceAbove) });
+            return;
+        }
+
+        setDropdownPos({ top: rect.bottom + TRIGGER_GAP, left, maxHeight: Math.max(160, spaceBelow) });
+    }, []);
+
     useLayoutEffect(() => {
         if (!open) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDropdownPos(null);
             return;
         }
-        const triggerEl = triggerRef.current;
-        if (!triggerEl) {
-            return;
-        }
-        const rect = triggerEl.getBoundingClientRect();
-        const dropdownWidth = 340;
-        const minMargin = 12;
-        let left = rect.left;
-        if (left + dropdownWidth > window.innerWidth - minMargin) {
-            left = window.innerWidth - dropdownWidth - minMargin;
-        }
-        left = Math.max(minMargin, left);
-        setDropdownPos({ top: rect.bottom + 8, left });
-    }, [open]);
+
+        updatePosition();
+    }, [open, updatePosition]);
 
     useEffect(() => {
         if (!open) {
@@ -178,8 +206,15 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
             triggerRef.current?.focus();
         }
 
-        function handleScrollOrResize() {
-            setOpen(false);
+        function handleScrollOrResize(e?: Event) {
+            const target = (e as UIEvent | undefined)?.target as Element | null;
+            const isInsideDropdown = target !== null && dropdownRef.current?.contains(target);
+            if (isInsideDropdown) {
+                return;
+            }
+
+            // Keep the panel anchored to the trigger instead of closing it.
+            updatePosition();
         }
 
         document.addEventListener('mousedown', handleOutside);
@@ -193,7 +228,7 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
             window.removeEventListener('resize', handleScrollOrResize);
             window.removeEventListener('scroll', handleScrollOrResize, true);
         };
-    }, [open]);
+    }, [open, updatePosition]);
 
     function toggleTag(tag: Tag) {
         const isSelected = value.tags.includes(tag);
@@ -234,7 +269,7 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
             className="filter-panel__dropdown"
             role="dialog"
             aria-label={t('video.filters')}
-            style={{ top: dropdownPos.top, left: dropdownPos.left }}
+            style={{ top: dropdownPos.top, bottom: dropdownPos.bottom, left: dropdownPos.left, maxHeight: dropdownPos.maxHeight }}
         >
             {hasTags && (
                 <div className="filter-panel__dropdown-section">
