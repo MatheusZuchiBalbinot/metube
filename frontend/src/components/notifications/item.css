@@ -46,6 +46,22 @@
     background: var(--accent-subtle);
 }
 
+/* Type-coded icon badges (double-class to outrank the --unread tint) */
+.notification-item__icon.notification-item__icon--like {
+    background: rgba(248, 113, 113, 0.14);
+    color: #f87171;
+}
+
+.notification-item__icon.notification-item__icon--ai {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+}
+
+.notification-item__icon.notification-item__icon--success {
+    background: rgba(52, 211, 153, 0.14);
+    color: #34d399;
+}
+
 .notification-item__body {
     flex: 1;
     min-width: 0;

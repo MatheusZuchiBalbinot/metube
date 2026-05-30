@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic } from 'lucide-react';
+import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic, Sparkles } from 'lucide-react';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
 import { videoUrl, formatRelativeDate } from '@utils';
@@ -13,6 +13,7 @@ const VIDEO_NOTIFICATION_TYPES = new Set<NotificationType>([
     NotificationType.VIDEO_PROCESSED,
     NotificationType.VIDEO_TRANSCRIPTION_STARTED,
     NotificationType.VIDEO_TRANSCRIBED,
+    NotificationType.VIDEO_AI_SUMMARY_READY,
     NotificationType.COMMENT_REPLIED,
     NotificationType.COMMENT_LIKED,
 ]);
@@ -32,6 +33,21 @@ function getIcon(type: NotificationType): React.ReactNode {
         case NotificationType.VIDEO_PROCESSED: return <Clapperboard size={14} />;
         case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return <Mic size={14} />;
         case NotificationType.VIDEO_TRANSCRIBED: return <Captions size={14} />;
+        case NotificationType.VIDEO_AI_SUMMARY_READY: return <Sparkles size={14} />;
+    }
+}
+
+function getIconVariant(type: NotificationType): string {
+    switch (type) {
+        case NotificationType.VIDEO_LIKED:
+        case NotificationType.COMMENT_LIKED:
+            return 'like';
+        case NotificationType.VIDEO_AI_SUMMARY_READY:
+            return 'ai';
+        case NotificationType.VIDEO_PROCESSED:
+            return 'success';
+        default:
+            return 'default';
     }
 }
 
@@ -65,6 +81,8 @@ function getText(
             return t('notifications.types.video_transcription_started');
         case NotificationType.VIDEO_TRANSCRIBED:
             return t('notifications.types.video_transcribed');
+        case NotificationType.VIDEO_AI_SUMMARY_READY:
+            return t('notifications.types.video_ai_summary_ready');
     }
 }
 
@@ -79,9 +97,10 @@ export default function NotificationItem({ notification, onRead }: NotificationI
     const vuid = notification.data.vuid as string | undefined;
 
     const isVideoType = VIDEO_NOTIFICATION_TYPES.has(notification.type);
-    const thumbnail = isVideoType && vuid
-        ? videos.find(v => v.videoUrl?.includes(vuid))?.thumbnail
-        : undefined;
+    const payloadThumbnail = notification.data.thumbnail_url as string | undefined;
+    const thumbnail = !isVideoType
+        ? undefined
+        : (payloadThumbnail ?? (vuid ? videos.find(v => v.videoUrl?.includes(vuid))?.thumbnail : undefined));
 
     function handleClick(): void {
         onRead(notification.id);
@@ -96,7 +115,7 @@ export default function NotificationItem({ notification, onRead }: NotificationI
             className={`notification-item${isUnread ? ' notification-item--unread' : ''}`}
             onClick={handleClick}
         >
-            <span className="notification-item__icon">
+            <span className={`notification-item__icon notification-item__icon--${getIconVariant(notification.type)}`}>
                 {getIcon(notification.type)}
             </span>
             <span className="notification-item__body">
