@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flame, Clock, Clapperboard, LayoutGrid, Hash } from 'lucide-react';
-import { SortBy, VideoFilter, type FilterState } from '@utils';
+import { VideoFilter, type FilterState } from '@utils';
 import type { Tag } from '@models';
 import { cn } from '@utils';
 
@@ -9,95 +9,108 @@ interface ProfileQuickFiltersProps {
     allTags: Tag[]
     value: FilterState
     onChange: (state: FilterState) => void
+    onScrollToTop?: () => void
+    onScrollToTrending?: () => void
+    onScrollToRecent?: () => void
+    onScrollToTopic?: () => void
 }
 
-type QuickFilterId = 'all' | 'trending' | 'recent' | 'shorts' | string;
-
-interface QuickFilterOption {
-    id: QuickFilterId
-    labelKey?: string
-    label?: string
-    icon: React.ReactNode
-    state: FilterState
-}
-
-function isActive(option: QuickFilterOption, current: FilterState): boolean {
-    const s = option.state;
-    const tagsMatch = JSON.stringify([...s.tags].sort()) === JSON.stringify([...current.tags].sort());
-    const sortMatch = s.sortBy === current.sortBy;
-    const noDateFilter = current.year === null && current.dateFrom === null && current.dateTo === null;
-    return tagsMatch && sortMatch && noDateFilter;
-}
-
-export default function ProfileQuickFilters({ allTags, value, onChange }: ProfileQuickFiltersProps) {
+export default function ProfileQuickFilters({
+    allTags,
+    value,
+    onChange,
+    onScrollToTop,
+    onScrollToTrending,
+    onScrollToRecent,
+    onScrollToTopic,
+}: ProfileQuickFiltersProps) {
     const { t } = useTranslation();
 
     const hasShorts = allTags.includes('shorts' as Tag);
-
     const topTags = useMemo(
         () => allTags.filter(tag => tag !== 'shorts').slice(0, 5),
         [allTags],
     );
 
-    const options = useMemo<QuickFilterOption[]>(() => {
-        const base: QuickFilterOption[] = [
-            {
-                id: 'all',
-                labelKey: 'profile.filter_all',
-                icon: <LayoutGrid size={13} />,
-                state: VideoFilter.emptyState(),
-            },
-            {
-                id: 'trending',
-                labelKey: 'profile.filter_trending',
-                icon: <Flame size={13} />,
-                state: { ...VideoFilter.emptyState(), sortBy: SortBy.VIEWS },
-            },
-            {
-                id: 'recent',
-                labelKey: 'profile.filter_recent',
-                icon: <Clock size={13} />,
-                state: { ...VideoFilter.emptyState(), sortBy: SortBy.RECENT },
-            },
-        ];
+    const isFilterEmpty = VideoFilter.isEmpty(value);
+    const activeTagSet = new Set(value.tags.map(String));
 
-        if (hasShorts) {
-            base.push({
-                id: 'shorts',
-                labelKey: 'profile.filter_shorts',
-                icon: <Clapperboard size={13} />,
-                state: { ...VideoFilter.emptyState(), tags: ['shorts' as Tag] },
-            });
-        }
+    function handleNavClick(scrollFn?: () => void): void {
+        onChange(VideoFilter.emptyState());
+        scrollFn?.();
+    }
 
-        for (const tag of topTags) {
-            base.push({
-                id: tag,
-                label: `#${tag}`,
-                icon: <Hash size={12} />,
-                state: { ...VideoFilter.emptyState(), tags: [tag] },
-            });
-        }
-
-        return base;
-    }, [hasShorts, topTags]);
+    function handleTagClick(tag: Tag): void {
+        const isActive = activeTagSet.has(String(tag));
+        onChange(isActive ? VideoFilter.emptyState() : { ...VideoFilter.emptyState(), tags: [tag] });
+    }
 
     return (
         <div className="profile-quick-filters">
-            {options.map(option => {
-                const active = isActive(option, value);
-                return (
-                    <button
-                        key={option.id}
-                        type="button"
-                        className={cn('profile-quick-filters__chip', active && 'profile-quick-filters__chip--active')}
-                        onClick={() => onChange(option.state)}
-                    >
-                        {option.icon}
-                        <span>{option.label ?? t(option.labelKey!)}</span>
-                    </button>
-                );
-            })}
+            <button
+                type="button"
+                className={cn('profile-quick-filters__chip', isFilterEmpty && 'profile-quick-filters__chip--active')}
+                onClick={() => handleNavClick(onScrollToTop)}
+            >
+                <LayoutGrid size={13} />
+                <span>{t('profile.filter_all')}</span>
+            </button>
+
+            <button
+                type="button"
+                className="profile-quick-filters__chip"
+                onClick={() => handleNavClick(onScrollToTrending)}
+            >
+                <Flame size={13} />
+                <span>{t('profile.filter_trending')}</span>
+            </button>
+
+            <button
+                type="button"
+                className="profile-quick-filters__chip"
+                onClick={() => handleNavClick(onScrollToRecent)}
+            >
+                <Clock size={13} />
+                <span>{t('profile.filter_recent')}</span>
+            </button>
+
+            <button
+                type="button"
+                className="profile-quick-filters__chip"
+                onClick={() => handleNavClick(onScrollToTopic)}
+            >
+                <Hash size={13} />
+                <span>{t('profile.filter_topic')}</span>
+            </button>
+
+            {hasShorts && (
+                <button
+                    type="button"
+                    className={cn(
+                        'profile-quick-filters__chip',
+                        activeTagSet.has('shorts') && 'profile-quick-filters__chip--active',
+                    )}
+                    onClick={() => handleTagClick('shorts' as Tag)}
+                >
+                    <Clapperboard size={13} />
+                    <span>{t('profile.filter_shorts')}</span>
+                </button>
+            )}
+
+            {topTags.map(tag => (
+                <button
+                    key={tag}
+                    type="button"
+                    className={cn(
+                        'profile-quick-filters__chip',
+                        activeTagSet.has(String(tag)) && 'profile-quick-filters__chip--active',
+                    )}
+                    onClick={() => handleTagClick(tag)}
+                >
+                    <Hash size={12} />
+                    <span>#{tag}</span>
+                </button>
+            ))}
         </div>
     );
 }

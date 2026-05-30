@@ -871,6 +871,38 @@
     background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
 }
 
+/* ─── Summary prose (sidebar) ──────────────────────────────────────────────── */
+
+.video-page__summary-prose {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--text-2);
+}
+
+.video-page__summary-prose p {
+    margin: 0 0 0.75em;
+}
+
+.video-page__summary-prose p:last-child {
+    margin-bottom: 0;
+}
+
+.video-page__summary-prose h2,
+.video-page__summary-prose h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1em 0 0.4em;
+}
+
+.video-page__summary-prose code {
+    font-family: monospace;
+    font-size: 0.8125rem;
+    background: var(--surface-3);
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+
 /* ─── Reading mode — section overrides ─────────────────────────────────────── */
 
 .video-page__reading-summary .video-page__key-points {
@@ -1183,7 +1215,7 @@
 .video-page__reading-summary {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 16px;
 }
 
 .video-page__reading-subsection {
