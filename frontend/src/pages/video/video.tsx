@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
 import { video as videoApi, toVuid } from '@api';
-import AiSuggestions from '@components/video/aiSuggestions';
 import CommentSection from '@components/comment/section';
 import './video.css';
 import {
@@ -26,7 +25,7 @@ import { useVideoShare } from './hooks/useVideoShare';
 import { useVideoSave } from './hooks/useVideoSave';
 import VideoNotFound from './components/VideoNotFound';
 import VideoProcessingScreen from './components/VideoProcessingScreen';
-import StagingBanner from '@components/video/stagingBanner';
+import StagingPanel from '@components/video/stagingPanel';
 import AutoplayBanner from './components/AutoplayBanner';
 import VideoPlayerArea from './components/VideoPlayerArea';
 import VideoInfo from './components/VideoInfo';
@@ -127,7 +126,7 @@ export default function VideoPage() {
         <div className="video-page">
             <div className="video-page__layout">
                 <main className="video-page__main">
-                    {isStaging && <StagingBanner video={video} />}
+                    {isStaging && <StagingPanel video={video} summary={summary} />}
 
                     <VideoPlayerArea
                         readingMode={readingMode}
@@ -139,6 +138,7 @@ export default function VideoPage() {
                         videoRef={videoRef}
                         hasVideoFile={video.videoUrl !== undefined && video.videoUrl !== ''}
                         src={video.videoUrl ?? ''}
+                        autoPlay={autoplay}
                         chapters={summary?.chapters}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={handleVideoEnded}
@@ -168,12 +168,21 @@ export default function VideoPage() {
                         language={i18n.language}
                     />
 
-                    {isOwner && <AiSuggestions video={video} />}
-
                     <CommentSection vuid={toVuid(video.id)} videoChannelId={video.channelId} />
                 </main>
 
-                <VideoSidebar relatedVideos={relatedVideos} loadingRelated={loadingRelated} />
+                <VideoSidebar
+                    relatedVideos={relatedVideos}
+                    loadingRelated={loadingRelated}
+                    summary={summary}
+                    getCurrentTime={getCurrentTime}
+                    videoRef={videoRef}
+                    onSeekToChapter={(seconds) => {
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = seconds;
+                        }
+                    }}
+                />
             </div>
         </div>
     );

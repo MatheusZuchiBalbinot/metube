@@ -91,6 +91,16 @@ const videoSlice = createSlice({
             }
         },
 
+        upsertVideo(state, action: PayloadAction<Video>) {
+            const idx = state.videos.findIndex(v => v.id === action.payload.id);
+            const isFound = idx !== -1;
+            if (isFound) {
+                state.videos[idx] = action.payload;
+            } else {
+                state.videos.unshift(action.payload);
+            }
+        },
+
         editVideo(state, action: PayloadAction<{ id: VideoId; partial: Partial<Video> }>) {
             const idx = state.videos.findIndex(v => v.id === action.payload.id);
             const isFound = idx !== -1;
