@@ -2,7 +2,6 @@ import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { CalendarIcon, X } from 'lucide-react';
 import Calendar from './calendar';
-import Button from '../button/button';
 import './picker.css';
 
 interface DatePickerProps {
@@ -55,13 +54,10 @@ export default function DatePicker({ value, onChange, placeholder = 'Pick a date
     return (
         <Popover.Root open={open} onOpenChange={setOpen}>
             <Popover.Trigger asChild>
-                <Button
+                <button
                     id={id}
                     type="button"
-                    variant="ghost"
                     aria-label={placeholder}
-                    aria-haspopup="dialog"
-                    aria-expanded={open}
                     className={`dp-trigger${hasValue ? '' : ' dp-trigger--empty'}`}
                 >
                     <CalendarIcon size={14} className="dp-trigger__icon" />
@@ -71,7 +67,7 @@ export default function DatePicker({ value, onChange, placeholder = 'Pick a date
                     {hasValue && (
                         <X size={12} className="dp-trigger__clear" onClick={handleClear} />
                     )}
-                </Button>
+                </button>
             </Popover.Trigger>
 
             <Popover.Portal>
