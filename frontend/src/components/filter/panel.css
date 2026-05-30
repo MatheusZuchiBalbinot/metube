@@ -65,6 +65,17 @@
     justify-content: center;
     background: transparent;
     border-color: transparent;
+    position: relative;
+}
+
+.filter-panel__trigger--icon-only .filter-panel__trigger-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: 0.5625rem;
 }
 
 .filter-panel__trigger--icon-only:hover,
