@@ -164,8 +164,7 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
 
                     {!aiLoading && hasPendingSuggestion && (
                         <span className="ai-border">
-                            <Button variant="ghost" size="sm" className="ai-border__btn" onClick={openModal}>
-                                <Sparkles size={14} />
+                            <Button variant="ghost" size="sm" className="ai-border__btn" leftIcon={<Sparkles size={14} />} onClick={openModal}>
                                 {t('ai_suggestion.title')}
                             </Button>
                         </span>
@@ -189,12 +188,10 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
                 size="md"
                 footer={
                     <div className="staging-modal__footer">
-                        <Button variant="ghost" size="sm" onClick={() => void handleDismiss()}>
-                            <X size={14} />
+                        <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={() => void handleDismiss()}>
                             {t('ai_suggestion.dismiss')}
                         </Button>
-                        <Button variant="primary" size="sm" disabled={applying} onClick={() => void handleApply()}>
-                            <Check size={14} />
+                        <Button variant="primary" size="sm" leftIcon={<Check size={14} />} disabled={applying} onClick={() => void handleApply()}>
                             {applying ? t('common.loading') : t('ai_suggestion.accept')}
                         </Button>
                     </div>
