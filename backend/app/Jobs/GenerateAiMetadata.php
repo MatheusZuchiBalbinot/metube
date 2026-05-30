@@ -8,7 +8,7 @@ use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
 use App\Notifications\VideoAiSummaryReadyNotification;
-use App\Services\GeminiService;
+use App\Services\IAService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\RequestException;
@@ -56,7 +56,7 @@ class GenerateAiMetadata implements ShouldQueue
      * @throws RequestException
      * @throws \RuntimeException
      */
-    public function handle(GeminiService $gemini): void
+    public function handle(IAService $gemini): void
     {
         $video = Video::with('transcription')->find($this->video->id);
 
