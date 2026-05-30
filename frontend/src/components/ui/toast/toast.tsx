@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
 import { cn } from '@utils';
@@ -33,43 +33,59 @@ function ToastItem({ toast }: ToastItemProps) {
         dispatch(toastActions.removeToast(toast.id));
     }
 
-    const iconMap = {
-        success: <CheckCircle2 size={16} />,
-        error: <AlertCircle size={16} />,
-        info: <Info size={16} />,
-    };
-
     const hasMedia = toast.thumbnail !== undefined;
 
-    return (
-        <div className={cn('toast', `toast--${toast.type}`, hasMedia && 'toast--media')} role="alert">
-            {hasMedia && (
-                <img className="toast__thumb" src={toast.thumbnail} alt="" aria-hidden="true" />
-            )}
-
-            {!hasMedia && (
-                <span className="toast__icon">{iconMap[toast.type]}</span>
-            )}
-
-            <div className="toast__body">
-                <span className="toast__message">{toast.message}</span>
-                {toast.subtitle !== undefined && (
-                    <span className="toast__subtitle">{toast.subtitle}</span>
+    if (hasMedia) {
+        return (
+            <div className={cn('toast', 'toast--media', `toast--${toast.type}`)} role="alert">
+                <img
+                    className="toast__thumb"
+                    src={toast.thumbnail}
+                    alt=""
+                    aria-hidden="true"
+                />
+                <div className="toast__body">
+                    <span className="toast__message">{toast.message}</span>
+                    {toast.subtitle !== undefined && (
+                        <span className="toast__subtitle">{toast.subtitle}</span>
+                    )}
+                </div>
+                {toast.action !== undefined && (
+                    <button type="button" className="toast__action" onClick={handleAction}>
+                        {toast.action.label}
+                    </button>
                 )}
+                <button
+                    type="button"
+                    className="toast__close"
+                    onClick={handleClose}
+                    aria-label={t('common.close')}
+                >
+                    <X size={13} />
+                </button>
+                <div className="toast__progress" style={{ animationDuration: `${duration}ms` }} />
             </div>
+        );
+    }
 
+    return (
+        <div className={cn('toast', `toast--${toast.type}`)} role="alert">
+            <span className="toast__dot" aria-hidden="true" />
+            <span className="toast__message">{toast.message}</span>
             {toast.action !== undefined && (
-                <button className="toast__action" onClick={handleAction}>
+                <button type="button" className="toast__action" onClick={handleAction}>
                     {toast.action.label}
                 </button>
             )}
-            <button className="toast__close" onClick={handleClose} aria-label={t('common.close')}>
-                <X size={14} />
+            <button
+                type="button"
+                className="toast__close"
+                onClick={handleClose}
+                aria-label={t('common.close')}
+            >
+                <X size={13} />
             </button>
-            <div
-                className="toast__progress"
-                style={{ animationDuration: `${duration}ms` }}
-            />
+            <div className="toast__progress" style={{ animationDuration: `${duration}ms` }} />
         </div>
     );
 }
