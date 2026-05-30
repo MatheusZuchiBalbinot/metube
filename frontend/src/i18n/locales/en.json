@@ -172,6 +172,9 @@
         "liked_videos": "Liked videos",
         "your_videos": "Your videos",
         "related": "Related",
+        "related_empty": "No recommendations",
+        "related_empty_desc": "Nothing to suggest right now.",
+        "related_filtered_empty": "No videos match the current filter.",
         "no_video_file": "No video file available",
         "not_found": "Video not found",
         "results_for_query": "{{count}} results for",
@@ -337,6 +340,7 @@
         "since": "Since {{year}}",
         "subscribe": "Subscribe",
         "subscribed": "Subscribed",
+        "subscribers": "subscribers",
         "most_watched": "Most watched",
         "featured": "Featured",
         "cover_badge": "Featured",
@@ -459,6 +463,18 @@
         "exit_pip": "Exit picture in picture",
         "captions": "Captions",
         "captions_off": "Off"
+    },
+    "chat": {
+        "header": "Chat",
+        "placeholder": "Ask anything about this video…",
+        "send": "Send",
+        "clear": "Clear conversation",
+        "empty": "Ask the AI anything about this video. I'll use the transcript and summary to answer.",
+        "unavailable": "Chat will be available once the transcription is complete.",
+        "error": "Failed to get a response. Please try again.",
+        "quick_q1": "What is this video about?",
+        "quick_q2": "What are the key takeaways?",
+        "quick_q3": "Summarize in one sentence"
     },
     "comments": {
         "title_one": "{{count}} comment",

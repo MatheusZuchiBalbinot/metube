@@ -1,7 +1,7 @@
-import { Link2, Clock, Check } from 'lucide-react';
+import { Link2, Clock, Check, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as Popover from '@radix-ui/react-popover';
-import { Button } from '@ui';
+import { Tooltip } from '@ui';
 import { cn } from '@utils';
 
 interface ShareMenuProps {
@@ -19,46 +19,51 @@ export default function ShareMenu({ isOpen, onOpenChange, isCopied, onCopyLink, 
 
     return (
         <Popover.Root open={isOpen} onOpenChange={onOpenChange}>
-            <Popover.Trigger className={triggerClass} aria-label={t('video.share')}>
-                <span className="rbtn__icon">
-                    {isCopied ? (
-                        <Check size={20} strokeWidth={1.75} />
-                    ) : (
-                        <Link2 size={16} strokeWidth={1.75} />
-                    )}
-                </span>
-                <span className="rbtn__label">
-                    {isCopied ? t('video.copied') : t('video.share')}
-                </span>
-            </Popover.Trigger>
+            <Tooltip content={isCopied ? t('video.copied') : t('video.share')} side="top">
+                <Popover.Trigger className={triggerClass} aria-label={t('video.share')}>
+                    <span className="rbtn__icon">
+                        {isCopied ? (
+                            <Check size={20} strokeWidth={1.75} />
+                        ) : (
+                            <Link2 size={16} strokeWidth={1.75} />
+                        )}
+                    </span>
+                </Popover.Trigger>
+            </Tooltip>
             <Popover.Portal>
                 <Popover.Content
                     className="video-page__share-dropdown"
                     side="top"
                     align="center"
-                    sideOffset={6}
+                    sideOffset={8}
                     role="menu"
                 >
-                    <Button
-                        variant="ghost"
-                        size="sm"
+                    <p className="video-page__share-header">
+                        <Share2 size={12} aria-hidden="true" />
+                        {t('video.share')}
+                    </p>
+                    <button
+                        type="button"
                         className="video-page__share-option"
                         role="menuitem"
-                        leftIcon={<Link2 size={14} strokeWidth={1.75} />}
                         onClick={onCopyLink}
                     >
+                        <span className="video-page__share-option-icon">
+                            <Link2 size={14} strokeWidth={1.75} />
+                        </span>
                         {t('video.share_copy_link')}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
+                    </button>
+                    <button
+                        type="button"
                         className="video-page__share-option"
                         role="menuitem"
-                        leftIcon={<Clock size={14} strokeWidth={1.75} />}
                         onClick={onCopyAtTime}
                     >
+                        <span className="video-page__share-option-icon">
+                            <Clock size={14} strokeWidth={1.75} />
+                        </span>
                         {t('video.share_copy_at_time')}
-                    </Button>
+                    </button>
                 </Popover.Content>
             </Popover.Portal>
         </Popover.Root>

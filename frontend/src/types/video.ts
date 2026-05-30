@@ -30,6 +30,7 @@ export interface Video {
     createdAt: string
     channel: string
     channelId: ChannelId
+    channelSubscribers?: number
     views: ViewCount
     status: VideoStatus
     duration?: Seconds

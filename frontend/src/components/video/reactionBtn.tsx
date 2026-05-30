@@ -11,6 +11,7 @@ interface ReactionBtnProps {
     className: string
     activeClass: string
     tooltipSide?: 'top' | 'right' | 'bottom' | 'left'
+    showLabel?: boolean
     onClick: () => void
 }
 
@@ -24,6 +25,7 @@ export default function ReactionBtn({
     className,
     activeClass,
     tooltipSide = 'top',
+    showLabel = true,
     onClick,
 }: ReactionBtnProps) {
     const tooltipText = isActive && activeLabel ? activeLabel : label;
@@ -42,7 +44,7 @@ export default function ReactionBtn({
                 <span className="rbtn__icon">
                     {isActive ? iconActive : icon}
                 </span>
-                <span className="rbtn__label">{label}</span>
+                {showLabel && <span className="rbtn__label">{label}</span>}
             </button>
         </Tooltip>
     );

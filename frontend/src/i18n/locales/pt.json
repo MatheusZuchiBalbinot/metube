@@ -172,6 +172,9 @@
         "liked_videos": "Curtidos",
         "your_videos": "Seus Vídeos",
         "related": "Relacionados",
+        "related_empty": "Sem recomendações",
+        "related_empty_desc": "Nada para sugerir agora.",
+        "related_filtered_empty": "Nenhum vídeo corresponde ao filtro atual.",
         "no_video_file": "Nenhum arquivo de vídeo disponível",
         "not_found": "Vídeo não encontrado",
         "results_for_query": "{{count}} resultados para",
@@ -337,6 +340,7 @@
         "since": "Desde {{year}}",
         "subscribe": "Inscrever-se",
         "subscribed": "Inscrito",
+        "subscribers": "inscritos",
         "most_watched": "Mais assistidos",
         "featured": "Destaque",
         "cover_badge": "Destaque",
@@ -459,6 +463,18 @@
         "exit_pip": "Sair do picture in picture",
         "captions": "Legendas",
         "captions_off": "Desativar"
+    },
+    "chat": {
+        "header": "Chat",
+        "placeholder": "Pergunte qualquer coisa sobre este vídeo…",
+        "send": "Enviar",
+        "clear": "Limpar conversa",
+        "empty": "Pergunte à IA qualquer coisa sobre este vídeo. Usarei a transcrição e o resumo para responder.",
+        "unavailable": "O chat ficará disponível assim que a transcrição for concluída.",
+        "error": "Não foi possível obter uma resposta. Tente novamente.",
+        "quick_q1": "Sobre o que é este vídeo?",
+        "quick_q2": "Quais são os pontos principais?",
+        "quick_q3": "Resuma em uma frase"
     },
     "comments": {
         "title_one": "{{count}} comentário",

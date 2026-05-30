@@ -94,6 +94,7 @@ export function parseVideo(raw: unknown): Video | null {
         captions: Array.isArray(rawData['captions']) ? (rawData['captions'] as VideoCaption[]) : [],
         channel: str(rawData['channel']),
         channelId: brand<ChannelId>(str(rawData['channel_id'])),
+        channelSubscribers: typeof rawData['channel_subscribers'] === 'number' ? rawData['channel_subscribers'] : undefined,
     };
 }
 
