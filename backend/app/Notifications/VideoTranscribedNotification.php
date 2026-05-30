@@ -4,11 +4,14 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\Video;
+use App\Notifications\Concerns\IncludesVideoThumbnail;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class VideoTranscribedNotification extends Notification
 {
+    use IncludesVideoThumbnail;
+
     public function __construct(public readonly Video $video) {}
 
     /**
@@ -28,6 +31,7 @@ class VideoTranscribedNotification extends Notification
             'type' => NotificationType::VIDEO_TRANSCRIBED->value,
             'vuid' => $this->video->vuid,
             'video_title' => $this->video->title,
+            'thumbnail_url' => $this->thumbnailUrl($this->video),
         ];
     }
 

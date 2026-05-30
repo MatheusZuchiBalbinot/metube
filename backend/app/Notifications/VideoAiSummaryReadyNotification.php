@@ -8,12 +8,12 @@ use App\Notifications\Concerns\IncludesVideoThumbnail;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class VideoTranscriptionStartedNotification extends Notification
+class VideoAiSummaryReadyNotification extends Notification
 {
     use IncludesVideoThumbnail;
 
     /**
-     * @param  Video  $video  The video whose transcription just started
+     * @param  Video  $video  The video whose AI summary just finished generating
      */
     public function __construct(public readonly Video $video) {}
 
@@ -31,7 +31,7 @@ class VideoTranscriptionStartedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => NotificationType::VIDEO_TRANSCRIPTION_STARTED->value,
+            'type' => NotificationType::VIDEO_AI_SUMMARY_READY->value,
             'vuid' => $this->video->vuid,
             'video_title' => $this->video->title,
             'thumbnail_url' => $this->thumbnailUrl($this->video),

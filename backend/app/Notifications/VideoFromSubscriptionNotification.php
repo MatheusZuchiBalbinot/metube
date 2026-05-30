@@ -4,11 +4,14 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\Video;
+use App\Notifications\Concerns\IncludesVideoThumbnail;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class VideoFromSubscriptionNotification extends Notification
 {
+    use IncludesVideoThumbnail;
+
     public function __construct(
         public readonly Video $video,
     ) {}
@@ -31,6 +34,7 @@ class VideoFromSubscriptionNotification extends Notification
             'channel_name' => $this->video->channel->name,
             'vuid' => $this->video->vuid,
             'video_title' => $this->video->title,
+            'thumbnail_url' => $this->thumbnailUrl($this->video),
         ];
     }
 
