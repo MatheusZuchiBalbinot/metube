@@ -155,6 +155,7 @@ export default function VideoPage() {
 
                     <VideoInfo
                         video={video}
+                        isOwner={isOwner}
                         isChannelSubscribed={isChannelSubscribed}
                         onSubscribe={() => toggleSubscription(video.channelId)}
                         reactions={reactions}

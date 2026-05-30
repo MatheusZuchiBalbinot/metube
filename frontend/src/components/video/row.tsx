@@ -17,7 +17,7 @@ interface VideoRowProps {
     position?: number
 }
 
-// eslint-disable-next-line complexity
+
 const VideoRow = memo(function VideoRow({ video, highlighted = false, source = AnalyticsSource.SEARCH, position }: VideoRowProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
@@ -68,7 +68,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
 
     function handleChannelClick(e: React.MouseEvent) {
         e.stopPropagation();
-        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
+        navigate(ROUTES.USER.replace(':id', video.channelId));
     }
 
     function handleChannelKeyDown(e: React.KeyboardEvent) {
@@ -78,7 +78,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
         }
         e.preventDefault();
         e.stopPropagation();
-        navigate(ROUTES.CHANNEL.replace(':id', video.channelId));
+        navigate(ROUTES.USER.replace(':id', video.channelId));
     }
 
     function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {

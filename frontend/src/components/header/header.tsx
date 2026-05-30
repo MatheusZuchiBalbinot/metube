@@ -189,7 +189,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         }
 
         if (s.kind === SuggestionKind.CHANNEL) {
-            navigate(ROUTES.CHANNEL.replace(':id', s.targetId));
+            navigate(ROUTES.USER.replace(':id', s.targetId));
             return;
         }
 

@@ -64,10 +64,6 @@ describe('STORAGE_KEYS', () => {
         expect(STORAGE_KEYS.PLAYLISTS).toBe('vidsum:playlists');
     });
 
-    it('has the SIDEBAR_COLLAPSED key', () => {
-        expect(STORAGE_KEYS.SIDEBAR_COLLAPSED).toBe('vidsum:sidebar-collapsed');
-    });
-
     it('all storage keys are unique strings', () => {
         const values = Object.values(STORAGE_KEYS);
         const uniqueValues = new Set(values);

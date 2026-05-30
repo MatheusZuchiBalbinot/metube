@@ -219,8 +219,7 @@ export default function HomePage() {
             )}
 
             <div className="home-page__toolbar">
-                <Button variant="ghost" size="sm" onClick={handleSurpriseMe} className="home-page__surprise-btn">
-                    <Shuffle size={14} strokeWidth={2} aria-hidden="true" />
+                <Button variant="ghost" size="sm" leftIcon={<Shuffle size={14} strokeWidth={2} />} onClick={handleSurpriseMe} className="home-page__surprise-btn">
                     {t('home.surprise_me')}
                 </Button>
                 <div className="home-page__filters">
@@ -260,7 +259,7 @@ export default function HomePage() {
 
             <button
                 className="home-page__channel-link-hidden"
-                onClick={() => navigate(ROUTES.CHANNEL.replace(':id', 'ch_1'))}
+                onClick={() => navigate(ROUTES.USER.replace(':id', 'ch_1'))}
                 aria-hidden="true"
                 tabIndex={-1}
             />
