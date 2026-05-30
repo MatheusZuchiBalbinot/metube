@@ -395,7 +395,11 @@
         "name_label": "Nome",
         "bio_label": "Bio",
         "pinned_video": "Fixado",
-        "delete_confirm": "Excluir '{{title}}'? Esta ação não pode ser desfeita."
+        "delete_confirm": "Excluir '{{title}}'? Esta ação não pode ser desfeita.",
+        "filter_all": "Todos",
+        "filter_trending": "Em alta",
+        "filter_recent": "Recentes",
+        "filter_shorts": "Shorts"
     },
     "mini_player": {
         "label": "Mini player",

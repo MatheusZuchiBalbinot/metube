@@ -5,16 +5,36 @@
     flex-direction: column;
 }
 
+/* ─── Inner container (max-width centering) ────────────────────────────────── */
+
+.profile-page__container {
+    max-width: 1300px;
+    margin-inline: auto;
+    width: 100%;
+}
+
 /* ─── Banner ────────────────────────────────────────────────────────────────── */
 
 .profile-page__banner {
-    height: 120px;
+    height: 160px;
     background: linear-gradient(135deg,
-            var(--accent-orb-a) 0%,
-            var(--accent-orb-b) 50%,
+            color-mix(in srgb, var(--accent) 28%, transparent) 0%,
+            color-mix(in srgb, var(--accent) 12%, transparent) 55%,
             var(--surface-2) 100%);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-page__banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 140% at 15% 60%,
+            color-mix(in srgb, var(--accent) 22%, transparent),
+            transparent 65%);
+    pointer-events: none;
 }
 
 /* ─── Profile header ───────────────────────────────────────────────────────── */
@@ -29,17 +49,17 @@
 
 .profile-page__avatar-section {
     flex-shrink: 0;
-    margin-top: -36px;
+    margin-top: -44px;
     position: relative;
     z-index: 1;
 }
 
 .profile-page__avatar-section .avatar--lg {
-    width: 80px;
-    height: 80px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
-    font-size: 1.75rem;
-    box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+    font-size: 1.875rem;
+    box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent);
 }
 
 .profile-page__info {
@@ -156,9 +176,59 @@
 /* ─── Filters bar ───────────────────────────────────────────────────────────── */
 
 .profile-page__filters {
+    padding: var(--page-padding-y) var(--page-padding-x) 0;
+}
+
+/* ─── Quick filter chips ────────────────────────────────────────────────────── */
+
+.profile-quick-filters {
     display: flex;
-    justify-content: end;
-    padding: var(--page-padding-y) var(--page-padding-x) 0 var(--page-padding-x);
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.profile-quick-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.profile-quick-filters__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--duration-default), color var(--duration-default), border-color var(--duration-default);
+    flex-shrink: 0;
+}
+
+.profile-quick-filters__chip:hover {
+    background: var(--surface-3);
+    color: var(--text);
+    border-color: var(--border-2);
+}
+
+.profile-quick-filters__chip--active {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+}
+
+.profile-quick-filters__chip--active:hover {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+    opacity: 0.9;
 }
 
 /* ─── Main content ──────────────────────────────────────────────────────────── */
@@ -174,8 +244,8 @@
 /* ─── Pinned video ──────────────────────────────────────────────────────────── */
 
 .profile-page__pinned {
-    margin-bottom: 28px;
-    padding-bottom: 28px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
     border-bottom: 1px dashed var(--border);
 }
 
@@ -199,8 +269,8 @@
 
 .profile-page__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
 }
 
 /* ─── UX-12: Card wrapper for pinned badge overlay ──────────────────────────── */
@@ -260,7 +330,13 @@
 
 @media (max-width: 1024px) {
     .profile-page__grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-page__grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .profile-page__pinned-card {
@@ -270,7 +346,7 @@
 
 @media (max-width: 480px) {
     .profile-page__grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .profile-page__pinned-card {
@@ -293,7 +369,7 @@
     position: relative;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    min-height: 440px;
+    min-height: 308px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -871,7 +947,7 @@
 
 @media (max-width: 1024px) {
     .profile-page__cover {
-        min-height: 320px;
+        min-height: 220px;
     }
 
     .profile-page__latest-grid {
@@ -904,7 +980,7 @@
 
 @media (max-width: 768px) {
     .profile-page__cover {
-        min-height: 260px;
+        min-height: 180px;
     }
 
     .profile-page__cover-content {

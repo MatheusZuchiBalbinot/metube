@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Upload } from 'lucide-react';
-import FilterPanel from '@components/filter/panel';
+import ProfileQuickFilters from './components/ProfileQuickFilters';
 import { domain } from '@domain';
 import { Avatar, Button, Tooltip } from '@ui';
 import './profile.css';
@@ -144,6 +144,7 @@ export default function ProfilePage() {
         <div className="profile-page">
             <div className="profile-page__banner" aria-hidden="true" />
 
+            <div className="profile-page__container">
             <div className="profile-page__header">
                 <div className="profile-page__avatar-section">
                     <Avatar name={channelName} size="lg" />
@@ -190,7 +191,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="profile-page__filters">
-                <FilterPanel
+                <ProfileQuickFilters
                     allTags={allTags}
                     value={filterState}
                     onChange={setFilterState}
@@ -224,6 +225,8 @@ export default function ProfilePage() {
                 onEdit={handleEditOpen}
                 onDelete={handleDelete}
             />
+
+            </div>{/* .profile-page__container */}
 
             <EditVideoModal
                 editingVideo={editingVideo}
