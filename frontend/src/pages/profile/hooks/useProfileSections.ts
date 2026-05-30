@@ -4,7 +4,7 @@ import { VideoFilter } from '@utils';
 import type { Video, Tag } from '@models';
 import type { FilterState } from '@components/filter/panel';
 
-const MIN_VIDEOS_FOR_CURATED_LAYOUT = 8;
+const MIN_VIDEOS_FOR_CURATED_LAYOUT = 5;
 
 interface TagSection {
     tag: Tag

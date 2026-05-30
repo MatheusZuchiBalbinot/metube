@@ -395,7 +395,11 @@
         "name_label": "Name",
         "bio_label": "Bio",
         "pinned_video": "Pinned",
-        "delete_confirm": "Delete '{{title}}'? This cannot be undone."
+        "delete_confirm": "Delete '{{title}}'? This cannot be undone.",
+        "filter_all": "All",
+        "filter_trending": "Trending",
+        "filter_recent": "Recent",
+        "filter_shorts": "Shorts"
     },
     "mini_player": {
         "label": "Mini player",
