@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
+import { cn } from '@utils';
 import './toast.css';
 
 const AUTO_DISMISS_MS = 3500;
@@ -33,17 +34,30 @@ function ToastItem({ toast }: ToastItemProps) {
     }
 
     const iconMap = {
-        success: <CheckCircle2 size={18} />,
-        error: <AlertCircle size={18} />,
-        info: <Info size={18} />,
+        success: <CheckCircle2 size={16} />,
+        error: <AlertCircle size={16} />,
+        info: <Info size={16} />,
     };
 
-    const toastClass = ['toast', `toast--${toast.type}`].join(' ');
+    const hasMedia = toast.thumbnail !== undefined;
 
     return (
-        <div className={toastClass} role="alert">
-            <span className="toast__icon">{iconMap[toast.type]}</span>
-            <span className="toast__message">{toast.message}</span>
+        <div className={cn('toast', `toast--${toast.type}`, hasMedia && 'toast--media')} role="alert">
+            {hasMedia && (
+                <img className="toast__thumb" src={toast.thumbnail} alt="" aria-hidden="true" />
+            )}
+
+            {!hasMedia && (
+                <span className="toast__icon">{iconMap[toast.type]}</span>
+            )}
+
+            <div className="toast__body">
+                <span className="toast__message">{toast.message}</span>
+                {toast.subtitle !== undefined && (
+                    <span className="toast__subtitle">{toast.subtitle}</span>
+                )}
+            </div>
+
             {toast.action !== undefined && (
                 <button className="toast__action" onClick={handleAction}>
                     {toast.action.label}

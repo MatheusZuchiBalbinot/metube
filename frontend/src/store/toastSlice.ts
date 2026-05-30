@@ -14,6 +14,8 @@ export interface Toast {
     type: ToastType
     action?: ToastAction
     duration?: number
+    thumbnail?: string
+    subtitle?: string
 }
 
 interface ToastState {

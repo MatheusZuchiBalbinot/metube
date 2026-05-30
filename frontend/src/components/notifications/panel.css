@@ -5,7 +5,7 @@
     max-height: 480px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     box-shadow: var(--elevation-3);
     overflow: hidden;
     animation: panelIn var(--duration-default) var(--ease-out);
@@ -59,8 +59,13 @@
 }
 
 @keyframes panel-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .notifications-panel__group {
