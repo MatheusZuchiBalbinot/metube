@@ -11,41 +11,75 @@
     pointer-events: none;
 }
 
-/* ─── Slide-in animation ─────────────────────────────────────────────────── */
+/* ─── Animations ─────────────────────────────────────────────────────────── */
 
 @keyframes toast-slide-in {
-    from { opacity: 0; transform: translateX(16px) scale(0.97); }
+    from { opacity: 0; transform: translateX(20px) scale(0.96); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
 }
-
-/* ─── Progress bar ────────────────────────────────────────────────────────── */
 
 @keyframes toast-progress {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
 }
 
-/* ─── Individual toast ───────────────────────────────────────────────────── */
+/* ─── Base toast ─────────────────────────────────────────────────────────── */
 
 .toast {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    border-radius: var(--radius);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.28),
+        0 2px 8px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 500;
-    min-width: 220px;
-    max-width: 320px;
+    min-width: 240px;
+    max-width: 340px;
     pointer-events: all;
-    animation: toast-slide-in var(--duration-slow) var(--ease-out) both;
+    animation: toast-slide-in 0.28s var(--ease-out) both;
     position: relative;
     overflow: hidden;
 }
+
+/* ─── Media toast (with thumbnail) ──────────────────────────────────────── */
+
+.toast--media {
+    padding: 0;
+    gap: 0;
+    max-width: 380px;
+    min-width: 300px;
+    align-items: stretch;
+}
+
+.toast__thumb {
+    width: 88px;
+    flex-shrink: 0;
+    object-fit: cover;
+    display: block;
+    border-radius: 0;
+}
+
+.toast--media .toast__body {
+    padding: 11px 12px;
+}
+
+.toast--media .toast__action {
+    margin-right: 4px;
+    align-self: center;
+}
+
+.toast--media .toast__close {
+    align-self: center;
+    margin-right: 10px;
+}
+
+/* ─── Progress bar ────────────────────────────────────────────────────────── */
 
 .toast__progress {
     position: absolute;
@@ -53,21 +87,45 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--accent);
     transform-origin: left;
     animation: toast-progress linear forwards;
-    opacity: 0.7;
+    opacity: 0.6;
 }
+
+.toast--success .toast__progress { background: #34d399; }
+.toast--error   .toast__progress { background: #f87171; }
+.toast--info    .toast__progress { background: var(--accent); }
+
+/* ─── Icon ────────────────────────────────────────────────────────────────── */
 
 .toast__icon {
     flex-shrink: 0;
 }
 
-.toast__message {
+/* ─── Body ────────────────────────────────────────────────────────────────── */
+
+.toast__body {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toast__message {
     line-height: 1.4;
     color: var(--text);
 }
+
+.toast__subtitle {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Action button ──────────────────────────────────────────────────────── */
 
 .toast__action {
     background: transparent;
@@ -87,6 +145,8 @@
     background: var(--surface-3);
     border-color: var(--text-3);
 }
+
+/* ─── Close button ───────────────────────────────────────────────────────── */
 
 .toast__close {
     background: transparent;
@@ -110,8 +170,8 @@
 /* ─── Type modifiers ─────────────────────────────────────────────────────── */
 
 .toast--success .toast__icon { color: #34d399; }
-.toast--error .toast__icon   { color: #f87171; }
-.toast--info .toast__icon    { color: var(--accent); }
+.toast--error   .toast__icon { color: #f87171; }
+.toast--info    .toast__icon { color: var(--accent); }
 
-.toast--success { border-color: rgba(52, 211, 153, 0.2); }
-.toast--error   { border-color: rgba(248, 113, 113, 0.2); }
+.toast--success { border-color: rgba(52, 211, 153, 0.25); }
+.toast--error   { border-color: rgba(248, 113, 113, 0.25); }

@@ -77,6 +77,17 @@
     margin-top: 2px;
 }
 
+.notification-item__thumb {
+    flex-shrink: 0;
+    width: 64px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background: var(--surface-3);
+    align-self: center;
+    margin-left: 4px;
+}
+
 .notification-item__dot {
     flex-shrink: 0;
     width: 7px;

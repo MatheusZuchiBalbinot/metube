@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store/index';
 import { notificationsActions } from '@store/notificationsSlice';
@@ -11,11 +11,15 @@ import { getEcho, destroyEcho } from '@lib/echo';
 import { playNotificationSound } from '@utils';
 import { ToastType } from '@enums/toastType';
 import { VideoStatus } from '@models';
+import type { Video } from '@models';
 
 export function useRealtime(): void {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const user = useAppSelector(state => state.auth.user);
+    const videos = useAppSelector(state => state.video.videos);
+    const videosRef = useRef<Video[]>(videos);
+    videosRef.current = videos;
 
     useEffect(() => {
         if (user === null) {
@@ -71,36 +75,52 @@ export function useRealtime(): void {
                 }
 
                 if (data.status === VideoStatus.PROCESSING) {
+                    const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
                     dispatch(toastActions.addToast({
                         message: t('video.processing_toast'),
                         type: ToastType.INFO,
+                        thumbnail: video?.thumbnail,
+                        subtitle: video?.title,
                     }));
                 }
             });
 
             channel.listen('.TranscriptionStatusUpdated', (data: { vuid: string; status: string }) => {
+                const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
+                const thumbnail = video?.thumbnail;
+                const subtitle = video?.title;
+
                 if (data.status === 'processing') {
                     dispatch(toastActions.addToast({
                         message: t('video.transcription_started_toast'),
                         type: ToastType.INFO,
+                        thumbnail,
+                        subtitle,
                     }));
                 } else if (data.status === 'completed') {
                     dispatch(toastActions.addToast({
                         message: t('video.transcription_completed_toast'),
                         type: ToastType.SUCCESS,
+                        thumbnail,
+                        subtitle,
                     }));
                 } else if (data.status === 'failed') {
                     dispatch(toastActions.addToast({
                         message: t('video.transcription_failed_toast'),
                         type: ToastType.ERROR,
+                        thumbnail,
+                        subtitle,
                     }));
                 }
             });
 
             channel.listen('.AiSuggestionReady', (payload: { vuid: string; title: string }) => {
+                const video = videosRef.current.find(v => v.videoUrl?.includes(payload.vuid));
                 dispatch(toastActions.addToast({
                     message: t('ai_suggestion.pending_toast', { title: payload.title }),
                     type: ToastType.SUCCESS,
+                    thumbnail: video?.thumbnail,
+                    subtitle: video?.title,
                 }));
             });
         });

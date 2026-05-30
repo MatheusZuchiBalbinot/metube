@@ -4,7 +4,18 @@ import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
 import { videoUrl, formatRelativeDate } from '@utils';
+import { useAppSelector } from '@store';
 import './item.css';
+
+const VIDEO_NOTIFICATION_TYPES = new Set<NotificationType>([
+    NotificationType.VIDEO_LIKED,
+    NotificationType.VIDEO_FROM_SUBSCRIPTION,
+    NotificationType.VIDEO_PROCESSED,
+    NotificationType.VIDEO_TRANSCRIPTION_STARTED,
+    NotificationType.VIDEO_TRANSCRIBED,
+    NotificationType.COMMENT_REPLIED,
+    NotificationType.COMMENT_LIKED,
+]);
 
 interface NotificationItemProps {
     notification: Notification
@@ -13,14 +24,14 @@ interface NotificationItemProps {
 
 function getIcon(type: NotificationType): React.ReactNode {
     switch (type) {
-        case NotificationType.COMMENT_REPLIED: return <MessageSquareReply size={15} />;
-        case NotificationType.COMMENT_LIKED: return <Heart size={15} />;
-        case NotificationType.VIDEO_LIKED: return <Heart size={15} />;
-        case NotificationType.NEW_SUBSCRIBER: return <UserPlus size={15} />;
-        case NotificationType.VIDEO_FROM_SUBSCRIPTION: return <Video size={15} />;
-        case NotificationType.VIDEO_PROCESSED: return <Clapperboard size={15} />;
-        case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return <Mic size={15} />;
-        case NotificationType.VIDEO_TRANSCRIBED: return <Captions size={15} />;
+        case NotificationType.COMMENT_REPLIED: return <MessageSquareReply size={14} />;
+        case NotificationType.COMMENT_LIKED: return <Heart size={14} />;
+        case NotificationType.VIDEO_LIKED: return <Heart size={14} />;
+        case NotificationType.NEW_SUBSCRIBER: return <UserPlus size={14} />;
+        case NotificationType.VIDEO_FROM_SUBSCRIPTION: return <Video size={14} />;
+        case NotificationType.VIDEO_PROCESSED: return <Clapperboard size={14} />;
+        case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return <Mic size={14} />;
+        case NotificationType.VIDEO_TRANSCRIBED: return <Captions size={14} />;
     }
 }
 
@@ -60,9 +71,17 @@ function getText(
 export default function NotificationItem({ notification, onRead }: NotificationItemProps) {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const videos = useAppSelector(s => s.video.videos);
+
     const isUnread = notification.read_at === null;
     const text = getText(notification.type, notification.data, t);
     const subtitle = notification.data.video_title as string | undefined;
+    const vuid = notification.data.vuid as string | undefined;
+
+    const isVideoType = VIDEO_NOTIFICATION_TYPES.has(notification.type);
+    const thumbnail = isVideoType && vuid
+        ? videos.find(v => v.videoUrl?.includes(vuid))?.thumbnail
+        : undefined;
 
     function handleClick(): void {
         onRead(notification.id);
@@ -89,6 +108,14 @@ export default function NotificationItem({ notification, onRead }: NotificationI
                     {formatRelativeDate(notification.created_at, i18n.language)}
                 </span>
             </span>
+            {thumbnail !== undefined && (
+                <img
+                    className="notification-item__thumb"
+                    src={thumbnail}
+                    alt=""
+                    aria-hidden="true"
+                />
+            )}
             {isUnread && <span className="notification-item__dot" aria-hidden="true" />}
         </button>
     );
