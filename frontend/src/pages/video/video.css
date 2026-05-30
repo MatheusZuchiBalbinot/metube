@@ -12,7 +12,7 @@
     display: flex;
     gap: 16px;
     align-items: stretch;
-    padding: 16px 16px;
+    padding: 16px var(--page-padding-x);
     flex: 1;
 }
 
@@ -28,7 +28,7 @@
 
 .video-page__player {
     width: 100%;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
     background: #000;
     aspect-ratio: 16 / 9;
@@ -1089,7 +1089,7 @@
 
 .video-page__player-wrap {
     position: relative;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
@@ -1112,7 +1112,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     box-shadow:
         0 0 60px 10px color-mix(in srgb, var(--ambient-color, var(--accent)) 20%, transparent),
         0 24px 64px rgba(0, 0, 0, 0.4);
@@ -1307,7 +1307,7 @@
         width: 100%;
         max-height: none;
         position: static;
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-md);
     }
 }
 

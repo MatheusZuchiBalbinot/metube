@@ -172,7 +172,7 @@
     width: 268px;
     background: var(--surface-2);
     border: 1px solid var(--border-2);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 6px;
     box-shadow: 0 24px 64px var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.04);
     animation: panelIn 0.18s var(--ease-out);
@@ -269,7 +269,7 @@
 }
 
 .app-header__search-form .input-inner {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
 }
 
 .app-header__search-form .input-field {
@@ -277,7 +277,7 @@
     padding-top: 0;
     padding-bottom: 0;
     font-size: var(--text-base);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
 }
 
 /* ─── Recent searches dropdown ────────────────────────────────────────────── */

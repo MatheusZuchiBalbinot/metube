@@ -282,6 +282,7 @@
     /* ─── Page-level padding (responsivo via media queries abaixo) ───────── */
     --page-padding-x: 24px;
     --page-padding-y: 16px;
+    --page-max-width: 1400px;
 
     /* ─── Icon button sizes ──────────────────────────────────────────────── */
     --icon-sm: 32px;

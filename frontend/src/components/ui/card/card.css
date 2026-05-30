@@ -3,7 +3,7 @@
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     transition: border-color var(--duration-default), transform var(--duration-default), box-shadow var(--duration-default);
 }
 

@@ -3,6 +3,9 @@
 .channel-page {
     display: flex;
     flex-direction: column;
+    max-width: var(--page-max-width);
+    margin-inline: auto;
+    width: 100%;
 }
 
 .channel-page__back-btn {
@@ -162,13 +165,13 @@
 
 .channel-page__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
 }
 
 @media (max-width: 1024px) {
     .channel-page__grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .channel-page__cover {
