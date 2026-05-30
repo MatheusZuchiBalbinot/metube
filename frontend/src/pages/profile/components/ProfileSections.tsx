@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { STORAGE_KEYS } from '@utils/storageKeys';
 import { Clock, Flame, Hash, LayoutList, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import VideoCard from '@components/video/card';
@@ -39,7 +40,15 @@ export default function ProfileSections({
     topicRef,
 }: ProfileSectionsProps) {
     const { t } = useTranslation();
-    const [mostViewedLayout, setMostViewedLayout] = useState<MostViewedLayout>('diamond');
+    const [mostViewedLayout, setMostViewedLayout] = useState<MostViewedLayout>(() => {
+        const stored = localStorage.getItem(STORAGE_KEYS.MOST_VIEWED_LAYOUT);
+        return stored === 'list' ? 'list' : 'diamond';
+    });
+
+    function handleLayoutChange(layout: MostViewedLayout) {
+        setMostViewedLayout(layout);
+        localStorage.setItem(STORAGE_KEYS.MOST_VIEWED_LAYOUT, layout);
+    }
 
     return (
         <div className="profile-page__sections">
@@ -93,7 +102,7 @@ export default function ProfileSections({
                                 type="button"
                                 className="profile-page__layout-toggle"
                                 title={mostViewedLayout === 'diamond' ? t('profile.view_list') : t('profile.view_diamond')}
-                                onClick={() => setMostViewedLayout(l => l === 'diamond' ? 'list' : 'diamond')}
+                                onClick={() => handleLayoutChange(mostViewedLayout === 'diamond' ? 'list' : 'diamond')}
                             >
                                 {mostViewedLayout === 'diamond' ? <LayoutList size={15} /> : <Layers size={15} />}
                             </button>

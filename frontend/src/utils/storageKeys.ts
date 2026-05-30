@@ -14,4 +14,5 @@ export const STORAGE_KEYS = {
     RECENT_SEARCHES:  'vidsum:recent-searches',
     SUBSCRIPTIONS:    'vidsum:subscriptions',
     PLAYLISTS:        'vidsum:playlists',
+    MOST_VIEWED_LAYOUT: 'vidsum:most-viewed-layout',
 } as const;
