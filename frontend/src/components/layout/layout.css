@@ -1,8 +1,3 @@
-:root {
-    --sidebar-width: 220px;
-    --sidebar-width-collapsed: 60px;
-}
-
 .app-layout {
     display: flex;
     flex-direction: column;
@@ -29,26 +24,19 @@
     overflow: hidden;
 }
 
-/* ─── Sidebar backdrop (mobile only) ──────────────────────────────────────── */
+/* ─── Sidebar backdrop ─────────────────────────────────────────────────────── */
 
 .app-layout__sidebar-backdrop {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .app-layout__sidebar-backdrop {
-        display: block;
-        position: fixed;
-        top: 58px;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: calc(var(--z-modal) - 1);
-        background: var(--overlay-md);
-        backdrop-filter: var(--glass-blur-xs);
-        -webkit-backdrop-filter: var(--glass-blur-xs);
-        border: none;
-        cursor: pointer;
-        animation: overlay-in var(--duration-default) ease both;
-    }
+    position: fixed;
+    top: 58px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: calc(var(--z-modal) - 1);
+    background: var(--overlay-md);
+    backdrop-filter: var(--glass-blur-xs);
+    -webkit-backdrop-filter: var(--glass-blur-xs);
+    border: none;
+    cursor: pointer;
+    animation: overlay-in var(--duration-default) ease both;
 }

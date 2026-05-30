@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, Clapperboard, History, ThumbsUp, User, ListVideo } from 'lucide-react';
@@ -124,17 +124,30 @@ function SubscriptionsSection() {
 }
 
 interface AppSidebarProps {
-    collapsed: boolean;
+    open: boolean;
+    permanent?: boolean;
     hidden?: boolean;
+    onClose?: () => void;
 }
 
-export default function AppSidebar({ collapsed, hidden }: AppSidebarProps) {
+export default function AppSidebar({ open, permanent, hidden, onClose }: AppSidebarProps) {
     const { t } = useTranslation();
+    const isVisible = permanent || open;
+
+    useEffect(() => {
+        if (!open || permanent) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose?.();
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [open, permanent, onClose]);
 
     return (
         <nav
-            className={cn('app-sidebar', collapsed && 'app-sidebar--collapsed', hidden && 'app-sidebar--hidden')}
+            className={cn('app-sidebar', isVisible && 'app-sidebar--open', permanent && 'app-sidebar--permanent', hidden && 'app-sidebar--hidden')}
             aria-label={t('nav.aria_label')}
+            aria-hidden={!isVisible}
         >
             <ul className="app-sidebar__list">
                 {MAIN_NAV.map(item => <SidebarItem key={item.to} item={item} />)}

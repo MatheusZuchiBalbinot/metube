@@ -14,52 +14,18 @@ import { videoActions } from '@store/videoSlice';
 import { useSearch } from '@context/search';
 import './layout.css';
 import { useKeyboardShortcuts, useScrollRestoration } from '@hooks';
-import { ROUTES, STORAGE_KEYS, cn } from '@utils';
-
-function getInitialSidebarCollapsed(): boolean {
-    const hasWindow = typeof window !== 'undefined';
-
-    if (!hasWindow) {
-        return true;
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-    const hasStoredValue = stored !== null;
-
-    if (hasStoredValue) {
-        return stored === 'true';
-    }
-
-    return true;
-}
+import { ROUTES, cn } from '@utils';
 
 export default function AppLayout() {
     const { t } = useTranslation();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => getInitialSidebarCollapsed());
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleToggleSidebar = useCallback(() => {
-        setSidebarCollapsed(prev => {
-            const next = !prev;
-            const hasWindow = typeof window !== 'undefined';
-
-            if (hasWindow) {
-                window.localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
-            }
-
-            return next;
-        });
+        setSidebarOpen(prev => !prev);
     }, []);
 
     const handleCloseSidebar = useCallback(() => {
-        setSidebarCollapsed(() => {
-            const hasWindow = typeof window !== 'undefined';
-
-            if (hasWindow) {
-                window.localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, 'true');
-            }
-
-            return true;
-        });
+        setSidebarOpen(false);
     }, []);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
@@ -68,6 +34,7 @@ export default function AppLayout() {
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
+    const isPermanentSidebar = !isVideoPage;
     useScrollRestoration();
 
     useEffect(() => {
@@ -100,8 +67,8 @@ export default function AppLayout() {
             <a href="#main-content" className="skip-link">{t('nav.skip_to_content')}</a>
             <AppHeader onToggleSidebar={handleToggleSidebar} />
             <div className="app-layout__body">
-                <AppSidebar collapsed={sidebarCollapsed} hidden={theaterMode} />
-                {!sidebarCollapsed && (
+                <AppSidebar open={sidebarOpen} permanent={isPermanentSidebar} hidden={theaterMode} onClose={handleCloseSidebar} />
+                {sidebarOpen && !isPermanentSidebar && (
                     <button
                         type="button"
                         className="app-layout__sidebar-backdrop"
