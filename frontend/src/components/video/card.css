@@ -199,12 +199,90 @@
     color: var(--text-3);
 }
 
-/* ─── Actions (edit/delete) ───────────────────────────────────────────────── */
+/* ─── Actions overlay menu ────────────────────────────────────────────────── */
 
-.video-card__actions {
+.video-card__menu-wrap {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.video-card:hover .video-card__menu-wrap,
+.video-card__menu-wrap--open {
+    opacity: 1;
+}
+
+.video-card__menu-trigger {
     display: flex;
-    gap: 8px;
-    margin-top: 4px;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.video-card__menu-trigger:hover {
+    background: rgba(0, 0, 0, 0.82);
+    transform: scale(1.08);
+}
+
+.video-card__menu-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.14);
+    padding: 4px;
+    min-width: 148px;
+    z-index: 20;
+}
+
+.video-card__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    background: none;
+    color: var(--text);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    transition: background 0.1s;
+}
+
+.video-card__menu-item:hover {
+    background: var(--surface-3);
+}
+
+.video-card__menu-item--danger {
+    color: #ef4444;
+}
+
+.video-card__menu-item--danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.video-card__menu-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 3px 6px;
 }
 
 /* ─── Light mode ──────────────────────────────────────────────────────────── */

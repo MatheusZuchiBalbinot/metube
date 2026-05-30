@@ -209,6 +209,36 @@
     position: relative;
 }
 
+.profile-page__card-wrapper--draft {
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+
+.profile-page__card-wrapper--draft:hover {
+    opacity: 1;
+}
+
+.profile-page__draft-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    padding: 3px 8px;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
 .profile-page__pinned-badge {
     position: absolute;
     top: 8px;
@@ -217,14 +247,15 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: var(--accent);
-    color: var(--accent-fg);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--accent);
     font-size: 0.6875rem;
     font-weight: 600;
     border-radius: var(--radius-full);
     padding: 3px 8px;
     pointer-events: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 @media (max-width: 1024px) {

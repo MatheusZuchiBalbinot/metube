@@ -1,9 +1,11 @@
-import { Play, Pin, VideoOff } from 'lucide-react';
+import { Play, Pin, VideoOff, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import VideoCard from '@components/video/card';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models';
+import { videoUrl } from '@utils';
 
 interface ProfileVideoGridProps {
     isLoadingVideos: boolean
@@ -11,6 +13,7 @@ interface ProfileVideoGridProps {
     pinnedVideo: Video | null
     deckGhostVideos: Video[]
     filteredVideos: Video[]
+    draftVideos: Video[]
     pinnedVideoId: VideoId | null | undefined
     isOwnProfile: boolean
     allVideosRef: React.RefObject<HTMLDivElement | null>
@@ -25,6 +28,7 @@ export default function ProfileVideoGrid({
     pinnedVideo,
     deckGhostVideos,
     filteredVideos,
+    draftVideos,
     pinnedVideoId,
     isOwnProfile,
     allVideosRef,
@@ -33,9 +37,45 @@ export default function ProfileVideoGrid({
     onDelete,
 }: ProfileVideoGridProps) {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const hasDrafts = isOwnProfile && draftVideos.length > 0;
 
     return (
         <main className="profile-page__main">
+            {hasDrafts && !isLoadingVideos && (
+                <section className="profile-page__drafts">
+                    <div className="profile-page__all-videos-header">
+                        <h3 className="profile-page__section-title">
+                            <EyeOff size={15} strokeWidth={2} />
+                            {t('video.drafts_section', { count: draftVideos.length })}
+                        </h3>
+                    </div>
+                    <div className="profile-page__grid">
+                        {draftVideos.map(video => (
+                            <div
+                                key={video.id}
+                                className="profile-page__card-wrapper profile-page__card-wrapper--draft"
+                                onClick={() => navigate(videoUrl(video.id))}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
+                            >
+                                <div className="profile-page__draft-badge">
+                                    <EyeOff size={10} />
+                                    <span>{t('video.draft')}</span>
+                                </div>
+                                <VideoCard
+                                    video={video}
+                                    showActions={true}
+                                    onEdit={onEdit}
+                                    onDelete={onDelete}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {isLoadingVideos && (
                 <div className="profile-page__grid">
                     {Array.from({ length: 6 }).map((_, i) => (

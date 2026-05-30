@@ -1,7 +1,7 @@
-import { memo, useRef, useState } from 'react';
+import { memo, useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pin, PinOff, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
@@ -68,7 +68,20 @@ const VideoCard = memo(function VideoCard({
     const isVideoFailed = domain.video.isFailed(video);
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
     const isTouchDevice = useMediaQuery('(hover: none)');
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [menuOpen]);
 
     function handlePin(e: React.MouseEvent) {
         e.stopPropagation();
@@ -201,7 +214,54 @@ const VideoCard = memo(function VideoCard({
                         </Tooltip>
                     </SavePopover>
                 </div>
+
             </div>
+
+            {showActions && (
+                <div
+                    className={cn('video-card__menu-wrap', menuOpen && 'video-card__menu-wrap--open')}
+                    ref={menuRef}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <button
+                        className="video-card__menu-trigger"
+                        onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                        aria-label="Actions"
+                        aria-expanded={menuOpen}
+                    >
+                        <MoreHorizontal size={13} />
+                    </button>
+                    {menuOpen && (
+                        <div className="video-card__menu-popup" role="menu">
+                            <button
+                                className="video-card__menu-item"
+                                role="menuitem"
+                                onClick={() => { dispatch(videoActions.pinVideo(video.id)); setMenuOpen(false); }}
+                            >
+                                {isPinned ? <PinOff size={12} /> : <Pin size={12} />}
+                                <span>{t(isPinned ? 'video.unpin' : 'video.pin')}</span>
+                            </button>
+                            <button
+                                className="video-card__menu-item"
+                                role="menuitem"
+                                onClick={() => { onEdit?.(video); setMenuOpen(false); }}
+                            >
+                                <Pencil size={12} />
+                                <span>{t('video.edit')}</span>
+                            </button>
+                            <hr className="video-card__menu-divider" aria-hidden="true" />
+                            <button
+                                className="video-card__menu-item video-card__menu-item--danger"
+                                role="menuitem"
+                                onClick={() => { onDelete?.(video.id); setMenuOpen(false); }}
+                            >
+                                <Trash2 size={12} />
+                                <span>{t('video.delete')}</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="video-card__body">
                 <p className="video-card__title">{video.title}</p>
@@ -236,28 +296,6 @@ const VideoCard = memo(function VideoCard({
                     )}
                 </div>
 
-                {showActions && (
-                    <div className="video-card__actions">
-                        <Tooltip content={isPinned ? t('video.unpin') : t('video.pin')} side="top">
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                aria-label={isPinned ? t('video.unpin') : t('video.pin')}
-                                aria-pressed={isPinned}
-                                className={isPinned ? 'video-card__pin-btn--active' : ''}
-                                onClick={handlePin}
-                            >
-                                {isPinned ? <PinOff size={13} /> : <Pin size={13} />}
-                            </Button>
-                        </Tooltip>
-                        <Button variant="ghost" size="sm" onClick={handleEdit}>
-                            {t('video.edit')}
-                        </Button>
-                        <Button variant="danger" size="sm" onClick={handleDelete}>
-                            {t('video.delete')}
-                        </Button>
-                    </div>
-                )}
             </div>
         </article>
     );

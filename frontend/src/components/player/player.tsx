@@ -8,6 +8,7 @@ export interface VideoPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
     src: string
     mode?: 'default' | 'mini'
+    autoPlay?: boolean
     // Default mode
     chapters?: VideoChapter[]
     captions?: VideoCaption[]
@@ -27,6 +28,7 @@ export default function VideoPlayer({
     videoRef,
     src,
     mode = 'default',
+    autoPlay = true,
     chapters,
     captions,
     theaterMode,
@@ -56,6 +58,7 @@ export default function VideoPlayer({
         <DefaultVideoPlayer
             videoRef={videoRef}
             src={src}
+            autoPlay={autoPlay}
             chapters={chapters}
             captions={captions}
             theaterMode={theaterMode}
