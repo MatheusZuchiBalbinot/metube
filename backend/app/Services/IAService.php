@@ -7,12 +7,13 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 /**
- * GeminiService — Thin wrapper around the Groq REST API (OpenAI-compatible).
+ * IAService — Thin wrapper around the Groq REST API (OpenAI-compatible).
  *
- * Instructs the model to return structured JSON via a system prompt so
- * the response can be decoded directly without post-processing.
+ * Provides two modes of interaction:
+ *   - generate(): single-turn JSON extraction (video metadata, summaries)
+ *   - chat(): multi-turn conversational Q&A with a system prompt
  */
-class GeminiService
+class IAService
 {
     private string $apiKey;
 
@@ -62,7 +63,7 @@ class GeminiService
 
         $isTextMissing = ! is_string($text) || $text === '';
         if ($isTextMissing) {
-            throw new \RuntimeException('Groq returned an empty response.');
+            throw new \RuntimeException('AI service returned an empty response.');
         }
 
         /** @var array<string, mixed>|null $decoded */
@@ -70,9 +71,48 @@ class GeminiService
 
         $isInvalidJson = ! is_array($decoded);
         if ($isInvalidJson) {
-            throw new \RuntimeException('Groq response is not valid JSON: '.$text);
+            throw new \RuntimeException('AI service response is not valid JSON: '.$text);
         }
 
         return $decoded;
+    }
+
+    /**
+     * Send a multi-turn chat request and return the plain-text response.
+     *
+     * @param  string  $question  The user's question for this turn
+     * @param  string  $systemPrompt  System instructions (video context)
+     * @param  array<int, array{role: string, content: string}>  $history  Previous turns
+     * @return string The model's plain-text answer
+     *
+     * @throws ConnectionException When the API is unreachable
+     * @throws RequestException When the API returns a non-2xx response
+     * @throws \RuntimeException When the response content is missing
+     */
+    public function chat(string $question, string $systemPrompt, array $history): string
+    {
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $systemPrompt]],
+            $history,
+            [['role' => 'user', 'content' => $question]],
+        );
+
+        $response = Http::withToken($this->apiKey)
+            ->timeout(60)
+            ->post("{$this->baseUrl}/chat/completions", [
+                'model' => $this->model,
+                'messages' => $messages,
+                'temperature' => 0.5,
+            ])
+            ->throw();
+
+        $text = $response->json('choices.0.message.content');
+
+        $isTextMissing = ! is_string($text) || $text === '';
+        if ($isTextMissing) {
+            throw new \RuntimeException('AI service returned an empty chat response.');
+        }
+
+        return $text;
     }
 }
