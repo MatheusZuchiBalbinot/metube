@@ -7,10 +7,10 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 /**
- * GeminiService — Thin wrapper around the Gemini REST API.
+ * GeminiService — Thin wrapper around the Groq REST API (OpenAI-compatible).
  *
- * Uses generateContent with responseMimeType=application/json so the model
- * always returns structured JSON we can decode directly.
+ * Instructs the model to return structured JSON via a system prompt so
+ * the response can be decoded directly without post-processing.
  */
 class GeminiService
 {
@@ -22,16 +22,16 @@ class GeminiService
 
     public function __construct()
     {
-        $this->apiKey = (string) config('services.gemini.key');
-        $this->model = (string) config('services.gemini.model', 'gemini-2.0-flash');
-        $this->baseUrl = (string) config('services.gemini.url', 'https://generativelanguage.googleapis.com/v1beta/models');
+        $this->apiKey = (string) config('services.ai.key');
+        $this->model = (string) config('services.ai.model', 'llama-3.3-70b-versatile');
+        $this->baseUrl = (string) config('services.ai.url', 'https://api.groq.com/openai/v1');
     }
 
     /**
      * Send a prompt and return the parsed JSON response body.
      *
      * @param  string  $prompt  Full prompt text to send
-     * @return array<string, mixed> Decoded JSON from the model's first candidate
+     * @return array<string, mixed> Decoded JSON from the model
      *
      * @throws ConnectionException When the API is unreachable
      * @throws RequestException When the API returns a non-2xx response
@@ -39,25 +39,30 @@ class GeminiService
      */
     public function generate(string $prompt): array
     {
-        $url = "{$this->baseUrl}/{$this->model}:generateContent";
-
-        $response = Http::withQueryParameters(['key' => $this->apiKey])
+        $response = Http::withToken($this->apiKey)
             ->timeout(60)
-            ->post($url, [
-                'contents' => [
-                    ['parts' => [['text' => $prompt]]],
+            ->post("{$this->baseUrl}/chat/completions", [
+                'model' => $this->model,
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a video content analyzer. Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt,
+                    ],
                 ],
-                'generationConfig' => [
-                    'responseMimeType' => 'application/json',
-                ],
+                'response_format' => ['type' => 'json_object'],
+                'temperature' => 0.3,
             ])
             ->throw();
 
-        $text = $response->json('candidates.0.content.parts.0.text');
+        $text = $response->json('choices.0.message.content');
 
         $isTextMissing = ! is_string($text) || $text === '';
         if ($isTextMissing) {
-            throw new \RuntimeException('Gemini returned an empty response.');
+            throw new \RuntimeException('Groq returned an empty response.');
         }
 
         /** @var array<string, mixed>|null $decoded */
@@ -65,7 +70,7 @@ class GeminiService
 
         $isInvalidJson = ! is_array($decoded);
         if ($isInvalidJson) {
-            throw new \RuntimeException('Gemini response is not valid JSON: '.$text);
+            throw new \RuntimeException('Groq response is not valid JSON: '.$text);
         }
 
         return $decoded;

@@ -73,7 +73,7 @@ class ProcessVideoUpload implements ShouldQueue
     private function finalizeBatch(Video $video, string $videoUrl, ?string $thumbnailUrl): void
     {
         $newStatus = $this->resolveStatus($video);
-        $publishedAt = $newStatus === VideoStatus::PUBLISHED ? $video->created_at : $video->scheduled_at;
+        $publishedAt = $newStatus === VideoStatus::PUBLISHED ? now() : $video->scheduled_at;
 
         $previousStatus = $video->status;
 

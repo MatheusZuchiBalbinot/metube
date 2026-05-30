@@ -10,6 +10,7 @@ use App\Models\VideoSummary;
 use App\Services\GeminiService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,17 @@ class GenerateAiMetadata implements ShouldQueue
     public int $timeout = 120;
 
     /** @var int Attempts before marking as failed */
-    public int $tries = 3;
+    public int $tries = 5;
+
+    /**
+     * Exponential backoff: 60s, 5min, 15min, 30min between retries.
+     *
+     * @return int[]
+     */
+    public function backoff(): array
+    {
+        return [60, 300, 900, 1800];
+    }
 
     /**
      * @param  Video  $video  Published video whose transcription is complete
@@ -41,7 +52,7 @@ class GenerateAiMetadata implements ShouldQueue
      * the creator to review.
      *
      * @throws \Illuminate\Http\Client\ConnectionException
-     * @throws \Illuminate\Http\Client\RequestException
+     * @throws RequestException
      * @throws \RuntimeException
      */
     public function handle(GeminiService $gemini): void
@@ -63,7 +74,18 @@ class GenerateAiMetadata implements ShouldQueue
             return;
         }
 
-        $result = $gemini->generate($this->buildPrompt($video));
+        try {
+            $result = $gemini->generate($this->buildPrompt($video));
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            $isRateLimit = $e->response->status() === 429;
+            if ($isRateLimit) {
+                Log::warning('GenerateAiMetadata: Gemini rate limit hit, will retry with backoff', ['vuid' => $video->vuid, 'attempt' => $this->attempts()]);
+                $this->release($this->backoff()[$this->attempts() - 1] ?? 1800);
+
+                return;
+            }
+            throw $e;
+        }
 
         $this->validateResult($result, $video->vuid);
 
