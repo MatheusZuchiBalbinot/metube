@@ -60,8 +60,7 @@ export default function TagView() {
     return (
         <div className="tag-view">
             <div className="tag-view__header">
-                <Button variant="ghost" size="sm" className="tag-view__back" onClick={closeTagView}>
-                    <ArrowLeft size={14} strokeWidth={2} />
+                <Button variant="ghost" size="sm" className="tag-view__back" leftIcon={<ArrowLeft size={14} strokeWidth={2} />} onClick={closeTagView}>
                     {t('common.back')}
                 </Button>
                 <div className="tag-view__title">

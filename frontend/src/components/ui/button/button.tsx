@@ -58,9 +58,9 @@ export default function Button({
                 <span className="btn__spinner" />
             ) : (
                 <>
-                    {leftIcon}
-                    {children}
-                    {rightIcon}
+                    {leftIcon !== undefined && <span className="btn__icon">{leftIcon}</span>}
+                    {children !== undefined && <span className="btn__label">{children}</span>}
+                    {rightIcon !== undefined && <span className="btn__icon">{rightIcon}</span>}
                 </>
             )}
         </button>

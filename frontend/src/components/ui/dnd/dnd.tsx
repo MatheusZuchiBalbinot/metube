@@ -109,8 +109,7 @@ export default function DragAndDrop({
                         </div>
                         <p className="dnd-filename">{file.name}</p>
                         <p className="dnd-filesize">{formatBytes(file.size)}</p>
-                        <Button type="button" variant="ghost" size="sm" onClick={clear} className="dnd-clear">
-                            <X size={13} />
+                        <Button type="button" variant="ghost" size="sm" leftIcon={<X size={13} />} onClick={clear} className="dnd-clear">
                             {t('common.remove')}
                         </Button>
                     </>
