@@ -93,7 +93,7 @@
 .filter-panel__dropdown {
     position: fixed;
     width: min(340px, calc(100vw - 24px));
-    max-height: calc(100dvh - 80px);
+    /* max-height is set inline from JS to fit the space available below/above the trigger */
     overflow-y: auto;
     background: var(--surface-2);
     border: 1px solid var(--border-2);
@@ -127,6 +127,9 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .filter-panel__tag-chip {
