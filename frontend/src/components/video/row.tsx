@@ -122,9 +122,6 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
             <div className="video-row__body">
                 <p className="video-row__title">{video.title}</p>
 
-                {video.description && (
-                    <p className="video-row__description">{video.description}</p>
-                )}
 
                 <div className="video-row__meta">
                     <span

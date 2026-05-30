@@ -26,6 +26,7 @@ import {
 export function DefaultVideoPlayer({
     videoRef,
     src,
+    autoPlay = true,
     chapters,
     captions = [],
     theaterMode,
@@ -215,7 +216,7 @@ export function DefaultVideoPlayer({
             <video
                 ref={videoRef}
                 className="vp__video"
-                autoPlay
+                autoPlay={autoPlay}
                 onPlay={handleVideoPlay}
                 onPause={handleVideoPause}
                 onTimeUpdate={handleVideoTimeUpdate}

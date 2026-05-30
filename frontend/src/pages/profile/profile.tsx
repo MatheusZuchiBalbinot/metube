@@ -85,8 +85,14 @@ export default function ProfilePage() {
             .slice(0, 2);
     }, [isOwnProfile, pinnedVideo, ownVideos]);
 
+    const draftVideos = useMemo(
+        () => isOwnProfile ? ownVideos.filter(v => domain.video.isDraft(v)) : [],
+        [isOwnProfile, ownVideos],
+    );
+
     const filteredVideos = useMemo(
-        () => VideoFilter.apply(ownVideos, filterState).filter(v => v.id !== pinnedVideo?.id),
+        () => VideoFilter.apply(ownVideos, filterState)
+            .filter(v => v.id !== pinnedVideo?.id && !domain.video.isDraft(v)),
         [ownVideos, filterState, pinnedVideo],
     );
 
@@ -210,6 +216,7 @@ export default function ProfilePage() {
                 pinnedVideo={pinnedVideo}
                 deckGhostVideos={deckGhostVideos}
                 filteredVideos={filteredVideos}
+                draftVideos={draftVideos}
                 pinnedVideoId={pinnedVideoId}
                 isOwnProfile={isOwnProfile}
                 allVideosRef={allVideosRef}

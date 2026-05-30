@@ -10,9 +10,9 @@
 
 .video-page__layout {
     display: flex;
-    gap: 24px;
+    gap: 16px;
     align-items: stretch;
-    padding: var(--page-padding-y) var(--page-padding-x);
+    padding: 16px 16px;
     flex: 1;
 }
 
@@ -21,7 +21,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 /* ─── Player ───────────────────────────────────────────────────────────────── */
@@ -431,7 +431,7 @@
     flex-direction: column;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
     padding-bottom: 8px;
     align-self: flex-start;
@@ -506,17 +506,22 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(
-        ellipse 70% 55% at 50% 45%,
-        color-mix(in srgb, var(--accent) 18%, transparent) 0%,
-        transparent 70%
-    );
+    background: radial-gradient(ellipse 70% 55% at 50% 45%,
+            color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+            transparent 70%);
     animation: processing-bg-breathe 5s ease-in-out infinite alternate;
 }
 
 @keyframes processing-bg-breathe {
-    from { opacity: 0.55; transform: scale(1); }
-    to   { opacity: 1;    transform: scale(1.12); }
+    from {
+        opacity: 0.55;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.12);
+    }
 }
 
 .video-page__processing-card {
@@ -569,7 +574,9 @@
 }
 
 @keyframes processing-ring-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .video-page__processing-icon {
@@ -586,8 +593,15 @@
 }
 
 @keyframes processing-icon-glow {
-    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
-    50%       { box-shadow: 0 0 0 14px transparent; }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    50% {
+        box-shadow: 0 0 0 14px transparent;
+    }
 }
 
 /* ─── Text ─────────────────────────────────────────────────────────────────── */
@@ -634,18 +648,21 @@
     height: 100%;
     width: 45%;
     border-radius: 999px;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        var(--accent),
-        color-mix(in srgb, var(--accent) 60%, transparent)
-    );
+    background: linear-gradient(90deg,
+            transparent,
+            var(--accent),
+            color-mix(in srgb, var(--accent) 60%, transparent));
     animation: processing-shimmer 1.8s ease-in-out infinite;
 }
 
 @keyframes processing-shimmer {
-    0%   { transform: translateX(-200%); }
-    100% { transform: translateX(400%); }
+    0% {
+        transform: translateX(-200%);
+    }
+
+    100% {
+        transform: translateX(400%);
+    }
 }
 
 /* ─── Sidebar tabs ──────────────────────────────────────────────────────────── */
@@ -739,6 +756,9 @@
 }
 
 .video-page__chapters {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -749,7 +769,6 @@
     align-items: baseline;
     gap: 10px;
     padding: 6px 8px;
-    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background var(--duration-default), transform var(--duration-default), border-color var(--duration-default);
     background: none;
@@ -799,10 +818,81 @@
     min-width: 36px;
 }
 
+.video-page__chapter-spinner {
+    flex-shrink: 0;
+}
+
 .video-page__chapter-title {
     font-size: 0.875rem;
     color: var(--text-2);
     line-height: 1.4;
+}
+
+/* ─── Summary panel — sidebar overrides ─────────────────────────────────────── */
+
+.video-page__sidebar .video-page__summary {
+    padding: 16px 12px;
+    overflow-y: auto;
+    max-height: 75vh;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
+    gap: 20px;
+}
+
+.video-page__sidebar .video-page__summary-section {
+    gap: 8px;
+}
+
+.video-page__sidebar .video-page__summary-heading {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Key points as subtle accent cards */
+.video-page__sidebar .video-page__key-point {
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px 8px 12px;
+    padding-left: 12px;
+    color: var(--text-2);
+}
+
+.video-page__sidebar .video-page__key-point::before {
+    content: none;
+}
+
+/* Chapter hover fix: sidebar bg is surface-2, so use surface-3 for hover */
+.video-page__sidebar .video-page__chapter:hover {
+    background: var(--surface-3);
+}
+
+.video-page__sidebar .video-page__chapter--active {
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+}
+
+/* ─── Reading mode — section overrides ─────────────────────────────────────── */
+
+.video-page__reading-summary .video-page__key-points {
+    gap: 10px;
+}
+
+.video-page__reading-summary .video-page__key-point {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--text-2);
+}
+
+.video-page__reading-summary .video-page__chapter {
+    padding: 10px 12px;
+}
+
+.video-page__reading-summary .video-page__chapter:hover {
+    background: var(--surface-2);
+}
+
+.video-page__reading-summary .video-page__chapter-title {
+    font-size: 0.9375rem;
 }
 
 /* ─── Reading mode ──────────────────────────────────────────────────────────── */
@@ -810,8 +900,8 @@
 .video-page__reading-mode {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 32px;
+    border-radius: var(--radius-md);
+    padding: 16px;
     min-height: 400px;
 }
 
@@ -835,6 +925,10 @@
     color: var(--text-2);
     line-height: 1.75;
     margin: 0 0 14px;
+}
+
+.video-page__reading-content p:last-child {
+    margin-bottom: 0;
 }
 
 .video-page__reading-content code {
@@ -999,6 +1093,10 @@
     overflow: hidden;
 }
 
+.video-page__player-wrap--hidden {
+    display: none;
+}
+
 .video-page__player-wrap::before {
     content: '';
     position: absolute;
@@ -1050,54 +1148,57 @@
     z-index: 1;
 }
 
-/* ─── Transcription section ───────────────────────────────────────────────── */
+/* ─── Reading mode section headers ───────────────────────────────────────── */
 
-.video-page__transcription {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-}
-
-.video-page__transcription-header {
+.video-page__rm-section-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 7px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
 }
 
-.video-page__transcription-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
+.video-page__rm-section-header--ai {
+    color: var(--accent);
 }
 
-.video-page__transcription-status {
+/* ─── Transcription block (card) ──────────────────────────────────────────── */
+
+.video-page__transcription-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
+    margin-bottom: 28px;
+}
+
+/* ─── AI Summary section ──────────────────────────────────────────────────── */
+
+.video-page__reading-summary {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8125rem;
-    color: var(--text-2);
+    flex-direction: column;
+    gap: 28px;
 }
 
-.video-page__transcription-pulse {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: transcription-pulse 1.4s ease-in-out infinite;
+.video-page__reading-subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-@keyframes transcription-pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.5);
-        opacity: 0.4;
-    }
+.video-page__reading-subheading {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0;
 }
 
 .video-page__transcription-lang {
@@ -1110,9 +1211,9 @@
 }
 
 .video-page__transcription-content {
-    font-size: 0.9375rem;
-    line-height: 1.75;
-    color: var(--text);
+    font-size: 0.875rem;
+    line-height: 1.8;
+    color: var(--text-2);
     white-space: pre-wrap;
     margin: 0;
 }
@@ -1167,7 +1268,9 @@
 }
 
 @keyframes transcription-waveform {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scaleY(0.2);
         opacity: 0.4;
     }

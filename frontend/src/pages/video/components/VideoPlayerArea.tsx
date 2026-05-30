@@ -1,6 +1,7 @@
 import VideoPlayer from '@components/player/player';
 import ReadingMode from '@components/video/readingMode';
 import VideoFallback from './VideoFallback';
+import { cn } from '@utils';
 import type { VideoSummary, VideoTranscription } from '@api';
 
 interface VideoPlayerAreaProps {
@@ -13,6 +14,7 @@ interface VideoPlayerAreaProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
     hasVideoFile: boolean
     src: string
+    autoPlay: boolean
     chapters: VideoSummary['chapters'] | undefined
     onTimeUpdate: () => void
     onEnded: () => void
@@ -25,43 +27,48 @@ interface VideoPlayerAreaProps {
 
 export default function VideoPlayerArea({
     readingMode, transcription, summary, isOwner, onRetryTranscription,
-    getCurrentTime, videoRef, hasVideoFile, src, chapters,
+    getCurrentTime, videoRef, hasVideoFile, src, autoPlay, chapters,
     onTimeUpdate, onEnded, onLoadedMetadata, showCompletion, ambientColor,
     thumbnail, title,
 }: VideoPlayerAreaProps) {
-    if (readingMode && transcription !== null) {
-        return (
-            <ReadingMode
-                summary={summary}
-                transcription={transcription}
-                isOwner={isOwner}
-                onRetryTranscription={onRetryTranscription}
-                currentTime={getCurrentTime()}
-                onSeekToChapter={(seconds) => {
-                    if (videoRef.current) {
-                        videoRef.current.currentTime = seconds;
-                    }
-                }}
-            />
-        );
-    }
+    const isReadingMode = readingMode && transcription !== null;
 
     return (
-        <div className="video-page__player-wrap">
-            {hasVideoFile ? (
-                <VideoPlayer
+        <>
+            {/* Always mounted so the video element keeps its currentTime across mode toggles */}
+            <div className={cn('video-page__player-wrap', isReadingMode && 'video-page__player-wrap--hidden')}>
+                {hasVideoFile ? (
+                    <VideoPlayer
+                        videoRef={videoRef}
+                        src={src}
+                        autoPlay={autoPlay}
+                        chapters={chapters}
+                        onTimeUpdate={onTimeUpdate}
+                        onEnded={onEnded}
+                        onLoadedMetadata={onLoadedMetadata}
+                        showCompletion={showCompletion}
+                        ambientColor={ambientColor}
+                    />
+                ) : (
+                    <VideoFallback thumbnail={thumbnail} title={title} />
+                )}
+            </div>
+
+            {isReadingMode && (
+                <ReadingMode
+                    summary={summary}
+                    transcription={transcription}
+                    isOwner={isOwner}
+                    onRetryTranscription={onRetryTranscription}
+                    currentTime={getCurrentTime()}
                     videoRef={videoRef}
-                    src={src}
-                    chapters={chapters}
-                    onTimeUpdate={onTimeUpdate}
-                    onEnded={onEnded}
-                    onLoadedMetadata={onLoadedMetadata}
-                    showCompletion={showCompletion}
-                    ambientColor={ambientColor}
+                    onSeekToChapter={(seconds) => {
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = seconds;
+                        }
+                    }}
                 />
-            ) : (
-                <VideoFallback thumbnail={thumbnail} title={title} />
             )}
-        </div>
+        </>
     );
 }
