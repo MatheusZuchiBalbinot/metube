@@ -39,9 +39,9 @@ return [
         'url' => env('WHISPER_URL', 'http://whisper:8001'),
     ],
 
-    'gemini' => [
-        'key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
-        'url' => 'https://generativelanguage.googleapis.com/v1beta/models',
+    'ai' => [
+        'key' => env('AI_API_KEY'),
+        'model' => env('AI_MODEL', 'llama-3.3-70b-versatile'),
+        'url' => env('AI_URL', 'https://api.groq.com/openai/v1'),
     ],
 ];
