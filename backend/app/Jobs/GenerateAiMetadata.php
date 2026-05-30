@@ -7,6 +7,7 @@ use App\Events\AiSuggestionReady;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
+use App\Notifications\VideoAiSummaryReadyNotification;
 use App\Services\GeminiService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -104,6 +105,8 @@ class GenerateAiMetadata implements ShouldQueue
             $this->storeSuggestion($video, $result);
             AiSuggestionReady::dispatch($video);
         }
+
+        $video->channel->notify(new VideoAiSummaryReadyNotification($video));
     }
 
     /**
@@ -143,7 +146,7 @@ class GenerateAiMetadata implements ShouldQueue
         - key_points: 3 to 7 concise takeaways, each under 120 characters
         - chapters: detect natural topic breaks (minimum 2), use HH:MM:SS format
         - reading_mode: flowing prose summary, 150 to 300 words
-        - suggested_tags: 5 to 10 relevant lowercase tags, no spaces (use hyphens)
+        - suggested_tags: 3 to 6 relevant lowercase tags, no spaces (use hyphens)
         - suggested_title: improved, engaging title under 80 characters
         - suggested_description: engaging description between 80 and 200 characters
 

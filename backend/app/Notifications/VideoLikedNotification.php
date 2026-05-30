@@ -5,11 +5,14 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\User;
 use App\Models\Video;
+use App\Notifications\Concerns\IncludesVideoThumbnail;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class VideoLikedNotification extends Notification
 {
+    use IncludesVideoThumbnail;
+
     public function __construct(
         public readonly Video $video,
         public readonly User $liker,
@@ -33,6 +36,7 @@ class VideoLikedNotification extends Notification
             'liker_name' => $this->liker->name,
             'vuid' => $this->video->vuid,
             'video_title' => $this->video->title,
+            'thumbnail_url' => $this->thumbnailUrl($this->video),
         ];
     }
 
