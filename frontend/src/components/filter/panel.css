@@ -97,7 +97,7 @@
     overflow-y: auto;
     background: var(--surface-2);
     border: 1px solid var(--border-2);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 16px;
     box-shadow: var(--elevation-3);
     display: flex;
@@ -185,7 +185,7 @@
     line-height: 1.2;
 }
 
-.filter-panel__sort-btn + .filter-panel__sort-btn {
+.filter-panel__sort-btn+.filter-panel__sort-btn {
     border-left: 1px solid var(--border);
 }
 

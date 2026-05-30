@@ -5,6 +5,9 @@
     flex-direction: column;
     padding: var(--page-padding-y) var(--page-padding-x);
     gap: 24px;
+    max-width: var(--page-max-width);
+    margin-inline: auto;
+    width: 100%;
 }
 
 /* ─── Hero search input ───────────────────────────────────────────────────── */

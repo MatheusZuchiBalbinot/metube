@@ -5,7 +5,7 @@
     width: 100%;
     aspect-ratio: 16 / 9;
     background: #000;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
     cursor: pointer;
     user-select: none;
@@ -62,7 +62,9 @@
 }
 
 @keyframes vp-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .vp__buffering-spinner {
@@ -77,9 +79,20 @@
 /* ─── Play/Pause pop icon ───────────────────────────────────────────────────── */
 
 @keyframes vp-pop {
-    0%   { opacity: 0.9;  transform: scale(0.7); }
-    40%  { opacity: 1;    transform: scale(1.1); }
-    100% { opacity: 0;    transform: scale(1);   }
+    0% {
+        opacity: 0.9;
+        transform: scale(0.7);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 .vp__pop-icon {
@@ -96,10 +109,25 @@
 /* ─── Completion overlay ────────────────────────────────────────────────────── */
 
 @keyframes vp-complete {
-    0%   { opacity: 0; transform: scale(0.3); }
-    40%  { opacity: 1; transform: scale(1.1); }
-    65%  { opacity: 1; transform: scale(1);   }
-    100% { opacity: 0; transform: scale(1);   }
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    65% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 .vp__completion {
@@ -127,12 +155,10 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.78) 0%,
-        rgba(0, 0, 0, 0.22) 30%,
-        transparent 55%
-    );
+    background: linear-gradient(to top,
+            rgba(0, 0, 0, 0.78) 0%,
+            rgba(0, 0, 0, 0.22) 30%,
+            transparent 55%);
     opacity: 0;
     pointer-events: none;
     will-change: opacity;
@@ -271,8 +297,15 @@
 }
 
 @keyframes vp-preview-in {
-    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 /* Small triangle arrow pointing down to the seek position */
@@ -383,11 +416,9 @@
     width: 0;
     max-width: 72px;
     height: 3px;
-    background: linear-gradient(
-        to right,
-        #fff var(--vol, 100%),
-        rgba(255, 255, 255, 0.25) var(--vol, 100%)
-    );
+    background: linear-gradient(to right,
+            #fff var(--vol, 100%),
+            rgba(255, 255, 255, 0.25) var(--vol, 100%));
     border-radius: 2px;
     cursor: pointer;
     outline: none;
@@ -504,10 +535,25 @@
 /* ─── Skip indicator (← / → keyboard shortcuts) ─────────────────────────────── */
 
 @keyframes vp-skip {
-    0%   { opacity: 0; transform: scale(0.8); }
-    15%  { opacity: 1; transform: scale(1);   }
-    70%  { opacity: 1; transform: scale(1);   }
-    100% { opacity: 0; transform: scale(1);   }
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    15% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    70% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 .vp__skip-indicator {

@@ -3,6 +3,9 @@
 .home-page {
     display: flex;
     flex-direction: column;
+    max-width: var(--page-max-width);
+    margin-inline: auto;
+    width: 100%;
 }
 
 /* ─── Section (trending / continue watching) ─────────────────────────────── */
@@ -100,17 +103,17 @@
 
 .home-page__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
 }
 
 @media (max-width: 1200px) {
     .home-page__grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .home-page__grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -122,11 +125,11 @@
 
 @media (max-width: 480px) {
     .home-page__grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .home-page__carousel-item {
-        width: 180px;
+        width: 160px;
     }
 }
 

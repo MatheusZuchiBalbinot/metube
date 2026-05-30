@@ -10,7 +10,7 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     margin: 4px 0;
 }
 

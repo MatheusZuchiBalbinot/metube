@@ -5,6 +5,7 @@
         transform: translateY(24px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -18,7 +19,7 @@
     flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     box-shadow: 0 12px 48px var(--shadow-lg);
     overflow: hidden;
     width: min(360px, calc(100vw - 24px));
