@@ -14,7 +14,7 @@ import { useVideo } from '@hooks';
 export default function MiniPlayer() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { miniPlayer, closeMiniPlayer, videos, updateProgress, setPendingVideoSeek } = useVideo();
+    const { miniPlayer, closeMiniPlayer, videos, updateProgress, setPendingVideoSeek, autoplay } = useVideo();
     const videoRef = useRef<HTMLVideoElement>(null);
     const playerRef = useRef<HTMLDivElement>(null);
     const pendingMiniSeekRef = useRef<number | null>(null);
@@ -48,7 +48,9 @@ export default function MiniPlayer() {
             pendingMiniSeekRef.current = null;
         }
 
-        el?.play().catch(() => { });
+        if (autoplay) {
+            el?.play().catch(() => { });
+        }
     }
 
     useEffect(() => {
