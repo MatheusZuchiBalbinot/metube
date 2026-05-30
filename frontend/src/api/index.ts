@@ -1,5 +1,7 @@
 export type { ApiResult } from './client';
 export { auth } from './auth';
+export { chat } from './chat';
+export type { ChatMessage, ChatRequest, ChatResponse } from './chat';
 export { comments } from './comments';
 export { video } from './videos';
 export { history } from './history';
