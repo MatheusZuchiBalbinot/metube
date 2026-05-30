@@ -73,7 +73,9 @@ const VideoCard = memo(function VideoCard({
     const isTouchDevice = useMediaQuery('(hover: none)');
 
     useEffect(() => {
-        if (!menuOpen) return;
+        if (!menuOpen) {
+            return;
+        }
         const handler = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setMenuOpen(false);
@@ -82,11 +84,6 @@ const VideoCard = memo(function VideoCard({
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [menuOpen]);
-
-    function handlePin(e: React.MouseEvent) {
-        e.stopPropagation();
-        dispatch(videoActions.pinVideo(video.id));
-    }
 
     function trackClick() {
         if (!hasValidVuid) {
@@ -126,16 +123,6 @@ const VideoCard = memo(function VideoCard({
 
     function handleChannelLinkClick(e: React.MouseEvent) {
         e.stopPropagation();
-    }
-
-    function handleEdit(e: React.MouseEvent) {
-        e.stopPropagation();
-        onEdit?.(video);
-    }
-
-    function handleDelete(e: React.MouseEvent) {
-        e.stopPropagation();
-        onDelete?.(video.id);
     }
 
     function handleThumbLoad() {
@@ -225,7 +212,9 @@ const VideoCard = memo(function VideoCard({
                 >
                     <button
                         className="video-card__menu-trigger"
-                        onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                        onClick={e => {
+                            e.stopPropagation(); setMenuOpen(v => !v);
+                        }}
                         aria-label="Actions"
                         aria-expanded={menuOpen}
                     >
@@ -236,7 +225,9 @@ const VideoCard = memo(function VideoCard({
                             <button
                                 className="video-card__menu-item"
                                 role="menuitem"
-                                onClick={() => { dispatch(videoActions.pinVideo(video.id)); setMenuOpen(false); }}
+                                onClick={() => {
+                                    dispatch(videoActions.pinVideo(video.id)); setMenuOpen(false);
+                                }}
                             >
                                 {isPinned ? <PinOff size={12} /> : <Pin size={12} />}
                                 <span>{t(isPinned ? 'video.unpin' : 'video.pin')}</span>
@@ -244,7 +235,9 @@ const VideoCard = memo(function VideoCard({
                             <button
                                 className="video-card__menu-item"
                                 role="menuitem"
-                                onClick={() => { onEdit?.(video); setMenuOpen(false); }}
+                                onClick={() => {
+                                    onEdit?.(video); setMenuOpen(false);
+                                }}
                             >
                                 <Pencil size={12} />
                                 <span>{t('video.edit')}</span>
@@ -253,7 +246,9 @@ const VideoCard = memo(function VideoCard({
                             <button
                                 className="video-card__menu-item video-card__menu-item--danger"
                                 role="menuitem"
-                                onClick={() => { onDelete?.(video.id); setMenuOpen(false); }}
+                                onClick={() => {
+                                    onDelete?.(video.id); setMenuOpen(false);
+                                }}
                             >
                                 <Trash2 size={12} />
                                 <span>{t('video.delete')}</span>
@@ -268,7 +263,7 @@ const VideoCard = memo(function VideoCard({
 
                 <div className="video-card__meta">
                     <Link
-                        to={ROUTES.CHANNEL.replace(':id', video.channelId)}
+                        to={ROUTES.USER.replace(':id', video.channelId)}
                         className="video-card__meta-channel"
                         onClick={handleChannelLinkClick}
                     >

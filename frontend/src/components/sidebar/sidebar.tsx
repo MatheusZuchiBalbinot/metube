@@ -104,7 +104,7 @@ function SubscriptionsSection() {
             <span className="app-sidebar__section-label">{t('nav.subscriptions')}</span>
             <ul className="app-sidebar__list">
                 {channels.map(ch => {
-                    const channelPath = ROUTES.CHANNEL.replace(':id', ch.id);
+                    const channelPath = ROUTES.USER.replace(':id', ch.id);
                     return (
                         <li key={ch.id}>
                             <Tooltip content={ch.name} side="right">
@@ -135,9 +135,13 @@ export default function AppSidebar({ open, permanent, hidden, onClose }: AppSide
     const isVisible = permanent || open;
 
     useEffect(() => {
-        if (!open || permanent) return;
+        if (!open || permanent) {
+            return;
+        }
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose?.();
+            if (e.key === 'Escape') {
+                onClose?.();
+            }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);

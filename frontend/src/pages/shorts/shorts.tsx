@@ -177,7 +177,7 @@ const ShortItem = memo(function ShortItem({
 
     function handleNavigation(dest: 'channel' | 'tag', value: string | Tag) {
         if (dest === 'channel') {
-            navigate(ROUTES.CHANNEL.replace(':id', value as string));
+            navigate(ROUTES.USER.replace(':id', value as string));
         } else if (dest === 'tag') {
             openTagView(value as Tag, video.id);
         }

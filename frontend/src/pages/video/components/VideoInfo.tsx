@@ -16,6 +16,7 @@ import type { UseVideoShareResult } from '../hooks/useVideoShare';
 
 interface VideoInfoProps {
     video: Video
+    isOwner: boolean
     isChannelSubscribed: boolean
     onSubscribe: () => void
     reactions: UseVideoReactionsResult
@@ -30,7 +31,7 @@ interface VideoInfoProps {
 }
 
 export default function VideoInfo({
-    video, isChannelSubscribed, onSubscribe,
+    video, isOwner, isChannelSubscribed, onSubscribe,
     reactions, isSaved, share,
     transcription, readingMode, onReadingModeToggle,
     descExpanded, onDescExpandToggle, language,
@@ -47,7 +48,7 @@ export default function VideoInfo({
 
             <div className="video-page__channel-row">
                 <div className="video-page__channel-info">
-                    <Link to={ROUTES.CHANNEL.replace(':id', video.channelId)} className="video-page__channel-link">
+                    <Link to={isOwner ? ROUTES.PROFILE : ROUTES.USER.replace(':id', video.channelId)} className="video-page__channel-link">
                         <Avatar name={video.channel} size="sm" />
                         <span className="video-page__channel-name">{video.channel}</span>
                     </Link>

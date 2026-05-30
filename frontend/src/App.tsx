@@ -31,7 +31,6 @@ const LikedPage = React.lazy(() => import('@pages/liked/liked'));
 const ProfilePage = React.lazy(() => import('@pages/profile/profile'));
 const VideoPage = React.lazy(() => import('@pages/video/video'));
 const SearchPage = React.lazy(() => import('@pages/search/search'));
-const ChannelPage = React.lazy(() => import('@pages/channel/channel'));
 const ShortsPage = React.lazy(() => import('@pages/shorts/shorts'));
 const NotFoundPage = React.lazy(() => import('@pages/notFound/notFound'));
 
@@ -42,7 +41,7 @@ const GUEST_ROUTES: RouteDef[] = [
     { path: ROUTES.SHORTS, Page: ShortsPage },
     { path: ROUTES.VIDEO, Page: VideoPage },
     { path: ROUTES.SEARCH, Page: SearchPage },
-    { path: ROUTES.CHANNEL, Page: ChannelPage },
+    { path: ROUTES.CHANNEL, Page: ProfilePage },
     { path: ROUTES.USER, Page: ProfilePage },
 ];
 

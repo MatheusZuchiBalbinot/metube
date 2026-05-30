@@ -238,44 +238,6 @@ function VideoPageSkeleton() {
     );
 }
 
-// ─── Channel ──────────────────────────────────────────────────────────────
-
-function ChannelPageSkeleton() {
-    return (
-        <div className="ps ps--channel" aria-hidden="true">
-            <div className="ps__back-header">
-                <Skeleton className="ps__back-btn" />
-            </div>
-
-            <div className="ps-channel__banner" />
-
-            <div className="ps-channel__header">
-                <Skeleton className="ps-channel__avatar" />
-                <div className="ps-channel__info">
-                    <div className="ps-channel__name-row">
-                        <Skeleton className="ps-channel__name" />
-                        <Skeleton className="ps-channel__subscribe-btn" />
-                    </div>
-                    <div className="ps-channel__stats">
-                        {[80, 96, 72].map((w, i) => (
-                            <Skeleton key={i} className="ps-channel__stat" width={w} />
-                        ))}
-                    </div>
-                    <div className="ps-channel__tags">
-                        {[68, 84, 56, 72].map((w, i) => (
-                            <Skeleton key={i} className="ps-channel__tag" width={w} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="ps__main">
-                <GridSkeleton count={8} className="ps-grid ps-grid--four" />
-            </div>
-        </div>
-    );
-}
-
 // ─── Router ───────────────────────────────────────────────────────────────
 
 interface PageSkeletonProps {
@@ -285,8 +247,7 @@ interface PageSkeletonProps {
 function getSkeletonComponent(pathname: string): React.FC {
     const matchers: [test: (p: string) => boolean, component: React.FC][] = [
         [p => p.startsWith('/video/'), VideoPageSkeleton],
-        [p => p === ROUTES.PROFILE || p.startsWith('/user/'), ProfilePageSkeleton],
-        [p => p.startsWith('/channel/'), ChannelPageSkeleton],
+        [p => p === ROUTES.PROFILE || p.startsWith('/user/') || p.startsWith('/channel/'), ProfilePageSkeleton],
         [p => p === ROUTES.HISTORY, HistoryPageSkeleton],
         [p => p === ROUTES.SEARCH || p.startsWith('/search'), SearchPageSkeleton],
         [p => p === ROUTES.LIKED, CollectionPageSkeleton],
