@@ -25,7 +25,12 @@ interface TranscriptionBodyProps {
 
 const WAVEFORM_BARS = [0, 1, 2, 3, 4, 5, 6];
 
-function ProcessingScreen() {
+interface ProcessingScreenProps {
+    titleKey: string
+    subKey: string
+}
+
+function ProcessingScreen({ titleKey, subKey }: ProcessingScreenProps) {
     const { t } = useTranslation();
 
     return (
@@ -40,10 +45,10 @@ function ProcessingScreen() {
                 ))}
             </div>
             <h3 className="video-page__transcription-processing-title">
-                {t('video.transcription_processing_title')}
+                {t(titleKey)}
             </h3>
             <p className="video-page__transcription-processing-sub">
-                {t('video.transcription_processing_sub')}
+                {t(subKey)}
             </p>
         </div>
     );
@@ -57,8 +62,7 @@ function TranscriptionBody({ transcription, isOwner, onRetry }: TranscriptionBod
             <div className="video-page__transcription-failed">
                 <p className="video-page__transcription-error">{t('video.transcription_failed')}</p>
                 {isOwner && (
-                    <Button variant="secondary" size="sm" onClick={onRetry}>
-                        <RefreshCw size={14} />
+                    <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={onRetry}>
                         {t('video.transcription_retry')}
                     </Button>
                 )}
@@ -109,6 +113,7 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
     const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
     const hasChapters = summary !== null && summary.chapters.length > 0;
     const hasSummary = hasSummaryContent || hasKeyPoints || hasChapters;
+    const isSummaryGenerating = domain.transcription.isCompleted(transcription) && !hasSummary;
 
     const html = hasSummaryContent
         ? DOMPurify.sanitize(
@@ -131,7 +136,10 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                         dangerouslySetInnerHTML={{ __html: html }}
                     />
                 )}
-                <ProcessingScreen />
+                <ProcessingScreen
+                    titleKey="video.transcription_processing_title"
+                    subKey="video.transcription_processing_sub"
+                />
             </div>
         );
     }
@@ -198,7 +206,9 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                                                 className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
                                                 disabled={onSeekToChapter === undefined || isSeeking}
                                                 onClick={() => {
-                                                    if (!onSeekToChapter) return;
+                                                    if (!onSeekToChapter) {
+                                                        return;
+                                                    }
                                                     setSeekingIndex(i);
                                                     onSeekToChapter(seconds);
                                                     videoRef?.current?.addEventListener('seeked', () => {
@@ -218,6 +228,20 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                             </ol>
                         </div>
                     )}
+                </section>
+            )}
+
+            {/* AI Summary still being generated after transcription completed */}
+            {isSummaryGenerating && (
+                <section className="video-page__reading-summary">
+                    <header className="video-page__rm-section-header video-page__rm-section-header--ai">
+                        <Sparkles size={13} aria-hidden="true" />
+                        <span>{t('video.summary')}</span>
+                    </header>
+                    <ProcessingScreen
+                        titleKey="video.summary_processing_title"
+                        subKey="video.summary_processing_sub"
+                    />
                 </section>
             )}
         </div>

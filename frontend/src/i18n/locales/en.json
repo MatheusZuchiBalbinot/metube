@@ -21,6 +21,14 @@
         "dismiss": "Dismiss",
         "or": "or"
     },
+    "time": {
+        "seconds_left_one": "{{count}} second left",
+        "seconds_left_other": "{{count}} seconds left",
+        "minutes_left_one": "{{count}} minute left",
+        "minutes_left_other": "{{count}} minutes left",
+        "hours_left_one": "{{count}} hour left",
+        "hours_left_other": "{{count}} hours left"
+    },
     "auth": {
         "sign_in": "Sign In",
         "sign_in_subtitle": "Sign in to your account to continue",
@@ -215,6 +223,8 @@
         "transcription_processing": "Transcription in progress...",
         "transcription_processing_title": "Transcribing audio",
         "transcription_processing_sub": "We're converting the video's audio to text. This may take a few minutes.",
+        "summary_processing_title": "Generating summary",
+        "summary_processing_sub": "Our AI is reading the transcription to write the summary, key points, and chapters. This may take a moment.",
         "transcription_failed": "Transcription failed.",
         "transcription_retry": "Retry",
         "transcription_language": "Language: {{lang}}",
@@ -399,7 +409,10 @@
         "filter_all": "All",
         "filter_trending": "Trending",
         "filter_recent": "Recent",
-        "filter_shorts": "Shorts"
+        "filter_shorts": "Shorts",
+        "filter_topic": "By topic",
+        "view_list": "Switch to list view",
+        "view_diamond": "Switch to diamond view"
     },
     "mini_player": {
         "label": "Mini player",
@@ -492,7 +505,8 @@
             "video_processed": "Your video is now live",
             "video_processed_failed": "Video processing failed",
             "video_transcription_started": "Transcription started",
-            "video_transcribed": "Transcription ready"
+            "video_transcribed": "Transcription ready",
+            "video_ai_summary_ready": "AI summary is ready"
         }
     }
 }
