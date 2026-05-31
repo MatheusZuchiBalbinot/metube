@@ -2,73 +2,118 @@
 
 use App\AI\Prompts\VideoMetadataPrompt;
 use App\DTOs\VideoMetadataResult;
-use App\Models\Transcription;
-use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 describe('VideoMetadataPrompt', function () {
-    test('builds prompt with video data', function () {
-        $user = User::factory()->create();
-        $video = Video::factory()->for($user, 'channel')->create([
+    test('buildRequest returns valid Gemini request structure', function () {
+        $video = new Video([
             'title' => 'Test Video',
-            'description' => 'Test Description',
+            'description' => 'Test description',
         ]);
-        Transcription::factory()->for($video)->create([
-            'content' => 'Video transcription content',
+        $video->transcription = (object) [
+            'content' => 'Full transcription text',
             'language' => 'pt',
-        ]);
-
-        $prompt = new VideoMetadataPrompt($video);
-        $built = $prompt->build();
-
-        expect($built)->toContain('Test Video')
-            ->toContain('Test Description')
-            ->toContain('Video transcription content')
-            ->toContain('pt');
-    });
-
-    test('returns required keys', function () {
-        $user = User::factory()->create();
-        $video = Video::factory()->for($user, 'channel')->create();
-        Transcription::factory()->for($video)->create();
-
-        $prompt = new VideoMetadataPrompt($video);
-        $keys = $prompt->requiredKeys();
-
-        expect($keys)->toContain('key_points')
-            ->toContain('chapters')
-            ->toContain('reading_mode')
-            ->toContain('suggested_tags')
-            ->toContain('suggested_title')
-            ->toContain('suggested_description');
-    });
-
-    test('parses response into VideoMetadataResult', function () {
-        $user = User::factory()->create();
-        $video = Video::factory()->for($user, 'channel')->create();
-        Transcription::factory()->for($video)->create();
-
-        $prompt = new VideoMetadataPrompt($video);
-        $raw = [
-            'key_points' => ['Point 1', 'Point 2'],
-            'chapters' => [['timestamp' => '00:01:00', 'title' => 'Intro']],
-            'reading_mode' => 'Summary text',
-            'suggested_tags' => ['tag1', 'tag2'],
-            'suggested_title' => 'New Title',
-            'suggested_description' => 'New Description',
         ];
 
-        $result = $prompt->parse($raw);
+        $prompt = new VideoMetadataPrompt($video);
+        $request = $prompt->buildRequest();
 
-        expect($result)->toBeInstanceOf(VideoMetadataResult::class)
-            ->and($result->keyPoints)->toBe(['Point 1', 'Point 2'])
-            ->and($result->chapters)->toBe([['timestamp' => '00:01:00', 'title' => 'Intro']])
-            ->and($result->readingMode)->toBe('Summary text')
-            ->and($result->suggestedTags)->toBe(['tag1', 'tag2'])
-            ->and($result->suggestedTitle)->toBe('New Title')
-            ->and($result->suggestedDescription)->toBe('New Description');
+        expect($request)
+            ->toHaveKey('contents')
+            ->toHaveKey('generationConfig')
+            ->toHaveKey('generationConfig.responseMimeType', 'application/json');
+
+        expect($request['contents'][0]['parts'][0]['text'])
+            ->toContain('Test Video')
+            ->toContain('Full transcription text')
+            ->toContain('language code: pt');
+    });
+
+    test('parse returns VideoMetadataResult from valid response', function () {
+        $video = new Video(['vuid' => 'test-vuid']);
+
+        $response = [
+            'candidates' => [
+                [
+                    'content' => [
+                        'parts' => [
+                            [
+                                'text' => json_encode([
+                                    'key_points' => ['Point 1', 'Point 2'],
+                                    'chapters' => [['timestamp' => '00:01:00', 'title' => 'Intro']],
+                                    'reading_mode' => 'Summary text here.',
+                                    'suggested_tags' => ['tag1', 'tag2'],
+                                    'suggested_title' => 'New Title',
+                                    'suggested_description' => 'New description',
+                                ]),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $prompt = new VideoMetadataPrompt($video);
+        $result = $prompt->parse($response);
+
+        expect($result)->toBeInstanceOf(VideoMetadataResult::class);
+        expect($result->keyPoints)->toBe(['Point 1', 'Point 2']);
+        expect($result->suggestedTitle)->toBe('New Title');
+    });
+
+    test('parse throws exception if response missing content', function () {
+        $video = new Video(['vuid' => 'test-vuid']);
+        $response = ['candidates' => [[]]];
+
+        $prompt = new VideoMetadataPrompt($video);
+
+        expect(fn () => $prompt->parse($response))
+            ->toThrow(\RuntimeException::class, 'missing content');
+    });
+
+    test('parse throws exception if JSON is invalid', function () {
+        $video = new Video(['vuid' => 'test-vuid']);
+        $response = [
+            'candidates' => [
+                [
+                    'content' => [
+                        'parts' => [['text' => 'not valid json']],
+                    ],
+                ],
+            ],
+        ];
+
+        $prompt = new VideoMetadataPrompt($video);
+
+        expect(fn () => $prompt->parse($response))
+            ->toThrow(\RuntimeException::class, 'invalid JSON');
+    });
+
+    test('parse throws exception if required key is missing', function () {
+        $video = new Video(['vuid' => 'test-vuid']);
+        $response = [
+            'candidates' => [
+                [
+                    'content' => [
+                        'parts' => [
+                            [
+                                'text' => json_encode([
+                                    'key_points' => ['Point 1'],
+                                    // missing other required keys
+                                ]),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $prompt = new VideoMetadataPrompt($video);
+
+        expect(fn () => $prompt->parse($response))
+            ->toThrow(\RuntimeException::class, 'missing required key');
     });
 });

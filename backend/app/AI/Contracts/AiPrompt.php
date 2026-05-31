@@ -3,29 +3,28 @@
 namespace App\AI\Contracts;
 
 /**
- * Interface for AI prompts — encapsulates prompt generation and response parsing.
+ * Interface for AI prompts.
  *
- * Implementations define a specific task (e.g., metadata extraction, content moderation)
- * and handle both the prompt construction and typed response parsing.
+ * Prompts encapsulate:
+ * - The request structure (buildRequest() for HTTP payload)
+ * - Response parsing (parse() to convert API response to DTO or array)
  */
 interface AiPrompt
 {
     /**
-     * Build the prompt text to send to the AI service.
+     * Build the request payload for the AI provider.
+     *
+     * @return array<string, mixed> The HTTP request body
      */
-    public function build(): string;
+    public function buildRequest(): array;
 
     /**
-     * Parse the raw JSON response from the AI and return a typed result.
+     * Parse and validate the AI provider response.
      *
-     * @param  array<string, mixed>  $raw
-     */
-    public function parse(array $raw): mixed;
-
-    /**
-     * Return the list of required keys in the response.
+     * @param  array<string, mixed>  $response  Raw API response
+     * @return mixed The parsed result (DTO, array, or other)
      *
-     * @return string[]
+     * @throws \RuntimeException If required keys are missing or invalid
      */
-    public function requiredKeys(): array;
+    public function parse(array $response): mixed;
 }

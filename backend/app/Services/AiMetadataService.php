@@ -4,46 +4,43 @@ namespace App\Services;
 
 use App\DTOs\VideoMetadataResult;
 use App\Enums\AiSuggestionStatus;
-use App\Events\AiSuggestionReady;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
 
 /**
- * Service to apply AI-generated metadata to videos.
+ * Service for applying AI-generated metadata to videos.
  *
- * Handles persistence of video summary (key points, chapters, reading mode)
- * and manages the flow for batch vs. single uploads:
- * - Batch: auto-applies suggestions
- * - Single: stores for creator review
+ * Handles storing summaries, applying suggestions in batch mode,
+ * and creating pending suggestions for single uploads.
  */
 class AiMetadataService
 {
     /**
-     * Apply AI metadata to a video.
+     * Apply AI metadata result to a video.
      *
-     * For batch uploads, auto-applies all suggestions.
-     * For single uploads, stores suggestions for creator review and dispatches AiSuggestionReady event.
+     * - Always stores summary (key_points, chapters, reading_mode)
+     * - For batch uploads: auto-applies tags/title/description when empty
+     * - For single uploads: creates pending suggestion for review
      *
-     * @param  Video  $video  The video to update
-     * @param  VideoMetadataResult  $result  AI-generated metadata
+     * @param  Video  $video  The video to apply metadata to
+     * @param  VideoMetadataResult  $result  The AI-generated metadata
      */
     public function apply(Video $video, VideoMetadataResult $result): void
     {
-        $this->persistSummary($video, $result);
+        $this->storeSummary($video, $result);
 
         if ($video->is_batch) {
-            $this->autoApply($video, $result);
+            $this->autoApplyToBatch($video, $result);
         } else {
-            $this->storeSuggestion($video, $result);
-            AiSuggestionReady::dispatch($video);
+            $this->storePendingSuggestion($video, $result);
         }
     }
 
     /**
-     * Persist video summary (key points, chapters, reading mode).
+     * Store the video summary.
      */
-    private function persistSummary(Video $video, VideoMetadataResult $result): void
+    private function storeSummary(Video $video, VideoMetadataResult $result): void
     {
         VideoSummary::updateOrCreate(
             ['video_id' => $video->id],
@@ -56,32 +53,31 @@ class AiMetadataService
     }
 
     /**
-     * Auto-apply suggestions for batch uploads.
-     *
-     * Always applies suggested title. Applies tags only if empty.
-     * Applies description only if empty.
+     * Auto-apply metadata when fields are empty (batch mode).
      */
-    private function autoApply(Video $video, VideoMetadataResult $result): void
+    private function autoApplyToBatch(Video $video, VideoMetadataResult $result): void
     {
-        $updates = ['title' => $result->suggestedTitle];
+        $updates = [];
 
-        $hasNoTags = count($video->tags ?? []) === 0;
+        $hasNoTags = \count($video->tags ?? []) === 0;
         if ($hasNoTags) {
             $updates['tags'] = $result->suggestedTags;
         }
 
-        $hasNoDescription = blank($video->description);
+        $hasNoDescription = \trim($video->description ?? '') === '';
         if ($hasNoDescription) {
             $updates['description'] = $result->suggestedDescription;
         }
+
+        $updates['title'] = $result->suggestedTitle;
 
         $video->update($updates);
     }
 
     /**
-     * Store pending suggestion for creator review (single upload).
+     * Store pending suggestion for creator review (single mode).
      */
-    private function storeSuggestion(Video $video, VideoMetadataResult $result): void
+    private function storePendingSuggestion(Video $video, VideoMetadataResult $result): void
     {
         VideoAiSuggestion::updateOrCreate(
             ['video_id' => $video->id],

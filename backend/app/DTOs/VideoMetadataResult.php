@@ -3,20 +3,19 @@
 namespace App\DTOs;
 
 /**
- * Result from AI-generated video metadata extraction.
+ * AI-generated metadata for a video.
  *
- * Contains key points, chapters, reading mode summary, and suggestions
- * for title, description, and tags.
+ * Returned by Gemini after analyzing a video transcription.
  */
 readonly class VideoMetadataResult
 {
     /**
-     * @param  string[]  $keyPoints  3–7 concise takeaways
-     * @param  array<int, array{timestamp: string, title: string}>  $chapters  Natural topic breaks
-     * @param  string  $readingMode  Flowing prose summary
-     * @param  string[]  $suggestedTags  3–6 lowercase tags
-     * @param  string  $suggestedTitle  Improved title
-     * @param  string  $suggestedDescription  Improved description
+     * @param  list<string>  $keyPoints  3-7 concise takeaways
+     * @param  list<array{timestamp: string, title: string}>  $chapters  Natural topic breaks with HH:MM:SS timestamps
+     * @param  string  $readingMode  Flowing prose summary (150-300 words)
+     * @param  list<string>  $suggestedTags  3-6 lowercase tags
+     * @param  string  $suggestedTitle  Improved title (under 80 chars)
+     * @param  string  $suggestedDescription  Engaging description (80-200 chars)
      */
     public function __construct(
         public array $keyPoints,
