@@ -29,18 +29,12 @@ class VideoPublishingService
      * Sets status to PUBLISHED, records published_at, fires VideoPublished
      * for subscriber notifications, and invalidates the video cache.
      *
-     * @param Video $video Video in DRAFT status to publish
+     * Authorization must be checked by caller via VideoPolicy::publish().
      *
-     * @throws \Illuminate\Http\Exceptions\HttpResponseException When video is not in DRAFT
+     * @param Video $video Video in DRAFT status to publish
      */
     public function publishVideo(Video $video): void
     {
-        $isNotDraft = $video->status !== VideoStatus::DRAFT;
-
-        if ($isNotDraft) {
-            abort(409, 'Video is not in draft status.');
-        }
-
         $video->update([
             'status' => VideoStatus::PUBLISHED,
             'published_at' => now(),
