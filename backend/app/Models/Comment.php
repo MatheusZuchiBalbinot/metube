@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -24,8 +26,8 @@ use Illuminate\Support\Str;
  * @property int|null $current_version_id
  * @property bool $is_edited Computed: true when current_version_id is not null
  * @property bool $is_liked Virtual attribute set at query time; not persisted
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property User $user
  * @property Video $video
  * @property Comment|null $parent
@@ -148,11 +150,11 @@ class Comment extends Model
     /**
      * Scope to get only top-level comments (no parent).
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeTopLevel($query)
+    public function scopeTopLevel(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
     }
@@ -160,12 +162,12 @@ class Comment extends Model
     /**
      * Scope to get comments for a specific video.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      * @param int $videoId Video ID
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeForVideo($query, $videoId)
+    public function scopeForVideo(Builder $query, int $videoId): Builder
     {
         return $query->where('video_id', $videoId);
     }
@@ -173,12 +175,12 @@ class Comment extends Model
     /**
      * Filter comment by CUID.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      * @param string $cuid Comment unique ID
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeByCuid($query, $cuid)
+    public function scopeByCuid(Builder $query, string $cuid): Builder
     {
         return $query->where('cuid', $cuid);
     }
@@ -186,12 +188,12 @@ class Comment extends Model
     /**
      * Scope to get comments by a specific user.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      * @param int $userId User ID
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeByUser($query, $userId)
+    public function scopeByUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
     }
@@ -199,12 +201,12 @@ class Comment extends Model
     /**
      * Scope to get replies to a specific comment.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      * @param int $parentId Parent comment ID
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeRepliesTo($query, $parentId)
+    public function scopeRepliesTo(Builder $query, int $parentId): Builder
     {
         return $query->where('parent_id', $parentId);
     }
@@ -212,11 +214,11 @@ class Comment extends Model
     /**
      * Order comments by creation date, newest first.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeNewest($query)
+    public function scopeNewest(Builder $query): Builder
     {
         return $query->orderByDesc('created_at');
     }
@@ -224,11 +226,11 @@ class Comment extends Model
     /**
      * Order comments by creation date, oldest first.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Builder<Comment> $query
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder<Comment>
      */
-    public function scopeOldest($query)
+    public function scopeOldest(Builder $query): Builder
     {
         return $query->orderBy('created_at');
     }

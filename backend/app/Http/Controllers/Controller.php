@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Response;
 
 /**
  * Controller — Base class for all HTTP controllers.
@@ -41,7 +42,7 @@ abstract class Controller
      *
      * Use for successful operations with no response body (DELETE, etc.)
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     protected function noContent()
     {

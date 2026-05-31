@@ -82,6 +82,7 @@ class CommentService
                 'content' => $comment->content,
                 'version' => 1,
             ];
+
             CommentVersion::create($versionPayload);
 
             if ($parentId !== null) {
@@ -89,9 +90,8 @@ class CommentService
             }
 
             // Denormalized counter on videos to avoid COUNT(*) per comment.
-            $newCount = Video::find($video->id) ? Video::find($video->id)->getAttribute('comments_count') : null; // TODO refactor('comments_count');
-            Video::find($video->id)?->increment('comments_count');
-            $commentCount = (int) $newCount + 1;
+            $video->increment('comments_count');
+            $commentCount = $video->comments_count;
 
             $comment->load('user');
 
@@ -172,7 +172,7 @@ class CommentService
                 Comment::where('id', $comment->parent_id)->decrement('replies_count');
             }
 
-            Video::find($comment->video_id)?->decrement('comments_count');
+            Video::where('id', $comment->video_id)->decrement('comments_count');
 
             $comment->delete();
         });

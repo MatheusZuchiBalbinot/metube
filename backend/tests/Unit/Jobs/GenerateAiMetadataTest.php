@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
+use App\Services\AiMetadataService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -51,7 +52,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
+        $job->handle(app(AiClient::class), app(AiMetadataService::class));
 
         expect(VideoSummary::where('video_id', $video->id)->exists())->toBeTrue();
         $summary = VideoSummary::where('video_id', $video->id)->first();
@@ -70,7 +71,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
+        $job->handle(app(AiClient::class), app(AiMetadataService::class));
 
         $video->refresh();
         expect($video->tags)->toBe($mockResponse['suggested_tags'])
@@ -88,7 +89,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
+        $job->handle(app(AiClient::class), app(AiMetadataService::class));
 
         expect(VideoAiSuggestion::where('video_id', $video->id)->exists())->toBeTrue();
         $suggestion = VideoAiSuggestion::where('video_id', $video->id)->first();
@@ -152,7 +153,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
+        $job->handle(app(AiClient::class), app(AiMetadataService::class));
 
         Event::assertDispatched(AiSuggestionReady::class);
     });
@@ -169,7 +170,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
+        $job->handle(app(AiClient::class), app(AiMetadataService::class));
 
         Event::assertNotDispatched(AiSuggestionReady::class);
     });

@@ -36,16 +36,31 @@ class UserSubscription extends Pivot
         return $this->belongsTo(User::class, 'channel_id');
     }
 
+    /**
+     * @param Builder<UserSubscription> $query
+     *
+     * @return Builder<UserSubscription>
+     */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
     }
 
+    /**
+     * @param Builder<UserSubscription> $query
+     *
+     * @return Builder<UserSubscription>
+     */
     public function scopeToChannel(Builder $query, int $channelId): Builder
     {
         return $query->where('channel_id', $channelId);
     }
 
+    /**
+     * @param Builder<UserSubscription> $query
+     *
+     * @return Builder<UserSubscription>
+     */
     public function scopeBetween(Builder $query, int $userId, int $channelId): Builder
     {
         return $query->where('user_id', $userId)->where('channel_id', $channelId);

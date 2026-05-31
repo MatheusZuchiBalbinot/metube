@@ -8,6 +8,7 @@ use App\Enums\TranscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -15,9 +16,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $language
  * @property string|null $content
  * @property TranscriptionStatus $status
- * @property \Illuminate\Support\Carbon|null $started_at
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon|null $started_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Video $video
  */
 class Transcription extends Model

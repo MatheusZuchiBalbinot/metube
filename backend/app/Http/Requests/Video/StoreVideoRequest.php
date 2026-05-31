@@ -8,6 +8,7 @@ use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -23,8 +24,8 @@ use Illuminate\Validation\Validator;
  * @property string|null $description Video description
  * @property list<string> $tags Video tags
  * @property string $status Video status
- * @property \Illuminate\Http\UploadedFile|null $video_file Direct video file
- * @property \Illuminate\Http\UploadedFile|null $thumbnail_file Direct thumbnail file
+ * @property UploadedFile|null $video_file Direct video file
+ * @property UploadedFile|null $thumbnail_file Direct thumbnail file
  * @property string|null $upload_key Tus resumable upload key
  * @property string|null $thumbnail_key Tus resumable thumbnail key
  * @property string|null $scheduled_at When to publish (ISO 8601)

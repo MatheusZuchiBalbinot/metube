@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\AI\Contracts\AiClient;
 use App\AI\Prompts\VideoMetadataPrompt;
 use App\Events\AiSuggestionReady;
+use App\Exceptions\AiException;
 use App\Models\Video;
 use App\Notifications\VideoAiSummaryReadyNotification;
 use App\Services\AiMetadataService;
@@ -55,7 +56,7 @@ class GenerateAiMetadata implements ShouldQueue
     /**
      * Generate AI metadata from transcription and apply to video.
      *
-     * @throws \App\Exceptions\AiException If AI provider returns an error
+     * @throws AiException If AI provider returns an error
      */
     public function handle(AiClient $ai, AiMetadataService $service): void
     {

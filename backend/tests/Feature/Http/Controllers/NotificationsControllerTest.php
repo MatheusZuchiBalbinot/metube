@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Notifications\VideoFromSubscriptionNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ function createNotificationFor(User $user, bool $read = false): DatabaseNotifica
 {
     $notif = DatabaseNotification::create([
         'id' => (string) Str::uuid(),
-        'type' => App\Notifications\VideoFromSubscriptionNotification::class,
+        'type' => VideoFromSubscriptionNotification::class,
         'notifiable_type' => User::class,
         'notifiable_id' => $user->id,
         'data' => ['type' => 'video_from_subscription', 'vuid' => 'abc', 'video_title' => 'Test', 'channel_name' => 'Chan'],

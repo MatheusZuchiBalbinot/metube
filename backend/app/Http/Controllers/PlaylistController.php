@@ -11,6 +11,8 @@ use App\Http\Requests\Playlist\UpdatePlaylistRequest;
 use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\VideoResource;
 use App\Services\PlaylistService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -53,8 +55,8 @@ class PlaylistController extends Controller
      *
      * @param string $puid Playlist ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function show(string $puid): JsonResponse
     {
@@ -69,8 +71,8 @@ class PlaylistController extends Controller
      *
      * @param string $puid Playlist identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return JsonResponse Ordered collection of video resources
      */
@@ -90,8 +92,8 @@ class PlaylistController extends Controller
      * @param UpdatePlaylistRequest $request Validated playlist data
      * @param string $puid Playlist ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function update(UpdatePlaylistRequest $request, string $puid): JsonResponse
     {
@@ -111,8 +113,8 @@ class PlaylistController extends Controller
      *
      * @param string $puid Playlist ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function destroy(string $puid): Response
     {
@@ -130,8 +132,8 @@ class PlaylistController extends Controller
      * @param AddVideoRequest $request Validated video ULID
      * @param string $puid Playlist ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function addVideo(AddVideoRequest $request, string $puid): JsonResponse
     {
@@ -152,8 +154,8 @@ class PlaylistController extends Controller
      * @param string $puid Playlist ULID
      * @param string $vuid Video ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function removeVideo(string $puid, string $vuid): Response
     {
@@ -171,8 +173,8 @@ class PlaylistController extends Controller
      * @param ReorderVideosRequest $request Ordered video ULIDs
      * @param string $puid Playlist ULID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function reorderVideos(ReorderVideosRequest $request, string $puid): JsonResponse
     {

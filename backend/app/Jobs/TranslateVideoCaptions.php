@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Exceptions\WhisperException;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use App\Services\WhisperClient;
@@ -49,7 +50,7 @@ class TranslateVideoCaptions implements ShouldQueue
      * WhisperException is allowed to bubble up and trigger retries. If all retries
      * exhaust, failed() logs the issue and the video keeps its original captions.
      *
-     * @throws \App\Exceptions\WhisperException If Whisper returns an error
+     * @throws WhisperException If Whisper returns an error
      */
     public function handle(WhisperClient $whisper, VideoStorageService $storage): void
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoSummary;
@@ -156,9 +157,9 @@ class CacheService
     /**
      * Return the cached playlist collection for a user.
      *
-     * @param Closure(): Collection<int, \App\Models\Playlist> $callback
+     * @param Closure(): Collection<int, Playlist> $callback
      *
-     * @return Collection<int, \App\Models\Playlist>
+     * @return Collection<int, Playlist>
      */
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {

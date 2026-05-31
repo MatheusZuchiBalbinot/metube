@@ -7,13 +7,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $user_id
  * @property int $video_id
  * @property float|null $watched_percent
- * @property \Illuminate\Support\Carbon $watched_at
+ * @property Carbon $watched_at
  */
 class WatchHistory extends Model
 {
@@ -39,21 +40,41 @@ class WatchHistory extends Model
         return $this->belongsTo(Video::class);
     }
 
+    /**
+     * @param Builder<WatchHistory> $query
+     *
+     * @return Builder<WatchHistory>
+     */
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
     }
 
+    /**
+     * @param Builder<WatchHistory> $query
+     *
+     * @return Builder<WatchHistory>
+     */
     public function scopeForVideo(Builder $query, int $videoId): Builder
     {
         return $query->where('video_id', $videoId);
     }
 
+    /**
+     * @param Builder<WatchHistory> $query
+     *
+     * @return Builder<WatchHistory>
+     */
     public function scopeRecentDays(Builder $query, int $days = 30): Builder
     {
         return $query->where('watched_at', '>=', now()->subDays($days));
     }
 
+    /**
+     * @param Builder<WatchHistory> $query
+     *
+     * @return Builder<WatchHistory>
+     */
     public function scopeGroupedByDate(Builder $query): Builder
     {
         return $query->orderByDesc('watched_at');

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\LanguageLabel;
+use App\Enums\TranscriptionStatus;
+use App\Exceptions\WhisperException;
 use App\Models\Video;
 
 class TranscriptionService
@@ -14,7 +16,7 @@ class TranscriptionService
      *
      * @param Video $video The video to transcribe
      *
-     * @throws \App\Exceptions\WhisperException If transcription fails
+     * @throws WhisperException If transcription fails
      */
     public function transcribe(Video $video): void
     {
@@ -39,7 +41,7 @@ class TranscriptionService
         $video->update($videoUpdatePayload);
 
         $transcriptionPayload = [
-            'status' => \App\Enums\TranscriptionStatus::COMPLETED,
+            'status' => TranscriptionStatus::COMPLETED,
             'content' => $result->text,
             'language' => $result->language,
         ];

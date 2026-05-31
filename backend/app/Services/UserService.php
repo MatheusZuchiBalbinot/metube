@@ -9,6 +9,7 @@ use App\Enums\HistoryPeriod;
 use App\Models\User;
 use App\Models\WatchHistory;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -41,9 +42,9 @@ class UserService
     /**
      * Get all subscriptions for a user.
      *
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function getUserSubscriptions(User $user): \Illuminate\Support\Collection
+    public function getUserSubscriptions(User $user): Collection
     {
         return $this->cache->rememberUserSubscriptions(
             $user->id,
@@ -128,13 +129,11 @@ class UserService
                     ->orderByDesc(DB::raw('DATE(watched_at)'))
                     ->limit(PaginationSize::HISTORY_EVENTS_DAYS)
                     ->get()
-                    ->map(function (object $row) {
-                        $eventData = [
-                            'date' => (string) $row->date,
-                            'count' => (int) $row->count,
+                    ->map(function (WatchHistory $row): array {
+                        return [
+                            'date' => (string) $row->getAttribute('date'),
+                            'count' => (int) $row->getAttribute('count'),
                         ];
-
-                        return $eventData;
                     })
                     ->values()
                     ->toArray();
