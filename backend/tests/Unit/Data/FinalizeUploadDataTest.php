@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Data\FinalizeUploadData;
+use App\DTOs\FinalizeUploadDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;
 
-describe('FinalizeUploadData', function () {
+describe('FinalizeUploadDTO', function () {
     test('can be constructed directly', function () {
-        $data = new FinalizeUploadData(
+        $data = new FinalizeUploadDTO(
             uploadKey: 'abc123',
             thumbnailKey: null,
             title: 'My Video',
@@ -34,7 +34,7 @@ describe('FinalizeUploadData', function () {
             'status' => 'published',
         ];
 
-        $data = FinalizeUploadData::fromRequest($validated);
+        $data = FinalizeUploadDTO::fromRequest($validated);
 
         expect($data->uploadKey)->toBe('key-xyz')
             ->and($data->title)->toBe('From Request')
@@ -52,7 +52,7 @@ describe('FinalizeUploadData', function () {
             'status' => 'draft',
         ];
 
-        $data = FinalizeUploadData::fromRequest($validated);
+        $data = FinalizeUploadDTO::fromRequest($validated);
 
         expect($data->thumbnailKey)->toBe('thumb-xyz');
     });
@@ -65,7 +65,7 @@ describe('FinalizeUploadData', function () {
             'scheduled_at' => '2025-12-25T10:00:00Z',
         ];
 
-        $data = FinalizeUploadData::fromRequest($validated);
+        $data = FinalizeUploadDTO::fromRequest($validated);
 
         expect($data->scheduledAt)->toBeInstanceOf(Carbon::class)
             ->and($data->scheduledAt->year)->toBe(2025)
@@ -81,7 +81,7 @@ describe('FinalizeUploadData', function () {
             'is_batch' => true,
         ];
 
-        $data = FinalizeUploadData::fromRequest($validated);
+        $data = FinalizeUploadDTO::fromRequest($validated);
 
         expect($data->isBatch)->toBeTrue();
     });
@@ -93,13 +93,13 @@ describe('FinalizeUploadData', function () {
             'status' => 'draft',
         ];
 
-        $data = FinalizeUploadData::fromRequest($validated);
+        $data = FinalizeUploadDTO::fromRequest($validated);
 
         expect($data->tags)->toBe([]);
     });
 
     test('is readonly and cannot be mutated', function () {
-        $data = new FinalizeUploadData(
+        $data = new FinalizeUploadDTO(
             uploadKey: 'key',
             thumbnailKey: null,
             title: 'Title',

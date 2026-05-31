@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\PaginationSize;
-use App\Data\CreateVideoData;
-use App\Data\EmptyVideoSummary;
-use App\Data\FinalizeUploadData;
-use App\Data\UpdateVideoData;
+use App\DTOs\CreateVideoDTO;
+use App\DTOs\EmptyVideoSummary;
+use App\DTOs\FinalizeUploadDTO;
+use App\DTOs\UpdateVideoDTO;
 use App\Enums\ReactionType;
 use App\Enums\VideoEventType;
 use App\Enums\VideoSource;
@@ -54,11 +54,11 @@ class VideoService
      * Create a new video.
      *
      * @param User $user Video owner (channel)
-     * @param CreateVideoData $data Validated and typed input
+     * @param CreateVideoDTO $data Validated and typed input
      *
      * @return Video Created video
      */
-    public function createVideo(User $user, CreateVideoData $data): Video
+    public function createVideo(User $user, CreateVideoDTO $data): Video
     {
         return DB::transaction(function () use ($user, $data) {
             $video = Video::create([
@@ -97,14 +97,14 @@ class VideoService
      * createVideo() does for the legacy single-POST path.
      *
      * @param User $user Authenticated channel owner
-     * @param FinalizeUploadData $data Validated metadata + upload keys
+     * @param FinalizeUploadDTO $data Validated metadata + upload keys
      *
      * @throws ModelNotFoundException When the upload_key is not found in tus cache
      * @throws RuntimeException When the assembled file cannot be moved
      *
      * @return Video Freshly created Video (status=PROCESSING)
      */
-    public function finalizeUpload(User $user, FinalizeUploadData $data): Video
+    public function finalizeUpload(User $user, FinalizeUploadDTO $data): Video
     {
         $tusCache = new TusRedisStore;
         // TusServer sets prefix via reflection: 'tus:' + strtolower(ShortName) + ':'
@@ -229,11 +229,11 @@ class VideoService
      * Update a video's metadata.
      *
      * @param Video $video Video to update
-     * @param UpdateVideoData $data Validated and typed input
+     * @param UpdateVideoDTO $data Validated and typed input
      *
      * @return Video Updated video
      */
-    public function updateVideo(Video $video, UpdateVideoData $data): Video
+    public function updateVideo(Video $video, UpdateVideoDTO $data): Video
     {
         return DB::transaction(function () use ($video, $data) {
             $video->update($data->toUpdateArray());

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Data\CreateVideoData;
-use App\Data\UpdateVideoData;
+use App\DTOs\CreateVideoDTO;
+use App\DTOs\UpdateVideoDTO;
 use App\Enums\VideoStatus;
 use App\Events\VideoFinished;
 use App\Events\VideoReactionApplied;
@@ -42,7 +42,7 @@ describe('VideoService', function () {
         $description = $faker->paragraph();
         $tags = array_slice($faker->words(5), 0, rand(1, 3));
 
-        $data = new CreateVideoData(
+        $data = new CreateVideoDTO(
             title: $title,
             description: $description,
             tags: $tags,
@@ -98,7 +98,7 @@ describe('VideoService', function () {
         $newStatus = $faker->randomElement(VideoStatus::cases());
 
         $video = Video::factory()->create(['title' => $oldTitle]);
-        $newData = new UpdateVideoData(
+        $newData = new UpdateVideoDTO(
             title: $newTitle,
             description: $newDescription,
             tags: null,

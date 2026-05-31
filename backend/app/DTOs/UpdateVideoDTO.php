@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Data;
+namespace App\DTOs;
 
 use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;
 
-final readonly class UpdateVideoData
+final readonly class UpdateVideoDTO
 {
     /**
      * @param list<string>|null $tags

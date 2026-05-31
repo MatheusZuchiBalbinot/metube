@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Data\EmptyVideoSummary;
+use App\DTOs\EmptyVideoSummary;
 
 describe('EmptyVideoSummary', function () {
     test('key_points is an empty array', function () {
