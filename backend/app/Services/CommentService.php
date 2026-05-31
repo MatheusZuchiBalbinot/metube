@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\PaginationSize;
+use App\DTOs\StoreCommentDTO;
+use App\DTOs\UpdateCommentDTO;
 use App\Events\CommentCreated;
 use App\Events\CommentLiked;
-use App\Http\Requests\Comment\StoreCommentRequest;
-use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\CommentVersion;
@@ -48,20 +48,19 @@ class CommentService
      * Store a new comment on a video.
      *
      * @param string $vuid Public video identifier
-     * @param StoreCommentRequest $request Validated request
+     * @param StoreCommentDTO $data Validated comment data
      * @param User $user Authenticated user
      *
      * @return Comment Newly created comment with user loaded
      */
-    public function store(string $vuid, StoreCommentRequest $request, User $user): Comment
+    public function store(string $vuid, StoreCommentDTO $data, User $user): Comment
     {
         $video = Video::byVuid($vuid)->firstOrFail();
-        $validated = $request->validated();
 
         $parentId = null;
 
-        if (isset($validated['parent_cuid'])) {
-            $parent = Comment::byCuid($validated['parent_cuid'])->firstOrFail();
+        if ($data->parentCuid !== null) {
+            $parent = Comment::byCuid($data->parentCuid)->firstOrFail();
             $isNestedReply = $parent->parent_id !== null;
 
             abort_if($isNestedReply, 422, 'Cannot reply to a reply.');
@@ -69,12 +68,12 @@ class CommentService
             $parentId = $parent->id;
         }
 
-        $result = DB::transaction(function () use ($user, $video, $validated, $parentId): array {
+        $result = DB::transaction(function () use ($user, $video, $data, $parentId): array {
             $commentPayload = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'parent_id' => $parentId,
-                'content' => $validated['content'],
+                'content' => $data->content,
             ];
             $comment = Comment::create($commentPayload);
 
@@ -118,14 +117,14 @@ class CommentService
      * comment with the user relation loaded and is_liked set.
      *
      * @param Comment $comment Comment to update
-     * @param UpdateCommentRequest $request Validated request
+     * @param UpdateCommentDTO $data Validated comment data
      * @param User $user Authenticated user (for is_liked resolution)
      *
      * @return Comment Updated comment with user loaded
      */
-    public function update(Comment $comment, UpdateCommentRequest $request, User $user): Comment
+    public function update(Comment $comment, UpdateCommentDTO $data, User $user): Comment
     {
-        return DB::transaction(function () use ($comment, $request, $user): Comment {
+        return DB::transaction(function () use ($comment, $data, $user): Comment {
             $isLiked = CommentLike::byUser($user->id)
                 ->forComment($comment->id)
                 ->exists();
@@ -134,11 +133,11 @@ class CommentService
 
             $newVersion = CommentVersion::create([
                 'comment_id' => $comment->id,
-                'content' => $request->validated('content'),
+                'content' => $data->content,
                 'version' => $nextVersion,
             ]);
 
-            $comment->content = $request->validated('content');
+            $comment->content = $data->content;
             $comment->current_version_id = $newVersion->id;
             $comment->save();
 
@@ -156,7 +155,7 @@ class CommentService
      */
     public function versions(Comment $comment): BaseCollection
     {
-        return $comment->versions()->orderByDesc('version')->get();
+        return $comment->versions()->newest()->get();
     }
 
     /**
@@ -233,7 +232,7 @@ class CommentService
      */
     public function replies(Comment $comment, User $user): BaseCollection
     {
-        $replies = $comment->replies()->with(['user', 'parent'])->orderBy('created_at')->get();
+        $replies = $comment->replies()->with(['user', 'parent'])->oldest()->get();
 
         $this->attachIsLiked($replies, $user);
 

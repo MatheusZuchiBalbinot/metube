@@ -6,6 +6,7 @@ namespace App\AI\Clients;
 
 use App\AI\Contracts\AiClient;
 use App\AI\Contracts\AiPrompt;
+use App\Enums\ApiTimeout;
 use App\Exceptions\AiException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -32,7 +33,7 @@ class GeminiClient implements AiClient
         $model = config('services.gemini.model', 'gemini-2.0-flash');
 
         try {
-            $response = Http::timeout(60)->post(
+            $response = Http::timeout(ApiTimeout::GEMINI_GENERATE->value)->post(
                 "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent",
                 array_merge(
                     $prompt->buildRequest(),

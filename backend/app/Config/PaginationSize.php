@@ -17,11 +17,15 @@ final class PaginationSize
 
     public const USER_LIKES = 15;
 
+    public const USER_SAVED = 15;
+
     public const USER_HISTORY = 20;
 
     public const CHANNEL_VIDEOS = 50;
 
     public const COMMENT_LIST = 20;
+
+    public const HISTORY_EVENTS_DAYS = 365;
 
     private function __construct() {}
 }

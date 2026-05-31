@@ -7,8 +7,9 @@ namespace App\Http\Controllers;
 use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
 use App\DTOs\UpdateVideoDTO;
+use App\DTOs\VideoListFilterDTO;
 use App\Enums\TranscriptionStatus;
-use App\Enums\VideoSource;
+use App\Http\Requests\Video\RecordViewRequest;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
 use App\Http\Requests\Video\UpdateVideoRequest;
@@ -56,7 +57,8 @@ class VideoController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $videos = $this->videoService->listVideos($request->all());
+        $filters = VideoListFilterDTO::fromArray($request->all());
+        $videos = $this->videoService->listVideos($filters);
 
         return $this->json(VideoResource::collection($videos));
     }
@@ -155,26 +157,26 @@ class VideoController extends Controller
     /**
      * Record that a user viewed a video.
      *
-     * @param Request $request Optional body: source, session_id
+     * @param RecordViewRequest $request Optional body: source, session_id
      * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
-    public function recordView(Request $request, string $vuid): Response
+    public function recordView(RecordViewRequest $request, string $vuid): Response
     {
         $video = $this->videoService->getVideoByUuid($vuid);
+        $validated = $request->validated();
 
-        $sourceInput = $request->input('source');
-        $source = is_string($sourceInput) ? VideoSource::tryFrom($sourceInput) : null;
-        $sessionId = $request->input('session_id');
+        $source = isset($validated['source']) ? \App\Enums\VideoSource::from($validated['source']) : null;
+        $sessionId = $validated['session_id'] ?? null;
 
         $this->reactionService->recordView(
             auth()->user(),
             $video,
             $source,
-            is_string($sessionId) ? $sessionId : null,
+            $sessionId,
         );
 
         return $this->noContent();

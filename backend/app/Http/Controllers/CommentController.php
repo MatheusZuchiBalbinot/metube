@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\ToggleLikeResultDTO;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\CommentVersionResource;
+use App\Http\Resources\ToggleLikeResource;
 use App\Models\Comment;
 use App\Services\CommentService;
 use Illuminate\Http\JsonResponse;
@@ -42,7 +44,7 @@ class CommentController extends Controller
     public function store(string $vuid, StoreCommentRequest $request): JsonResponse
     {
         $user = $request->user();
-        $comment = $this->commentService->store($vuid, $request, $user);
+        $comment = $this->commentService->store($vuid, $request->getDTO(), $user);
 
         return $this->json(new CommentResource($comment), 201);
     }
@@ -57,7 +59,7 @@ class CommentController extends Controller
     {
         $this->authorize('update', $comment);
 
-        $updated = $this->commentService->update($comment, $request, $request->user());
+        $updated = $this->commentService->update($comment, $request->getDTO(), $request->user());
 
         return $this->json(new CommentResource($updated));
     }
@@ -87,7 +89,12 @@ class CommentController extends Controller
         $user = $request->user();
         $result = $this->commentService->toggleLike($comment, $user);
 
-        return $this->json($result);
+        $dto = new ToggleLikeResultDTO(
+            liked: $result['liked'],
+            likesCount: $result['likes_count'],
+        );
+
+        return $this->json(new ToggleLikeResource($dto));
     }
 
     /**

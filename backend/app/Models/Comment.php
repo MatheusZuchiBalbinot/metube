@@ -220,4 +220,16 @@ class Comment extends Model
     {
         return $query->orderByDesc('created_at');
     }
+
+    /**
+     * Order comments by creation date, oldest first.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOldest($query)
+    {
+        return $query->orderBy('created_at');
+    }
 }

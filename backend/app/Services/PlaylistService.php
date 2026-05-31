@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\CreatePlaylistDTO;
+use App\DTOs\ReorderPlaylistVideosDTO;
+use App\DTOs\UpdatePlaylistDTO;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
@@ -39,15 +42,15 @@ class PlaylistService
      * Create a new playlist.
      *
      * @param User $user Playlist owner
-     * @param string $name Playlist name
+     * @param CreatePlaylistDTO $data Playlist data
      *
      * @return Playlist Created playlist
      */
-    public function createPlaylist(User $user, string $name): Playlist
+    public function createPlaylist(User $user, CreatePlaylistDTO $data): Playlist
     {
-        return DB::transaction(function () use ($user, $name) {
+        return DB::transaction(function () use ($user, $data) {
             $payload = [
-                'name' => $name,
+                'name' => $data->name,
             ];
 
             return $user->playlists()->create($payload);
@@ -71,15 +74,15 @@ class PlaylistService
     /**
      * Update a playlist (rename).
      *
-     * @param string $name New name
+     * @param UpdatePlaylistDTO $data Playlist data
      *
      * @return Playlist Updated playlist
      */
-    public function updatePlaylist(Playlist $playlist, string $name): Playlist
+    public function updatePlaylist(Playlist $playlist, UpdatePlaylistDTO $data): Playlist
     {
-        return DB::transaction(function () use ($playlist, $name) {
+        return DB::transaction(function () use ($playlist, $data) {
             $updateData = [
-                'name' => $name,
+                'name' => $data->name,
             ];
             $playlist->update($updateData);
 
@@ -138,23 +141,23 @@ class PlaylistService
     /**
      * Reorder videos in a playlist using drag-and-drop.
      *
-     * @param list<string> $vuids Ordered video UUIDs
+     * @param ReorderPlaylistVideosDTO $data Reorder data containing ordered video UUIDs
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      *
      * @return Playlist Reordered playlist
      */
-    public function reorderPlaylistVideos(Playlist $playlist, array $vuids): Playlist
+    public function reorderPlaylistVideos(Playlist $playlist, ReorderPlaylistVideosDTO $data): Playlist
     {
-        return DB::transaction(function () use ($playlist, $vuids) {
-            if ($vuids === []) {
+        return DB::transaction(function () use ($playlist, $data) {
+            if ($data->vuids === []) {
                 return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
             }
 
             /** @var array<string, int> $idByVuid */
-            $idByVuid = Video::whereIn('vuid', $vuids)->pluck('id', 'vuid')->all();
+            $idByVuid = Video::whereIn('vuid', $data->vuids)->pluck('id', 'vuid')->all();
 
-            $missing = array_diff($vuids, array_keys($idByVuid));
+            $missing = array_diff($data->vuids, array_keys($idByVuid));
 
             if ($missing !== []) {
                 throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)
@@ -166,7 +169,7 @@ class PlaylistService
             $bindings = [];
             $videoIds = [];
 
-            foreach ($vuids as $position => $vuid) {
+            foreach ($data->vuids as $position => $vuid) {
                 $videoId = $idByVuid[$vuid];
                 $cases[] = 'WHEN ? THEN CAST(? AS INTEGER)';
                 $bindings[] = $videoId;

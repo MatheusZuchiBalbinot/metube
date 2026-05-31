@@ -12,7 +12,6 @@ use App\Models\UserSubscription;
 use App\Models\Video;
 use App\Models\WatchHistory;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class RecommendationService
 {
@@ -301,7 +300,7 @@ class RecommendationService
     }
 
     /**
-     * Paginate a collection of items (15 per page).
+     * Paginate a collection of items.
      *
      * @template T
      *
@@ -311,7 +310,7 @@ class RecommendationService
      */
     private function paginate(Collection $items, int $page): Collection
     {
-        $perPage = 15;
+        $perPage = PaginationSize::RECOMMENDATIONS;
         $start = ($page - 1) * $perPage;
 
         return $items->skip($start)->take($perPage);

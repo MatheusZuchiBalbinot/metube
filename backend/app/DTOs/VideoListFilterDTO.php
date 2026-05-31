@@ -9,6 +9,9 @@ namespace App\DTOs;
  */
 class VideoListFilterDTO
 {
+    /**
+     * @param list<string>|null $tags
+     */
     public function __construct(
         public readonly int $page = 1,
         public readonly ?string $search = null,
@@ -16,6 +19,11 @@ class VideoListFilterDTO
         public readonly ?string $status = null,
     ) {}
 
+    /**
+     * Create from a request query array.
+     *
+     * @param array<string, mixed> $filters
+     */
     public static function fromArray(array $filters): self
     {
         return new self(

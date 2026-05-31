@@ -75,6 +75,7 @@ class VideoPublishingService
         $vuids = Video::scheduledDue()->pluck('vuid');
 
         $hasVideos = !$vuids->isEmpty();
+
         if (!$hasVideos) {
             return 0;
         }

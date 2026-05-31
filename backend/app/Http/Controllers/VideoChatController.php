@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\ChatAnswerDTO;
 use App\Enums\TranscriptionLimit;
 use App\Enums\TranscriptionStatus;
 use App\Http\Requests\Video\VideoChatRequest;
+use App\Http\Resources\VideoChatAnswerResource;
 use App\Services\IAService;
 use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
@@ -63,7 +65,9 @@ class VideoChatController extends Controller
             return $this->json(['message' => 'The AI service failed to respond. Please try again.'], 503);
         }
 
-        return $this->json(['answer' => $answer]);
+        $dto = new ChatAnswerDTO(answer: $answer);
+
+        return $this->json(new VideoChatAnswerResource($dto));
     }
 
     /**

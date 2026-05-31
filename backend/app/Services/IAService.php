@@ -4,47 +4,26 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\ApiTimeout;
-use Illuminate\Http\Client\ConnectionException;
+use App\AI\Clients\GroqClient;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * IAService — Thin wrapper around the Groq REST API (OpenAI-compatible).
+ * IAService — Wrapper around Groq API for video content analysis.
  *
- * Provides two modes of interaction:
- *   - generate(): single-turn JSON extraction (video metadata, summaries)
- *   - chat(): multi-turn conversational Q&A with a system prompt
+ * Delegates HTTP communication to GroqClient and focuses on:
+ *   - JSON extraction and parsing for generate()
+ *   - Multi-turn chat responses for chat()
  */
 class IAService
 {
-    private string $apiKey;
-
-    private string $model;
-
-    private string $baseUrl;
-
-    private int $timeout;
-
-    public function __construct(
-        ?string $apiKey = null,
-        ?string $model = null,
-        ?string $baseUrl = null,
-        ?int $timeout = null,
-    ) {
-        $this->apiKey = $apiKey ?? (string) config('services.ai.key');
-        $this->model = $model ?? (string) config('services.ai.model', 'llama-3.3-70b-versatile');
-        $this->baseUrl = $baseUrl ?? (string) config('services.ai.url', 'https://api.groq.com/openai/v1');
-        $this->timeout = $timeout ?? ApiTimeout::CHAT_COMPLETION->value;
-    }
+    public function __construct(private readonly GroqClient $groq) {}
 
     /**
      * Send a prompt and return the parsed JSON response body.
      *
      * @param string $prompt Full prompt text to send
      *
-     * @throws ConnectionException When the API is unreachable
      * @throws RequestException When the API returns a non-2xx response
      * @throws RuntimeException When the response cannot be decoded as JSON
      *
@@ -52,33 +31,7 @@ class IAService
      */
     public function generate(string $prompt): array
     {
-        $payload = [
-            'model' => $this->model,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'You are a video content analyzer. Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $prompt,
-                ],
-            ],
-            'response_format' => ['type' => 'json_object'],
-            'temperature' => 0.3,
-        ];
-        $response = Http::withToken($this->apiKey)
-            ->timeout($this->timeout)
-            ->post("{$this->baseUrl}/chat/completions", $payload)
-            ->throw();
-
-        $text = $response->json('choices.0.message.content');
-
-        $isTextMissing = !is_string($text) || $text === '';
-
-        if ($isTextMissing) {
-            throw new RuntimeException('AI service returned an empty response.');
-        }
+        $text = $this->groq->generateJson($prompt);
 
         /** @var array<string, mixed>|null $decoded */
         $decoded = json_decode($text, true);
@@ -99,38 +52,13 @@ class IAService
      * @param string $systemPrompt System instructions (video context)
      * @param array<int, array{role: string, content: string}> $history Previous turns
      *
-     * @throws ConnectionException When the API is unreachable
      * @throws RequestException When the API returns a non-2xx response
-     * @throws RuntimeException When the response content is missing
+     * @throws RuntimeException When the response is missing
      *
      * @return string The model's plain-text answer
      */
     public function chat(string $question, string $systemPrompt, array $history): string
     {
-        $messages = array_merge(
-            [['role' => 'system', 'content' => $systemPrompt]],
-            $history,
-            [['role' => 'user', 'content' => $question]],
-        );
-
-        $payload = [
-            'model' => $this->model,
-            'messages' => $messages,
-            'temperature' => 0.5,
-        ];
-        $response = Http::withToken($this->apiKey)
-            ->timeout($this->timeout)
-            ->post("{$this->baseUrl}/chat/completions", $payload)
-            ->throw();
-
-        $text = $response->json('choices.0.message.content');
-
-        $isTextMissing = !is_string($text) || $text === '';
-
-        if ($isTextMissing) {
-            throw new RuntimeException('AI service returned an empty chat response.');
-        }
-
-        return $text;
+        return $this->groq->chat($question, $systemPrompt, $history);
     }
 }

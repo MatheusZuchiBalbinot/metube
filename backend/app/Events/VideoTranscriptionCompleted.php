@@ -4,34 +4,35 @@ declare(strict_types=1);
 
 namespace App\Events;
 
-use App\Enums\VideoStatus;
 use App\Models\Video;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class VideoStatusUpdated implements ShouldBroadcast
+class VideoTranscriptionCompleted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
     /**
-     * @param Video $video Video whose status changed
-     * @param VideoStatus $newStatus New video status
-     * @param VideoStatus|null $previousStatus Previous status (for transition context)
+     * @param Video $video The video whose transcription completed
      */
     public function __construct(
         public readonly Video $video,
-        public readonly VideoStatus $newStatus,
-        public readonly ?VideoStatus $previousStatus = null,
     ) {}
 
     /**
-     * @return array<int, PrivateChannel>
+     * Broadcast on the public video channel (video page) and the owner's private channel (useRealtime).
+     *
+     * @return array<int, Channel|PrivateChannel>
      */
     public function broadcastOn(): array
     {
-        return [new PrivateChannel("users.{$this->video->channel->uuid}")];
+        return [
+            new Channel("videos.{$this->video->vuid}"),
+            new PrivateChannel("users.{$this->video->channel->uuid}"),
+        ];
     }
 
     /**
@@ -41,13 +42,11 @@ class VideoStatusUpdated implements ShouldBroadcast
     {
         return [
             'vuid' => $this->video->vuid,
-            'status' => $this->newStatus->value,
-            'previous_status' => $this->previousStatus?->value,
         ];
     }
 
     public function broadcastAs(): string
     {
-        return 'VideoStatusUpdated';
+        return 'VideoTranscriptionCompleted';
     }
 }

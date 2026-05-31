@@ -74,4 +74,14 @@ class UpdateVideoRequest extends FormRequest
             }
         });
     }
+
+    /**
+     * Get the DTO for updating a video.
+     *
+     * @return \App\DTOs\UpdateVideoDTO
+     */
+    public function getDTO(): \App\DTOs\UpdateVideoDTO
+    {
+        return \App\DTOs\UpdateVideoDTO::fromRequest($this->validated());
+    }
 }

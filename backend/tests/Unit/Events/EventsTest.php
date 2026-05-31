@@ -319,7 +319,18 @@ describe('VideoStatusUpdated', function () {
         $payload = $event->broadcastWith();
 
         expect($payload['vuid'])->toBe($video->vuid)
-            ->and($payload['status'])->toBe(VideoStatus::FAILED->value);
+            ->and($payload['status'])->toBe(VideoStatus::FAILED->value)
+            ->and($payload['previous_status'])->toBeNull();
+    });
+
+    test('broadcastWith includes previous_status when provided', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+        $event = new VideoStatusUpdated($video, VideoStatus::PUBLISHED, VideoStatus::PROCESSING);
+
+        $payload = $event->broadcastWith();
+
+        expect($payload['previous_status'])->toBe(VideoStatus::PROCESSING->value);
     });
 
     test('broadcastAs returns VideoStatusUpdated', function () {

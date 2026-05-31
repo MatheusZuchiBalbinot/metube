@@ -50,4 +50,18 @@ class UserSubscription extends Pivot
     {
         return $query->where('user_id', $userId)->where('channel_id', $channelId);
     }
+
+    /**
+     * Filter subscriptions by both user and channel.
+     *
+     * @param Builder<UserSubscription> $query
+     * @param int $userId User ID
+     * @param int $channelId Channel ID
+     *
+     * @return Builder<UserSubscription>
+     */
+    public function scopeFromUserToChannel(Builder $query, int $userId, int $channelId): Builder
+    {
+        return $query->where('user_id', $userId)->where('channel_id', $channelId);
+    }
 }

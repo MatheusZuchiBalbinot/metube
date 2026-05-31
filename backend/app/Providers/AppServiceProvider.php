@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\AI\Clients\GeminiClient;
+use App\AI\Clients\GroqClient;
 use App\AI\Contracts\AiClient;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
@@ -22,6 +23,8 @@ use App\Events\VideoReactionApplied;
 use App\Events\VideoSaved;
 use App\Events\VideoSkipped;
 use App\Events\VideoStatusUpdated;
+use App\Events\VideoTranscriptionCompleted;
+use App\Events\VideoTranscriptionStarted;
 use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
@@ -36,6 +39,8 @@ use App\Listeners\SendVideoLikedNotification;
 use App\Listeners\SendVideoProcessedNotification;
 use App\Listeners\SendVideoPublishedNotifications;
 use App\Listeners\SendVideoTranscribedNotification;
+use App\Listeners\SendVideoTranscriptionCompletedListener;
+use App\Listeners\SendVideoTranscriptionStartedListener;
 use App\Listeners\TranscribeVideoListener;
 use App\Models\Comment;
 use App\Models\Playlist;
@@ -63,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AiClient::class, GeminiClient::class);
+        $this->app->singleton(GroqClient::class);
     }
 
     /**
@@ -126,6 +132,13 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VideoPublished::class, TranscribeVideoListener::class);
         Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
+
+        // Transcription events — split to handle STARTED and COMPLETED separately
+        Event::listen(VideoTranscriptionStarted::class, SendVideoTranscriptionStartedListener::class);
+        Event::listen(VideoTranscriptionCompleted::class, SendVideoTranscriptionCompletedListener::class);
+
+        // Deprecated: TranscriptionStatusUpdated is kept for FAILED status only.
+        // Use VideoTranscriptionStarted/VideoTranscriptionCompleted instead.
         Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscribedNotification::class);
 
         Event::subscribe(InvalidateCacheSubscriber::class);

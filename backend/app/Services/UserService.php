@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Config\PaginationSize;
 use App\Enums\HistoryPeriod;
 use App\Models\User;
+use App\Models\WatchHistory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ class UserService
      */
     public function getUserSaved(User $user): LengthAwarePaginator
     {
-        return $user->getWatchLaterPlaylist()->videos()->with('channel')->paginate(15);
+        return $user->getWatchLaterPlaylist()->videos()->with('channel')->paginate(PaginationSize::USER_SAVED);
     }
 
     /**
@@ -78,7 +79,7 @@ class UserService
     public function removeFromHistory(User $user, string $vuid): void
     {
         $user->history()
-            ->whereHas('video', fn ($q) => $q->where('vuid', $vuid))
+            ->byVideoVuid($vuid)
             ->delete();
         $this->cache->forgetHistoryEvents($user->id);
     }
@@ -125,7 +126,7 @@ class UserService
                     )
                     ->groupBy(DB::raw('DATE(watched_at)'))
                     ->orderByDesc(DB::raw('DATE(watched_at)'))
-                    ->limit(365)
+                    ->limit(PaginationSize::HISTORY_EVENTS_DAYS)
                     ->get()
                     ->map(function (object $row) {
                         $eventData = [
