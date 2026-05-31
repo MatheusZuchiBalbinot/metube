@@ -42,7 +42,7 @@ class PlaylistController extends Controller
     {
         $playlist = $this->playlistService->createPlaylist(
             auth()->user(),
-            $request->validated()['name'],
+            $request->getDTO(),
         );
 
         return $this->json(new PlaylistResource($playlist->load('videos')), 201);
@@ -100,7 +100,7 @@ class PlaylistController extends Controller
 
         $updated = $this->playlistService->updatePlaylist(
             $playlist,
-            $request->validated()['name'],
+            $request->getDTO(),
         );
 
         return $this->json(new PlaylistResource($updated));
@@ -181,7 +181,7 @@ class PlaylistController extends Controller
 
         $updated = $this->playlistService->reorderPlaylistVideos(
             $playlist,
-            $request->validated()['vuids'],
+            $request->getDTO(),
         );
 
         return $this->json(new PlaylistResource($updated));

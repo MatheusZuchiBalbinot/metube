@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\HistoryPeriod;
+use App\Http\Requests\User\HistoryRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\VideoResource;
 use App\Http\Resources\WatchHistoryResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
@@ -63,15 +63,15 @@ class UserController extends Controller
      *
      * Supports filtering by period: today, week, month, all
      *
-     * @param Request $request Query: period?{today|week|month|all}, page?, perPage?
+     * @param HistoryRequest $request Query: period?{today|week|month|all}, page?, perPage?
      *
      * @return JsonResponse array{data: array{vuid: string, watched_at: string}[], meta: {total: int, page: int}}
      */
-    public function history(Request $request): JsonResponse
+    public function history(HistoryRequest $request): JsonResponse
     {
-        $periodValue = $request->query('period', 'all');
-        $periodValue = is_string($periodValue) ? $periodValue : 'all';
-        $period = HistoryPeriod::tryFrom($periodValue) ?? HistoryPeriod::ALL;
+        $validated = $request->validated();
+        $periodValue = $validated['period'] ?? 'all';
+        $period = HistoryPeriod::from($periodValue);
         $history = $this->userService->getUserHistory(auth()->user(), $period);
 
         return $this->json(WatchHistoryResource::collection($history));
@@ -125,6 +125,7 @@ class UserController extends Controller
         $progress = $this->userService->getUserProgress(auth()->user());
 
         $payload = ['data' => $progress];
+
         return $this->json($payload);
     }
 }

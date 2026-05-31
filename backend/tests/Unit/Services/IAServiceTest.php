@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\AI\Clients\GroqClient;
 use App\Services\IAService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -21,7 +22,8 @@ describe('IAService', function () {
             '*' => Http::response(groqJsonResponse('{"key":"value"}')),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
         $result = $service->generate('test prompt');
 
         expect($result)->toBeArray()
@@ -33,7 +35,8 @@ describe('IAService', function () {
             '*' => Http::response(groqJsonResponse('{invalid json}')),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
 
         expect(fn () => $service->generate('test prompt'))
             ->toThrow(RuntimeException::class, 'not valid JSON');
@@ -44,7 +47,8 @@ describe('IAService', function () {
             '*' => Http::response(groqJsonResponse('')),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
 
         expect(fn () => $service->generate('test prompt'))
             ->toThrow(RuntimeException::class, 'empty response');
@@ -55,7 +59,8 @@ describe('IAService', function () {
             '*' => Http::response([], 500),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
 
         expect(fn () => $service->generate('test prompt'))
             ->toThrow(RequestException::class);
@@ -70,7 +75,8 @@ describe('IAService', function () {
             ]),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
         $answer = $service->chat('What is this about?', 'System context here.', []);
 
         expect($answer)->toBe('The video is about Laravel.');
@@ -90,7 +96,8 @@ describe('IAService', function () {
             ['role' => 'assistant', 'content' => 'Yes, PHP and Laravel.'],
         ];
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
         $answer = $service->chat('Anything else?', 'Context.', $history);
 
         Http::assertSent(function ($request) use ($history) {
@@ -117,10 +124,11 @@ describe('IAService', function () {
             ]),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
 
         expect(fn () => $service->chat('Question?', 'Context.', []))
-            ->toThrow(RuntimeException::class, 'empty chat response');
+            ->toThrow(RuntimeException::class, 'empty response');
     });
 
     test('chat throws on HTTP error', function () {
@@ -128,7 +136,8 @@ describe('IAService', function () {
             '*' => Http::response([], 429),
         ]);
 
-        $service = app(IAService::class);
+        $groqClient = app(GroqClient::class);
+        $service = new IAService($groqClient);
 
         expect(fn () => $service->chat('Question?', 'Context.', []))
             ->toThrow(RequestException::class);

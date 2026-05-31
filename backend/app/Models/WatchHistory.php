@@ -58,4 +58,17 @@ class WatchHistory extends Model
     {
         return $query->orderByDesc('watched_at');
     }
+
+    /**
+     * Filter history by video VUID using a joined query.
+     *
+     * @param Builder<WatchHistory> $query
+     * @param string $vuid Video VUID
+     *
+     * @return Builder<WatchHistory>
+     */
+    public function scopeByVideoVuid(Builder $query, string $vuid): Builder
+    {
+        return $query->whereHas('video', fn ($q) => $q->where('vuid', $vuid));
+    }
 }

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Video;
 
+use App\DTOs\CreateVideoDTO;
+use App\DTOs\FinalizeUploadDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -40,7 +43,7 @@ class StoreVideoRequest extends FormRequest
     /**
      * Get the validation rules.
      *
-     * @return array<string, string|list<string>>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
@@ -49,7 +52,7 @@ class StoreVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['required', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
+            'status' => ['required', 'string', Rule::enum(VideoStatus::class)],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
             'video_file' => ['required_without:upload_key', 'nullable', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
@@ -124,5 +127,21 @@ class StoreVideoRequest extends FormRequest
         if (!$isOwner) {
             $v->errors()->add($field, 'Upload session not found or has expired.');
         }
+    }
+
+    /**
+     * Get the appropriate DTO based on upload mode (tus vs. direct).
+     *
+     * @return CreateVideoDTO|FinalizeUploadDTO
+     */
+    public function getDTO(): CreateVideoDTO|FinalizeUploadDTO
+    {
+        $isTusUpload = $this->has('upload_key');
+
+        if ($isTusUpload) {
+            return FinalizeUploadDTO::fromRequest($this->validated());
+        }
+
+        return CreateVideoDTO::fromRequest($this->validated());
     }
 }

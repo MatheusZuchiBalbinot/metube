@@ -34,7 +34,7 @@ class VideoProgressService
     {
         DB::transaction(function () use ($user, $video, $percent) {
             $existing = $user->progress()
-                ->where('video_id', $video->id)
+                ->forVideo($video->id)
                 ->lockForUpdate()
                 ->first();
 

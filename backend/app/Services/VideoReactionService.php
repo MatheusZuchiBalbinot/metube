@@ -14,11 +14,11 @@ use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
+use App\Models\PlaylistVideo;
 use App\Models\User;
 use App\Models\UserVideoReaction;
-use App\Models\PlaylistVideo;
-use App\Models\VideoView;
 use App\Models\Video;
+use App\Models\VideoView;
 use Illuminate\Support\Facades\DB;
 
 /**

@@ -6,6 +6,8 @@ namespace App\Jobs;
 
 use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
+use App\Events\VideoTranscriptionCompleted;
+use App\Events\VideoTranscriptionStarted;
 use App\Models\Video;
 use App\Services\TranscriptionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -65,7 +67,7 @@ class TranscribeVideo implements ShouldQueue
 
         $service->transcribe($video);
 
-        event(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
+        event(new VideoTranscriptionCompleted($video));
         dispatch(new GenerateAiMetadata($video));
 
         $video->refresh();
@@ -92,6 +94,8 @@ class TranscribeVideo implements ShouldQueue
             ['status' => TranscriptionStatus::FAILED],
         );
 
+        // Note: We dispatch TranscriptionStatusUpdated for FAILED so listeners can react.
+        // In future, we may create VideoTranscriptionFailed event if needed.
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
     }
 
@@ -113,7 +117,7 @@ class TranscribeVideo implements ShouldQueue
         $isFirstAttempt = $this->attempts() === 1;
 
         if ($isFirstAttempt) {
-            event(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING, $startedAt, $estimatedSeconds));
+            event(new VideoTranscriptionStarted($video, $startedAt, $estimatedSeconds));
         }
     }
 }

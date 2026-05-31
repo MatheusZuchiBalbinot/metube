@@ -84,8 +84,7 @@ class ChannelService
 
         DB::transaction(function () use ($subscriber, $channel) {
             $unsubscribed = UserSubscription::query()
-                ->where('user_id', $subscriber->id)
-                ->where('channel_id', $channel->id)
+                ->fromUserToChannel($subscriber->id, $channel->id)
                 ->delete();
 
             if ($unsubscribed > 0) {
