@@ -124,6 +124,7 @@ class UserController extends Controller
     {
         $progress = $this->userService->getUserProgress(auth()->user());
 
-        return $this->json(['data' => $progress]);
+        $payload = ['data' => $progress];
+        return $this->json($payload);
     }
 }

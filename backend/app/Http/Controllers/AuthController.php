@@ -32,7 +32,9 @@ class AuthController extends Controller
     {
         $user = $this->authService->login($request->validated());
 
-        return $this->json(['user' => new UserResource($user)]);
+        $response = ['user' => new UserResource($user)];
+
+        return $this->json($response);
     }
 
     /**
@@ -44,7 +46,9 @@ class AuthController extends Controller
     {
         $this->authService->logout();
 
-        return $this->json(['message' => trans('messages.auth.logout_success')]);
+        $response = ['message' => trans('messages.auth.logout_success')];
+
+        return $this->json($response);
     }
 
     /**
@@ -85,7 +89,9 @@ class AuthController extends Controller
     {
         $user = $this->authService->register($request->validated());
 
-        return $this->json(['user' => new UserResource($user)], 201);
+        $response = ['user' => new UserResource($user)];
+
+        return $this->json($response, 201);
     }
 
     /**
@@ -101,7 +107,9 @@ class AuthController extends Controller
     {
         $this->authService->sendPasswordResetLink($request->validated('email'));
 
-        return $this->json(['message' => trans('passwords.sent')]);
+        $response = ['message' => trans('passwords.sent')];
+
+        return $this->json($response);
     }
 
     /**
@@ -116,13 +124,16 @@ class AuthController extends Controller
      */
     public function resetPassword(string $token, ResetPasswordRequest $request): JsonResponse
     {
-        $this->authService->resetPassword([
+        $payload = [
             'token' => $token,
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
-        ]);
+        ];
+        $this->authService->resetPassword($payload);
 
-        return $this->json(['message' => trans('passwords.reset')]);
+        $response = ['message' => trans('passwords.reset')];
+
+        return $this->json($response);
     }
 
     /**
@@ -136,7 +147,9 @@ class AuthController extends Controller
     {
         $request->fulfill();
 
-        return $this->json(['message' => 'Email verified.']);
+        $response = ['message' => 'Email verified.'];
+
+        return $this->json($response);
     }
 
     /**
@@ -148,6 +161,8 @@ class AuthController extends Controller
     {
         $request->user()->sendEmailVerificationNotification();
 
-        return $this->json(['message' => 'Verification email sent.']);
+        $response = ['message' => 'Verification email sent.'];
+
+        return $this->json($response);
     }
 }
