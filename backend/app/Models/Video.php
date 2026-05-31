@@ -217,4 +217,23 @@ class Video extends Model
 
         return $query;
     }
+
+    /**
+     * Check if this video already has English captions.
+     */
+    public function hasEnglishCaptions(): bool
+    {
+        return \in_array('en', \array_column($this->captions ?? [], 'lang'), true);
+    }
+
+    /**
+     * Append a caption track to this video's caption list.
+     */
+    public function appendCaption(string $lang, string $label, string $url): void
+    {
+        $captions = $this->captions ?? [];
+        $captions[] = compact('lang', 'label', 'url');
+
+        $this->update(['captions' => $captions]);
+    }
 }
