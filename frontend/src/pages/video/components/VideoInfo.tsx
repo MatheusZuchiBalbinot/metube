@@ -18,6 +18,7 @@ import type { UseVideoShareResult } from '../hooks/useVideoShare';
 interface VideoInfoProps {
     video: Video
     isOwner: boolean
+    isAuthenticated: boolean
     isChannelSubscribed: boolean
     onSubscribe: () => void
     reactions: UseVideoReactionsResult
@@ -33,7 +34,7 @@ interface VideoInfoProps {
 }
 
 export default function VideoInfo({
-    video, isOwner, isChannelSubscribed, onSubscribe,
+    video, isOwner, isAuthenticated, isChannelSubscribed, onSubscribe,
     reactions, isSaved, share,
     transcription, readingMode, onReadingModeToggle,
     descExpanded, onDescExpandToggle, language, onScrollToChat,
@@ -77,33 +78,37 @@ export default function VideoInfo({
                 </div>
 
                 <div className="video-page__actions">
-                    <ReactionPill
-                        isLiked={reactions.isLiked}
-                        isDisliked={reactions.isDisliked}
-                        isLikeAnimating={reactions.likeAnimating}
-                        isDislikeAnimating={reactions.dislikeAnimating}
-                        likeIcon={<ThumbsUp size={18} strokeWidth={1.75} fill="none" />}
-                        likeIconActive={<ThumbsUp size={18} strokeWidth={1.75} fill="currentColor" />}
-                        dislikeIcon={<ThumbsDown size={18} strokeWidth={1.75} fill="none" />}
-                        dislikeIconActive={<ThumbsDown size={18} strokeWidth={1.75} fill="currentColor" />}
-                        onLike={reactions.handleLike}
-                        onDislike={reactions.handleDislike}
-                    />
-                    <SavePopover videoId={videoId}>
-                        <ReactionBtn
-                            isActive={isSaved}
-                            icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}
-                            iconActive={<Bookmark size={20} strokeWidth={1.75} fill="currentColor" />}
-                            label={t('video.save')}
-                            activeLabel={t('video.saved')}
-                            className="video-page__reaction-btn"
-                            activeClass="video-page__reaction-btn--saved"
-                            showLabel={false}
-                            onClick={() => { }}
-                        />
-                    </SavePopover>
+                    {isAuthenticated && (
+                        <>
+                            <ReactionPill
+                                isLiked={reactions.isLiked}
+                                isDisliked={reactions.isDisliked}
+                                isLikeAnimating={reactions.likeAnimating}
+                                isDislikeAnimating={reactions.dislikeAnimating}
+                                likeIcon={<ThumbsUp size={18} strokeWidth={1.75} fill="none" />}
+                                likeIconActive={<ThumbsUp size={18} strokeWidth={1.75} fill="currentColor" />}
+                                dislikeIcon={<ThumbsDown size={18} strokeWidth={1.75} fill="none" />}
+                                dislikeIconActive={<ThumbsDown size={18} strokeWidth={1.75} fill="currentColor" />}
+                                onLike={reactions.handleLike}
+                                onDislike={reactions.handleDislike}
+                            />
+                            <SavePopover videoId={videoId}>
+                                <ReactionBtn
+                                    isActive={isSaved}
+                                    icon={<Bookmark size={20} strokeWidth={1.75} fill="none" />}
+                                    iconActive={<Bookmark size={20} strokeWidth={1.75} fill="currentColor" />}
+                                    label={t('video.save')}
+                                    activeLabel={t('video.saved')}
+                                    className="video-page__reaction-btn"
+                                    activeClass="video-page__reaction-btn--saved"
+                                    showLabel={false}
+                                    onClick={() => { }}
+                                />
+                            </SavePopover>
 
-                    <span className="video-page__actions-sep" aria-hidden="true" />
+                            <span className="video-page__actions-sep" aria-hidden="true" />
+                        </>
+                    )}
 
                     <ShareMenu
                         isOpen={share.isShareDropdownOpen}

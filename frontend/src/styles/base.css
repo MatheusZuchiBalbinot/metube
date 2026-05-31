@@ -7,6 +7,22 @@
     padding: 0;
 }
 
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    text-decoration: none;
+}
+
 /* ─── CSS Custom Properties ─────────────────────────────────────────────── */
 
 :root,

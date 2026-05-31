@@ -152,6 +152,7 @@ export default function VideoPage() {
                         hasVideoFile={video.videoUrl !== undefined && video.videoUrl !== ''}
                         src={video.videoUrl ?? ''}
                         autoPlay={autoplay}
+                        captions={video.captions}
                         chapters={summary?.chapters}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={handleVideoEnded}
@@ -169,6 +170,7 @@ export default function VideoPage() {
                     <VideoInfo
                         video={video}
                         isOwner={isOwner}
+                        isAuthenticated={authUser !== null}
                         isChannelSubscribed={isChannelSubscribed}
                         onSubscribe={() => toggleSubscription(video.channelId)}
                         reactions={reactions}
