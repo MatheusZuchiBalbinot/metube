@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Data;
 
 use App\Enums\VideoStatus;
@@ -8,7 +10,7 @@ use Illuminate\Support\Carbon;
 final readonly class FinalizeUploadData
 {
     /**
-     * @param  list<string>  $tags
+     * @param list<string> $tags
      */
     public function __construct(
         public string $uploadKey,
@@ -24,7 +26,7 @@ final readonly class FinalizeUploadData
     /**
      * Build from a validated FinalizeUploadRequest payload.
      *
-     * @param  array<string, mixed>  $validated
+     * @param array<string, mixed> $validated
      */
     public static function fromRequest(array $validated): self
     {

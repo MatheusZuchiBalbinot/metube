@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +30,7 @@ class CommentVersion extends Model
     /**
      * Get the comment this version belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Comment, $this>
+     * @return BelongsTo<Comment, $this>
      */
     public function comment(): BelongsTo
     {

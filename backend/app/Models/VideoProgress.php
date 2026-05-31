@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int $video_id
  * @property int $percent
- * @property \App\Models\Video $video
+ * @property Video $video
  */
 class VideoProgress extends Model
 {
@@ -31,7 +33,7 @@ class VideoProgress extends Model
     /**
      * Get the user who has this progress.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -41,7 +43,7 @@ class VideoProgress extends Model
     /**
      * Get the video this progress is for.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\VideoLiked;
 use App\Listeners\SendVideoLikedNotification;
 use App\Models\User;

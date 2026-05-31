@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Exceptions\InvalidCredentialsException;
@@ -15,13 +17,13 @@ class AuthService
     /**
      * Attempt login, regenerate session, and return the authenticated user.
      *
-     * @param  array{email: string, password: string}  $credentials
+     * @param array{email: string, password: string} $credentials
      *
      * @throws InvalidCredentialsException
      */
     public function login(array $credentials): User
     {
-        if (! Auth::attempt($credentials)) {
+        if (!Auth::attempt($credentials)) {
             throw new InvalidCredentialsException;
         }
 
@@ -63,7 +65,7 @@ class AuthService
     /**
      * Update the authenticated user's profile fields.
      *
-     * @param  array<string, mixed>  $data  Validated: name?, bio?
+     * @param array<string, mixed> $data Validated: name?, bio?
      */
     public function updateProfile(array $data): User
     {
@@ -77,7 +79,7 @@ class AuthService
     /**
      * Register a new user, auto-login, and dispatch the Registered event.
      *
-     * @param  array{name: string, email: string, password: string}  $data
+     * @param array{name: string, email: string, password: string} $data
      */
     public function register(array $data): User
     {
@@ -109,7 +111,7 @@ class AuthService
         $status = Password::broker()->sendResetLink(['email' => $email]);
         $isSent = $status === Password::RESET_LINK_SENT;
 
-        if (! $isSent) {
+        if (!$isSent) {
             throw ValidationException::withMessages(['email' => [trans($status)]]);
         }
     }
@@ -117,7 +119,7 @@ class AuthService
     /**
      * Reset the user's password using the given token.
      *
-     * @param  array{token: string, email: string, password: string}  $data
+     * @param array{token: string, email: string, password: string} $data
      *
      * @throws ValidationException if the token is invalid or expired
      */
@@ -129,7 +131,7 @@ class AuthService
 
         $isReset = $status === Password::PASSWORD_RESET;
 
-        if (! $isReset) {
+        if (!$isReset) {
             throw ValidationException::withMessages(['email' => [trans($status)]]);
         }
     }

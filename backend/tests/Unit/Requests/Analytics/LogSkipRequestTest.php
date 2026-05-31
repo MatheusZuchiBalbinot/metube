@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Analytics\LogSkipRequest;
 use App\Models\User;
 use App\Models\Video;
@@ -12,7 +14,7 @@ describe('LogSkipRequest', function () {
     test('vuid is required', function () {
         $validator = Validator::make(
             ['percent' => 50],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -22,7 +24,7 @@ describe('LogSkipRequest', function () {
     test('vuid must exist in videos table', function () {
         $validator = Validator::make(
             ['vuid' => 'nonexistent11', 'percent' => 50],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -35,7 +37,7 @@ describe('LogSkipRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -48,7 +50,7 @@ describe('LogSkipRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'percent' => -1],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -61,7 +63,7 @@ describe('LogSkipRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'percent' => 101],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -74,7 +76,7 @@ describe('LogSkipRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'percent' => 42],
-            (new LogSkipRequest)->rules()
+            (new LogSkipRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

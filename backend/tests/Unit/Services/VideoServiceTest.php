@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Data\CreateVideoData;
 use App\Data\UpdateVideoData;
 use App\Enums\VideoStatus;
@@ -34,7 +36,7 @@ describe('VideoService', function () {
     });
 
     test('create video stores data correctly and dispatches upload job', function () use (&$service) {
-        $faker = \Faker\Factory::create();
+        $faker = Faker\Factory::create();
         $user = User::factory()->create();
         $title = $faker->unique()->sentence(3);
         $description = $faker->paragraph();
@@ -89,7 +91,7 @@ describe('VideoService', function () {
     });
 
     test('update video changes attributes', function () use (&$service) {
-        $faker = \Faker\Factory::create();
+        $faker = Faker\Factory::create();
         $oldTitle = $faker->sentence(2);
         $newTitle = $faker->sentence(2);
         $newDescription = $faker->paragraph();

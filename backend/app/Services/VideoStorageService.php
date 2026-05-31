@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class VideoStorageService
 {
@@ -14,8 +17,9 @@ class VideoStorageService
      * Both disks live under the same Docker volume so rename() is O(1)
      * instead of a full stream copy through PHP.
      *
-     * @param  string  $tmpPath  Path relative to the 'local' disk (e.g. uploads/tmp/{vuid}.mp4)
-     * @param  string  $vuid  Video ULID used as the public filename
+     * @param string $tmpPath Path relative to the 'local' disk (e.g. uploads/tmp/{vuid}.mp4)
+     * @param string $vuid Video ULID used as the public filename
+     *
      * @return string Disk-relative path: videos/{vuid}.{ext}
      */
     public function publishVideo(string $tmpPath, string $vuid): string
@@ -27,14 +31,16 @@ class VideoStorageService
         $dst = Storage::disk('public')->path($finalPath);
 
         $dstDir = dirname($dst);
-        $isDirMissing = ! is_dir($dstDir);
+        $isDirMissing = !is_dir($dstDir);
+
         if ($isDirMissing) {
             mkdir($dstDir, 0755, true);
         }
 
         $moved = rename($src, $dst);
-        if (! $moved) {
-            throw new \RuntimeException("Could not move video file: {$src} → {$dst}");
+
+        if (!$moved) {
+            throw new RuntimeException("Could not move video file: {$src} → {$dst}");
         }
 
         return $finalPath;
@@ -43,8 +49,9 @@ class VideoStorageService
     /**
      * Convert a thumbnail to WebP and move it from temporary local storage to public storage.
      *
-     * @param  string  $tmpPath  Path relative to the 'local' disk
-     * @param  string  $vuid  Video ULID used as the public filename
+     * @param string $tmpPath Path relative to the 'local' disk
+     * @param string $vuid Video ULID used as the public filename
+     *
      * @return string Disk-relative path: thumbnails/{vuid}.webp
      */
     public function publishThumbnail(string $tmpPath, string $vuid): string
@@ -63,9 +70,10 @@ class VideoStorageService
     /**
      * Write a WebVTT caption file to public storage.
      *
-     * @param  string  $vttContent  WebVTT file content
-     * @param  string  $vuid  Video public identifier used as the filename stem
-     * @param  string  $lang  BCP-47 language code (e.g. "pt", "en")
+     * @param string $vttContent WebVTT file content
+     * @param string $vuid Video public identifier used as the filename stem
+     * @param string $lang BCP-47 language code (e.g. "pt", "en")
+     *
      * @return string Disk-relative path: captions/{vuid}.{lang}.vtt
      */
     public function publishCaption(string $vttContent, string $vuid, string $lang): string
@@ -79,8 +87,8 @@ class VideoStorageService
     /**
      * Delete temporary files from local storage.
      *
-     * @param  string  $videoPath  Path relative to the 'local' disk
-     * @param  string|null  $thumbnailPath  Path relative to the 'local' disk, or null if none
+     * @param string $videoPath Path relative to the 'local' disk
+     * @param string|null $thumbnailPath Path relative to the 'local' disk, or null if none
      */
     public function cleanupTmp(string $videoPath, ?string $thumbnailPath): void
     {

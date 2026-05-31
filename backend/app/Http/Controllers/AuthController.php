@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\ForgotPasswordRequest;
@@ -20,10 +22,11 @@ class AuthController extends Controller
     /**
      * Authenticate user with email and password.
      *
-     * @param  LoginRequest  $request  Validated: email, password
-     * @return JsonResponse {user: User}
+     * @param LoginRequest $request Validated: email, password
      *
      * @throws \Illuminate\Validation\ValidationException
+     *
+     * @return JsonResponse {user: User}
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -57,8 +60,9 @@ class AuthController extends Controller
     /**
      * Update a user profile. Only the user themself may patch their record.
      *
-     * @param  string  $uuid  Target user UUID (must match the authenticated user)
-     * @param  UpdateProfileRequest  $request  Validated: name?, bio?
+     * @param string $uuid Target user UUID (must match the authenticated user)
+     * @param UpdateProfileRequest $request Validated: name?, bio?
+     *
      * @return JsonResponse User resource
      */
     public function updateProfile(string $uuid, UpdateProfileRequest $request): JsonResponse
@@ -73,7 +77,8 @@ class AuthController extends Controller
     /**
      * Register a new user account.
      *
-     * @param  RegisterRequest  $request  Validated: name, email, password, password_confirmation
+     * @param RegisterRequest $request Validated: name, email, password, password_confirmation
+     *
      * @return JsonResponse {user: User}
      */
     public function register(RegisterRequest $request): JsonResponse
@@ -86,10 +91,11 @@ class AuthController extends Controller
     /**
      * Send a password reset link to the given email address.
      *
-     * @param  ForgotPasswordRequest  $request  Validated: email
-     * @return JsonResponse {message: string}
+     * @param ForgotPasswordRequest $request Validated: email
      *
      * @throws \Illuminate\Validation\ValidationException
+     *
+     * @return JsonResponse {message: string}
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
@@ -101,11 +107,12 @@ class AuthController extends Controller
     /**
      * Reset the user's password using the given token.
      *
-     * @param  string  $token  Password reset token (from URL)
-     * @param  ResetPasswordRequest  $request  Validated: email, password, password_confirmation
-     * @return JsonResponse {message: string}
+     * @param string $token Password reset token (from URL)
+     * @param ResetPasswordRequest $request Validated: email, password, password_confirmation
      *
      * @throws \Illuminate\Validation\ValidationException
+     *
+     * @return JsonResponse {message: string}
      */
     public function resetPassword(string $token, ResetPasswordRequest $request): JsonResponse
     {
@@ -121,7 +128,8 @@ class AuthController extends Controller
     /**
      * Mark the authenticated user's email address as verified.
      *
-     * @param  EmailVerificationRequest  $request  Signed URL request
+     * @param EmailVerificationRequest $request Signed URL request
+     *
      * @return JsonResponse {message: string}
      */
     public function verifyEmail(EmailVerificationRequest $request): JsonResponse

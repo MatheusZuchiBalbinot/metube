@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -13,12 +15,12 @@ class ResetPasswordNotification extends ResetPassword
      * The reset link points to the frontend SPA so the user lands on the
      * React form instead of a server-rendered page.
      *
-     * @param  mixed  $notifiable  The user receiving the notification
+     * @param mixed $notifiable The user receiving the notification
      */
     public function toMail(mixed $notifiable): MailMessage
     {
         $frontendUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
-        $resetUrl = "{$frontendUrl}/reset-password/{$this->token}?email=".urlencode((string) $notifiable->email);
+        $resetUrl = "{$frontendUrl}/reset-password/{$this->token}?email=" . urlencode((string) $notifiable->email);
 
         return (new MailMessage)
             ->subject('Reset Your Password')

@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Config\PaginationSize;
 use App\Enums\HistoryPeriod;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -23,7 +26,7 @@ class UserService
      */
     public function getUserLikes(User $user): LengthAwarePaginator
     {
-        return $user->likes()->with('channel')->paginate(15);
+        return $user->likes()->with('channel')->paginate(PaginationSize::USER_LIKES);
     }
 
     /**
@@ -55,7 +58,7 @@ class UserService
         return $user->history()
             ->filterByPeriod($period)
             ->with('video')
-            ->paginate(20);
+            ->paginate(PaginationSize::USER_HISTORY);
     }
 
     /**
@@ -70,7 +73,7 @@ class UserService
     /**
      * Remove a specific video from user's history.
      *
-     * @param  string  $vuid  Video UUID
+     * @param string $vuid Video UUID
      */
     public function removeFromHistory(User $user, string $vuid): void
     {

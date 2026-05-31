@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Config\PaginationSize;
 use App\Events\CommentCreated;
 use App\Events\CommentLiked;
 use App\Http\Requests\Comment\StoreCommentRequest;
@@ -21,9 +24,9 @@ class CommentService
      *
      * Attaches is_liked as a virtual attribute resolved in bulk.
      *
-     * @param  string  $vuid  Public video identifier
-     * @param  User|null  $user  Authenticated user, or null for guests
-     * @param  int  $page  Page number
+     * @param string $vuid Public video identifier
+     * @param User|null $user Authenticated user, or null for guests
+     * @param int $page Page number
      */
     public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
     {
@@ -33,7 +36,7 @@ class CommentService
             ->where('video_id', $video->id)
             ->whereNull('parent_id')
             ->orderByDesc('created_at')
-            ->paginate(20, ['*'], 'page', $page);
+            ->paginate(PaginationSize::COMMENT_LIST, ['*'], 'page', $page);
 
         $this->attachIsLiked($paginator->getCollection(), $user);
 
@@ -43,9 +46,10 @@ class CommentService
     /**
      * Store a new comment on a video.
      *
-     * @param  string  $vuid  Public video identifier
-     * @param  StoreCommentRequest  $request  Validated request
-     * @param  User  $user  Authenticated user
+     * @param string $vuid Public video identifier
+     * @param StoreCommentRequest $request Validated request
+     * @param User $user Authenticated user
+     *
      * @return Comment Newly created comment with user loaded
      */
     public function store(string $vuid, StoreCommentRequest $request, User $user): Comment
@@ -110,9 +114,10 @@ class CommentService
      * Saves a new version, marks the comment as edited, and returns the
      * comment with the user relation loaded and is_liked set.
      *
-     * @param  Comment  $comment  Comment to update
-     * @param  UpdateCommentRequest  $request  Validated request
-     * @param  User  $user  Authenticated user (for is_liked resolution)
+     * @param Comment $comment Comment to update
+     * @param UpdateCommentRequest $request Validated request
+     * @param User $user Authenticated user (for is_liked resolution)
+     *
      * @return Comment Updated comment with user loaded
      */
     public function update(Comment $comment, UpdateCommentRequest $request, User $user): Comment
@@ -145,7 +150,7 @@ class CommentService
     /**
      * Get all saved versions of a comment, newest first.
      *
-     * @param  Comment  $comment  The comment whose versions to retrieve
+     * @param Comment $comment The comment whose versions to retrieve
      */
     public function versions(Comment $comment): BaseCollection
     {
@@ -155,7 +160,7 @@ class CommentService
     /**
      * Delete a comment and maintain parent reply counter.
      *
-     * @param  Comment  $comment  Comment to delete
+     * @param Comment $comment Comment to delete
      */
     public function destroy(Comment $comment): void
     {
@@ -182,8 +187,9 @@ class CommentService
      *
      * Returns the new like state and updated count.
      *
-     * @param  Comment  $comment  Comment to like/unlike
-     * @param  User  $user  Authenticated user
+     * @param Comment $comment Comment to like/unlike
+     * @param User $user Authenticated user
+     *
      * @return array{liked: bool, likes_count: int}
      */
     public function toggleLike(Comment $comment, User $user): array
@@ -221,8 +227,8 @@ class CommentService
      *
      * Attaches is_liked as a virtual attribute resolved in bulk.
      *
-     * @param  Comment  $comment  Parent comment
-     * @param  User  $user  Authenticated user
+     * @param Comment $comment Parent comment
+     * @param User $user Authenticated user
      */
     public function replies(Comment $comment, User $user): BaseCollection
     {
@@ -238,7 +244,7 @@ class CommentService
      *
      * Guests (null user) always get is_liked = false.
      *
-     * @param  BaseCollection<int, mixed>  $comments
+     * @param BaseCollection<int, mixed> $comments
      */
     private function attachIsLiked(BaseCollection $comments, ?User $user): void
     {

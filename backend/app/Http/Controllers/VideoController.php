@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Data\CreateVideoData;
@@ -37,7 +39,8 @@ class VideoController extends Controller
     /**
      * List all videos with pagination and filters.
      *
-     * @param  Request  $request  Query: page?, perPage?, search?, tags[]?, status?
+     * @param Request $request Query: page?, perPage?, search?, tags[]?, status?
+     *
      * @return JsonResponse array{data: Video[], meta: {total: int, page: int}}
      */
     public function index(Request $request): JsonResponse
@@ -54,7 +57,8 @@ class VideoController extends Controller
      *   - Direct: multipart/form-data with `video_file` (+ optional `thumbnail_file`)
      *   - Resumable: JSON with `upload_key` from a completed tus session (+ optional `thumbnail_key`)
      *
-     * @param  StoreVideoRequest  $request  Validated video data
+     * @param StoreVideoRequest $request Validated video data
+     *
      * @return JsonResponse Created video (202 Accepted — still processing)
      */
     public function store(StoreVideoRequest $request): JsonResponse
@@ -79,10 +83,11 @@ class VideoController extends Controller
     /**
      * Get a specific video by UUID.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return JsonResponse Video with full metadata
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return JsonResponse Video with full metadata
      */
     public function show(string $vuid): JsonResponse
     {
@@ -98,12 +103,13 @@ class VideoController extends Controller
     /**
      * Update a video's metadata.
      *
-     * @param  UpdateVideoRequest  $request  Partial payload
-     * @param  string  $vuid  Video UUID (v4)
-     * @return JsonResponse Updated video
+     * @param UpdateVideoRequest $request Partial payload
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return JsonResponse Updated video
      */
     public function update(UpdateVideoRequest $request, string $vuid): JsonResponse
     {
@@ -118,11 +124,12 @@ class VideoController extends Controller
     /**
      * Delete a video permanently.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function destroy(string $vuid): Response
     {
@@ -137,11 +144,12 @@ class VideoController extends Controller
     /**
      * Record that a user viewed a video.
      *
-     * @param  Request  $request  Optional body: source, session_id
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param Request $request Optional body: source, session_id
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function recordView(Request $request, string $vuid): Response
     {
@@ -164,10 +172,11 @@ class VideoController extends Controller
     /**
      * Toggle like status for a video.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function toggleLike(string $vuid): Response
     {
@@ -181,10 +190,11 @@ class VideoController extends Controller
     /**
      * Toggle dislike status for a video.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function toggleDislike(string $vuid): Response
     {
@@ -198,10 +208,11 @@ class VideoController extends Controller
     /**
      * Toggle save status for a video.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function toggleSave(string $vuid): Response
     {
@@ -215,11 +226,12 @@ class VideoController extends Controller
     /**
      * Update user's watch progress for a video.
      *
-     * @param  UpdateProgressRequest  $request  Validated: percent (0-100)
-     * @param  string  $vuid  Video UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param UpdateProgressRequest $request Validated: percent (0-100)
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function updateProgress(UpdateProgressRequest $request, string $vuid): Response
     {
@@ -233,10 +245,11 @@ class VideoController extends Controller
     /**
      * Get AI-generated summary for a video.
      *
-     * @param  string  $vuid  Video UUID (v4)
-     * @return JsonResponse {keyPoints: string[], chapters: {timestamp, title}[], readingMode: string}
+     * @param string $vuid Video UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return JsonResponse {keyPoints: string[], chapters: {timestamp, title}[], readingMode: string}
      */
     public function summary(string $vuid): JsonResponse
     {
@@ -253,10 +266,11 @@ class VideoController extends Controller
      * Returns the transcription record if it exists, or a 404 when no
      * transcription has been started yet (e.g. video still processing).
      *
-     * @param  string  $vuid  Video public identifier
-     * @return JsonResponse {status: string, language: string|null, content: string|null}
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return JsonResponse {status: string, language: string|null, content: string|null}
      */
     public function transcription(string $vuid): JsonResponse
     {
@@ -265,6 +279,7 @@ class VideoController extends Controller
         $transcription = $video->transcription()->with('video')->first();
 
         $hasNoTranscription = $transcription === null;
+
         if ($hasNoTranscription) {
             return $this->json(['message' => 'Transcription not available.'], 404);
         }
@@ -275,11 +290,12 @@ class VideoController extends Controller
     /**
      * Retry a failed transcription for a video the authenticated user owns.
      *
-     * @param  string  $vuid  Video public identifier
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function retryTranscription(string $vuid): Response
     {
@@ -299,11 +315,12 @@ class VideoController extends Controller
     /**
      * Get pending AI suggestions for a video.
      *
-     * @param  string  $vuid  Video public identifier
-     * @return JsonResponse AI suggestion or 404
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return JsonResponse AI suggestion or 404
      */
     public function aiSuggestion(string $vuid): JsonResponse
     {
@@ -313,7 +330,8 @@ class VideoController extends Controller
         $suggestion = $video->aiSuggestion;
 
         $hasSuggestion = $suggestion !== null;
-        if (! $hasSuggestion) {
+
+        if (!$hasSuggestion) {
             return $this->json(['message' => 'No AI suggestions available.'], 404);
         }
 
@@ -323,11 +341,12 @@ class VideoController extends Controller
     /**
      * Accept pending AI suggestions and apply to video.
      *
-     * @param  string  $vuid  Video public identifier
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function acceptSuggestion(string $vuid): Response
     {
@@ -342,11 +361,12 @@ class VideoController extends Controller
     /**
      * Publish a draft video, making it publicly visible.
      *
-     * @param  string  $vuid  Video public identifier
-     * @return JsonResponse Published video resource
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return JsonResponse Published video resource
      */
     public function publish(string $vuid): JsonResponse
     {
@@ -361,11 +381,12 @@ class VideoController extends Controller
     /**
      * Dismiss pending AI suggestions without applying them.
      *
-     * @param  string  $vuid  Video public identifier
-     * @return Response HTTP 204 No Content
+     * @param string $vuid Video public identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function dismissSuggestion(string $vuid): Response
     {
@@ -380,7 +401,8 @@ class VideoController extends Controller
     /**
      * Get personalized video recommendations for the authenticated user.
      *
-     * @param  Request  $request  Query: page? (default 1)
+     * @param Request $request Query: page? (default 1)
+     *
      * @return JsonResponse array{data: Video[], meta: {total: int, page: int, ...}}
      */
     public function recommendations(Request $request): JsonResponse

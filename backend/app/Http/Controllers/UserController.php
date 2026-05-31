@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Enums\HistoryPeriod;
@@ -61,7 +63,8 @@ class UserController extends Controller
      *
      * Supports filtering by period: today, week, month, all
      *
-     * @param  Request  $request  Query: period?{today|week|month|all}, page?, perPage?
+     * @param Request $request Query: period?{today|week|month|all}, page?, perPage?
+     *
      * @return JsonResponse array{data: array{vuid: string, watched_at: string}[], meta: {total: int, page: int}}
      */
     public function history(Request $request): JsonResponse
@@ -89,7 +92,8 @@ class UserController extends Controller
     /**
      * Remove a specific video from the user's watch history.
      *
-     * @param  string  $vuid  Video UUID (v4)
+     * @param string $vuid Video UUID (v4)
+     *
      * @return Response HTTP 204 No Content
      */
     public function removeHistory(string $vuid): Response

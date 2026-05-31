@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Contracts;
 
 /**
@@ -13,10 +15,11 @@ interface AiClient
     /**
      * Execute a prompt against the AI provider.
      *
-     * @param  AiPrompt  $prompt  The prompt with request structure and parser
-     * @return mixed The parsed response (DTO or array)
+     * @param AiPrompt $prompt The prompt with request structure and parser
      *
      * @throws \App\Exceptions\AiException On API errors
+     *
+     * @return mixed The parsed response (DTO or array)
      */
     public function execute(AiPrompt $prompt): mixed;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -11,7 +13,7 @@ describe('LoginRequest', function () {
     test('email is required', function () {
         $validator = Validator::make(
             ['password' => 'secret'],
-            (new LoginRequest)->rules()
+            (new LoginRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -21,7 +23,7 @@ describe('LoginRequest', function () {
     test('email must be a valid email address', function () {
         $validator = Validator::make(
             ['email' => 'not-an-email', 'password' => 'secret'],
-            (new LoginRequest)->rules()
+            (new LoginRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -31,7 +33,7 @@ describe('LoginRequest', function () {
     test('password is required', function () {
         $validator = Validator::make(
             ['email' => 'user@example.com'],
-            (new LoginRequest)->rules()
+            (new LoginRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -41,7 +43,7 @@ describe('LoginRequest', function () {
     test('valid credentials payload passes', function () {
         $validator = Validator::make(
             ['email' => 'user@example.com', 'password' => 'secret123'],
-            (new LoginRequest)->rules()
+            (new LoginRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

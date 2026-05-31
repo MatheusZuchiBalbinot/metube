@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\User;
@@ -31,12 +33,13 @@ class CacheService
     /**
      * Return the cached paginated public feed, or resolve and store it.
      *
-     * @param  Closure(): LengthAwarePaginator<int, Video>  $callback
+     * @param Closure(): LengthAwarePaginator<int, Video> $callback
+     *
      * @return LengthAwarePaginator<int, Video>
      */
     public function rememberFeed(int $page, Closure $callback): LengthAwarePaginator
     {
-        if (! (bool) config('cache.vidsum.feed.active')) {
+        if (!(bool) config('cache.vidsum.feed.active')) {
             return $callback();
         }
 
@@ -55,12 +58,13 @@ class CacheService
     /**
      * Return the cached channel (User) for the given UUID, or resolve and store it.
      *
-     * @param  Closure(): User  $callback  DB resolver on cache miss
+     * @param Closure(): User $callback DB resolver on cache miss
+     *
      * @return User Channel user
      */
     public function rememberChannelInfo(string $uuid, Closure $callback): User
     {
-        if (! (bool) config('cache.vidsum.channel.info.active')) {
+        if (!(bool) config('cache.vidsum.channel.info.active')) {
             return $callback();
         }
 
@@ -71,12 +75,13 @@ class CacheService
     /**
      * Return the cached paginated video list for a channel page.
      *
-     * @param  Closure(): LengthAwarePaginator<int, Video>  $callback
+     * @param Closure(): LengthAwarePaginator<int, Video> $callback
+     *
      * @return LengthAwarePaginator<int, Video>
      */
     public function rememberChannelVideos(string $uuid, int $page, Closure $callback): LengthAwarePaginator
     {
-        if (! (bool) config('cache.vidsum.channel.videos.active')) {
+        if (!(bool) config('cache.vidsum.channel.videos.active')) {
             return $callback();
         }
 
@@ -95,11 +100,11 @@ class CacheService
     /**
      * Return the cached video for the given vuid, or resolve and store it.
      *
-     * @param  Closure(): Video  $callback  DB resolver on cache miss
+     * @param Closure(): Video $callback DB resolver on cache miss
      */
     public function rememberVideoMeta(string $vuid, Closure $callback): Video
     {
-        if (! (bool) config('cache.vidsum.video.meta.active')) {
+        if (!(bool) config('cache.vidsum.video.meta.active')) {
             return $callback();
         }
 
@@ -114,11 +119,11 @@ class CacheService
      * each request re-queries so the result appears as soon as it exists without
      * waiting for a TTL to expire.
      *
-     * @param  Closure(): (VideoSummary|null)  $callback  DB resolver on cache miss
+     * @param Closure(): (VideoSummary|null) $callback DB resolver on cache miss
      */
     public function getOrCacheVideoSummary(string $vuid, Closure $callback): ?VideoSummary
     {
-        if (! (bool) config('cache.vidsum.video.summary.active')) {
+        if (!(bool) config('cache.vidsum.video.summary.active')) {
             return $callback();
         }
 
@@ -126,11 +131,13 @@ class CacheService
         $tag = "video:{$vuid}";
 
         $cached = Cache::tags([$tag])->get($key);
+
         if ($cached instanceof VideoSummary) {
             return $cached;
         }
 
         $summary = $callback();
+
         if ($summary instanceof VideoSummary) {
             Cache::tags([$tag])->forever($key, $summary);
         }
@@ -149,12 +156,13 @@ class CacheService
     /**
      * Return the cached playlist collection for a user.
      *
-     * @param  Closure(): Collection<int, \App\Models\Playlist>  $callback
+     * @param Closure(): Collection<int, \App\Models\Playlist> $callback
+     *
      * @return Collection<int, \App\Models\Playlist>
      */
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {
-        if (! (bool) config('cache.vidsum.user.playlists.active')) {
+        if (!(bool) config('cache.vidsum.user.playlists.active')) {
             return $callback();
         }
 
@@ -173,12 +181,13 @@ class CacheService
     /**
      * Return the cached subscription collection for a user.
      *
-     * @param  Closure(): Collection<int, \App\Models\User>  $callback
-     * @return Collection<int, \App\Models\User>
+     * @param Closure(): Collection<int, User> $callback
+     *
+     * @return Collection<int, User>
      */
     public function rememberUserSubscriptions(int $userId, Closure $callback): Collection
     {
-        if (! (bool) config('cache.vidsum.user.subscriptions.active')) {
+        if (!(bool) config('cache.vidsum.user.subscriptions.active')) {
             return $callback();
         }
 
@@ -197,12 +206,13 @@ class CacheService
     /**
      * Return the cached watch-history heatmap for a user.
      *
-     * @param  Closure(): list<array{date: string, count: int}>  $callback
+     * @param Closure(): list<array{date: string, count: int}> $callback
+     *
      * @return list<array{date: string, count: int}>
      */
     public function rememberHistoryEvents(int $userId, Closure $callback): array
     {
-        if (! (bool) config('cache.vidsum.user.history_events.active')) {
+        if (!(bool) config('cache.vidsum.user.history_events.active')) {
             return $callback();
         }
 
@@ -221,12 +231,13 @@ class CacheService
     /**
      * Return the cached recommended videos for a user page, or resolve and store.
      *
-     * @param  Closure(): Collection<int, Video>  $callback
+     * @param Closure(): Collection<int, Video> $callback
+     *
      * @return Collection<int, Video>
      */
     public function rememberRecommendations(int $userId, int $page, Closure $callback): Collection
     {
-        if (! (bool) config('cache.vidsum.recommendations.active')) {
+        if (!(bool) config('cache.vidsum.recommendations.active')) {
             return $callback();
         }
 

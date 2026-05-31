@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
 use App\Listeners\SendVideoTranscribedNotification;

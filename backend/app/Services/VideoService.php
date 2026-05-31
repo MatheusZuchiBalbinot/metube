@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Config\PaginationSize;
 use App\Data\CreateVideoData;
 use App\Data\EmptyVideoSummary;
 use App\Data\FinalizeUploadData;
@@ -29,6 +32,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use TusPhp\Cache\RedisStore as TusRedisStore;
 
 /**
@@ -49,8 +53,9 @@ class VideoService
     /**
      * Create a new video.
      *
-     * @param  User  $user  Video owner (channel)
-     * @param  CreateVideoData  $data  Validated and typed input
+     * @param User $user Video owner (channel)
+     * @param CreateVideoData $data Validated and typed input
+     *
      * @return Video Created video
      */
     public function createVideo(User $user, CreateVideoData $data): Video
@@ -70,6 +75,7 @@ class VideoService
             $tmpPath = $data->videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
 
             $tmpThumbPath = null;
+
             if ($data->thumbnailFile !== null) {
                 $thumbExt = $data->thumbnailFile->getClientOriginalExtension();
                 $tmpThumbPath = $data->thumbnailFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
@@ -90,12 +96,13 @@ class VideoService
      * status=PROCESSING, and dispatches ProcessVideoUpload — exactly like
      * createVideo() does for the legacy single-POST path.
      *
-     * @param  User  $user  Authenticated channel owner
-     * @param  FinalizeUploadData  $data  Validated metadata + upload keys
-     * @return Video Freshly created Video (status=PROCESSING)
+     * @param User $user Authenticated channel owner
+     * @param FinalizeUploadData $data Validated metadata + upload keys
      *
      * @throws ModelNotFoundException When the upload_key is not found in tus cache
-     * @throws \RuntimeException When the assembled file cannot be moved
+     * @throws RuntimeException When the assembled file cannot be moved
+     *
+     * @return Video Freshly created Video (status=PROCESSING)
      */
     public function finalizeUpload(User $user, FinalizeUploadData $data): Video
     {
@@ -106,7 +113,7 @@ class VideoService
         $fileMeta = $tusCache->get($data->uploadKey);
         $isFileReady = $fileMeta !== null && isset($fileMeta['file_path']) && file_exists($fileMeta['file_path']);
 
-        if (! $isFileReady) {
+        if (!$isFileReady) {
             throw new ModelNotFoundException('Upload session not found or file is incomplete.');
         }
 
@@ -158,7 +165,7 @@ class VideoService
      * Sets status to PUBLISHED, records published_at, fires VideoPublished
      * for subscriber notifications, and invalidates the video cache.
      *
-     * @param  Video  $video  Video in DRAFT status to publish
+     * @param Video $video Video in DRAFT status to publish
      *
      * @throws \Illuminate\Http\Exceptions\HttpResponseException When video is not in DRAFT
      */
@@ -185,7 +192,7 @@ class VideoService
      *
      * Caches the default feed (no search/tags/status filters) for 60 seconds.
      *
-     * @param  array<string, mixed>  $filters
+     * @param array<string, mixed> $filters
      */
     public function listVideos(array $filters): LengthAwarePaginator
     {
@@ -206,9 +213,9 @@ class VideoService
      * Result is cached for 300 s with the channel relation eager-loaded so that
      * `VideoResource` can render channel name/id without an extra query.
      *
-     * @param  string  $vuid  Video UUID
+     * @param string $vuid Video UUID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function getVideoByUuid(string $vuid): Video
     {
@@ -221,8 +228,9 @@ class VideoService
     /**
      * Update a video's metadata.
      *
-     * @param  Video  $video  Video to update
-     * @param  UpdateVideoData  $data  Validated and typed input
+     * @param Video $video Video to update
+     * @param UpdateVideoData $data Validated and typed input
+     *
      * @return Video Updated video
      */
     public function updateVideo(Video $video, UpdateVideoData $data): Video
@@ -241,7 +249,7 @@ class VideoService
      * after the commit so a transaction rollback can never leave the record
      * alive with missing files.
      *
-     * @param  Video  $video  Video to delete
+     * @param Video $video Video to delete
      */
     public function deleteVideo(Video $video): void
     {
@@ -275,10 +283,10 @@ class VideoService
      * race condition where two simultaneous requests both passed the check and
      * both incremented views.
      *
-     * @param  User  $user  Who watched
-     * @param  Video  $video  What was watched
-     * @param  VideoSource|null  $source  Surface origin
-     * @param  string|null  $sessionId  Client session id
+     * @param User $user Who watched
+     * @param Video $video What was watched
+     * @param VideoSource|null $source Surface origin
+     * @param string|null $sessionId Client session id
      */
     public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
@@ -321,8 +329,8 @@ class VideoService
      * Emits VideoReactionApplied(LIKE) when adding, VideoUnliked when removing,
      * and VideoUndisliked when switching from a previous dislike.
      *
-     * @param  User  $user  Who's liking
-     * @param  Video  $video  What to like
+     * @param User $user Who's liking
+     * @param Video $video What to like
      */
     public function toggleLike(User $user, Video $video): void
     {
@@ -375,8 +383,8 @@ class VideoService
      * Emits VideoReactionApplied(DISLIKE) when adding, VideoUndisliked when
      * removing, and VideoUnliked when switching from a previous like.
      *
-     * @param  User  $user  Who's disliking
-     * @param  Video  $video  What to dislike
+     * @param User $user Who's disliking
+     * @param Video $video What to dislike
      */
     public function toggleDislike(User $user, Video $video): void
     {
@@ -424,8 +432,8 @@ class VideoService
      *
      * Emits VideoSaved when adding, VideoUnsaved when removing.
      *
-     * @param  User  $user  Who's saving
-     * @param  Video  $video  What to save
+     * @param User $user Who's saving
+     * @param Video $video What to save
      */
     public function toggleSave(User $user, Video $video): void
     {
@@ -461,9 +469,9 @@ class VideoService
      * Emits VideoFinished only on the FIRST crossing of the 95% threshold,
      * to avoid duplicate finish events when the user re-watches the tail.
      *
-     * @param  User  $user  Who's watching
-     * @param  Video  $video  What's being watched
-     * @param  int  $percent  Progress percentage (0-100)
+     * @param User $user Who's watching
+     * @param Video $video What's being watched
+     * @param int $percent Progress percentage (0-100)
      */
     public function updateProgress(User $user, Video $video, int $percent): void
     {
@@ -528,7 +536,8 @@ class VideoService
      * null so the result appears immediately after the AI finishes without waiting
      * for a TTL to expire.
      *
-     * @param  Video  $video  Video to get summary for
+     * @param Video $video Video to get summary for
+     *
      * @return VideoSummary|EmptyVideoSummary Summary with keyPoints, chapters, readingMode
      */
     public function getSummary(Video $video): VideoSummary|EmptyVideoSummary
@@ -544,7 +553,7 @@ class VideoService
     /**
      * Accept pending AI suggestions and apply them to the video.
      *
-     * @param  Video  $video  Video to accept suggestions for
+     * @param Video $video Video to accept suggestions for
      *
      * @throws ModelNotFoundException When no suggestion exists
      */
@@ -566,7 +575,7 @@ class VideoService
     /**
      * Dismiss pending AI suggestions without applying them.
      *
-     * @param  Video  $video  Video to dismiss suggestions for
+     * @param Video $video Video to dismiss suggestions for
      *
      * @throws ModelNotFoundException When no suggestion exists
      */
@@ -580,17 +589,17 @@ class VideoService
     /**
      * Execute the base video query with filters applied.
      *
-     * @param  array<string, mixed>  $filters
+     * @param array<string, mixed> $filters
      */
     private function queryVideos(array $filters): LengthAwarePaginator
     {
         $hasStatusFilter = isset($filters['status']);
         $query = Video::filter($filters)->with('channel');
 
-        if (! $hasStatusFilter) {
+        if (!$hasStatusFilter) {
             $query = $query->published();
         }
 
-        return $query->paginate(15);
+        return $query->paginate(PaginationSize::VIDEO_LIST);
     }
 }

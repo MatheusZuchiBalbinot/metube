@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Resources\NotificationResource;
@@ -12,7 +14,7 @@ class NotificationsController extends Controller
     /**
      * List paginated notifications for the authenticated user.
      *
-     * @param  Request  $request  Incoming HTTP request
+     * @param Request $request Incoming HTTP request
      */
     public function index(Request $request): JsonResponse
     {
@@ -26,7 +28,7 @@ class NotificationsController extends Controller
     /**
      * Return the count of unread notifications for the authenticated user.
      *
-     * @param  Request  $request  Incoming HTTP request
+     * @param Request $request Incoming HTTP request
      */
     public function unreadCount(Request $request): JsonResponse
     {
@@ -38,8 +40,8 @@ class NotificationsController extends Controller
     /**
      * Mark a single notification as read.
      *
-     * @param  Request  $request  Incoming HTTP request
-     * @param  string  $notificationId  Notification UUID
+     * @param Request $request Incoming HTTP request
+     * @param string $notificationId Notification UUID
      */
     public function markRead(Request $request, string $notificationId): JsonResponse
     {
@@ -55,7 +57,7 @@ class NotificationsController extends Controller
     /**
      * Mark all notifications as read for the authenticated user.
      *
-     * @param  Request  $request  Incoming HTTP request
+     * @param Request $request Incoming HTTP request
      */
     public function readAll(Request $request): Response
     {
@@ -67,8 +69,8 @@ class NotificationsController extends Controller
     /**
      * Delete a single notification.
      *
-     * @param  Request  $request  Incoming HTTP request
-     * @param  string  $notificationId  Notification UUID
+     * @param Request $request Incoming HTTP request
+     * @param string $notificationId Notification UUID
      */
     public function destroy(Request $request, string $notificationId): Response
     {

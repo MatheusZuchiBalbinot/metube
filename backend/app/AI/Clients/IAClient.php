@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Clients;
 
 use App\AI\Contracts\AiClient;
@@ -7,6 +9,7 @@ use App\AI\Contracts\AiPrompt;
 use App\Services\IAService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use RuntimeException;
 
 /**
  * AI client using IAService (Groq/OpenAI-compatible).
@@ -21,12 +24,13 @@ class IAClient implements AiClient
     /**
      * Execute a prompt against the AI service and return parsed result.
      *
-     * @param  AiPrompt  $prompt  The prompt to execute
-     * @return mixed The prompt's parse() result
+     * @param AiPrompt $prompt The prompt to execute
      *
      * @throws ConnectionException
      * @throws RequestException
-     * @throws \RuntimeException When validation fails
+     * @throws RuntimeException When validation fails
+     *
+     * @return mixed The prompt's parse() result
      */
     public function execute(AiPrompt $prompt): mixed
     {
@@ -40,17 +44,18 @@ class IAClient implements AiClient
     /**
      * Validate that all required keys are present in the response.
      *
-     * @param  array<string, mixed>  $raw
-     * @param  string[]  $required
+     * @param array<string, mixed> $raw
+     * @param string[] $required
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     private function validate(array $raw, array $required): void
     {
         foreach ($required as $key) {
-            $isMissing = ! array_key_exists($key, $raw);
+            $isMissing = !array_key_exists($key, $raw);
+
             if ($isMissing) {
-                throw new \RuntimeException("AI response missing required key '{$key}'");
+                throw new RuntimeException("AI response missing required key '{$key}'");
             }
         }
     }

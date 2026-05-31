@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\CommentCreated;
 use App\Listeners\SendCommentRepliedNotification;
 use App\Models\Comment;

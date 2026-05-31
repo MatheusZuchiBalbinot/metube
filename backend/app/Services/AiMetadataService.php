@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\DTOs\VideoMetadataResult;
@@ -23,8 +25,8 @@ class AiMetadataService
      * - For batch uploads: auto-applies tags/title/description when empty
      * - For single uploads: creates pending suggestion for review
      *
-     * @param  Video  $video  The video to apply metadata to
-     * @param  VideoMetadataResult  $result  The AI-generated metadata
+     * @param Video $video The video to apply metadata to
+     * @param VideoMetadataResult $result The AI-generated metadata
      */
     public function apply(Video $video, VideoMetadataResult $result): void
     {
@@ -60,11 +62,13 @@ class AiMetadataService
         $updates = [];
 
         $hasNoTags = \count($video->tags ?? []) === 0;
+
         if ($hasNoTags) {
             $updates['tags'] = $result->suggestedTags;
         }
 
         $hasNoDescription = \trim($video->description ?? '') === '';
+
         if ($hasNoDescription) {
             $updates['description'] = $result->suggestedDescription;
         }

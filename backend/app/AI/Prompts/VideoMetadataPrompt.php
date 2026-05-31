@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Prompts;
 
 use App\AI\Contracts\AiPrompt;
 use App\DTOs\VideoMetadataResult;
 use App\Models\Video;
+use RuntimeException;
 
 class VideoMetadataPrompt implements AiPrompt
 {
@@ -64,29 +67,29 @@ PROMPT;
     /**
      * Parse and validate Gemini's JSON response.
      *
-     * @param  array<string, mixed>  $response  Gemini API response
+     * @param array<string, mixed> $response Gemini API response
      *
-     * @throws \RuntimeException If required keys are missing
+     * @throws RuntimeException If required keys are missing
      */
     public function parse(array $response): VideoMetadataResult
     {
         $content = $response['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
         if ($content === null) {
-            throw new \RuntimeException("Gemini response missing content for video {$this->video->vuid}");
+            throw new RuntimeException("Gemini response missing content for video {$this->video->vuid}");
         }
 
         $parsed = json_decode($content, true);
 
         if ($parsed === null) {
-            throw new \RuntimeException("Gemini returned invalid JSON for video {$this->video->vuid}: {$content}");
+            throw new RuntimeException("Gemini returned invalid JSON for video {$this->video->vuid}: {$content}");
         }
 
         $required = ['key_points', 'chapters', 'reading_mode', 'suggested_tags', 'suggested_title', 'suggested_description'];
 
         foreach ($required as $key) {
-            if (! array_key_exists($key, $parsed)) {
-                throw new \RuntimeException("Gemini response missing required key '{$key}' for video {$this->video->vuid}");
+            if (!array_key_exists($key, $parsed)) {
+                throw new RuntimeException("Gemini response missing required key '{$key}' for video {$this->video->vuid}");
             }
         }
 

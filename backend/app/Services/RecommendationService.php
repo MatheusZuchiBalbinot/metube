@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Config\PaginationSize;
 use App\Enums\VideoEventType;
 use App\Models\User;
 use App\Models\UserAnalytic;
@@ -58,8 +61,8 @@ class RecommendationService
                 $paginated = $this->paginate($scored, $page);
 
                 return $paginated->map(fn (array $item) => $item['video'])->values();
-
-            });
+            },
+        );
 
         return $recommendations;
     }
@@ -67,9 +70,9 @@ class RecommendationService
     /**
      * Get user event scores aggregated by video over the last 30 days.
      *
-     * @return \Illuminate\Support\Collection<int, float>
+     * @return Collection<int, float>
      */
-    private function getUserEventScores(int $userId): \Illuminate\Support\Collection
+    private function getUserEventScores(int $userId): Collection
     {
         $events = UserAnalytic::query()
             ->where('user_id', $userId)
@@ -111,10 +114,11 @@ class RecommendationService
     /**
      * Derive tag affinity from positively-scored videos.
      *
-     * @param  \Illuminate\Support\Collection<int, float>  $videoScores
+     * @param Collection<int, float> $videoScores
+     *
      * @return array<string, float>
      */
-    private function deriveTagAffinity(\Illuminate\Support\Collection $videoScores): array
+    private function deriveTagAffinity(Collection $videoScores): array
     {
         $positiveVideoIds = $videoScores->filter(fn (float $score) => $score > 0)->keys()->toArray();
 
@@ -128,6 +132,7 @@ class RecommendationService
 
         foreach ($videos as $video) {
             $videoScore = $videoScores[$video->id] ?? 0;
+
             foreach ($video->tags ?? [] as $tag) {
                 $tagWeights[$tag] = ($tagWeights[$tag] ?? 0) + $videoScore;
             }
@@ -139,10 +144,11 @@ class RecommendationService
     /**
      * Derive channel affinity from positively-scored videos.
      *
-     * @param  \Illuminate\Support\Collection<int, float>  $videoScores
+     * @param Collection<int, float> $videoScores
+     *
      * @return array<int, float>
      */
-    private function deriveChannelAffinity(\Illuminate\Support\Collection $videoScores): array
+    private function deriveChannelAffinity(Collection $videoScores): array
     {
         $positiveVideoIds = $videoScores->filter(fn (float $score) => $score > 0)->keys()->toArray();
 
@@ -188,7 +194,8 @@ class RecommendationService
     /**
      * Get candidate videos (published, excluding watched).
      *
-     * @param  int[]  $excludeIds
+     * @param int[] $excludeIds
+     *
      * @return Collection<int, Video>
      */
     private function getCandidateVideos(array $excludeIds): Collection
@@ -204,9 +211,9 @@ class RecommendationService
      *
      * Score = (tagScore × 0.40) + (channelScore × 0.30) + (popularScore × 0.20) + (freshScore × 0.10)
      *
-     * @param  array<string, float>  $tagAffinity
-     * @param  array<int, float>  $channelAffinity
-     * @param  int[]  $subscribedChannelIds
+     * @param array<string, float> $tagAffinity
+     * @param array<int, float> $channelAffinity
+     * @param int[] $subscribedChannelIds
      */
     private function score(
         Video $video,
@@ -227,7 +234,7 @@ class RecommendationService
     /**
      * Calculate tag relevance score for a video.
      *
-     * @param  array<string, float>  $tagAffinity
+     * @param array<string, float> $tagAffinity
      */
     private function tagScore(Video $video, array $tagAffinity): float
     {
@@ -251,8 +258,8 @@ class RecommendationService
      * Subscription provides a 0.40 floor for channels the user actively follows.
      * Behavioral affinity (log-normalized watch history) contributes the remaining 0.60.
      *
-     * @param  array<int, float>  $channelAffinity
-     * @param  int[]  $subscribedChannelIds
+     * @param array<int, float> $channelAffinity
+     * @param int[] $subscribedChannelIds
      */
     private function channelScore(
         Video $video,
@@ -278,11 +285,13 @@ class RecommendationService
      */
     private function popularVideos(int $page): Collection
     {
+        $perPage = PaginationSize::RECOMMENDATIONS;
+
         return Video::published()
             ->orderByDesc('views')
             ->with('channel')
-            ->skip(($page - 1) * 15)
-            ->take(15)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
             ->get();
     }
 
@@ -291,10 +300,11 @@ class RecommendationService
      *
      * @template T
      *
-     * @param  \Illuminate\Support\Collection<int, T>  $items
-     * @return \Illuminate\Support\Collection<int, T>
+     * @param Collection<int, T> $items
+     *
+     * @return Collection<int, T>
      */
-    private function paginate(\Illuminate\Support\Collection $items, int $page): \Illuminate\Support\Collection
+    private function paginate(Collection $items, int $page): Collection
     {
         $perPage = 15;
         $start = ($page - 1) * $perPage;

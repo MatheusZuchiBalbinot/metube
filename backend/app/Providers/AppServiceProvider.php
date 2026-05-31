@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
+use App\AI\Clients\GeminiClient;
+use App\AI\Contracts\AiClient;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
@@ -58,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(AiClient::class, GeminiClient::class);
     }
 
     /**
@@ -69,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             return [
                 Limit::perMinute(5)->by($request->ip()),
-                Limit::perMinute(10)->by($request->input('email').'|login'),
+                Limit::perMinute(10)->by($request->input('email') . '|login'),
             ];
         });
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Video\UpdateProgressRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,7 +16,7 @@ describe('UpdateProgressRequest', function () {
     test('percent must be an integer', function () {
         $validator = Validator::make(
             ['percent' => 'not-a-number'],
-            (new UpdateProgressRequest)->rules()
+            (new UpdateProgressRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -24,7 +26,7 @@ describe('UpdateProgressRequest', function () {
     test('percent cannot be negative', function () {
         $validator = Validator::make(
             ['percent' => -1],
-            (new UpdateProgressRequest)->rules()
+            (new UpdateProgressRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -34,7 +36,7 @@ describe('UpdateProgressRequest', function () {
     test('percent cannot exceed 100', function () {
         $validator = Validator::make(
             ['percent' => 101],
-            (new UpdateProgressRequest)->rules()
+            (new UpdateProgressRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()

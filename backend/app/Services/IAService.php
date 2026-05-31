@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Enums\ApiTimeout;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 /**
  * IAService — Thin wrapper around the Groq REST API (OpenAI-compatible).
@@ -21,27 +25,35 @@ class IAService
 
     private string $baseUrl;
 
-    public function __construct()
-    {
-        $this->apiKey = (string) config('services.ai.key');
-        $this->model = (string) config('services.ai.model', 'llama-3.3-70b-versatile');
-        $this->baseUrl = (string) config('services.ai.url', 'https://api.groq.com/openai/v1');
+    private int $timeout;
+
+    public function __construct(
+        ?string $apiKey = null,
+        ?string $model = null,
+        ?string $baseUrl = null,
+        ?int $timeout = null,
+    ) {
+        $this->apiKey = $apiKey ?? (string) config('services.ai.key');
+        $this->model = $model ?? (string) config('services.ai.model', 'llama-3.3-70b-versatile');
+        $this->baseUrl = $baseUrl ?? (string) config('services.ai.url', 'https://api.groq.com/openai/v1');
+        $this->timeout = $timeout ?? ApiTimeout::CHAT_COMPLETION->value;
     }
 
     /**
      * Send a prompt and return the parsed JSON response body.
      *
-     * @param  string  $prompt  Full prompt text to send
-     * @return array<string, mixed> Decoded JSON from the model
+     * @param string $prompt Full prompt text to send
      *
      * @throws ConnectionException When the API is unreachable
      * @throws RequestException When the API returns a non-2xx response
-     * @throws \RuntimeException When the response cannot be decoded as JSON
+     * @throws RuntimeException When the response cannot be decoded as JSON
+     *
+     * @return array<string, mixed> Decoded JSON from the model
      */
     public function generate(string $prompt): array
     {
         $response = Http::withToken($this->apiKey)
-            ->timeout(60)
+            ->timeout($this->timeout)
             ->post("{$this->baseUrl}/chat/completions", [
                 'model' => $this->model,
                 'messages' => [
@@ -61,17 +73,19 @@ class IAService
 
         $text = $response->json('choices.0.message.content');
 
-        $isTextMissing = ! is_string($text) || $text === '';
+        $isTextMissing = !is_string($text) || $text === '';
+
         if ($isTextMissing) {
-            throw new \RuntimeException('AI service returned an empty response.');
+            throw new RuntimeException('AI service returned an empty response.');
         }
 
         /** @var array<string, mixed>|null $decoded */
         $decoded = json_decode($text, true);
 
-        $isInvalidJson = ! is_array($decoded);
+        $isInvalidJson = !is_array($decoded);
+
         if ($isInvalidJson) {
-            throw new \RuntimeException('AI service response is not valid JSON: '.$text);
+            throw new RuntimeException('AI service response is not valid JSON: ' . $text);
         }
 
         return $decoded;
@@ -80,14 +94,15 @@ class IAService
     /**
      * Send a multi-turn chat request and return the plain-text response.
      *
-     * @param  string  $question  The user's question for this turn
-     * @param  string  $systemPrompt  System instructions (video context)
-     * @param  array<int, array{role: string, content: string}>  $history  Previous turns
-     * @return string The model's plain-text answer
+     * @param string $question The user's question for this turn
+     * @param string $systemPrompt System instructions (video context)
+     * @param array<int, array{role: string, content: string}> $history Previous turns
      *
      * @throws ConnectionException When the API is unreachable
      * @throws RequestException When the API returns a non-2xx response
-     * @throws \RuntimeException When the response content is missing
+     * @throws RuntimeException When the response content is missing
+     *
+     * @return string The model's plain-text answer
      */
     public function chat(string $question, string $systemPrompt, array $history): string
     {
@@ -98,7 +113,7 @@ class IAService
         );
 
         $response = Http::withToken($this->apiKey)
-            ->timeout(60)
+            ->timeout($this->timeout)
             ->post("{$this->baseUrl}/chat/completions", [
                 'model' => $this->model,
                 'messages' => $messages,
@@ -108,9 +123,10 @@ class IAService
 
         $text = $response->json('choices.0.message.content');
 
-        $isTextMissing = ! is_string($text) || $text === '';
+        $isTextMissing = !is_string($text) || $text === '';
+
         if ($isTextMissing) {
-            throw new \RuntimeException('AI service returned an empty chat response.');
+            throw new RuntimeException('AI service returned an empty chat response.');
         }
 
         return $text;

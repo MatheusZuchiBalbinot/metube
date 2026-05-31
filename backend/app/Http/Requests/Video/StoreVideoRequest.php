@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Video;
 
 use App\Enums\VideoStatus;
@@ -47,7 +49,7 @@ class StoreVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['required', 'in:'.implode(',', array_column(VideoStatus::cases(), 'value'))],
+            'status' => ['required', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
             'video_file' => ['required_without:upload_key', 'nullable', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
@@ -87,7 +89,7 @@ class StoreVideoRequest extends FormRequest
             $isScheduled = $status === VideoStatus::SCHEDULED->value;
             $hasScheduledAt = $scheduledAt !== null;
 
-            if ($isScheduled && ! $hasScheduledAt) {
+            if ($isScheduled && !$hasScheduledAt) {
                 $v->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
             }
 
@@ -95,11 +97,13 @@ class StoreVideoRequest extends FormRequest
             $thumbnailKey = $this->input('thumbnail_key');
 
             $hasUploadKey = is_string($uploadKey) && $uploadKey !== '';
+
             if ($hasUploadKey) {
                 $this->assertKeyOwnership($v, $uploadKey, 'upload_key');
             }
 
             $hasThumbnailKey = is_string($thumbnailKey) && $thumbnailKey !== '';
+
             if ($hasThumbnailKey) {
                 $this->assertKeyOwnership($v, $thumbnailKey, 'thumbnail_key');
             }
@@ -109,15 +113,15 @@ class StoreVideoRequest extends FormRequest
     /**
      * Check that a tus key exists in cache and belongs to the authenticated user.
      *
-     * @param  string  $key  Tus upload key
-     * @param  string  $field  Request field name for error reporting
+     * @param string $key Tus upload key
+     * @param string $field Request field name for error reporting
      */
     private function assertKeyOwnership(Validator $v, string $key, string $field): void
     {
         $ownerId = Cache::get("tus:owner:{$key}");
         $isOwner = $ownerId !== null && (int) $ownerId === (int) auth()->id();
 
-        if (! $isOwner) {
+        if (!$isOwner) {
             $v->errors()->add($field, 'Upload session not found or has expired.');
         }
     }

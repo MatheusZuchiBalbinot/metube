@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Comment\StoreCommentRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,7 +20,7 @@ describe('StoreCommentRequest', function () {
     test('content cannot exceed 2000 characters', function () {
         $validator = Validator::make(
             ['content' => str_repeat('a', 2001)],
-            (new StoreCommentRequest)->rules()
+            (new StoreCommentRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -28,7 +30,7 @@ describe('StoreCommentRequest', function () {
     test('parent_cuid is optional', function () {
         $validator = Validator::make(
             ['content' => 'Valid comment'],
-            (new StoreCommentRequest)->rules()
+            (new StoreCommentRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();
@@ -37,7 +39,7 @@ describe('StoreCommentRequest', function () {
     test('valid payload passes all rules', function () {
         $validator = Validator::make(
             ['content' => 'A valid comment', 'parent_cuid' => null],
-            (new StoreCommentRequest)->rules()
+            (new StoreCommentRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

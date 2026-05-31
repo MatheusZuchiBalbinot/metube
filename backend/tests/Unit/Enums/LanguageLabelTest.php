@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\LanguageLabel;
 
 describe('LanguageLabel', function () {

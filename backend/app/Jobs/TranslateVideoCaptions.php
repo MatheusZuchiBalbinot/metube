@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\Video;
@@ -10,6 +12,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Generate English caption track for a non-English video via Whisper's translate task.
@@ -33,7 +36,7 @@ class TranslateVideoCaptions implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * @param  Video  $video  Published video whose original transcription is complete
+     * @param Video $video Published video whose original transcription is complete
      */
     public function __construct(private readonly Video $video)
     {
@@ -51,6 +54,7 @@ class TranslateVideoCaptions implements ShouldQueue
     public function handle(WhisperClient $whisper, VideoStorageService $storage): void
     {
         $video = Video::find($this->video->id);
+
         if ($video === null || $video->video_url === null) {
             return;
         }
@@ -71,9 +75,10 @@ class TranslateVideoCaptions implements ShouldQueue
      * Translation is best-effort: video already has original-language captions,
      * so this is a nice-to-have that doesn't block the user experience.
      */
-    public function failed(\Throwable $e): void
+    public function failed(Throwable $e): void
     {
         $video = Video::find($this->video->id);
+
         if ($video === null) {
             return;
         }

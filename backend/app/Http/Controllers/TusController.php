@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -19,15 +21,16 @@ class TusController extends Controller
     /**
      * Handle any tus protocol request.
      *
-     * @param  Request  $request  Incoming Laravel request (passed through but tus-php reads
-     *                            from the global Symfony request internally)
+     * @param Request $request Incoming Laravel request (passed through but tus-php reads
+     *                         from the global Symfony request internally)
+     *
      * @return SymfonyResponse tus-php Symfony response (Laravel renders it transparently)
      */
     public function handle(Request $request): SymfonyResponse
     {
         $uploadDir = config('tus.upload_dir');
 
-        if (! is_dir($uploadDir)) {
+        if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0775, true);
         }
 
@@ -44,7 +47,7 @@ class TusController extends Controller
             function ($event) use ($userId): void {
                 $key = $event->getFile()->getKey();
                 Cache::put("tus:owner:{$key}", $userId, config('tus.ttl'));
-            }
+            },
         );
 
         return $server->serve();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -22,8 +24,8 @@ abstract class Controller
     /**
      * Return a JSON response.
      *
-     * @param  mixed  $data  Data to return as JSON
-     * @param  int  $status  HTTP status code
+     * @param mixed $data Data to return as JSON
+     * @param int $status HTTP status code
      */
     protected function json($data, int $status = 200): JsonResponse
     {

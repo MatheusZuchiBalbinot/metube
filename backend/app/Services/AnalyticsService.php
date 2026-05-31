@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Enums\VideoSource;
@@ -24,10 +26,10 @@ class AnalyticsService
      * Emits a single VideoImpressionsBatch event instead of one event per video,
      * so the listener can bulk-insert all rows in one query.
      *
-     * @param  User  $user  Who saw the impressions
-     * @param  list<string>  $vuids  Video UUIDs in render order
-     * @param  VideoSource  $source  Surface origin
-     * @param  string|null  $sessionId  Client session id
+     * @param User $user Who saw the impressions
+     * @param list<string> $vuids Video UUIDs in render order
+     * @param VideoSource $source Surface origin
+     * @param string|null $sessionId Client session id
      */
     public function recordImpressions(User $user, array $vuids, VideoSource $source, ?string $sessionId = null): void
     {
@@ -37,7 +39,7 @@ class AnalyticsService
         $items = [];
 
         foreach ($vuids as $position => $vuid) {
-            if (! isset($idByVuid[$vuid])) {
+            if (!isset($idByVuid[$vuid])) {
                 continue;
             }
 
@@ -54,11 +56,11 @@ class AnalyticsService
     /**
      * Record that the user clicked a video from a feed.
      *
-     * @param  User  $user  Who clicked
-     * @param  Video  $video  What was clicked
-     * @param  VideoSource  $source  Surface origin
-     * @param  int|null  $position  Render position when clicked
-     * @param  string|null  $sessionId  Client session id
+     * @param User $user Who clicked
+     * @param Video $video What was clicked
+     * @param VideoSource $source Surface origin
+     * @param int|null $position Render position when clicked
+     * @param string|null $sessionId Client session id
      */
     public function recordClick(User $user, Video $video, VideoSource $source, ?int $position = null, ?string $sessionId = null): void
     {
@@ -68,10 +70,10 @@ class AnalyticsService
     /**
      * Record that the user performed a search query.
      *
-     * @param  User  $user  Who searched
-     * @param  string  $query  Raw query text
-     * @param  int  $resultCount  How many results were returned
-     * @param  string|null  $sessionId  Client session id
+     * @param User $user Who searched
+     * @param string $query Raw query text
+     * @param int $resultCount How many results were returned
+     * @param string|null $sessionId Client session id
      */
     public function recordSearch(User $user, string $query, int $resultCount, ?string $sessionId = null): void
     {
@@ -81,9 +83,9 @@ class AnalyticsService
     /**
      * Record that the user abandoned a video early.
      *
-     * @param  User  $user  Who skipped
-     * @param  Video  $video  What was skipped
-     * @param  int  $percent  Watch progress at the moment of skip (0-100)
+     * @param User $user Who skipped
+     * @param Video $video What was skipped
+     * @param int $percent Watch progress at the moment of skip (0-100)
      */
     public function recordSkip(User $user, Video $video, int $percent): void
     {

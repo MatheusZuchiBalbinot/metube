@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Enums\LanguageLabel;
@@ -10,7 +12,7 @@ class TranscriptionService
     /**
      * Transcribe a video and persist the transcription with original-language captions.
      *
-     * @param  Video  $video  The video to transcribe
+     * @param Video $video The video to transcribe
      *
      * @throws \App\Exceptions\WhisperException If transcription fails
      */
@@ -23,7 +25,9 @@ class TranscriptionService
         $result = $this->client->transcribe($video->video_url);
 
         $captionPath = $this->storage->publishCaption(
-            $result->vtt, $video->vuid, $result->language
+            $result->vtt,
+            $video->vuid,
+            $result->language,
         );
 
         $video->update(['captions' => [[

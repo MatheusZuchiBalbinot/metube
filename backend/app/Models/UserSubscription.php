@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +28,7 @@ class UserSubscription extends Pivot
     /**
      * Get the subscriber (user who subscribed).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function subscriber(): BelongsTo
     {
@@ -36,7 +38,7 @@ class UserSubscription extends Pivot
     /**
      * Get the channel being subscribed to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function channel(): BelongsTo
     {

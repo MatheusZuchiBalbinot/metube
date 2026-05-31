@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Services\IAService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +36,7 @@ describe('IAService', function () {
         $service = app(IAService::class);
 
         expect(fn () => $service->generate('test prompt'))
-            ->toThrow(\RuntimeException::class, 'not valid JSON');
+            ->toThrow(RuntimeException::class, 'not valid JSON');
     });
 
     test('generate throws on empty response', function () {
@@ -45,7 +47,7 @@ describe('IAService', function () {
         $service = app(IAService::class);
 
         expect(fn () => $service->generate('test prompt'))
-            ->toThrow(\RuntimeException::class, 'empty response');
+            ->toThrow(RuntimeException::class, 'empty response');
     });
 
     test('generate throws on HTTP error', function () {
@@ -118,7 +120,7 @@ describe('IAService', function () {
         $service = app(IAService::class);
 
         expect(fn () => $service->chat('Question?', 'Context.', []))
-            ->toThrow(\RuntimeException::class, 'empty chat response');
+            ->toThrow(RuntimeException::class, 'empty chat response');
     });
 
     test('chat throws on HTTP error', function () {

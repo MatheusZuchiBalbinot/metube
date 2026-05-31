@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\TranscriptionStatusUpdated;
 use App\Jobs\TranscribeVideo;
 use App\Models\Video;

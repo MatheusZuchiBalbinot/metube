@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\AI\Prompts\VideoMetadataPrompt;
 use App\DTOs\VideoMetadataResult;
 use App\Models\Video;
@@ -71,7 +73,7 @@ describe('VideoMetadataPrompt', function () {
         $prompt = new VideoMetadataPrompt($video);
 
         expect(fn () => $prompt->parse($response))
-            ->toThrow(\RuntimeException::class, 'missing content');
+            ->toThrow(RuntimeException::class, 'missing content');
     });
 
     test('parse throws exception if JSON is invalid', function () {
@@ -89,7 +91,7 @@ describe('VideoMetadataPrompt', function () {
         $prompt = new VideoMetadataPrompt($video);
 
         expect(fn () => $prompt->parse($response))
-            ->toThrow(\RuntimeException::class, 'invalid JSON');
+            ->toThrow(RuntimeException::class, 'invalid JSON');
     });
 
     test('parse throws exception if required key is missing', function () {
@@ -114,6 +116,6 @@ describe('VideoMetadataPrompt', function () {
         $prompt = new VideoMetadataPrompt($video);
 
         expect(fn () => $prompt->parse($response))
-            ->toThrow(\RuntimeException::class, 'missing required key');
+            ->toThrow(RuntimeException::class, 'missing required key');
     });
 });

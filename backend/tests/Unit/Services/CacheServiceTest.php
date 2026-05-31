@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoSummary;
@@ -23,7 +25,7 @@ describe('CacheService', function () {
         config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
 
         $callCount = 0;
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $paginator = new Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
 
         $result = $service->rememberFeed(1, function () use (&$callCount, $paginator) {
             $callCount++;
@@ -39,7 +41,7 @@ describe('CacheService', function () {
         config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
 
         $callCount = 0;
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $paginator = new Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
 
         $service->rememberFeed(1, function () use (&$callCount, $paginator) {
             $callCount++;
@@ -60,7 +62,7 @@ describe('CacheService', function () {
         config(['cache.vidsum.feed.active' => false]);
 
         $callCount = 0;
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $paginator = new Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
 
         $service->rememberFeed(1, function () use (&$callCount, $paginator) {
             $callCount++;
@@ -81,7 +83,7 @@ describe('CacheService', function () {
         config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
 
         $callCount = 0;
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $paginator = new Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
 
         $service->rememberFeed(1, function () use (&$callCount, $paginator) {
             $callCount++;

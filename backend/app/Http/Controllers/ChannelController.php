@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
@@ -20,10 +22,11 @@ class ChannelController extends Controller
     /**
      * Get channel profile information.
      *
-     * @param  string  $uuid  User UUID (v4)
-     * @return JsonResponse User profile data
+     * @param string $uuid User UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return JsonResponse User profile data
      */
     public function show(string $uuid): JsonResponse
     {
@@ -39,10 +42,11 @@ class ChannelController extends Controller
      * (including processing, failed, scheduled, draft) so they can manage them
      * from their own profile. Otherwise only published videos are exposed.
      *
-     * @param  string  $uuid  User UUID (v4)
-     * @return JsonResponse array{data: Video[], meta: {total: int}}
+     * @param string $uuid User UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return JsonResponse array{data: Video[], meta: {total: int}}
      */
     public function videos(string $uuid): JsonResponse
     {
@@ -56,10 +60,11 @@ class ChannelController extends Controller
     /**
      * Toggle subscription to a channel.
      *
-     * @param  string  $uuid  Channel user UUID (v4)
-     * @return Response HTTP 204 No Content
+     * @param string $uuid Channel user UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function toggleSubscription(string $uuid): Response
     {

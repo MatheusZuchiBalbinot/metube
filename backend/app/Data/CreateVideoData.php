@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Data;
 
 use App\Enums\VideoStatus;
@@ -9,7 +11,7 @@ use Illuminate\Support\Carbon;
 final readonly class CreateVideoData
 {
     /**
-     * @param  list<string>  $tags
+     * @param list<string> $tags
      */
     public function __construct(
         public string $title,
@@ -25,7 +27,7 @@ final readonly class CreateVideoData
     /**
      * Build from a validated FormRequest payload.
      *
-     * @param  array<string, mixed>  $validated
+     * @param array<string, mixed> $validated
      */
     public static function fromRequest(array $validated): self
     {

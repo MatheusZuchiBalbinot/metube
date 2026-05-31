@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoStatus;
 use App\Events\VideoPublished;
 use App\Jobs\ProcessVideoUpload;
@@ -15,8 +17,8 @@ uses(RefreshDatabase::class);
 /**
  * Return a mock VideoStorageService that stubs all methods with sensible defaults.
  *
- * @param  string  $videoPath  Disk-relative path returned by publishVideo
- * @param  string|null  $thumbnailPath  Disk-relative path returned by publishThumbnail
+ * @param string $videoPath Disk-relative path returned by publishVideo
+ * @param string|null $thumbnailPath Disk-relative path returned by publishThumbnail
  */
 function mockStorage(string $videoPath = 'videos/test.mp4', ?string $thumbnailPath = 'thumbnails/test.webp'): VideoStorageService
 {
@@ -37,12 +39,12 @@ describe('ProcessVideoUpload', function () {
         test('publishes batch video and sets status to PUBLISHED when not scheduled', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
 
-            $storage = mockStorage('videos/'.$video->vuid.'.mp4');
+            $storage = mockStorage('videos/' . $video->vuid . '.mp4');
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
 
             $video->refresh();
             expect($video->status)->toBe(VideoStatus::PUBLISHED)
-                ->and($video->video_url)->toBe('videos/'.$video->vuid.'.mp4');
+                ->and($video->video_url)->toBe('videos/' . $video->vuid . '.mp4');
         });
 
         test('sets batch video to SCHEDULED when scheduled_at is in the future', function () {

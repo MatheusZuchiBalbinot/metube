@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Services\ThumbnailService;
 use App\Services\VideoStorageService;
 use Illuminate\Support\Facades\Storage;

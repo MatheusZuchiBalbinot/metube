@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoEventType;
 use App\Enums\VideoSource;
 use App\Events\ChannelSubscribed;

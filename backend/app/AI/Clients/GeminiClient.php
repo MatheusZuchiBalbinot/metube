@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Clients;
 
 use App\AI\Contracts\AiClient;
@@ -18,10 +20,11 @@ class GeminiClient implements AiClient
     /**
      * Execute a prompt against Gemini API.
      *
-     * @param  AiPrompt  $prompt  The prompt with request structure and parser
-     * @return mixed The parsed response from the prompt
+     * @param AiPrompt $prompt The prompt with request structure and parser
      *
      * @throws AiException On API errors
+     *
+     * @return mixed The parsed response from the prompt
      */
     public function execute(AiPrompt $prompt): mixed
     {
@@ -37,7 +40,7 @@ class GeminiClient implements AiClient
                 ),
             );
 
-            if (! $response->successful()) {
+            if (!$response->successful()) {
                 throw new AiException($response->status(), $response->body());
             }
 

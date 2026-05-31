@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Video;
 use App\Models\VideoSummary;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Events;
 
 use App\Enums\VideoEventType;
@@ -9,7 +11,7 @@ use App\Models\User;
 class VideoImpressionsBatch
 {
     /**
-     * @param  list<array{video_id: int, position: int}>  $items
+     * @param list<array{video_id: int, position: int}> $items
      */
     public function __construct(
         public readonly User $user,

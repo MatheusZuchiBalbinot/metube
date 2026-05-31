@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\VideoEventType;
@@ -11,14 +13,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int|null $video_id
  * @property int|null $channel_id
- * @property \App\Enums\VideoEventType $event_type
+ * @property VideoEventType $event_type
  * @property string|null $source
  * @property string|null $session_id
  * @property array<string, mixed>|null $payload
  * @property \Illuminate\Support\Carbon $occurred_at
- * @property \App\Models\User $user
- * @property \App\Models\Video|null $video
- * @property \App\Models\User|null $channel
+ * @property User $user
+ * @property Video|null $video
+ * @property User|null $channel
  */
 class UserAnalytic extends Model
 {
@@ -53,7 +55,7 @@ class UserAnalytic extends Model
     /**
      * Get the user who triggered the event.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -63,7 +65,7 @@ class UserAnalytic extends Model
     /**
      * Get the video the event is about, if any.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {
@@ -73,7 +75,7 @@ class UserAnalytic extends Model
     /**
      * Get the channel the event is about, if any.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function channel(): BelongsTo
     {

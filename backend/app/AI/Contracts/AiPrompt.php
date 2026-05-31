@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Contracts;
+
+use RuntimeException;
 
 /**
  * Interface for AI prompts.
@@ -21,10 +25,11 @@ interface AiPrompt
     /**
      * Parse and validate the AI provider response.
      *
-     * @param  array<string, mixed>  $response  Raw API response
-     * @return mixed The parsed result (DTO, array, or other)
+     * @param array<string, mixed> $response Raw API response
      *
-     * @throws \RuntimeException If required keys are missing or invalid
+     * @throws RuntimeException If required keys are missing or invalid
+     *
+     * @return mixed The parsed result (DTO, array, or other)
      */
     public function parse(array $response): mixed;
 }

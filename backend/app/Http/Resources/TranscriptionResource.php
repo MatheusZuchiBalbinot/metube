@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use App\Enums\TranscriptionStatus;
@@ -39,7 +41,7 @@ class TranscriptionResource extends JsonResource
         $duration = $this->video->duration;
         $hasDuration = $duration !== null;
 
-        if (! $hasDuration) {
+        if (!$hasDuration) {
             return null;
         }
 

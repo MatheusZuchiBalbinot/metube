@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Playlist;
@@ -36,8 +38,9 @@ class PlaylistService
     /**
      * Create a new playlist.
      *
-     * @param  User  $user  Playlist owner
-     * @param  string  $name  Playlist name
+     * @param User $user Playlist owner
+     * @param string $name Playlist name
+     *
      * @return Playlist Created playlist
      */
     public function createPlaylist(User $user, string $name): Playlist
@@ -50,7 +53,7 @@ class PlaylistService
     /**
      * Get a specific playlist with all videos.
      *
-     * @param  string  $puid  Playlist UUID
+     * @param string $puid Playlist UUID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
@@ -64,7 +67,8 @@ class PlaylistService
     /**
      * Update a playlist (rename).
      *
-     * @param  string  $name  New name
+     * @param string $name New name
+     *
      * @return Playlist Updated playlist
      */
     public function updatePlaylist(Playlist $playlist, string $name): Playlist
@@ -89,10 +93,11 @@ class PlaylistService
     /**
      * Add a video to a playlist (idempotent).
      *
-     * @param  string  $vuid  Video UUID
-     * @return Playlist Updated playlist
+     * @param string $vuid Video UUID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Playlist Updated playlist
      */
     public function addVideoToPlaylist(Playlist $playlist, string $vuid): Playlist
     {
@@ -109,7 +114,7 @@ class PlaylistService
     /**
      * Remove a video from a playlist.
      *
-     * @param  string  $vuid  Video UUID
+     * @param string $vuid Video UUID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
@@ -126,10 +131,11 @@ class PlaylistService
     /**
      * Reorder videos in a playlist using drag-and-drop.
      *
-     * @param  list<string>  $vuids  Ordered video UUIDs
-     * @return Playlist Reordered playlist
+     * @param list<string> $vuids Ordered video UUIDs
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Playlist Reordered playlist
      */
     public function reorderPlaylistVideos(Playlist $playlist, array $vuids): Playlist
     {
@@ -142,6 +148,7 @@ class PlaylistService
             $idByVuid = Video::whereIn('vuid', $vuids)->pluck('id', 'vuid')->all();
 
             $missing = array_diff($vuids, array_keys($idByVuid));
+
             if ($missing !== []) {
                 throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)
                     ->setModel(Video::class, array_values($missing));
@@ -162,10 +169,11 @@ class PlaylistService
 
             $placeholders = implode(',', array_fill(0, count($videoIds), '?'));
             $sql = 'UPDATE playlist_video SET position = CASE video_id '
-                .implode(' ', $cases)
-                ." END WHERE playlist_id = ? AND video_id IN ({$placeholders})";
+                . implode(' ', $cases)
+                . " END WHERE playlist_id = ? AND video_id IN ({$placeholders})";
 
             $bindings[] = $playlist->id;
+
             foreach ($videoIds as $videoId) {
                 $bindings[] = $videoId;
             }

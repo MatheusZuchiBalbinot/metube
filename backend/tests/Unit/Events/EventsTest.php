@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\TranscriptionStatus;
 use App\Enums\VideoEventType;
 use App\Enums\VideoSource;
@@ -76,7 +78,7 @@ describe('ChannelUnsubscribed', function () {
         $channel = User::factory()->create();
         $event = new ChannelUnsubscribed($subscriber, $channel);
 
-        expect($event)->toBeInstanceOf(\App\Contracts\LoggableUserEvent::class);
+        expect($event)->toBeInstanceOf(App\Contracts\LoggableUserEvent::class);
     });
 });
 
@@ -223,7 +225,7 @@ describe('VideoClickedFromFeed', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $event = new VideoClickedFromFeed($user, $video, VideoSource::FEED);
 
-        expect($event)->toBeInstanceOf(\App\Contracts\LoggableUserEvent::class);
+        expect($event)->toBeInstanceOf(App\Contracts\LoggableUserEvent::class);
     });
 });
 
@@ -245,7 +247,7 @@ describe('VideoFinished', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $event = new VideoFinished($user, $video);
 
-        expect($event)->toBeInstanceOf(\App\Contracts\LoggableUserEvent::class);
+        expect($event)->toBeInstanceOf(App\Contracts\LoggableUserEvent::class);
     });
 });
 

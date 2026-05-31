@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Listeners;
 
 use App\Enums\VideoStatus;
@@ -24,7 +26,7 @@ class SendVideoProcessedNotification implements ShouldQueueAfterCommit
     {
         $isTerminal = $event->status === VideoStatus::PUBLISHED || $event->status === VideoStatus::FAILED;
 
-        if (! $isTerminal) {
+        if (!$isTerminal) {
             return;
         }
 

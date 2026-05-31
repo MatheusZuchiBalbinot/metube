@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Resources\NotificationResource;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

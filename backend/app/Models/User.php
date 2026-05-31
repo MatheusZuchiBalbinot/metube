@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\PlaylistName;
@@ -60,7 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all videos published by this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Video, $this>
+     * @return HasMany<Video, $this>
      */
     public function videos(): HasMany
     {
@@ -70,7 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all playlists created by this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Playlist, $this>
+     * @return HasMany<Playlist, $this>
      */
     public function playlists(): HasMany
     {
@@ -80,7 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all watch history entries for this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\WatchHistory, $this>
+     * @return HasMany<WatchHistory, $this>
      */
     public function history(): HasMany
     {
@@ -90,7 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all video reactions (likes/dislikes) by this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Video, $this>
+     * @return BelongsToMany<Video, $this>
      */
     public function reactions(): BelongsToMany
     {
@@ -102,7 +104,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all videos liked by this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Video, $this>
+     * @return BelongsToMany<Video, $this>
      */
     public function likes(): BelongsToMany
     {
@@ -115,7 +117,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all videos disliked by this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Video, $this>
+     * @return BelongsToMany<Video, $this>
      */
     public function dislikes(): BelongsToMany
     {
@@ -128,7 +130,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all watch progress entries for this user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\VideoProgress, $this>
+     * @return HasMany<VideoProgress, $this>
      */
     public function progress(): HasMany
     {
@@ -138,22 +140,22 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all channels this user is subscribed to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this>
+     * @return BelongsToMany<User, $this>
      */
     public function subscriptions(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_subscriptions', 'user_id', 'channel_id')
+        return $this->belongsToMany(self::class, 'user_subscriptions', 'user_id', 'channel_id')
             ->using(UserSubscription::class);
     }
 
     /**
      * Get all users subscribed to this channel.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this>
+     * @return BelongsToMany<User, $this>
      */
     public function subscribers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_subscriptions', 'channel_id', 'user_id')
+        return $this->belongsToMany(self::class, 'user_subscriptions', 'channel_id', 'user_id')
             ->using(UserSubscription::class);
     }
 
@@ -168,7 +170,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Override the default reset-password notification to link to the frontend SPA.
      *
-     * @param  string  $token  Password reset token
+     * @param string $token Password reset token
      */
     public function sendPasswordResetNotification(mixed $token): void
     {
@@ -178,8 +180,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Filter users by UUID.
      *
-     * @param  Builder<self>  $query
-     * @param  string  $uuid  User UUID
+     * @param Builder<self> $query
+     * @param string $uuid User UUID
+     *
      * @return Builder<self>
      */
     public function scopeByUuid(Builder $query, string $uuid): Builder

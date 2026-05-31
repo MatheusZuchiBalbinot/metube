@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoStatus;
 
 describe('VideoStatus Enum', function () {
