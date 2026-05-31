@@ -83,11 +83,12 @@ class AuthService
      */
     public function register(array $data): User
     {
-        $user = User::create([
+        $payload = [
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-        ]);
+        ];
+        $user = User::create($payload);
 
         event(new Registered($user));
 
@@ -108,7 +109,8 @@ class AuthService
      */
     public function sendPasswordResetLink(string $email): void
     {
-        $status = Password::broker()->sendResetLink(['email' => $email]);
+        $payload = ['email' => $email];
+        $status = Password::broker()->sendResetLink($payload);
         $isSent = $status === Password::RESET_LINK_SENT;
 
         if (!$isSent) {

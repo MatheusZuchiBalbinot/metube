@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Video;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
@@ -32,9 +33,10 @@ class ViewCounterService
         // Tests assert against videos.views directly; bypass the Redis buffer
         // so the DB reflects the new count immediately.
         if (app()->runningUnitTests()) {
-            Video::find($videoId)?->update([
+            $updateData = [
                 'views' => DB::raw('views + 1'),
-            ]);
+            ];
+            Video::find($videoId)?->update($updateData);
 
             return;
         }
@@ -78,9 +80,10 @@ class ViewCounterService
                 continue;
             }
 
-            Video::find($videoId)?->update([
+            $updateData = [
                 'views' => DB::raw("views + {$count}"),
-            ]);
+            ];
+            Video::find($videoId)?->update($updateData);
             $updated++;
         }
 

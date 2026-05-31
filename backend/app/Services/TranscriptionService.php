@@ -30,17 +30,20 @@ class TranscriptionService
             $result->language,
         );
 
-        $video->update(['captions' => [[
+        $caption = [
             'lang' => $result->language,
             'label' => LanguageLabel::fromLangCode($result->language),
             'url' => $captionPath,
-        ]]]);
+        ];
+        $videoUpdatePayload = ['captions' => [$caption]];
+        $video->update($videoUpdatePayload);
 
-        $video->transcription()->updateOrCreate([], [
+        $transcriptionPayload = [
             'status' => \App\Enums\TranscriptionStatus::COMPLETED,
             'content' => $result->text,
             'language' => $result->language,
-        ]);
+        ];
+        $video->transcription()->updateOrCreate([], $transcriptionPayload);
     }
 
     public function __construct(

@@ -57,13 +57,15 @@ class VideoAiService
     {
         $suggestion = $video->aiSuggestion ?? throw new ModelNotFoundException('AI suggestion not found.');
 
-        $video->update([
+        $videoUpdatePayload = [
             'title' => $suggestion->suggested_title ?? $video->title,
             'description' => $suggestion->suggested_description ?? $video->description,
             'tags' => ($suggestion->suggested_tags !== []) ? $suggestion->suggested_tags : $video->tags,
-        ]);
+        ];
+        $video->update($videoUpdatePayload);
 
-        $suggestion->update(['status' => AiSuggestionStatus::ACCEPTED]);
+        $suggestionUpdatePayload = ['status' => AiSuggestionStatus::ACCEPTED];
+        $suggestion->update($suggestionUpdatePayload);
 
         $this->cache->forgetVideo($video->vuid);
     }
@@ -81,6 +83,7 @@ class VideoAiService
     {
         $suggestion = $video->aiSuggestion ?? throw new ModelNotFoundException('AI suggestion not found.');
 
-        $suggestion->update(['status' => AiSuggestionStatus::DISMISSED]);
+        $dismissPayload = ['status' => AiSuggestionStatus::DISMISSED];
+        $suggestion->update($dismissPayload);
     }
 }

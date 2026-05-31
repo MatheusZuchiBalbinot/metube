@@ -44,13 +44,14 @@ class AiMetadataService
      */
     private function storeSummary(Video $video, VideoMetadataResult $result): void
     {
+        $summaryPayload = [
+            'key_points' => $result->keyPoints,
+            'chapters' => $result->chapters,
+            'reading_mode' => $result->readingMode,
+        ];
         VideoSummary::updateOrCreate(
             ['video_id' => $video->id],
-            [
-                'key_points' => $result->keyPoints,
-                'chapters' => $result->chapters,
-                'reading_mode' => $result->readingMode,
-            ],
+            $summaryPayload,
         );
     }
 
@@ -83,14 +84,15 @@ class AiMetadataService
      */
     private function storePendingSuggestion(Video $video, VideoMetadataResult $result): void
     {
+        $suggestionPayload = [
+            'suggested_title' => $result->suggestedTitle,
+            'suggested_description' => $result->suggestedDescription,
+            'suggested_tags' => $result->suggestedTags,
+            'status' => AiSuggestionStatus::PENDING,
+        ];
         VideoAiSuggestion::updateOrCreate(
             ['video_id' => $video->id],
-            [
-                'suggested_title' => $result->suggestedTitle,
-                'suggested_description' => $result->suggestedDescription,
-                'suggested_tags' => $result->suggestedTags,
-                'status' => AiSuggestionStatus::PENDING,
-            ],
+            $suggestionPayload,
         );
     }
 }

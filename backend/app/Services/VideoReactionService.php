@@ -63,11 +63,12 @@ class VideoReactionService
                 event(new VideoUndisliked($user, $video));
             }
 
-            $inserted = UserVideoReaction::insertOrIgnore([
+            $likePayload = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'type' => ReactionType::LIKE->value,
-            ]);
+            ];
+            $inserted = UserVideoReaction::insertOrIgnore($likePayload);
 
             if ($inserted > 0) {
                 event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
@@ -111,11 +112,12 @@ class VideoReactionService
                 event(new VideoUnliked($user, $video));
             }
 
-            $inserted = UserVideoReaction::insertOrIgnore([
+            $dislikePayload = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'type' => ReactionType::DISLIKE->value,
-            ]);
+            ];
+            $inserted = UserVideoReaction::insertOrIgnore($dislikePayload);
 
             if ($inserted > 0) {
                 event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
@@ -146,10 +148,11 @@ class VideoReactionService
                 return;
             }
 
-            PlaylistVideo::query()->insert([
+            $playlistVideoPayload = [
                 'playlist_id' => $playlist->id,
                 'video_id' => $video->id,
-            ]);
+            ];
+            PlaylistVideo::query()->insert($playlistVideoPayload);
 
             $playlist->touch();
             event(new VideoSaved($user, $video));

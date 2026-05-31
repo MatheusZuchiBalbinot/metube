@@ -94,10 +94,11 @@ class ChannelService
                 return;
             }
 
-            $inserted = UserSubscription::query()->insertOrIgnore([
+            $subscriptionData = [
                 'user_id' => $subscriber->id,
                 'channel_id' => $channel->id,
-            ]);
+            ];
+            $inserted = UserSubscription::query()->insertOrIgnore($subscriptionData);
 
             if ($inserted > 0) {
                 event(new ChannelSubscribed($subscriber, $channel));

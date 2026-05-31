@@ -52,10 +52,14 @@ class RecommendationService
                 $maxChannelAffinity = $channelAffinity !== [] ? max($channelAffinity) : 0.0;
 
                 $scored = $candidates
-                    ->map(fn (Video $v) => [
-                        'video' => $v,
-                        'score' => $this->score($v, $tagAffinity, $channelAffinity, $subscribedChannelIds, $maxViews, $maxChannelAffinity),
-                    ])
+                    ->map(function (Video $v) use ($tagAffinity, $channelAffinity, $subscribedChannelIds, $maxViews, $maxChannelAffinity) {
+                        $itemData = [
+                            'video' => $v,
+                            'score' => $this->score($v, $tagAffinity, $channelAffinity, $subscribedChannelIds, $maxViews, $maxChannelAffinity),
+                        ];
+
+                        return $itemData;
+                    })
                     ->sortByDesc('score')
                     ->values();
 
@@ -156,7 +160,8 @@ class RecommendationService
             return [];
         }
 
-        $videos = Video::whereIn('id', $positiveVideoIds)->get(['id', 'channel_id']);
+        $columns = ['id', 'channel_id'];
+        $videos = Video::whereIn('id', $positiveVideoIds)->get($columns);
 
         $channelWeights = [];
 

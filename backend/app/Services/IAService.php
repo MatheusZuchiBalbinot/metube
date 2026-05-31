@@ -52,23 +52,24 @@ class IAService
      */
     public function generate(string $prompt): array
     {
+        $payload = [
+            'model' => $this->model,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a video content analyzer. Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt,
+                ],
+            ],
+            'response_format' => ['type' => 'json_object'],
+            'temperature' => 0.3,
+        ];
         $response = Http::withToken($this->apiKey)
             ->timeout($this->timeout)
-            ->post("{$this->baseUrl}/chat/completions", [
-                'model' => $this->model,
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are a video content analyzer. Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $prompt,
-                    ],
-                ],
-                'response_format' => ['type' => 'json_object'],
-                'temperature' => 0.3,
-            ])
+            ->post("{$this->baseUrl}/chat/completions", $payload)
             ->throw();
 
         $text = $response->json('choices.0.message.content');
@@ -112,13 +113,14 @@ class IAService
             [['role' => 'user', 'content' => $question]],
         );
 
+        $payload = [
+            'model' => $this->model,
+            'messages' => $messages,
+            'temperature' => 0.5,
+        ];
         $response = Http::withToken($this->apiKey)
             ->timeout($this->timeout)
-            ->post("{$this->baseUrl}/chat/completions", [
-                'model' => $this->model,
-                'messages' => $messages,
-                'temperature' => 0.5,
-            ])
+            ->post("{$this->baseUrl}/chat/completions", $payload)
             ->throw();
 
         $text = $response->json('choices.0.message.content');
