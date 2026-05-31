@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
@@ -25,23 +26,28 @@ class UserSubscription extends Pivot
     /** @var bool */
     public $timestamps = false;
 
-    /**
-     * Get the subscriber (user who subscribed).
-     *
-     * @return BelongsTo<User, $this>
-     */
-    public function subscriber(): BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Get the channel being subscribed to.
-     *
-     * @return BelongsTo<User, $this>
-     */
     public function channel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'channel_id');
+    }
+
+    public function scopeByUser(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeToChannel(Builder $query, int $channelId): Builder
+    {
+        return $query->where('channel_id', $channelId);
+    }
+
+    public function scopeBetween(Builder $query, int $userId, int $channelId): Builder
+    {
+        return $query->where('user_id', $userId)->where('channel_id', $channelId);
     }
 }
