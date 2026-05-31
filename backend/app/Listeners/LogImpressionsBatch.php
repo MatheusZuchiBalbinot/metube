@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\VideoImpressionsBatch;
+use App\Models\UserAnalytic;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
-use Illuminate\Support\Facades\DB;
 
 class LogImpressionsBatch implements ShouldQueueAfterCommit
 {
@@ -27,6 +27,6 @@ class LogImpressionsBatch implements ShouldQueueAfterCommit
             return;
         }
 
-        DB::table('user_analytics')->insert($rows);
+        UserAnalytic::insert($rows);
     }
 }

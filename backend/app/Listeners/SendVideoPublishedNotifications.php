@@ -7,8 +7,8 @@ namespace App\Listeners;
 use App\Events\VideoPublished;
 use App\Jobs\NotifySubscribersChunk;
 use App\Listeners\Traits\SendsQueuedNotifications;
+use App\Models\UserSubscription;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
-use Illuminate\Support\Facades\DB;
 
 class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
 {
@@ -33,8 +33,7 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
             return;
         }
 
-        DB::table('user_subscriptions')
-            ->where('channel_id', $channel->id)
+        UserSubscription::toChannel($channel->id)
             ->select('user_id')
             ->orderBy('user_id')
             ->chunkById(self::CHUNK_SIZE, function ($rows) use ($video): void {
