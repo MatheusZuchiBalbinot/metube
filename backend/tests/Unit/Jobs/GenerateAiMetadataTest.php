@@ -27,13 +27,11 @@ describe('GenerateAiMetadata', function () {
 
     beforeEach(function () use (&$mockResponse) {
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [
+            'api.groq.com/*' => Http::response([
+                'choices' => [
                     [
-                        'content' => [
-                            'parts' => [
-                                ['text' => json_encode($mockResponse)],
-                            ],
+                        'message' => [
+                            'content' => json_encode($mockResponse),
                         ],
                     ],
                 ],
