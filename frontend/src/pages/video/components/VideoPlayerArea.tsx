@@ -3,6 +3,7 @@ import ReadingMode from '@components/video/readingMode';
 import VideoFallback from './VideoFallback';
 import { cn } from '@utils';
 import type { VideoSummary, VideoTranscription } from '@api';
+import type { VideoCaption } from '@models';
 
 interface VideoPlayerAreaProps {
     readingMode: boolean
@@ -15,6 +16,7 @@ interface VideoPlayerAreaProps {
     hasVideoFile: boolean
     src: string
     autoPlay: boolean
+    captions: VideoCaption[]
     chapters: VideoSummary['chapters'] | undefined
     onTimeUpdate: () => void
     onEnded: () => void
@@ -27,14 +29,14 @@ interface VideoPlayerAreaProps {
 
 export default function VideoPlayerArea({
     readingMode, transcription, summary, isOwner, onRetryTranscription,
-    getCurrentTime, videoRef, hasVideoFile, src, autoPlay, chapters,
+    getCurrentTime, videoRef, hasVideoFile, src, autoPlay, captions, chapters,
     onTimeUpdate, onEnded, onLoadedMetadata, showCompletion, ambientColor,
     thumbnail, title,
 }: VideoPlayerAreaProps) {
     const isReadingMode = readingMode && transcription !== null;
 
     return (
-        <>
+        <div className="video-page__player-area">
             {/* Always mounted so the video element keeps its currentTime across mode toggles */}
             <div className={cn('video-page__player-wrap', isReadingMode && 'video-page__player-wrap--hidden')}>
                 {hasVideoFile ? (
@@ -42,6 +44,7 @@ export default function VideoPlayerArea({
                         videoRef={videoRef}
                         src={src}
                         autoPlay={autoPlay}
+                        captions={captions}
                         chapters={chapters}
                         onTimeUpdate={onTimeUpdate}
                         onEnded={onEnded}
@@ -55,20 +58,22 @@ export default function VideoPlayerArea({
             </div>
 
             {isReadingMode && (
-                <ReadingMode
-                    summary={summary}
-                    transcription={transcription}
-                    isOwner={isOwner}
-                    onRetryTranscription={onRetryTranscription}
-                    currentTime={getCurrentTime()}
-                    videoRef={videoRef}
-                    onSeekToChapter={(seconds) => {
-                        if (videoRef.current) {
-                            videoRef.current.currentTime = seconds;
-                        }
-                    }}
-                />
+                <div className="video-page__reading-overlay">
+                    <ReadingMode
+                        summary={summary}
+                        transcription={transcription}
+                        isOwner={isOwner}
+                        onRetryTranscription={onRetryTranscription}
+                        currentTime={getCurrentTime()}
+                        videoRef={videoRef}
+                        onSeekToChapter={(seconds) => {
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = seconds;
+                            }
+                        }}
+                    />
+                </div>
             )}
-        </>
+        </div>
     );
 }

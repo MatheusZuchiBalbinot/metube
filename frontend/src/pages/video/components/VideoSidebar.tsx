@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { List, BookOpen, Tv2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
@@ -32,7 +32,7 @@ export default function VideoSidebar({
     const { t } = useTranslation();
     const hasSummary = summary !== null;
     const isSummaryGenerating = transcription !== null
-        && domain.transcription.isCompleted(transcription)
+        && !domain.transcription.isFailed(transcription)
         && !hasSummary;
     const showSummaryTab = hasSummary || isSummaryGenerating;
     const [sidebarTab, setSidebarTab] = useState<SidebarTab>(
@@ -41,6 +41,20 @@ export default function VideoSidebar({
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [currentTime, setCurrentTime] = useState(0);
     const [seekingIndex, setSeekingIndex] = useState<number | null>(null);
+    const autoSwitchedRef = useRef(false);
+
+    // Auto-switch to Summary tab once when a transcription/summary process appears.
+    // Uses a ref so the user can freely switch back to Related without being forced back.
+    // Resets when the tab disappears (e.g. navigating to another video) so the
+    // next video's summary re-triggers the auto-switch.
+    useEffect(() => {
+        if (showSummaryTab && !autoSwitchedRef.current) {
+            autoSwitchedRef.current = true;
+            setSidebarTab(SidebarTab.SUMMARY);
+        } else if (!showSummaryTab) {
+            autoSwitchedRef.current = false;
+        }
+    }, [showSummaryTab]);
 
     useEffect(() => {
         const isOnSummaryTab = sidebarTab === SidebarTab.SUMMARY;
