@@ -171,6 +171,19 @@ class Comment extends Model
     }
 
     /**
+     * Filter comment by CUID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $cuid Comment unique ID
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByCuid($query, $cuid)
+    {
+        return $query->where('cuid', $cuid);
+    }
+
+    /**
      * Scope to get comments by a specific user.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query

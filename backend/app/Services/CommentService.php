@@ -30,12 +30,12 @@ class CommentService
      */
     public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
     {
-        $video = Video::where('vuid', $vuid)->firstOrFail();
+        $video = Video::byVuid($vuid)->firstOrFail();
 
         $paginator = Comment::with('user')
             ->forVideo($video->id)
             ->topLevel()
-            ->orderByDesc('created_at')
+            ->newest()
             ->paginate(PaginationSize::COMMENT_LIST, ['*'], 'page', $page);
 
         $this->attachIsLiked($paginator->getCollection(), $user);
@@ -54,13 +54,13 @@ class CommentService
      */
     public function store(string $vuid, StoreCommentRequest $request, User $user): Comment
     {
-        $video = Video::where('vuid', $vuid)->firstOrFail();
+        $video = Video::byVuid($vuid)->firstOrFail();
         $validated = $request->validated();
 
         $parentId = null;
 
         if (isset($validated['parent_cuid'])) {
-            $parent = Comment::where('cuid', $validated['parent_cuid'])->firstOrFail();
+            $parent = Comment::byCuid($validated['parent_cuid'])->firstOrFail();
             $isNestedReply = $parent->parent_id !== null;
 
             abort_if($isNestedReply, 422, 'Cannot reply to a reply.');
