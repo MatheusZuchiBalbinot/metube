@@ -10,6 +10,9 @@ const playerInstance = vi.hoisted(() => ({
     configure: vi.fn(),
     selectVariantTrack: vi.fn(),
     destroy: vi.fn(),
+    addTextTrackAsync: vi.fn().mockResolvedValue(undefined),
+    setTextTrackVisibility: vi.fn(),
+    selectTextLanguage: vi.fn(),
 }));
 
 const shakaMock = vi.hoisted(() => ({

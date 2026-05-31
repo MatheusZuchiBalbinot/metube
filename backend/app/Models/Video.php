@@ -43,6 +43,7 @@ class Video extends Model
         'title',
         'description',
         'tags',
+        'captions',
         'status',
         'duration',
         'views',

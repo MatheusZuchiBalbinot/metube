@@ -40,8 +40,10 @@ export function DefaultVideoPlayer({
 }: Omit<VideoPlayerProps, 'mode'>) {
     const containerRef = useRef<HTMLDivElement>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
+    const captionsMenuRef = useRef<HTMLDivElement>(null);
 
     const [showSettings, setShowSettings] = useState(false);
+    const [showCaptionsMenu, setShowCaptionsMenu] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
     // ─── Hooks ────────────────────────────────────────────────────────────────
@@ -68,14 +70,19 @@ export function DefaultVideoPlayer({
     const { skipIndicator, showSkipIndicator, resetSkipIndicator } = useSkipIndicator();
     const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
     const { isActive: isPiP, isSupported: isPiPSupported, togglePiP } = usePictureInPicture(videoRef);
-    const { levels, currentQuality, setQuality } = useShaka(videoRef, src);
-    const { activeTrack, setActiveTrack } = usePlayerCaptions(videoRef, captions);
+    const { levels, currentQuality, setQuality, tracksLoaded } = useShaka(videoRef, src, captions);
+    const { activeTrack, setActiveTrack } = usePlayerCaptions(captions);
 
     useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
     useOutsideClick(settingsRef, handleCloseSettings);
+    useOutsideClick(captionsMenuRef, handleCloseCaptionsMenu);
 
     function handleCloseSettings() {
         setShowSettings(false);
+    }
+
+    function handleCloseCaptionsMenu() {
+        setShowCaptionsMenu(false);
     }
 
     function handleMouseLeave() {
@@ -133,12 +140,29 @@ export function DefaultVideoPlayer({
 
     // ─── Effects ──────────────────────────────────────────────────────────────
 
+    // Sync activeTrack → native TextTrack.mode once Shaka has loaded the tracks.
+    // Shaka's SimpleTextDisplayer respects track.mode to drive its own <div> renderer.
+    useEffect(() => {
+        if (!tracksLoaded) {
+            return;
+        }
+        const el = videoRef.current;
+        if (!el) {
+            return;
+        }
+        for (let i = 0; i < el.textTracks.length; i++) {
+            const track = el.textTracks[i];
+            track.mode = track.language === activeTrack ? 'showing' : 'disabled';
+        }
+    }, [activeTrack, tracksLoaded, videoRef]);
+
     // Reset local state when source changes
     useEffect(() => {
         resetPopIcon();
         resetSkipIndicator();
         applyPlaybackRate(1);
         setShowSettings(false);
+        setShowCaptionsMenu(false);
         setIsDragging(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src]);
@@ -180,6 +204,16 @@ export function DefaultVideoPlayer({
     function handleToggleSettings(e: React.MouseEvent) {
         e.stopPropagation();
         setShowSettings(v => !v);
+    }
+
+    function handleToggleCaptionsMenu(e: React.MouseEvent) {
+        e.stopPropagation();
+        setShowCaptionsMenu(v => !v);
+    }
+
+    function handleCaptionSelect(lang: string | null) {
+        setActiveTrack(lang);
+        setShowCaptionsMenu(false);
     }
 
     function handleTheaterBtn(e: React.MouseEvent) {
@@ -264,6 +298,8 @@ export function DefaultVideoPlayer({
                     settingsRef={settingsRef}
                     captions={captions}
                     activeTrack={activeTrack}
+                    showCaptionsMenu={showCaptionsMenu}
+                    captionsMenuRef={captionsMenuRef}
                     levels={levels}
                     currentQuality={currentQuality}
                     onBarClick={handleBarClick}
@@ -271,12 +307,13 @@ export function DefaultVideoPlayer({
                     onToggleMute={handleToggleMute}
                     onVolumeChange={handleVolumeChange}
                     onToggleSettings={handleToggleSettings}
+                    onToggleCaptionsMenu={handleToggleCaptionsMenu}
                     onSpeedChange={handleSpeedChange}
                     onQualityChange={handleQualityChange}
                     onPip={handlePipBtn}
                     onTheater={handleTheaterBtn}
                     onFullscreen={handleFullscreenBtn}
-                    onCaptionSelect={setActiveTrack}
+                    onCaptionSelect={handleCaptionSelect}
                     showTheaterButton={onTheaterToggle !== undefined}
                     fullscreenIcon={isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
                 />

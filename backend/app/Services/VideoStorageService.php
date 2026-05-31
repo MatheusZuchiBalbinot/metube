@@ -61,6 +61,22 @@ class VideoStorageService
     }
 
     /**
+     * Write a WebVTT caption file to public storage.
+     *
+     * @param  string  $vttContent  WebVTT file content
+     * @param  string  $vuid  Video public identifier used as the filename stem
+     * @param  string  $lang  BCP-47 language code (e.g. "pt", "en")
+     * @return string Disk-relative path: captions/{vuid}.{lang}.vtt
+     */
+    public function publishCaption(string $vttContent, string $vuid, string $lang): string
+    {
+        $captionPath = "captions/{$vuid}.{$lang}.vtt";
+        Storage::disk('public')->put($captionPath, $vttContent);
+
+        return $captionPath;
+    }
+
+    /**
      * Delete temporary files from local storage.
      *
      * @param  string  $videoPath  Path relative to the 'local' disk
