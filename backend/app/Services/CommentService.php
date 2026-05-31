@@ -70,18 +70,20 @@ class CommentService
         }
 
         $result = DB::transaction(function () use ($user, $video, $validated, $parentId): array {
-            $comment = Comment::create([
+            $commentPayload = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'parent_id' => $parentId,
                 'content' => $validated['content'],
-            ]);
+            ];
+            $comment = Comment::create($commentPayload);
 
-            CommentVersion::create([
+            $versionPayload = [
                 'comment_id' => $comment->id,
                 'content' => $comment->content,
                 'version' => 1,
-            ]);
+            ];
+            CommentVersion::create($versionPayload);
 
             if ($parentId !== null) {
                 Comment::where('id', $parentId)->increment('replies_count');

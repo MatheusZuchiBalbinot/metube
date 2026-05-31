@@ -40,7 +40,7 @@ class VideoUploadService
     public function createVideo(User $user, CreateVideoDTO $data): Video
     {
         return DB::transaction(function () use ($user, $data) {
-            $video = Video::create([
+            $videoPayload = [
                 'channel_id' => $user->id,
                 'title' => $data->title,
                 'description' => $data->description,
@@ -48,7 +48,9 @@ class VideoUploadService
                 'status' => VideoStatus::PROCESSING,
                 'scheduled_at' => $data->scheduledAt,
                 'is_batch' => $data->isBatch,
-            ]);
+            ];
+
+            $video = Video::create($videoPayload);
 
             $ext = $data->videoFile->getClientOriginalExtension();
             $tmpPath = $data->videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
@@ -97,7 +99,7 @@ class VideoUploadService
         }
 
         return DB::transaction(function () use ($user, $data, $tusCache, $fileMeta) {
-            $video = Video::create([
+            $videoPayload = [
                 'channel_id' => $user->id,
                 'title' => $data->title,
                 'description' => $data->description,
@@ -105,7 +107,9 @@ class VideoUploadService
                 'status' => VideoStatus::PROCESSING,
                 'scheduled_at' => $data->scheduledAt,
                 'is_batch' => $data->isBatch,
-            ]);
+            ];
+
+            $video = Video::create($videoPayload);
 
             $rawExt = strtolower(pathinfo((string) ($fileMeta['name'] ?? 'video.mp4'), PATHINFO_EXTENSION));
             $ext = $rawExt !== '' ? $rawExt : 'mp4';

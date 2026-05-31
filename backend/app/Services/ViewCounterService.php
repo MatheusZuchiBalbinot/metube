@@ -32,7 +32,7 @@ class ViewCounterService
         // Tests assert against videos.views directly; bypass the Redis buffer
         // so the DB reflects the new count immediately.
         if (app()->runningUnitTests()) {
-            DB::table('videos')->where('id', $videoId)->update([
+            Video::find($videoId)?->update([
                 'views' => DB::raw('views + 1'),
             ]);
 
@@ -78,7 +78,7 @@ class ViewCounterService
                 continue;
             }
 
-            DB::table('videos')->where('id', $videoId)->update([
+            Video::find($videoId)?->update([
                 'views' => DB::raw("views + {$count}"),
             ]);
             $updated++;
