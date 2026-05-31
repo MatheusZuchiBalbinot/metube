@@ -1301,6 +1301,10 @@
 
 /* ─── Ambient color (player wrap glow) ──────────────────────────────────────── */
 
+.video-page__player-area {
+    position: relative;
+}
+
 .video-page__player-wrap {
     position: relative;
     border-radius: var(--radius-md);
@@ -1308,7 +1312,23 @@
 }
 
 .video-page__player-wrap--hidden {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.video-page__reading-overlay {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    z-index: 1;
+}
+
+.video-page__reading-overlay .video-page__reading-mode {
+    overflow-y: visible;
+    max-height: none;
+    height: 100%;
 }
 
 .video-page__player-wrap::before {

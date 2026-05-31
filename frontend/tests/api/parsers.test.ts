@@ -852,17 +852,21 @@ describe('parseVideoSummary', () => {
     });
 
     it('defaults keyPoints to [] when key_points is not an array', () => {
-        const result = parseVideoSummary({ key_points: null, chapters: [], reading_mode: '' });
+        const result = parseVideoSummary({ key_points: null, chapters: [{ timestamp: '0:00', title: 'Intro' }], reading_mode: '' });
 
         expect(result).not.toBeNull();
         expect(result!.keyPoints).toEqual([]);
     });
 
     it('defaults chapters to [] when chapters is not an array', () => {
-        const result = parseVideoSummary({ key_points: [], chapters: 'not-array', reading_mode: '' });
+        const result = parseVideoSummary({ key_points: ['A'], chapters: 'not-array', reading_mode: '' });
 
         expect(result).not.toBeNull();
         expect(result!.chapters).toEqual([]);
+    });
+
+    it('returns null for the empty-summary sentinel (still generating)', () => {
+        expect(parseVideoSummary({ key_points: [], chapters: [], reading_mode: '' })).toBeNull();
     });
 
     it('returns null for null', () => {

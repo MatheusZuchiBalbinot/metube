@@ -334,11 +334,19 @@ export function parseVideoSummary(raw: unknown): VideoSummary | null {
         return null;
     }
 
-    return {
-        keyPoints: Array.isArray(rawData['key_points']) ? (rawData['key_points'] as unknown as KeyPoint[]) : [],
-        chapters: Array.isArray(rawData['chapters']) ? (rawData['chapters'] as VideoSummary['chapters']) : [],
-        readingMode: str(rawData['reading_mode']),
-    };
+    const keyPoints = Array.isArray(rawData['key_points']) ? (rawData['key_points'] as unknown as KeyPoint[]) : [];
+    const chapters = Array.isArray(rawData['chapters']) ? (rawData['chapters'] as VideoSummary['chapters']) : [];
+    const readingMode = str(rawData['reading_mode']);
+
+    // The backend returns an EmptyVideoSummary sentinel ({key_points: [], chapters: [],
+    // reading_mode: ''}) instead of 404 while the AI summary is still being generated.
+    // Map it back to null so callers can distinguish "not ready yet" from a real summary.
+    const isEmpty = keyPoints.length === 0 && chapters.length === 0 && readingMode.trim() === '';
+    if (isEmpty) {
+        return null;
+    }
+
+    return { keyPoints, chapters, readingMode };
 }
 
 // ─── Transcription ─────────────────────────────────────────────────────────────
