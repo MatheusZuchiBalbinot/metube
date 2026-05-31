@@ -40,9 +40,13 @@ class VideoProgressService
 
             $previousPercent = $existing !== null ? $existing->percent : 0;
 
+            $updateData = [
+                'percent' => $percent,
+                'updated_at' => now(),
+            ];
             $user->progress()->updateOrCreate(
                 ['video_id' => $video->id],
-                ['percent' => $percent, 'updated_at' => now()],
+                $updateData,
             );
 
             // User finished the video (reached 90%+)

@@ -46,7 +46,11 @@ class PlaylistService
     public function createPlaylist(User $user, string $name): Playlist
     {
         return DB::transaction(function () use ($user, $name) {
-            return $user->playlists()->create(['name' => $name]);
+            $payload = [
+                'name' => $name,
+            ];
+
+            return $user->playlists()->create($payload);
         });
     }
 
@@ -74,7 +78,10 @@ class PlaylistService
     public function updatePlaylist(Playlist $playlist, string $name): Playlist
     {
         return DB::transaction(function () use ($playlist, $name) {
-            $playlist->update(['name' => $name]);
+            $updateData = [
+                'name' => $name,
+            ];
+            $playlist->update($updateData);
 
             return $playlist;
         });

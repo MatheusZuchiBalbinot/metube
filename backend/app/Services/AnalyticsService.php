@@ -43,7 +43,11 @@ class AnalyticsService
                 continue;
             }
 
-            $items[] = ['video_id' => $idByVuid[$vuid], 'position' => $position];
+            $impressionData = [
+                'video_id' => $idByVuid[$vuid],
+                'position' => $position,
+            ];
+            $items[] = $impressionData;
         }
 
         if ($items === []) {

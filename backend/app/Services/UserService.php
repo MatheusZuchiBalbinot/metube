@@ -93,7 +93,13 @@ class UserService
         return $user->progress()
             ->with('video:id,vuid')
             ->get()
-            ->mapWithKeys(fn ($p) => [$p->video->vuid => $p->percent])
+            ->mapWithKeys(function ($p) {
+                $progressMap = [
+                    $p->video->vuid => $p->percent,
+                ];
+
+                return $progressMap;
+            })
             ->toArray();
     }
 
@@ -121,10 +127,14 @@ class UserService
                     ->orderByDesc(DB::raw('DATE(watched_at)'))
                     ->limit(365)
                     ->get()
-                    ->map(fn (object $row) => [
-                        'date' => (string) $row->date,
-                        'count' => (int) $row->count,
-                    ])
+                    ->map(function (object $row) {
+                        $eventData = [
+                            'date' => (string) $row->date,
+                            'count' => (int) $row->count,
+                        ];
+
+                        return $eventData;
+                    })
                     ->values()
                     ->toArray();
             },
