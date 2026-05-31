@@ -8,6 +8,7 @@ use App\Config\PaginationSize;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Models\User;
+use App\Models\UserSubscription;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -82,7 +83,7 @@ class ChannelService
         $channel = User::byUuid($uuid)->firstOrFail();
 
         DB::transaction(function () use ($subscriber, $channel) {
-            $unsubscribed = DB::table('user_subscriptions')
+            $unsubscribed = UserSubscription::query()
                 ->where('user_id', $subscriber->id)
                 ->where('channel_id', $channel->id)
                 ->delete();
@@ -93,7 +94,7 @@ class ChannelService
                 return;
             }
 
-            $inserted = DB::table('user_subscriptions')->insertOrIgnore([
+            $inserted = UserSubscription::query()->insertOrIgnore([
                 'user_id' => $subscriber->id,
                 'channel_id' => $channel->id,
             ]);
