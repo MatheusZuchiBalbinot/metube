@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Data\UpdateVideoData;
+use App\DTOs\UpdateVideoDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;
 
-describe('UpdateVideoData', function () {
+describe('UpdateVideoDTO', function () {
     test('can be constructed with all nulls', function () {
-        $data = new UpdateVideoData(
+        $data = new UpdateVideoDTO(
             title: null,
             description: null,
             tags: null,
@@ -31,7 +31,7 @@ describe('UpdateVideoData', function () {
             'status' => 'published',
         ];
 
-        $data = UpdateVideoData::fromRequest($validated);
+        $data = UpdateVideoDTO::fromRequest($validated);
 
         expect($data->title)->toBe('New Title')
             ->and($data->description)->toBe('New Desc')
@@ -46,14 +46,14 @@ describe('UpdateVideoData', function () {
             'scheduled_at' => '2025-12-01T00:00:00Z',
         ];
 
-        $data = UpdateVideoData::fromRequest($validated);
+        $data = UpdateVideoDTO::fromRequest($validated);
 
         expect($data->scheduledAt)->toBeInstanceOf(Carbon::class)
             ->and($data->scheduledAt->year)->toBe(2025);
     });
 
     test('toUpdateArray omits null fields', function () {
-        $data = new UpdateVideoData(
+        $data = new UpdateVideoDTO(
             title: null,
             description: null,
             tags: null,
@@ -65,7 +65,7 @@ describe('UpdateVideoData', function () {
     });
 
     test('toUpdateArray includes only non-null fields', function () {
-        $data = new UpdateVideoData(
+        $data = new UpdateVideoDTO(
             title: 'Updated Title',
             description: null,
             tags: null,
@@ -82,7 +82,7 @@ describe('UpdateVideoData', function () {
 
     test('toUpdateArray includes all provided fields', function () {
         $scheduledAt = Carbon::parse('2025-10-01');
-        $data = new UpdateVideoData(
+        $data = new UpdateVideoDTO(
             title: 'Title',
             description: 'Desc',
             tags: ['a', 'b'],
@@ -102,7 +102,7 @@ describe('UpdateVideoData', function () {
     });
 
     test('all fields are null when constructed with nulls', function () {
-        $data = new UpdateVideoData(null, null, null, null, null);
+        $data = new UpdateVideoDTO(null, null, null, null, null);
 
         expect($data->toUpdateArray())->toBeArray()
             ->and($data->toUpdateArray())->toHaveCount(0);

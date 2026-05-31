@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Data\CreateVideoData;
+use App\DTOs\CreateVideoDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
-describe('CreateVideoData', function () {
+describe('CreateVideoDTO', function () {
     test('can be constructed directly', function () {
         $file = UploadedFile::fake()->create('video.mp4', 1024, 'video/mp4');
 
-        $data = new CreateVideoData(
+        $data = new CreateVideoDTO(
             title: 'My Video',
             description: 'A description',
             tags: ['php', 'laravel'],
@@ -40,7 +40,7 @@ describe('CreateVideoData', function () {
             'video_file' => $file,
         ];
 
-        $data = CreateVideoData::fromRequest($validated);
+        $data = CreateVideoDTO::fromRequest($validated);
 
         expect($data->title)->toBe('From Request')
             ->and($data->description)->toBe('Desc')
@@ -59,7 +59,7 @@ describe('CreateVideoData', function () {
             'scheduled_at' => '2025-08-01T09:00:00Z',
         ];
 
-        $data = CreateVideoData::fromRequest($validated);
+        $data = CreateVideoDTO::fromRequest($validated);
 
         expect($data->scheduledAt)->toBeInstanceOf(Carbon::class)
             ->and($data->scheduledAt->year)->toBe(2025);
@@ -75,7 +75,7 @@ describe('CreateVideoData', function () {
             'thumbnail_file' => $thumb,
         ];
 
-        $data = CreateVideoData::fromRequest($validated);
+        $data = CreateVideoDTO::fromRequest($validated);
 
         expect($data->thumbnailFile)->not->toBeNull();
     });
@@ -88,7 +88,7 @@ describe('CreateVideoData', function () {
             'video_file' => $file,
         ];
 
-        $data = CreateVideoData::fromRequest($validated);
+        $data = CreateVideoDTO::fromRequest($validated);
 
         expect($data->tags)->toBe([]);
     });
@@ -101,14 +101,14 @@ describe('CreateVideoData', function () {
             'video_file' => $file,
         ];
 
-        $data = CreateVideoData::fromRequest($validated);
+        $data = CreateVideoDTO::fromRequest($validated);
 
         expect($data->description)->toBeNull();
     });
 
     test('videoFile is stored on the DTO', function () {
         $file = UploadedFile::fake()->create('video.mp4', 512, 'video/mp4');
-        $data = new CreateVideoData(
+        $data = new CreateVideoDTO(
             title: 'Title',
             description: null,
             tags: [],

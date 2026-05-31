@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Data\CreateVideoData;
-use App\Data\FinalizeUploadData;
-use App\Data\UpdateVideoData;
+use App\DTOs\CreateVideoDTO;
+use App\DTOs\FinalizeUploadDTO;
+use App\DTOs\UpdateVideoDTO;
 use App\Enums\TranscriptionStatus;
 use App\Enums\VideoSource;
 use App\Http\Requests\Video\StoreVideoRequest;
@@ -68,12 +68,12 @@ class VideoController extends Controller
         if ($isTusUpload) {
             $video = $this->videoService->finalizeUpload(
                 auth()->user(),
-                FinalizeUploadData::fromRequest($request->validated()),
+                FinalizeUploadDTO::fromRequest($request->validated()),
             );
         } else {
             $video = $this->videoService->createVideo(
                 auth()->user(),
-                CreateVideoData::fromRequest($request->validated()),
+                CreateVideoDTO::fromRequest($request->validated()),
             );
         }
 
@@ -116,7 +116,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('update', $video);
 
-        $updated = $this->videoService->updateVideo($video, UpdateVideoData::fromRequest($request->validated()));
+        $updated = $this->videoService->updateVideo($video, UpdateVideoDTO::fromRequest($request->validated()));
 
         return $this->json(new VideoResource($updated->load('channel')));
     }
