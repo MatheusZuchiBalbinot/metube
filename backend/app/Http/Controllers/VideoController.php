@@ -19,7 +19,12 @@ use App\Jobs\TranscribeVideo;
 use App\Models\Transcription;
 use App\Models\Video;
 use App\Services\RecommendationService;
+use App\Services\VideoAiService;
+use App\Services\VideoProgressService;
+use App\Services\VideoPublishingService;
+use App\Services\VideoReactionService;
 use App\Services\VideoService;
+use App\Services\VideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,6 +38,11 @@ class VideoController extends Controller
 {
     public function __construct(
         private readonly VideoService $videoService,
+        private readonly VideoUploadService $uploadService,
+        private readonly VideoPublishingService $publishingService,
+        private readonly VideoReactionService $reactionService,
+        private readonly VideoProgressService $progressService,
+        private readonly VideoAiService $aiService,
         private readonly RecommendationService $recommendationService,
     ) {}
 
@@ -66,12 +76,12 @@ class VideoController extends Controller
         $isTusUpload = $request->has('upload_key');
 
         if ($isTusUpload) {
-            $video = $this->videoService->finalizeUpload(
+            $video = $this->uploadService->finalizeUpload(
                 auth()->user(),
                 FinalizeUploadDTO::fromRequest($request->validated()),
             );
         } else {
-            $video = $this->videoService->createVideo(
+            $video = $this->uploadService->createVideo(
                 auth()->user(),
                 CreateVideoDTO::fromRequest($request->validated()),
             );
@@ -116,7 +126,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('update', $video);
 
-        $updated = $this->videoService->updateVideo($video, UpdateVideoDTO::fromRequest($request->validated()));
+        $updated = $this->publishingService->updateVideo($video, UpdateVideoDTO::fromRequest($request->validated()));
 
         return $this->json(new VideoResource($updated->load('channel')));
     }
@@ -136,7 +146,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('delete', $video);
 
-        $this->videoService->deleteVideo($video);
+        $this->uploadService->deleteVideo($video);
 
         return $this->noContent();
     }
@@ -159,7 +169,7 @@ class VideoController extends Controller
         $source = is_string($sourceInput) ? VideoSource::tryFrom($sourceInput) : null;
         $sessionId = $request->input('session_id');
 
-        $this->videoService->recordView(
+        $this->reactionService->recordView(
             auth()->user(),
             $video,
             $source,
@@ -182,7 +192,7 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $this->videoService->toggleLike(auth()->user(), $video);
+        $this->reactionService->toggleLike(auth()->user(), $video);
 
         return $this->noContent();
     }
@@ -200,7 +210,7 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $this->videoService->toggleDislike(auth()->user(), $video);
+        $this->reactionService->toggleDislike(auth()->user(), $video);
 
         return $this->noContent();
     }
@@ -218,7 +228,7 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $this->videoService->toggleSave(auth()->user(), $video);
+        $this->reactionService->toggleSave(auth()->user(), $video);
 
         return $this->noContent();
     }
@@ -237,7 +247,7 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $this->videoService->updateProgress(auth()->user(), $video, $request->validated()['percent']);
+        $this->progressService->updateProgress(auth()->user(), $video, $request->validated()['percent']);
 
         return $this->noContent();
     }
@@ -255,7 +265,7 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
 
-        $summary = $this->videoService->getSummary($video);
+        $summary = $this->aiService->getSummary($video);
 
         return $this->json($summary);
     }
@@ -353,7 +363,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('manageSuggestion', $video);
 
-        $this->videoService->acceptAiSuggestion($video);
+        $this->aiService->acceptAiSuggestion($video);
 
         return $this->noContent();
     }
@@ -373,7 +383,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('update', $video);
 
-        $this->videoService->publishVideo($video);
+        $this->publishingService->publishVideo($video);
 
         return $this->json(new VideoResource($video->fresh('channel')));
     }
@@ -393,7 +403,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('manageSuggestion', $video);
 
-        $this->videoService->dismissAiSuggestion($video);
+        $this->aiService->dismissAiSuggestion($video);
 
         return $this->noContent();
     }
