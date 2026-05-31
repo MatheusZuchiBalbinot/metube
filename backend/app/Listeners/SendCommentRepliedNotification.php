@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\CommentCreated;
+use App\Listeners\Traits\SendsQueuedNotifications;
 use App\Notifications\CommentRepliedNotification;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
 class SendCommentRepliedNotification implements ShouldQueueAfterCommit
 {
-    /** @var string */
-    public $queue = 'notifications';
-
-    /** @var int */
-    public $tries = 3;
+    use SendsQueuedNotifications;
 
     /**
      * Notify the parent comment author when their comment receives a reply.
@@ -25,9 +22,8 @@ class SendCommentRepliedNotification implements ShouldQueueAfterCommit
     public function handle(CommentCreated $event): void
     {
         $reply = $event->comment;
-        $isReply = $reply->parent_id !== null;
 
-        if (!$isReply) {
+        if ($reply->parent_id === null) {
             return;
         }
 
@@ -37,9 +33,7 @@ class SendCommentRepliedNotification implements ShouldQueueAfterCommit
             return;
         }
 
-        $isSameUser = $parent->user_id === $event->author->id;
-
-        if ($isSameUser) {
+        if ($this->shouldSkipSelfNotification($event->author, $parent->user)) {
             return;
         }
 
