@@ -72,10 +72,7 @@ class VideoPublishingService
      */
     public function publishDueVideos(): int
     {
-        $vuids = Video::query()
-            ->where('status', VideoStatus::SCHEDULED)
-            ->where('scheduled_at', '<=', now())
-            ->pluck('vuid');
+        $vuids = Video::scheduledDue()->pluck('vuid');
 
         if ($vuids->isEmpty()) {
             return 0;
