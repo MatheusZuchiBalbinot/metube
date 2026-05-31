@@ -144,4 +144,29 @@ class Comment extends Model
     {
         return $this->belongsTo(CommentVersion::class, 'current_version_id');
     }
+
+    /**
+     * Scope to get only top-level comments (no parent).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeTopLevel($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Scope to get comments for a specific video.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $videoId Video ID
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForVideo($query, $videoId)
+    {
+        return $query->where('video_id', $videoId);
+    }
 }

@@ -33,8 +33,8 @@ class CommentService
         $video = Video::where('vuid', $vuid)->firstOrFail();
 
         $paginator = Comment::with('user')
-            ->where('video_id', $video->id)
-            ->whereNull('parent_id')
+            ->forVideo($video->id)
+            ->topLevel()
             ->orderByDesc('created_at')
             ->paginate(PaginationSize::COMMENT_LIST, ['*'], 'page', $page);
 
