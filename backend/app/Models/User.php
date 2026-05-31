@@ -191,6 +191,32 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get users created recently (last N days).
+     *
+     * @param Builder<self> $query
+     * @param int $days Number of days (default 30)
+     *
+     * @return Builder<self>
+     */
+    public function scopeRecent(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Get users who have been active recently.
+     *
+     * @param Builder<self> $query
+     * @param int $days Number of days (default 7)
+     *
+     * @return Builder<self>
+     */
+    public function scopeActive(Builder $query, int $days = 7): Builder
+    {
+        return $query->where('updated_at', '>=', now()->subDays($days));
+    }
+
+    /**
      * Route broadcast notifications to the same private channel the frontend subscribes to.
      */
     public function receivesBroadcastNotificationsOn(): string

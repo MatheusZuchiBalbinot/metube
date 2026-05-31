@@ -169,4 +169,42 @@ class Comment extends Model
     {
         return $query->where('video_id', $videoId);
     }
+
+    /**
+     * Scope to get comments by a specific user.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $userId User ID
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Scope to get replies to a specific comment.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $parentId Parent comment ID
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeRepliesTo($query, $parentId)
+    {
+        return $query->where('parent_id', $parentId);
+    }
+
+    /**
+     * Order comments by creation date, newest first.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNewest($query)
+    {
+        return $query->orderByDesc('created_at');
+    }
 }
