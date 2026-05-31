@@ -10,6 +10,7 @@ use App\Events\CommentLiked;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Models\Comment;
+use App\Models\CommentLike;
 use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
@@ -123,9 +124,8 @@ class CommentService
     public function update(Comment $comment, UpdateCommentRequest $request, User $user): Comment
     {
         return DB::transaction(function () use ($comment, $request, $user): Comment {
-            $isLiked = DB::table('comment_likes')
-                ->where('user_id', $user->id)
-                ->where('comment_id', $comment->id)
+            $isLiked = CommentLike::byUser($user->id)
+                ->forComment($comment->id)
                 ->exists();
 
             $nextVersion = $comment->versions()->max('version') + 1;
@@ -195,9 +195,8 @@ class CommentService
     public function toggleLike(Comment $comment, User $user): array
     {
         return DB::transaction(function () use ($comment, $user): array {
-            $unliked = DB::table('comment_likes')
-                ->where('user_id', $user->id)
-                ->where('comment_id', $comment->id)
+            $unliked = CommentLike::byUser($user->id)
+                ->forComment($comment->id)
                 ->delete();
 
             if ($unliked > 0) {
@@ -207,7 +206,7 @@ class CommentService
                 return ['liked' => false, 'likes_count' => $comment->likes_count];
             }
 
-            DB::table('comment_likes')->insertOrIgnore([
+            CommentLike::insertOrIgnore([
                 'user_id' => $user->id,
                 'comment_id' => $comment->id,
                 'created_at' => now(),
@@ -264,9 +263,8 @@ class CommentService
 
         $commentIds = $comments->pluck('id')->all();
 
-        $likedIds = DB::table('comment_likes')
-            ->where('user_id', $user->id)
-            ->whereIn('comment_id', $commentIds)
+        $likedIds = CommentLike::byUser($user->id)
+            ->forComments($commentIds)
             ->pluck('comment_id')
             ->flip()
             ->all();
