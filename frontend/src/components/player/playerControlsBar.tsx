@@ -22,6 +22,8 @@ interface PlayerControlsBarProps {
     settingsRef: React.RefObject<HTMLDivElement | null>
     captions: VideoCaption[]
     activeTrack: string | null
+    showCaptionsMenu: boolean
+    captionsMenuRef: React.RefObject<HTMLDivElement | null>
     levels: { height: number; bitrate: number }[]
     currentQuality: number
     onBarClick: (e: React.MouseEvent) => void
@@ -29,6 +31,7 @@ interface PlayerControlsBarProps {
     onToggleMute: (e: React.MouseEvent) => void
     onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     onToggleSettings: (e: React.MouseEvent) => void
+    onToggleCaptionsMenu: (e: React.MouseEvent) => void
     onSpeedChange: (e: React.MouseEvent, rate: number) => void
     onQualityChange: (e: React.MouseEvent, index: number) => void
     onPip: (e: React.MouseEvent) => void
@@ -42,10 +45,10 @@ interface PlayerControlsBarProps {
 export default function PlayerControlsBar({
     isPlaying, currentTime, duration, volume, isMuted, playbackRate,
     isFullscreen, isTheaterMode, isPiP, isPiPSupported,
-    showSettings, settingsRef, captions, activeTrack,
+    showSettings, settingsRef, captions, activeTrack, showCaptionsMenu, captionsMenuRef,
     levels, currentQuality,
     onBarClick, onTogglePlay, onToggleMute, onVolumeChange,
-    onToggleSettings, onSpeedChange, onQualityChange,
+    onToggleSettings, onToggleCaptionsMenu, onSpeedChange, onQualityChange,
     onPip, onTheater, onFullscreen, onCaptionSelect,
     showTheaterButton, fullscreenIcon,
 }: PlayerControlsBarProps) {
@@ -110,6 +113,9 @@ export default function PlayerControlsBar({
                 <CaptionsButton
                     captions={captions}
                     activeTrack={activeTrack}
+                    showMenu={showCaptionsMenu}
+                    menuRef={captionsMenuRef}
+                    onToggle={onToggleCaptionsMenu}
                     onSelect={onCaptionSelect}
                 />
 

@@ -24,7 +24,14 @@ class VideoResource extends JsonResource
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
             'tags' => $this->tags ?? [],
-            'captions' => $this->captions ?? [],
+            'captions' => array_map(
+                fn (array $caption): array => [
+                    'lang' => $caption['lang'],
+                    'label' => $caption['label'],
+                    'url' => Storage::disk('public')->url($caption['url']),
+                ],
+                $this->captions ?? [],
+            ),
             'channel' => $this->whenLoaded('channel', fn () => $this->channel->name, ''),
             'channel_id' => $this->whenLoaded('channel', fn () => $this->channel->uuid, ''),
             'channel_subscribers' => $this->whenLoaded('channel', fn () => $this->channel->subscribers_count),

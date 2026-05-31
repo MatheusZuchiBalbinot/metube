@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { default as ShakaNamespace } from 'shaka-player';
 import type { ShakaLevel } from '@components/player/playerTypes';
+import type { VideoCaption } from '@models';
 
 export type { ShakaLevel };
 
@@ -12,10 +13,12 @@ let polyfillsInstalled = false;
 export function useShaka(
     videoRef: React.RefObject<HTMLVideoElement | null>,
     src: string,
+    captions: VideoCaption[] = [],
 ) {
     const playerRef = useRef<ShakaPlayer | null>(null);
     const [levels, setLevels] = useState<ShakaLevel[]>([]);
     const [currentQuality, setCurrentQuality] = useState(-1);
+    const [tracksLoaded, setTracksLoaded] = useState(false);
 
     useEffect(() => {
         const el = videoRef.current;
@@ -81,6 +84,35 @@ export function useShaka(
             });
 
             setLevels(uniqueLevels.sort((a, b) => b.height - a.height));
+
+            // Load caption tracks via Shaka after video is ready.
+            // Native <track> elements do not render when the video src is a MSE blob: URL.
+            for (const caption of captions) {
+                try {
+                    await player.addTextTrackAsync(
+                        caption.url,
+                        caption.lang,
+                        'subtitles',
+                        'text/vtt',
+                        undefined,
+                        caption.label,
+                    );
+                } catch (err) {
+                    // eslint-disable-next-line no-console
+                    console.warn('[Shaka Caption]', caption.lang, err);
+                }
+            }
+
+            // Disable all text tracks before signalling readiness so the consumer
+            // starts from a known clean state and can enable only the selected one.
+            for (let i = 0; i < el.textTracks.length; i++) {
+                el.textTracks[i].mode = 'disabled';
+            }
+
+            /* v8 ignore next 3 */
+            if (!destroyed) {
+                setTracksLoaded(true);
+            }
         };
 
         init().catch(err => {
@@ -94,7 +126,10 @@ export function useShaka(
             playerRef.current = null;
             setLevels([]);
             setCurrentQuality(-1);
+            setTracksLoaded(false);
         };
+    // captions intentionally omitted: they are loaded once per src load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src, videoRef]);
 
     function setQuality(levelIndex: number) {
@@ -118,5 +153,5 @@ export function useShaka(
         }
     }
 
-    return { levels, currentQuality, setQuality };
+    return { levels, currentQuality, setQuality, tracksLoaded };
 }

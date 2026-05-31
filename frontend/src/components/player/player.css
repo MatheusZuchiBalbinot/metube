@@ -455,6 +455,61 @@
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
+/* ─── Captions ───────────────────────────────────────────────────────────────── */
+
+.vp__captions {
+    position: relative;
+}
+
+.vp__captions-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 140px;
+    background: rgba(18, 18, 20, 0.96);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    z-index: 20;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.vp__captions-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, color 0.1s;
+}
+
+.vp__captions-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.vp__captions-option--active {
+    color: #fff;
+    font-weight: 600;
+}
+
+.vp__captions-option--active:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
 /* ─── Settings ──────────────────────────────────────────────────────────────── */
 
 .vp__settings {

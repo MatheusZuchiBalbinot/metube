@@ -3,30 +3,38 @@
 use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
 use App\Jobs\TranscribeVideo;
+use App\Jobs\TranslateVideoCaptions;
 use App\Models\Transcription;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
-describe('TranscribeVideo', function () {
-    describe('handle — happy path', function () {
-        beforeEach(fn () => Queue::fake());
+$vttFixture = "WEBVTT\n\n1\n00:00:00.000 --> 00:00:03.000\nHello world\n";
 
-        test('creates a completed transcription when whisper responds successfully', function () {
+describe('TranscribeVideo', function () use ($vttFixture) {
+    describe('handle — happy path', function () use ($vttFixture) {
+        beforeEach(function () {
+            Queue::fake();
+            Storage::fake('public');
+        });
+
+        test('creates a completed transcription when whisper responds successfully', function () use ($vttFixture) {
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
 
             Http::fake([
                 'whisper:8001/transcribe' => Http::response([
                     'text' => 'Hello world',
                     'language' => 'en',
+                    'vtt' => $vttFixture,
                 ], 200),
             ]);
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             $transcription = Transcription::where('video_id', $video->id)->first();
             expect($transcription)->not->toBeNull()
@@ -35,29 +43,88 @@ describe('TranscribeVideo', function () {
                 ->and($transcription->language)->toBe('en');
         });
 
-        test('sets started_at on the transcription before calling whisper', function () {
+        test('saves a vtt caption file and updates video captions for detected language', function () use ($vttFixture) {
+            $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4', 'vuid' => 'testvuid123']);
+
+            Http::fake([
+                'whisper:8001/transcribe' => Http::response([
+                    'text' => 'Hello world',
+                    'language' => 'en',
+                    'vtt' => $vttFixture,
+                ], 200),
+            ]);
+
+            app()->call([new TranscribeVideo($video), 'handle']);
+
+            Storage::disk('public')->assertExists("captions/{$video->vuid}.en.vtt");
+
+            $video->refresh();
+            expect($video->captions)->toHaveCount(1)
+                ->and($video->captions[0]['lang'])->toBe('en')
+                ->and($video->captions[0]['label'])->toBe('English');
+        });
+
+        test('dispatches async english translation when source language is not english', function () use ($vttFixture) {
+            $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
+
+            Http::fake([
+                'whisper:8001/transcribe' => Http::response(['text' => 'Olá mundo', 'language' => 'pt', 'vtt' => $vttFixture], 200),
+            ]);
+
+            app()->call([new TranscribeVideo($video), 'handle']);
+
+            Http::assertSentCount(1);
+            Queue::assertPushed(TranslateVideoCaptions::class);
+
+            $video->refresh();
+            expect($video->captions)->toHaveCount(1)
+                ->and($video->captions[0]['lang'])->toBe('pt');
+        });
+
+        test('does not dispatch translation when source is already english', function () use ($vttFixture) {
+            $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
+
+            Http::fake([
+                'whisper:8001/transcribe' => Http::response([
+                    'text' => 'Hello world',
+                    'language' => 'en',
+                    'vtt' => $vttFixture,
+                ], 200),
+            ]);
+
+            app()->call([new TranscribeVideo($video), 'handle']);
+
+            Http::assertSentCount(1);
+            Queue::assertNotPushed(TranslateVideoCaptions::class);
+
+            $video->refresh();
+            expect($video->captions)->toHaveCount(1)
+                ->and($video->captions[0]['lang'])->toBe('en');
+        });
+
+        test('sets started_at on the transcription before calling whisper', function () use ($vttFixture) {
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4', 'duration' => 120.0]);
 
             Http::fake([
-                'whisper:8001/transcribe' => Http::response(['text' => 'ok', 'language' => 'en'], 200),
+                'whisper:8001/transcribe' => Http::response(['text' => 'ok', 'language' => 'en', 'vtt' => $vttFixture], 200),
             ]);
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             $transcription = Transcription::where('video_id', $video->id)->first();
             expect($transcription->started_at)->not->toBeNull();
         });
 
-        test('fires TranscriptionStatusUpdated with PROCESSING and ETA before calling whisper', function () {
+        test('fires TranscriptionStatusUpdated with PROCESSING and ETA before calling whisper', function () use ($vttFixture) {
             Event::fake([TranscriptionStatusUpdated::class]);
 
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4', 'duration' => 100.0]);
 
             Http::fake([
-                'whisper:8001/transcribe' => Http::response(['text' => 'ok', 'language' => 'en'], 200),
+                'whisper:8001/transcribe' => Http::response(['text' => 'ok', 'language' => 'en', 'vtt' => $vttFixture], 200),
             ]);
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             Event::assertDispatched(TranscriptionStatusUpdated::class, function (TranscriptionStatusUpdated $e) {
                 return $e->status === TranscriptionStatus::PROCESSING
@@ -66,7 +133,7 @@ describe('TranscribeVideo', function () {
             });
         });
 
-        test('updates an existing transcription record instead of creating a new one', function () {
+        test('updates an existing transcription record instead of creating a new one', function () use ($vttFixture) {
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
             Transcription::create([
                 'video_id' => $video->id,
@@ -74,13 +141,12 @@ describe('TranscribeVideo', function () {
             ]);
 
             Http::fake([
-                'whisper:8001/transcribe' => Http::response([
-                    'text' => 'Retry worked',
-                    'language' => 'pt',
-                ], 200),
+                'whisper:8001/transcribe' => Http::sequence()
+                    ->push(['text' => 'Retry worked', 'language' => 'pt', 'vtt' => $vttFixture], 200)
+                    ->push(['text' => 'Retry worked', 'language' => 'en', 'vtt' => $vttFixture], 200),
             ]);
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             expect(Transcription::where('video_id', $video->id)->count())->toBe(1)
                 ->and(Transcription::where('video_id', $video->id)->first()->status)->toBe(TranscriptionStatus::COMPLETED);
@@ -89,18 +155,20 @@ describe('TranscribeVideo', function () {
 
     describe('handle — failure path', function () {
         test('marks transcription as failed when whisper returns an error', function () {
+            Storage::fake('public');
             $video = Video::factory()->published()->create(['video_url' => 'videos/abc.mp4']);
 
             Http::fake([
                 'whisper:8001/transcribe' => Http::response(['detail' => 'File not found'], 404),
             ]);
 
-            expect(fn () => (new TranscribeVideo($video))->handle())
+            expect(fn () => app()->call([new TranscribeVideo($video), 'handle']))
                 ->toThrow(RuntimeException::class);
 
             $transcription = Transcription::where('video_id', $video->id)->first();
             expect($transcription->status)->toBe(TranscriptionStatus::FAILED);
         });
+
     });
 
     describe('handle — early exit', function () {
@@ -110,7 +178,7 @@ describe('TranscribeVideo', function () {
 
             Http::fake();
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             Http::assertNothingSent();
         });
@@ -120,7 +188,7 @@ describe('TranscribeVideo', function () {
 
             Http::fake();
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             Http::assertNothingSent();
         });
@@ -136,7 +204,7 @@ describe('TranscribeVideo', function () {
 
             Http::fake();
 
-            (new TranscribeVideo($video))->handle();
+            app()->call([new TranscribeVideo($video), 'handle']);
 
             Http::assertNothingSent();
         });

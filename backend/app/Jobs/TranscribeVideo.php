@@ -6,6 +6,7 @@ use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
 use App\Models\Transcription;
 use App\Models\Video;
+use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
@@ -26,10 +27,10 @@ class TranscribeVideo implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * Estimated realtime factor for Whisper small on CPU (seconds of audio per second of wall time).
-     * A factor of 5.0 means 1 minute of audio takes ~12 seconds to transcribe.
+     * Estimated realtime factor for Whisper medium on CPU (seconds of audio per second of wall time).
+     * A factor of 2.0 means 1 minute of audio takes ~30 seconds to transcribe.
      */
-    public const SPEED_FACTOR = 5.0;
+    public const SPEED_FACTOR = 2.0;
 
     /**
      * @param  Video  $video  Published video to transcribe
@@ -40,11 +41,15 @@ class TranscribeVideo implements ShouldQueue
     }
 
     /**
-     * Call the Whisper service and persist the transcription result.
+     * Call the Whisper service, persist the transcription, and generate the original VTT caption file.
+     *
+     * Only the original-language pass runs here. When the source language is not English,
+     * a separate TranslateVideoCaptions job is dispatched so the slower translate pass does
+     * not block the captions, transcription, and AI summary from becoming available.
      *
      * @throws ConnectionException
      */
-    public function handle(): void
+    public function handle(VideoStorageService $storage): void
     {
         $video = Video::find($this->video->id);
 
@@ -78,32 +83,52 @@ class TranscribeVideo implements ShouldQueue
 
         $whisperUrl = config('services.whisper.url', 'http://whisper:8001');
 
-        $response = Http::timeout(3600)->post("{$whisperUrl}/transcribe", [
+        $transcribeResponse = Http::timeout(3600)->post("{$whisperUrl}/transcribe", [
             'file_path' => $video->video_url,
+            'task' => 'transcribe',
         ]);
 
-        $isSuccess = $response->successful();
+        $isSuccess = $transcribeResponse->successful();
 
-        if ($isSuccess) {
-            $transcription->update([
-                'status' => TranscriptionStatus::COMPLETED,
-                'content' => $response->json('text'),
-                'language' => $response->json('language'),
-            ]);
-
-            event(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
-
-            dispatch(new GenerateAiMetadata($video));
-        } else {
+        if (! $isSuccess) {
             Log::error('Whisper transcription failed', [
                 'vuid' => $video->vuid,
-                'status' => $response->status(),
-                'body' => $response->body(),
+                'status' => $transcribeResponse->status(),
+                'body' => $transcribeResponse->body(),
             ]);
 
             $transcription->update(['status' => TranscriptionStatus::FAILED]);
 
-            throw new \RuntimeException("Whisper returned HTTP {$response->status()} for video {$video->vuid}");
+            throw new \RuntimeException("Whisper returned HTTP {$transcribeResponse->status()} for video {$video->vuid}");
+        }
+
+        $detectedLang = (string) $transcribeResponse->json('language');
+        $plainText = (string) $transcribeResponse->json('text');
+        $originalVtt = (string) $transcribeResponse->json('vtt');
+
+        $originalCaptionPath = $storage->publishCaption($originalVtt, $video->vuid, $detectedLang);
+
+        $video->update(['captions' => [
+            [
+                'lang' => $detectedLang,
+                'label' => $this->languageLabel($detectedLang),
+                'url' => $originalCaptionPath,
+            ],
+        ]]);
+
+        $transcription->update([
+            'status' => TranscriptionStatus::COMPLETED,
+            'content' => $plainText,
+            'language' => $detectedLang,
+        ]);
+
+        event(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
+
+        dispatch(new GenerateAiMetadata($video));
+
+        $isNotEnglish = $detectedLang !== 'en';
+        if ($isNotEnglish) {
+            dispatch(new TranslateVideoCaptions($video));
         }
     }
 
@@ -124,5 +149,26 @@ class TranscribeVideo implements ShouldQueue
         );
 
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
+    }
+
+    /**
+     * Return a human-readable language label for a BCP-47 code.
+     */
+    private function languageLabel(string $lang): string
+    {
+        return match ($lang) {
+            'pt' => 'Português',
+            'en' => 'English',
+            'es' => 'Español',
+            'fr' => 'Français',
+            'de' => 'Deutsch',
+            'it' => 'Italiano',
+            'ja' => '日本語',
+            'zh' => '中文',
+            'ko' => '한국어',
+            'ru' => 'Русский',
+            'ar' => 'العربية',
+            default => strtoupper($lang),
+        };
     }
 }

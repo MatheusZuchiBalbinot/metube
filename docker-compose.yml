@@ -37,6 +37,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env
+    environment:
+      OCTANE_WORKERS: 2
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,12 +52,16 @@ services:
     working_dir: /app
     networks:
       - app_net
+    mem_limit: 512m
 
   whisper:
-    build: ./whisper
+    build:
+      context: ./whisper
+      args:
+        WHISPER_MODEL: medium
     restart: unless-stopped
     environment:
-      - WHISPER_MODEL=small
+      - WHISPER_MODEL=medium
       - WHISPER_LANGUAGE=pt
       - STORAGE_ROOT=/storage/app/public
     volumes:
@@ -84,6 +90,7 @@ services:
     working_dir: /app
     networks:
       - app_net
+    mem_limit: 512m
 
   reverb:
     build: ./backend
@@ -104,14 +111,19 @@ services:
     working_dir: /app
     networks:
       - app_net
+    mem_limit: 128m
 
   frontend:
     build: ./frontend
     restart: unless-stopped
     ports:
       - "5173:5173"
+    environment:
+      NODE_OPTIONS: "--max-old-space-size=768"
+      CHOKIDAR_USEPOLLING: "0"
     volumes:
       - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
     working_dir: /app
     networks:
       - app_net
@@ -119,6 +131,7 @@ services:
     tty: true
     depends_on:
       - backend
+    mem_limit: 1g
 
   nginx:
     image: nginx:alpine
@@ -142,3 +155,4 @@ volumes:
   vidsum_storage:
   backend_vendor:
   backend_cache:
+  frontend_node_modules:

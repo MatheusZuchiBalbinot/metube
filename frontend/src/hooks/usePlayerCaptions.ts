@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { VideoCaption } from '@models';
 
 const STORAGE_KEY = 'captions.preferredLang';
@@ -23,10 +23,7 @@ function saveLang(lang: string | null): void {
     }
 }
 
-export function usePlayerCaptions(
-    videoRef: React.RefObject<HTMLVideoElement | null>,
-    captions: VideoCaption[],
-) {
+export function usePlayerCaptions(captions: VideoCaption[]) {
     const [activeTrack, setActiveTrackState] = useState<string | null>(() => {
         const savedLang = getSavedLang();
         const hasSavedTrack = savedLang !== null && captions.some(c => c.lang === savedLang);
@@ -34,21 +31,6 @@ export function usePlayerCaptions(
     });
 
     const hasCaptions = captions.length > 0;
-
-    useEffect(() => {
-        const el = videoRef.current;
-        const isNotReady = !el || !hasCaptions;
-        if (isNotReady) {
-            return;
-        }
-
-        // Sync native text tracks with activeTrack state
-        for (let i = 0; i < el.textTracks.length; i++) {
-            const track = el.textTracks[i];
-            const isActive = track.language === activeTrack;
-            track.mode = isActive ? 'showing' : 'disabled';
-        }
-    }, [activeTrack, videoRef, hasCaptions]);
 
     const setActiveTrack = useCallback((lang: string | null) => {
         setActiveTrackState(lang);
