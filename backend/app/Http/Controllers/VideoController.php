@@ -15,6 +15,7 @@ use App\Http\Requests\Video\UpdateVideoRequest;
 use App\Http\Resources\TranscriptionResource;
 use App\Http\Resources\VideoAiSuggestionResource;
 use App\Http\Resources\VideoResource;
+use App\Http\Resources\VideoSummaryResource;
 use App\Jobs\TranscribeVideo;
 use App\Models\Transcription;
 use App\Models\Video;
@@ -267,7 +268,7 @@ class VideoController extends Controller
 
         $summary = $this->aiService->getSummary($video);
 
-        return $this->json($summary);
+        return $this->json(new VideoSummaryResource($summary));
     }
 
     /**
