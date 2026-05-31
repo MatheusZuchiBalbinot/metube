@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Services\VideoService;
+use App\Services\VideoPublishingService;
 use Illuminate\Console\Command;
 
 /**
@@ -25,11 +25,11 @@ class PublishScheduledVideos extends Command
     /**
      * Run the command.
      *
-     * @param VideoService $service Video business logic
+     * @param VideoPublishingService $service Video publishing logic
      *
      * @return int Exit code
      */
-    public function handle(VideoService $service): int
+    public function handle(VideoPublishingService $service): int
     {
         $count = $service->publishDueVideos();
 
