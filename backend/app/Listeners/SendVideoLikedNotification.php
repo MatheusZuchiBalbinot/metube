@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\VideoLiked;
+use App\Listeners\Traits\SendsQueuedNotifications;
 use App\Notifications\VideoLikedNotification;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
 class SendVideoLikedNotification implements ShouldQueueAfterCommit
 {
-    /** @var string */
-    public $queue = 'notifications';
-
-    /** @var int */
-    public $tries = 3;
+    use SendsQueuedNotifications;
 
     /**
      * Notify the video owner when their video is liked.
@@ -24,9 +21,8 @@ class SendVideoLikedNotification implements ShouldQueueAfterCommit
     public function handle(VideoLiked $event): void
     {
         $owner = $event->video->channel;
-        $isSameUser = $owner->id === $event->liker->id;
 
-        if ($isSameUser) {
+        if ($this->shouldSkipSelfNotification($event->liker, $owner)) {
             return;
         }
 

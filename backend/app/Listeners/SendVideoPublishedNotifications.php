@@ -6,16 +6,13 @@ namespace App\Listeners;
 
 use App\Events\VideoPublished;
 use App\Jobs\NotifySubscribersChunk;
+use App\Listeners\Traits\SendsQueuedNotifications;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\DB;
 
 class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
 {
-    /** @var string */
-    public $queue = 'notifications';
-
-    /** @var int */
-    public $tries = 3;
+    use SendsQueuedNotifications;
 
     /** Subscribers per fan-out child job. */
     private const CHUNK_SIZE = 500;
