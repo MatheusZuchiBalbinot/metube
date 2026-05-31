@@ -130,6 +130,7 @@ class GenerateAiMetadata implements ShouldQueue
         $title = $video->title;
         $description = $video->description ?? '';
         $content = (string) $video->transcription?->content;
+        $lang = $video->transcription->language ?? 'pt';
 
         return <<<PROMPT
         You are a video content analyzer. Given the title, description and full transcription of a video, return ONLY valid JSON with this exact structure — no markdown, no explanation:
@@ -149,6 +150,7 @@ class GenerateAiMetadata implements ShouldQueue
         - suggested_tags: 3 to 6 relevant lowercase tags, no spaces (use hyphens)
         - suggested_title: improved, engaging title under 80 characters
         - suggested_description: engaging description between 80 and 200 characters
+        - IMPORTANT: ALL text fields (key_points, reading_mode, suggested_title, suggested_description) MUST be written in the same language as the transcription (language code: {$lang})
 
         Video title: {$title}
         Video description: {$description}
