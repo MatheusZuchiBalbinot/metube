@@ -16,6 +16,8 @@ use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
 use App\Models\User;
 use App\Models\UserVideoReaction;
+use App\Models\PlaylistVideo;
+use App\Models\VideoView;
 use App\Models\Video;
 use Illuminate\Support\Facades\DB;
 
@@ -132,9 +134,9 @@ class VideoReactionService
         DB::transaction(function () use ($user, $video) {
             $playlist = $user->getWatchLaterPlaylist();
 
-            $removed = DB::table('playlist_video')
-                ->where('playlist_id', $playlist->id)
-                ->where('video_id', $video->id)
+            $removed = PlaylistVideo::query()
+                ->forPlaylist($playlist->id)
+                ->forVideo($video->id)
                 ->delete();
 
             if ($removed > 0) {
@@ -144,7 +146,7 @@ class VideoReactionService
                 return;
             }
 
-            DB::table('playlist_video')->insert([
+            PlaylistVideo::query()->insert([
                 'playlist_id' => $playlist->id,
                 'video_id' => $video->id,
             ]);
@@ -192,7 +194,7 @@ class VideoReactionService
                 $row['session_id'] = $sessionId;
             }
 
-            DB::table('video_views')->insertOrIgnore($row);
+            VideoView::insertOrIgnore($row);
 
             event(new VideoViewed($user, $video, $source));
         });

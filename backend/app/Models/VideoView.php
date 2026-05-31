@@ -12,16 +12,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $video_id
- * @property float|null $watched_percent
+ * @property string|null $source
+ * @property string|null $session_id
  * @property \Illuminate\Support\Carbon $watched_at
  */
-class WatchHistory extends Model
+class VideoView extends Model
 {
+    /** @var string */
+    public $table = 'video_views';
+
     /** @var bool */
     public $timestamps = false;
 
     /** @var list<string> */
-    protected $fillable = ['user_id', 'video_id', 'watched_percent', 'watched_at'];
+    protected $fillable = ['user_id', 'video_id', 'source', 'session_id', 'watched_at'];
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -49,13 +53,13 @@ class WatchHistory extends Model
         return $query->where('video_id', $videoId);
     }
 
-    public function scopeRecentDays(Builder $query, int $days = 30): Builder
+    public function scopeWithSource(Builder $query, string $source): Builder
     {
-        return $query->where('watched_at', '>=', now()->subDays($days));
+        return $query->where('source', $source);
     }
 
-    public function scopeGroupedByDate(Builder $query): Builder
+    public function scopeWithSession(Builder $query, string $sessionId): Builder
     {
-        return $query->orderByDesc('watched_at');
+        return $query->where('session_id', $sessionId);
     }
 }
