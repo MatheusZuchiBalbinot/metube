@@ -224,6 +224,32 @@ class Video extends Model
     }
 
     /**
+     * Filter videos by status.
+     *
+     * @param Builder<Video> $query
+     * @param VideoStatus $status
+     *
+     * @return Builder<Video>
+     */
+    public function scopeByStatus(Builder $query, VideoStatus $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Filter scheduled videos that are due for publication.
+     *
+     * @param Builder<Video> $query
+     *
+     * @return Builder<Video>
+     */
+    public function scopeScheduledDue(Builder $query): Builder
+    {
+        return $query->where('status', VideoStatus::SCHEDULED)
+            ->where('scheduled_at', '<=', now());
+    }
+
+    /**
      * Check if this video already has English captions.
      */
     public function hasEnglishCaptions(): bool
