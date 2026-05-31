@@ -61,7 +61,8 @@ class NotificationsController extends Controller
      */
     public function readAll(Request $request): Response
     {
-        $request->user()->unreadNotifications()->update(['read_at' => now()]);
+        $updateData = ['read_at' => now()];
+        $request->user()->unreadNotifications()->update($updateData);
 
         return response()->noContent();
     }

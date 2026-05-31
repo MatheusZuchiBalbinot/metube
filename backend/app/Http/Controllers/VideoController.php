@@ -313,10 +313,10 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('retryTranscription', $video);
 
-        Transcription::updateOrCreate(
-            ['video_id' => $video->id],
-            ['status' => TranscriptionStatus::PENDING, 'content' => null, 'language' => null],
-        );
+        $searchAttributes = ['video_id' => $video->id];
+        $updateData = ['status' => TranscriptionStatus::PENDING, 'content' => null, 'language' => null];
+
+        Transcription::updateOrCreate($searchAttributes, $updateData);
 
         dispatch(new TranscribeVideo($video));
 
