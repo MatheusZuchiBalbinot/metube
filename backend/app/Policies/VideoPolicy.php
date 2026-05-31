@@ -73,4 +73,20 @@ class VideoPolicy
     {
         return $user->id === $video->channel_id;
     }
+
+    /**
+     * Determine if user can publish this video.
+     *
+     * Video must be in DRAFT status to be published.
+     */
+    public function publish(User $user, Video $video): bool
+    {
+        $isOwner = $user->id === $video->channel_id;
+
+        if (!$isOwner) {
+            return false;
+        }
+
+        return $video->status === VideoStatus::DRAFT;
+    }
 }

@@ -382,7 +382,7 @@ class VideoController extends Controller
     public function publish(string $vuid): JsonResponse
     {
         $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('update', $video);
+        $this->authorize('publish', $video);
 
         $this->publishingService->publishVideo($video);
 
