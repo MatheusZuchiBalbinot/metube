@@ -8,6 +8,7 @@ use App\Config\PaginationSize;
 use App\Enums\VideoEventType;
 use App\Models\User;
 use App\Models\UserAnalytic;
+use App\Models\UserSubscription;
 use App\Models\Video;
 use App\Models\WatchHistory;
 use Illuminate\Support\Collection;
@@ -174,7 +175,7 @@ class RecommendationService
      */
     private function getSubscribedChannelIds(int $userId): array
     {
-        return DB::table('user_subscriptions')
+        return UserSubscription::query()
             ->where('user_id', $userId)
             ->pluck('channel_id')
             ->toArray();

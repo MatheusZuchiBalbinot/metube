@@ -111,8 +111,8 @@ class UserService
             $user->id,
             function () use ($user): array {
                 /** @var list<array{date: string, count: int}> */
-                return DB::table('watch_histories')
-                    ->where('user_id', $user->id)
+                return WatchHistory::query()
+                    ->forUser($user->id)
                     ->select(
                         DB::raw('DATE(watched_at) as date'),
                         DB::raw('COUNT(*) as count'),

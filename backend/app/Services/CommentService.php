@@ -88,8 +88,8 @@ class CommentService
             }
 
             // Denormalized counter on videos to avoid COUNT(*) per comment.
-            $newCount = DB::table('videos')->where('id', $video->id)->value('comments_count');
-            DB::table('videos')->where('id', $video->id)->increment('comments_count');
+            $newCount = Video::find($video->id) ? Video::find($video->id)->getAttribute('comments_count') : null; // TODO refactor('comments_count');
+            Video::find($video->id)?->increment('comments_count');
             $commentCount = (int) $newCount + 1;
 
             $comment->load('user');
@@ -171,7 +171,7 @@ class CommentService
                 Comment::where('id', $comment->parent_id)->decrement('replies_count');
             }
 
-            DB::table('videos')->where('id', $comment->video_id)->decrement('comments_count');
+            Video::find($comment->video_id)?->decrement('comments_count');
 
             $comment->delete();
         });
