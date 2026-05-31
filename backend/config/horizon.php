@@ -128,9 +128,11 @@ return [
 
         'local' => [
             'supervisor-notifications' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],
             'supervisor-default' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],
             'supervisor-transcription' => [
@@ -138,6 +140,7 @@ return [
                 'maxProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
             ],
             'supervisor-analytics' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],
         ],
