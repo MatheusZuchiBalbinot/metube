@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Enums\VideoStatus;
@@ -32,6 +34,7 @@ class VideoPolicy
 
         // Owner can view any status
         $isOwner = $user->id === $video->channel_id;
+
         if ($isOwner) {
             return true;
         }

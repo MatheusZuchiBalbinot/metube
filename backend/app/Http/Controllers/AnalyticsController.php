@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Enums\VideoSource;
@@ -27,7 +29,8 @@ class AnalyticsController extends Controller
     /**
      * Log a batch of feed impressions.
      *
-     * @param  LogImpressionsRequest  $request  Validated batch
+     * @param LogImpressionsRequest $request Validated batch
+     *
      * @return Response HTTP 204 No Content
      */
     public function impressions(LogImpressionsRequest $request): Response
@@ -47,10 +50,11 @@ class AnalyticsController extends Controller
     /**
      * Log a click on a feed-rendered video.
      *
-     * @param  LogClickRequest  $request  Validated click
-     * @return Response HTTP 204 No Content
+     * @param LogClickRequest $request Validated click
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function click(LogClickRequest $request): Response
     {
@@ -71,7 +75,8 @@ class AnalyticsController extends Controller
     /**
      * Log a search query the user just performed.
      *
-     * @param  LogSearchRequest  $request  Validated search
+     * @param LogSearchRequest $request Validated search
+     *
      * @return Response HTTP 204 No Content
      */
     public function search(LogSearchRequest $request): Response
@@ -91,10 +96,11 @@ class AnalyticsController extends Controller
     /**
      * Log a video skip / early abandon.
      *
-     * @param  LogSkipRequest  $request  Validated skip
-     * @return Response HTTP 204 No Content
+     * @param LogSkipRequest $request Validated skip
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return Response HTTP 204 No Content
      */
     public function skip(LogSkipRequest $request): Response
     {

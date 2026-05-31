@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoEventType;
 use App\Models\User;
 use App\Models\UserAnalytic;

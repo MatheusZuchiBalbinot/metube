@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Playlist\UpdatePlaylistRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,7 +16,7 @@ describe('UpdatePlaylistRequest', function () {
     test('name cannot exceed 255 characters', function () {
         $validator = Validator::make(
             ['name' => str_repeat('a', 256)],
-            (new UpdatePlaylistRequest)->rules()
+            (new UpdatePlaylistRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -24,7 +26,7 @@ describe('UpdatePlaylistRequest', function () {
     test('valid name passes', function () {
         $validator = Validator::make(
             ['name' => 'Renamed Playlist'],
-            (new UpdatePlaylistRequest)->rules()
+            (new UpdatePlaylistRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

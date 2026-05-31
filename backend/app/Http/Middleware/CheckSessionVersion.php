@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -21,13 +23,15 @@ class CheckSessionVersion
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request  The incoming HTTP request
-     * @param  \Closure(\Illuminate\Http\Request): \Symfony\Component\HttpFoundation\Response  $next  The next middleware/handler
-     * @return \Symfony\Component\HttpFoundation\Response HTTP response (401 if session mismatch)
+     * @param Request $request The incoming HTTP request
+     * @param Closure(Request): Response $next The next middleware/handler
+     *
+     * @return Response HTTP response (401 if session mismatch)
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
+
         if ($user === null) {
             return $next($request);
         }
@@ -38,6 +42,7 @@ class CheckSessionVersion
             && $user->session_version !== session('session_version')
         ) {
             Auth::guard('web')->logout();
+
             if ($request->hasSession()) {
                 $request->session()->invalidate();
             }

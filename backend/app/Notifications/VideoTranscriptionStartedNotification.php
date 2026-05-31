@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
@@ -13,7 +15,7 @@ class VideoTranscriptionStartedNotification extends Notification
     use IncludesVideoThumbnail;
 
     /**
-     * @param  Video  $video  The video whose transcription just started
+     * @param Video $video The video whose transcription just started
      */
     public function __construct(public readonly Video $video) {}
 

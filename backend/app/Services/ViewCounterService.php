@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
@@ -38,7 +40,7 @@ class ViewCounterService
         }
 
         $conn = Redis::connection();
-        $conn->command('INCR', [self::COUNTER_KEY.$videoId]);
+        $conn->command('INCR', [self::COUNTER_KEY . $videoId]);
         $conn->command('SADD', [self::DIRTY_SET, $videoId]);
     }
 
@@ -63,7 +65,7 @@ class ViewCounterService
 
         foreach ($ids as $rawId) {
             $videoId = (int) $rawId;
-            $key = self::COUNTER_KEY.$videoId;
+            $key = self::COUNTER_KEY . $videoId;
 
             // GETDEL is atomic; any concurrent INCR after this either lands
             // before (counted now) or after (next dirty cycle).
@@ -71,6 +73,7 @@ class ViewCounterService
             $conn->command('SREM', [self::DIRTY_SET, $videoId]);
 
             $count = (int) $delta;
+
             if ($count <= 0) {
                 continue;
             }

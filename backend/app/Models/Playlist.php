@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,7 +35,7 @@ class Playlist extends Model
     /**
      * Get the user who owns this playlist.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -43,7 +45,7 @@ class Playlist extends Model
     /**
      * Get all videos in this playlist, ordered by position.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Video, $this>
+     * @return BelongsToMany<Video, $this>
      */
     public function videos(): BelongsToMany
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Listeners;
 
 use App\Events\CommentLiked;
@@ -22,6 +24,7 @@ class SendCommentLikedNotification implements ShouldQueueAfterCommit
     public function handle(CommentLiked $event): void
     {
         $isSameUser = $event->comment->user_id === $event->liker->id;
+
         if ($isSameUser) {
             return;
         }

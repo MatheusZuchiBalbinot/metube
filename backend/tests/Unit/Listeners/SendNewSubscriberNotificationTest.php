@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\ChannelSubscribed;
 use App\Listeners\SendNewSubscriberNotification;
 use App\Models\User;

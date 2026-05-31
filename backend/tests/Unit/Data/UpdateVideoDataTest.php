@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Data\UpdateVideoData;
 use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\DTOs\TranscriptionResult;
 use App\Exceptions\WhisperException;
 use App\Services\WhisperClient;

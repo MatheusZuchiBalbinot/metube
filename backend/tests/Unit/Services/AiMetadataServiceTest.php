@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\DTOs\VideoMetadataResult;
 use App\Enums\AiSuggestionStatus;
 use App\Models\User;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,7 +34,7 @@ class VideoSummary extends Model
     /**
      * Get the video this summary belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {

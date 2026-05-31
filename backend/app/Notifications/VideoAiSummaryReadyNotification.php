@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
@@ -13,7 +15,7 @@ class VideoAiSummaryReadyNotification extends Notification
     use IncludesVideoThumbnail;
 
     /**
-     * @param  Video  $video  The video whose AI summary just finished generating
+     * @param Video $video The video whose AI summary just finished generating
      */
     public function __construct(public readonly Video $video) {}
 

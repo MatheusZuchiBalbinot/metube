@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Observers;
 
 use App\Models\Video;
@@ -17,6 +19,7 @@ class VideoObserver
         $this->cache->forgetVideo($video->vuid);
 
         $affectsFeed = $video->wasChanged('status') || $video->wasChanged('published_at');
+
         if ($affectsFeed) {
             $this->cache->forgetFeed();
         }

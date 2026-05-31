@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Models\User;

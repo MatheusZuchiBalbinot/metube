@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\AI\Clients\IAClient;
 use App\AI\Contracts\AiPrompt;
 use App\DTOs\VideoMetadataResult;
@@ -76,6 +78,6 @@ describe('IAClient', function () {
         $client = new IAClient($mockService);
 
         expect(fn () => $client->execute($mockPrompt))
-            ->toThrow(\RuntimeException::class, "missing required key 'chapters'");
+            ->toThrow(RuntimeException::class, "missing required key 'chapters'");
     });
 });

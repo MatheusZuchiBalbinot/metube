@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\CommentLiked;
 use App\Http\Requests\Comment\StoreCommentRequest;
 use App\Http\Requests\Comment\UpdateCommentRequest;
@@ -141,7 +143,7 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id, 'likes_count' => 1]);
 
-        \Illuminate\Support\Facades\DB::table('comment_likes')->insert([
+        Illuminate\Support\Facades\DB::table('comment_likes')->insert([
             'user_id' => $user->id,
             'comment_id' => $comment->id,
             'created_at' => now(),
@@ -181,8 +183,8 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id]);
 
-        \App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v1', 'version' => 1]);
-        \App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v2', 'version' => 2]);
+        App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v1', 'version' => 1]);
+        App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v2', 'version' => 2]);
 
         $versions = $service->versions($comment);
 

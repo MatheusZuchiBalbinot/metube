@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\CommentLiked;
 use App\Listeners\SendCommentLikedNotification;
 use App\Models\Comment;

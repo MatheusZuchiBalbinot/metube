@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+use App\AI\Contracts\AiClient;
 use App\Enums\AiSuggestionStatus;
 use App\Events\AiSuggestionReady;
 use App\Jobs\GenerateAiMetadata;
@@ -8,7 +11,6 @@ use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
-use App\Services\IAService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -27,11 +29,15 @@ describe('GenerateAiMetadata', function () {
 
     beforeEach(function () use (&$mockResponse) {
         Http::fake([
-            'api.groq.com/*' => Http::response([
-                'choices' => [
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
                     [
-                        'message' => [
-                            'content' => json_encode($mockResponse),
+                        'content' => [
+                            'parts' => [
+                                [
+                                    'text' => json_encode($mockResponse),
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -45,7 +51,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(IAService::class));
+        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
 
         expect(VideoSummary::where('video_id', $video->id)->exists())->toBeTrue();
         $summary = VideoSummary::where('video_id', $video->id)->first();
@@ -64,7 +70,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(IAService::class));
+        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
 
         $video->refresh();
         expect($video->tags)->toBe($mockResponse['suggested_tags'])
@@ -82,7 +88,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(IAService::class));
+        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
 
         expect(VideoAiSuggestion::where('video_id', $video->id)->exists())->toBeTrue();
         $suggestion = VideoAiSuggestion::where('video_id', $video->id)->first();
@@ -125,7 +131,7 @@ describe('GenerateAiMetadata', function () {
         ]);
 
         $job = new GenerateAiMetadata($video);
-        $exception = new \Exception('Gemini API error');
+        $exception = new Exception('Gemini API error');
 
         // Verify failed() method exists and can be called
         $job->failed($exception);
@@ -146,7 +152,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(IAService::class));
+        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
 
         Event::assertDispatched(AiSuggestionReady::class);
     });
@@ -163,7 +169,7 @@ describe('GenerateAiMetadata', function () {
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         $job = new GenerateAiMetadata($video);
-        $job->handle(app(IAService::class));
+        $job->handle(app(AiClient::class), app(App\Services\AiMetadataService::class));
 
         Event::assertNotDispatched(AiSuggestionReady::class);
     });

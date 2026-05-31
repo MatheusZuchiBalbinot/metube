@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Services\VideoService;
@@ -23,7 +25,8 @@ class PublishScheduledVideos extends Command
     /**
      * Run the command.
      *
-     * @param  VideoService  $service  Video business logic
+     * @param VideoService $service Video business logic
+     *
      * @return int Exit code
      */
     public function handle(VideoService $service): int

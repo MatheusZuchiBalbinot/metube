@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Config\PaginationSize;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Models\User;
@@ -22,10 +25,11 @@ class ChannelService
     /**
      * Get a channel (user) by public UUID.
      *
-     * @param  string  $uuid  User UUID (v4)
-     * @return User Channel user
+     * @param string $uuid User UUID (v4)
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     *
+     * @return User Channel user
      */
     public function getByUuid(string $uuid): User
     {
@@ -42,7 +46,8 @@ class ChannelService
      * ordered by recency — used when the channel owner is viewing their own page.
      * Otherwise returns only published videos in newest-published order (cached per page).
      *
-     * @param  User  $channel  Channel to list videos for
+     * @param User $channel Channel to list videos for
+     *
      * @return LengthAwarePaginator<\App\Models\Video>
      */
     public function listVideos(User $channel, bool $includeAllStatuses = false): LengthAwarePaginator
@@ -50,7 +55,7 @@ class ChannelService
         $query = $channel->videos()->with('channel');
 
         if ($includeAllStatuses) {
-            return $query->latest()->paginate(50);
+            return $query->latest()->paginate(PaginationSize::CHANNEL_VIDEOS);
         }
 
         $page = (int) request()->query('page', '1');
@@ -58,7 +63,7 @@ class ChannelService
         return $this->cache->rememberChannelVideos(
             $channel->uuid,
             $page,
-            fn () => $query->published()->newestPublished()->paginate(15),
+            fn () => $query->published()->newestPublished()->paginate(PaginationSize::VIDEO_LIST),
         );
     }
 
@@ -67,8 +72,8 @@ class ChannelService
      *
      * Emits ChannelSubscribed / ChannelUnsubscribed for the analytics pipeline.
      *
-     * @param  User  $subscriber  User subscribing
-     * @param  string  $uuid  Channel UUID
+     * @param User $subscriber User subscribing
+     * @param string $uuid Channel UUID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */

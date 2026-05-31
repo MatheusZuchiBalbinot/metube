@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Events\VideoPublished;
 use App\Jobs\NotifySubscribersChunk;
 use App\Listeners\SendVideoPublishedNotifications;

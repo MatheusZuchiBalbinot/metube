@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\User;
@@ -22,8 +24,8 @@ class NotifySubscribersChunk implements ShouldQueue
     public $timeout = 120;
 
     /**
-     * @param  Video  $video  The newly published video
-     * @param  list<int>  $userIds  Subscriber ids in this chunk
+     * @param Video $video The newly published video
+     * @param list<int> $userIds Subscriber ids in this chunk
      */
     public function __construct(
         private readonly Video $video,

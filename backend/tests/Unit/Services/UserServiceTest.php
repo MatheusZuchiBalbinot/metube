@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\HistoryPeriod;
 use App\Enums\ReactionType;
 use App\Models\User;
@@ -26,7 +28,7 @@ describe('UserService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        \Illuminate\Support\Facades\DB::table('user_video_reactions')->insert([
+        Illuminate\Support\Facades\DB::table('user_video_reactions')->insert([
             'user_id' => $user->id,
             'video_id' => $video->id,
             'type' => ReactionType::LIKE->value,

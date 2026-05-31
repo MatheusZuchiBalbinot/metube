@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoStatus;
 use App\Events\VideoStatusUpdated;
 use App\Listeners\SendVideoProcessedNotification;

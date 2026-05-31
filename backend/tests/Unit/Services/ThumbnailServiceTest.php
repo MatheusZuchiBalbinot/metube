@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Services\ThumbnailService;
 
 describe('ThumbnailService', function () {
     beforeEach(function () {
-        if (! extension_loaded('gd')) {
+        if (!extension_loaded('gd')) {
             $this->markTestSkipped('GD extension is required.');
         }
     });
@@ -74,7 +76,7 @@ describe('ThumbnailService', function () {
  */
 function createTestImage(int $width, int $height): string
 {
-    $path = tempnam(sys_get_temp_dir(), 'thumb_test_').'.png';
+    $path = tempnam(sys_get_temp_dir(), 'thumb_test_') . '.png';
     $image = imagecreatetruecolor($width, $height);
     $color = imagecolorallocate($image, 100, 149, 237);
     imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $color);

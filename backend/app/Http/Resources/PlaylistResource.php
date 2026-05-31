@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ class PlaylistResource extends JsonResource
             'video_ids' => $this->whenLoaded(
                 'videos',
                 fn () => $this->videos->map(fn ($v) => $v->vuid)->values()->toArray(),
-                []
+                [],
             ),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

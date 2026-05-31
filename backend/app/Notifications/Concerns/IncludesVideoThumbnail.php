@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications\Concerns;
 
 use App\Models\Video;
@@ -13,7 +15,7 @@ trait IncludesVideoThumbnail
      * Notifications embed this so the frontend can render the thumbnail
      * without depending on the video already being present in its store.
      *
-     * @param  Video  $video  The video whose thumbnail should be resolved
+     * @param Video $video The video whose thumbnail should be resolved
      */
     protected function thumbnailUrl(Video $video): ?string
     {

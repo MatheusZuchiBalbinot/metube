@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +29,7 @@ class UserVideoReaction extends Pivot
     /**
      * Get the user who created this reaction.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -37,7 +39,7 @@ class UserVideoReaction extends Pivot
     /**
      * Get the video being reacted to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {

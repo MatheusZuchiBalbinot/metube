@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Jobs\TranslateVideoCaptions;
 use App\Models\Video;
 use App\Services\WhisperClient;

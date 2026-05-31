@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Playlist\AddVideoRequest;
 use App\Models\User;
 use App\Models\Video;
@@ -19,7 +21,7 @@ describe('AddVideoRequest', function () {
     test('vuid must exist in videos table', function () {
         $validator = Validator::make(
             ['vuid' => 'nonexistent11'],
-            (new AddVideoRequest)->rules()
+            (new AddVideoRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -32,7 +34,7 @@ describe('AddVideoRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid],
-            (new AddVideoRequest)->rules()
+            (new AddVideoRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

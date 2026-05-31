@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use App\Models\Video;
 use App\Observers\VideoObserver;
@@ -33,7 +35,7 @@ describe('VideoObserver', function () {
         $cache->shouldReceive('forgetFeed')->once();
 
         $observer = new VideoObserver($cache);
-        $video->status = \App\Enums\VideoStatus::PUBLISHED;
+        $video->status = App\Enums\VideoStatus::PUBLISHED;
         $video->save();
 
         $observer->updated($video);

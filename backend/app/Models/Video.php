@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\VideoStatus;
@@ -19,7 +21,7 @@ use Illuminate\Support\Str;
  * @property string $description
  * @property array<string> $tags
  * @property array<array{lang: string, label: string, url: string}> $captions
- * @property \App\Enums\VideoStatus $status
+ * @property VideoStatus $status
  * @property float|null $duration
  * @property int $views
  * @property int $comments_count
@@ -28,10 +30,10 @@ use Illuminate\Support\Str;
  * @property \Illuminate\Support\Carbon|null $published_at
  * @property \Illuminate\Support\Carbon|null $scheduled_at
  * @property bool $is_batch
- * @property \App\Models\VideoSummary|null $summary
- * @property \App\Models\Transcription|null $transcription
- * @property \App\Models\VideoAiSuggestion|null $aiSuggestion
- * @property-read \App\Models\User $channel
+ * @property VideoSummary|null $summary
+ * @property Transcription|null $transcription
+ * @property VideoAiSuggestion|null $aiSuggestion
+ * @property-read User $channel
  */
 class Video extends Model
 {
@@ -82,7 +84,7 @@ class Video extends Model
     /**
      * Get the user who published this video.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function channel(): BelongsTo
     {
@@ -92,7 +94,7 @@ class Video extends Model
     /**
      * Get the summary for this video (if it exists).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\VideoSummary, $this>
+     * @return HasOne<VideoSummary, $this>
      */
     public function summary(): HasOne
     {
@@ -102,7 +104,7 @@ class Video extends Model
     /**
      * Get the transcription for this video (if it exists).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Transcription, $this>
+     * @return HasOne<Transcription, $this>
      */
     public function transcription(): HasOne
     {
@@ -112,7 +114,7 @@ class Video extends Model
     /**
      * Get the AI-generated suggestion for this video (if it exists).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\VideoAiSuggestion, $this>
+     * @return HasOne<VideoAiSuggestion, $this>
      */
     public function aiSuggestion(): HasOne
     {
@@ -122,7 +124,7 @@ class Video extends Model
     /**
      * Get all watch progress entries for this video.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\VideoProgress, $this>
+     * @return HasMany<VideoProgress, $this>
      */
     public function progress(): HasMany
     {
@@ -132,7 +134,7 @@ class Video extends Model
     /**
      * Get all watch history entries for this video.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\WatchHistory, $this>
+     * @return HasMany<WatchHistory, $this>
      */
     public function watchHistory(): HasMany
     {
@@ -146,8 +148,9 @@ class Video extends Model
      * On other drivers (SQLite in tests), falls back to LIKE.
      * Tag filtering uses OR semantics: any matching tag includes the video.
      *
-     * @param  Builder<Video>  $query
-     * @param  array<string, mixed>  $filters
+     * @param Builder<Video> $query
+     * @param array<string, mixed> $filters
+     *
      * @return Builder<Video>
      */
     public function scopeFilter(Builder $query, array $filters): Builder
@@ -157,7 +160,7 @@ class Video extends Model
 
             if ($isPgsql) {
                 $term = str_replace(' ', ' & ', trim($filters['search']));
-                $query = $query->whereRaw("search_tsv @@ to_tsquery('simple', ?)", [$term.':*']);
+                $query = $query->whereRaw("search_tsv @@ to_tsquery('simple', ?)", [$term . ':*']);
             } else {
                 $term = "%{$filters['search']}%";
                 $query = $query->where(function (Builder $q) use ($term): void {
@@ -193,7 +196,8 @@ class Video extends Model
     /**
      * Filter only published videos.
      *
-     * @param  Builder<Video>  $query
+     * @param Builder<Video> $query
+     *
      * @return Builder<Video>
      */
     public function scopePublished(Builder $query): Builder
@@ -208,7 +212,8 @@ class Video extends Model
      *
      * Named distinctly from Eloquent's native latest() which orders by created_at.
      *
-     * @param  Builder<Video>  $query
+     * @param Builder<Video> $query
+     *
      * @return Builder<Video>
      */
     public function scopeNewestPublished(Builder $query): Builder

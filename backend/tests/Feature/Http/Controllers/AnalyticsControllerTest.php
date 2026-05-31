@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoSource;
 use App\Events\SearchPerformed;
 use App\Events\VideoClickedFromFeed;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\HistoryPeriod;
@@ -38,7 +40,7 @@ class WatchHistory extends Model
     /**
      * Get the user who watched the video.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -48,7 +50,7 @@ class WatchHistory extends Model
     /**
      * Get the video that was watched.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {
@@ -58,12 +60,14 @@ class WatchHistory extends Model
     /**
      * Filter watch history by period.
      *
-     * @param  Builder<WatchHistory>  $query
+     * @param Builder<WatchHistory> $query
+     *
      * @return Builder<WatchHistory>
      */
     public function scopeFilterByPeriod(Builder $query, HistoryPeriod $period): Builder
     {
         $startDate = $period->startDate();
+
         if ($startDate === null) {
             return $query;
         }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -24,10 +26,10 @@ use Illuminate\Support\Str;
  * @property bool $is_liked Virtual attribute set at query time; not persisted
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- * @property \App\Models\User $user
- * @property \App\Models\Video $video
- * @property \App\Models\Comment|null $parent
- * @property \App\Models\CommentVersion|null $currentVersion
+ * @property User $user
+ * @property Video $video
+ * @property Comment|null $parent
+ * @property CommentVersion|null $currentVersion
  */
 class Comment extends Model
 {
@@ -76,7 +78,7 @@ class Comment extends Model
     /**
      * Get the author of this comment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -86,7 +88,7 @@ class Comment extends Model
     /**
      * Get the video this comment belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {
@@ -96,27 +98,27 @@ class Comment extends Model
     /**
      * Get the parent comment (null for top-level comments).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Comment, $this>
+     * @return BelongsTo<Comment, $this>
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Comment::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**
      * Get the direct replies to this comment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Comment, $this>
+     * @return HasMany<Comment, $this>
      */
     public function replies(): HasMany
     {
-        return $this->hasMany(Comment::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     /**
      * Get the users who liked this comment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this>
+     * @return BelongsToMany<User, $this>
      */
     public function likes(): BelongsToMany
     {
@@ -126,7 +128,7 @@ class Comment extends Model
     /**
      * Get all saved versions of this comment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\CommentVersion, $this>
+     * @return HasMany<CommentVersion, $this>
      */
     public function versions(): HasMany
     {
@@ -136,7 +138,7 @@ class Comment extends Model
     /**
      * Get the version that was set as current on the last edit.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\CommentVersion, $this>
+     * @return BelongsTo<CommentVersion, $this>
      */
     public function currentVersion(): BelongsTo
     {

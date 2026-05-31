@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Playlist\AddVideoRequest;
@@ -34,13 +36,13 @@ class PlaylistController extends Controller
     /**
      * Create a new playlist.
      *
-     * @param  StorePlaylistRequest  $request  Validated playlist data
+     * @param StorePlaylistRequest $request Validated playlist data
      */
     public function store(StorePlaylistRequest $request): JsonResponse
     {
         $playlist = $this->playlistService->createPlaylist(
             auth()->user(),
-            $request->validated()['name']
+            $request->validated()['name'],
         );
 
         return $this->json(new PlaylistResource($playlist->load('videos')), 201);
@@ -49,7 +51,7 @@ class PlaylistController extends Controller
     /**
      * Get a specific playlist with all its videos.
      *
-     * @param  string  $puid  Playlist ULID
+     * @param string $puid Playlist ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -65,11 +67,12 @@ class PlaylistController extends Controller
     /**
      * List all videos in a playlist, ordered by position.
      *
-     * @param  string  $puid  Playlist identifier
-     * @return JsonResponse Ordered collection of video resources
+     * @param string $puid Playlist identifier
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return JsonResponse Ordered collection of video resources
      */
     public function listVideos(string $puid): JsonResponse
     {
@@ -84,8 +87,8 @@ class PlaylistController extends Controller
     /**
      * Update a playlist (rename).
      *
-     * @param  UpdatePlaylistRequest  $request  Validated playlist data
-     * @param  string  $puid  Playlist ULID
+     * @param UpdatePlaylistRequest $request Validated playlist data
+     * @param string $puid Playlist ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -97,7 +100,7 @@ class PlaylistController extends Controller
 
         $updated = $this->playlistService->updatePlaylist(
             $playlist,
-            $request->validated()['name']
+            $request->validated()['name'],
         );
 
         return $this->json(new PlaylistResource($updated));
@@ -106,7 +109,7 @@ class PlaylistController extends Controller
     /**
      * Delete a playlist permanently.
      *
-     * @param  string  $puid  Playlist ULID
+     * @param string $puid Playlist ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -124,8 +127,8 @@ class PlaylistController extends Controller
     /**
      * Add a video to a playlist.
      *
-     * @param  AddVideoRequest  $request  Validated video ULID
-     * @param  string  $puid  Playlist ULID
+     * @param AddVideoRequest $request Validated video ULID
+     * @param string $puid Playlist ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -137,7 +140,7 @@ class PlaylistController extends Controller
 
         $updated = $this->playlistService->addVideoToPlaylist(
             $playlist,
-            $request->validated()['vuid']
+            $request->validated()['vuid'],
         );
 
         return $this->json(new PlaylistResource($updated));
@@ -146,8 +149,8 @@ class PlaylistController extends Controller
     /**
      * Remove a video from a playlist.
      *
-     * @param  string  $puid  Playlist ULID
-     * @param  string  $vuid  Video ULID
+     * @param string $puid Playlist ULID
+     * @param string $vuid Video ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -165,8 +168,8 @@ class PlaylistController extends Controller
     /**
      * Reorder videos in a playlist using drag-and-drop.
      *
-     * @param  ReorderVideosRequest  $request  Ordered video ULIDs
-     * @param  string  $puid  Playlist ULID
+     * @param ReorderVideosRequest $request Ordered video ULIDs
+     * @param string $puid Playlist ULID
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -178,7 +181,7 @@ class PlaylistController extends Controller
 
         $updated = $this->playlistService->reorderPlaylistVideos(
             $playlist,
-            $request->validated()['vuids']
+            $request->validated()['vuids'],
         );
 
         return $this->json(new PlaylistResource($updated));

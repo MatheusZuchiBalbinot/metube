@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Listeners;
 
 use App\Events\CommentCreated;
@@ -25,7 +27,7 @@ class SendCommentRepliedNotification implements ShouldQueueAfterCommit
         $reply = $event->comment;
         $isReply = $reply->parent_id !== null;
 
-        if (! $isReply) {
+        if (!$isReply) {
             return;
         }
 
@@ -36,6 +38,7 @@ class SendCommentRepliedNotification implements ShouldQueueAfterCommit
         }
 
         $isSameUser = $parent->user_id === $event->author->id;
+
         if ($isSameUser) {
             return;
         }

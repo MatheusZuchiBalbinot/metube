@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\AI\Contracts\AiClient;
 use App\AI\Prompts\VideoMetadataPrompt;
+use App\Events\AiSuggestionReady;
 use App\Models\Video;
 use App\Notifications\VideoAiSummaryReadyNotification;
 use App\Services\AiMetadataService;
@@ -12,6 +15,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Generate AI-powered metadata from video transcription via Gemini.
@@ -41,7 +45,7 @@ class GenerateAiMetadata implements ShouldQueue
     }
 
     /**
-     * @param  Video  $video  Published video whose transcription is complete
+     * @param Video $video Published video whose transcription is complete
      */
     public function __construct(private readonly Video $video)
     {
@@ -62,7 +66,8 @@ class GenerateAiMetadata implements ShouldQueue
         }
 
         $hasContent = $video->transcription !== null && \is_string($video->transcription->content) && \trim($video->transcription->content) !== '';
-        if (! $hasContent) {
+
+        if (!$hasContent) {
             Log::warning('GenerateAiMetadata: skipping — transcription content is empty', ['vuid' => $video->vuid]);
 
             return;
@@ -74,12 +79,16 @@ class GenerateAiMetadata implements ShouldQueue
         $service->apply($video, $result);
 
         $video->channel->notify(new VideoAiSummaryReadyNotification($video));
+
+        if (!$video->is_batch) {
+            event(new AiSuggestionReady($video));
+        }
     }
 
     /**
      * Log the error when all retries are exhausted.
      */
-    public function failed(\Throwable $e): void
+    public function failed(Throwable $e): void
     {
         Log::error('GenerateAiMetadata: all retries exhausted', [
             'vuid' => $this->video->vuid ?? 'unknown',

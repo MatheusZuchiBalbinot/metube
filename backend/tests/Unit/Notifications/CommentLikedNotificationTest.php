@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\NotificationType;
 use App\Models\Comment;
 use App\Models\User;

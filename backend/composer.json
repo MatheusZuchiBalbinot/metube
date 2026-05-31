@@ -24,6 +24,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
+        "nunomaduro/phpinsights": "^2.14",
         "pestphp/pest": "^3.8",
         "pestphp/pest-plugin-laravel": "^3.0",
         "phpstan/phpstan": "^2.1",
@@ -61,6 +62,7 @@
         ],
         "lint": ["vendor/bin/pint --test", "vendor/bin/phpstan analyse"],
         "lint:fix": "vendor/bin/pint",
+        "insights": "@php artisan insights --no-interaction",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -91,7 +93,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "minimum-stability": "stable",

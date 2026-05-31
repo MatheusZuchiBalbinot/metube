@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\AiSuggestionStatus;
 use App\Http\Resources\VideoAiSuggestionResource;
 use App\Models\User;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +29,7 @@ class PlaylistVideo extends Pivot
     /**
      * Get the playlist this entry belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Playlist, $this>
+     * @return BelongsTo<Playlist, $this>
      */
     public function playlist(): BelongsTo
     {
@@ -37,7 +39,7 @@ class PlaylistVideo extends Pivot
     /**
      * Get the video this entry belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Video, $this>
+     * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
     {

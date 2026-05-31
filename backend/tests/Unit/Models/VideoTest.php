@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\VideoStatus;
 use App\Models\Transcription;
 use App\Models\User;
@@ -104,7 +106,7 @@ describe('Video Model', function () {
     });
 
     test('video can have tags as array', function () {
-        $faker = \Faker\Factory::create();
+        $faker = Faker\Factory::create();
         $tagsCount = rand(1, 8);
         $tags = array_slice($faker->words($tagsCount), 0, $tagsCount);
 
@@ -140,7 +142,7 @@ describe('Video Model', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         VideoAiSuggestion::create([
             'video_id' => $video->id,
-            'status' => \App\Enums\AiSuggestionStatus::PENDING,
+            'status' => App\Enums\AiSuggestionStatus::PENDING,
             'suggested_tags' => [],
         ]);
 

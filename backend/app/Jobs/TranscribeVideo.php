@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Enums\TranscriptionStatus;
@@ -11,6 +13,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
+use Throwable;
 
 class TranscribeVideo implements ShouldQueue
 {
@@ -29,7 +32,7 @@ class TranscribeVideo implements ShouldQueue
     public const SPEED_FACTOR = 2.0;
 
     /**
-     * @param  Video  $video  Published video to transcribe
+     * @param Video $video Published video to transcribe
      */
     public function __construct(private readonly Video $video)
     {
@@ -53,6 +56,7 @@ class TranscribeVideo implements ShouldQueue
         }
 
         $isAlreadyDone = $video->transcription?->status === TranscriptionStatus::COMPLETED;
+
         if ($isAlreadyDone) {
             return;
         }
@@ -66,6 +70,7 @@ class TranscribeVideo implements ShouldQueue
 
         $video->refresh();
         $isNotEnglish = $video->transcription !== null && $video->transcription->language !== 'en';
+
         if ($isNotEnglish) {
             dispatch(new TranslateVideoCaptions($video));
         }
@@ -74,15 +79,17 @@ class TranscribeVideo implements ShouldQueue
     /**
      * Mark the transcription as failed when all retries are exhausted.
      */
-    public function failed(\Throwable $_): void
+    public function failed(Throwable $_): void
     {
         $video = Video::find($this->video->id);
+
         if ($video === null) {
             return;
         }
 
         $video->transcription()->updateOrCreate(
-            [], ['status' => TranscriptionStatus::FAILED]
+            [],
+            ['status' => TranscriptionStatus::FAILED],
         );
 
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
@@ -99,10 +106,12 @@ class TranscribeVideo implements ShouldQueue
         $estimatedSeconds = $video->duration !== null ? round($video->duration / self::SPEED_FACTOR) : null;
 
         $video->transcription()->updateOrCreate(
-            [], ['status' => TranscriptionStatus::PROCESSING, 'started_at' => $startedAt]
+            [],
+            ['status' => TranscriptionStatus::PROCESSING, 'started_at' => $startedAt],
         );
 
         $isFirstAttempt = $this->attempts() === 1;
+
         if ($isFirstAttempt) {
             event(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING, $startedAt, $estimatedSeconds));
         }

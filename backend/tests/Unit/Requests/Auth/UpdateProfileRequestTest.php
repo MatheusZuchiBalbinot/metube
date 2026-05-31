@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -12,7 +14,7 @@ describe('UpdateProfileRequest', function () {
     test('name cannot exceed 255 characters', function () {
         $validator = Validator::make(
             ['name' => str_repeat('a', 256)],
-            (new UpdateProfileRequest)->rules()
+            (new UpdateProfileRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -22,7 +24,7 @@ describe('UpdateProfileRequest', function () {
     test('bio cannot exceed 1000 characters', function () {
         $validator = Validator::make(
             ['bio' => str_repeat('a', 1001)],
-            (new UpdateProfileRequest)->rules()
+            (new UpdateProfileRequest)->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -32,7 +34,7 @@ describe('UpdateProfileRequest', function () {
     test('valid name and bio passes', function () {
         $validator = Validator::make(
             ['name' => 'Alice', 'bio' => 'I make videos'],
-            (new UpdateProfileRequest)->rules()
+            (new UpdateProfileRequest)->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

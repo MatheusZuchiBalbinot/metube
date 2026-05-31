@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Enums\VideoStatus;
@@ -11,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class ProcessVideoUpload implements ShouldQueue
 {
@@ -23,9 +26,9 @@ class ProcessVideoUpload implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * @param  Video  $video  Freshly created video record (status=PROCESSING)
-     * @param  string  $tmpPath  Path relative to the 'local' disk
-     * @param  string|null  $tmpThumbnailPath  Path relative to the 'local' disk, or null
+     * @param Video $video Freshly created video record (status=PROCESSING)
+     * @param string $tmpPath Path relative to the 'local' disk
+     * @param string|null $tmpThumbnailPath Path relative to the 'local' disk, or null
      */
     public function __construct(
         private readonly Video $video,
@@ -67,8 +70,8 @@ class ProcessVideoUpload implements ShouldQueue
     /**
      * Finalize a batch upload: publish immediately and notify subscribers.
      *
-     * @param  string  $videoUrl  Public URL of the published video file
-     * @param  string|null  $thumbnailUrl  Public URL of the thumbnail, or null
+     * @param string $videoUrl Public URL of the published video file
+     * @param string|null $thumbnailUrl Public URL of the thumbnail, or null
      */
     private function finalizeBatch(Video $video, string $videoUrl, ?string $thumbnailUrl): void
     {
@@ -91,6 +94,7 @@ class ProcessVideoUpload implements ShouldQueue
         }
 
         $isPublished = $newStatus === VideoStatus::PUBLISHED;
+
         if ($isPublished && $statusChanged) {
             event(new VideoPublished($video));
         }
@@ -102,8 +106,8 @@ class ProcessVideoUpload implements ShouldQueue
      * Does NOT fire VideoPublished — that happens later when the creator
      * explicitly publishes from the staging page.
      *
-     * @param  string  $videoUrl  Public URL of the published video file
-     * @param  string|null  $thumbnailUrl  Public URL of the thumbnail, or null
+     * @param string $videoUrl Public URL of the published video file
+     * @param string|null $thumbnailUrl Public URL of the thumbnail, or null
      */
     private function finalizeSingle(Video $video, string $videoUrl, ?string $thumbnailUrl): void
     {
@@ -121,10 +125,11 @@ class ProcessVideoUpload implements ShouldQueue
     /**
      * Clean up temporary files and mark the video as failed.
      */
-    public function failed(\Throwable $_): void
+    public function failed(Throwable $_): void
     {
         app(VideoStorageService::class)->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
         $video = Video::find($this->video->id);
+
         if ($video !== null) {
             $video->update(['status' => VideoStatus::FAILED]);
             event(new VideoStatusUpdated($video, VideoStatus::FAILED));

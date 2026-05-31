@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Video;
 
 use App\Enums\VideoStatus;
@@ -36,7 +38,7 @@ class UpdateVideoRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => ['nullable', 'in:'.implode(',', array_column(VideoStatus::cases(), 'value'))],
+            'status' => ['nullable', 'in:' . implode(',', array_column(VideoStatus::cases(), 'value'))],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
         ];
     }
@@ -59,7 +61,7 @@ class UpdateVideoRequest extends FormRequest
     /**
      * Custom validation logic.
      *
-     * @param  \Illuminate\Validation\Validator  $validator
+     * @param \Illuminate\Validation\Validator $validator
      */
     public function withValidator($validator): void
     {

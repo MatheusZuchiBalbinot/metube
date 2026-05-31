@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -16,7 +18,7 @@ describe('User Model', function () {
     test('user can have many videos', function () {
         $user = User::factory()->create();
         $videoCount = rand(1, 10);
-        $videos = \App\Models\Video::factory($videoCount)->for($user, 'channel')->create();
+        $videos = App\Models\Video::factory($videoCount)->for($user, 'channel')->create();
 
         expect($user->videos)->toHaveCount($videoCount);
         $videos->each(fn ($video) => expect($user->videos->pluck('id'))->toContain($video->id));
@@ -35,7 +37,7 @@ describe('User Model', function () {
     test('user can have many playlists', function () {
         $user = User::factory()->create();
         $playlistCount = rand(1, 8);
-        $playlists = \App\Models\Playlist::factory($playlistCount)->for($user)->create();
+        $playlists = App\Models\Playlist::factory($playlistCount)->for($user)->create();
 
         // User gets 1 automatic "Watch Later" playlist + created playlists
         expect($user->playlists)->toHaveCount($playlistCount + 1);
@@ -45,7 +47,7 @@ describe('User Model', function () {
     test('user can have watch history', function () {
         $user = User::factory()->create();
         $historyCount = rand(1, 15);
-        $videos = \App\Models\Video::factory($historyCount)->create();
+        $videos = App\Models\Video::factory($historyCount)->create();
 
         $videos->each(fn ($video) => $user->history()->create(['video_id' => $video->id]));
 
@@ -65,7 +67,7 @@ describe('User Model', function () {
 
     test('user can like videos', function () {
         $user = User::factory()->create();
-        $video = \App\Models\Video::factory()->create();
+        $video = App\Models\Video::factory()->create();
 
         $user->reactions()->attach($video->id, ['type' => 'like']);
 
@@ -74,7 +76,7 @@ describe('User Model', function () {
 
     test('user can dislike videos', function () {
         $user = User::factory()->create();
-        $video = \App\Models\Video::factory()->create();
+        $video = App\Models\Video::factory()->create();
 
         $user->reactions()->attach($video->id, ['type' => 'dislike']);
 
@@ -84,7 +86,7 @@ describe('User Model', function () {
     test('user can save videos to watch later playlist', function () {
         $user = User::factory()->create();
         $videoCount = rand(1, 10);
-        $videos = \App\Models\Video::factory($videoCount)->create();
+        $videos = App\Models\Video::factory($videoCount)->create();
         $watchLater = $user->getWatchLaterPlaylist();
 
         $videos->each(fn ($video, $index) => $watchLater->videos()->attach($video->id, ['position' => $index]));

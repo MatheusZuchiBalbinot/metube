@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\DTOs\TranscriptionResult;
 use App\Enums\TranscriptionStatus;
 use App\Models\User;

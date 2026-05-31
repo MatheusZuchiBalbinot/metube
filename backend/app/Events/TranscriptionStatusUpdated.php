@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Events;
 
 use App\Enums\TranscriptionStatus;
@@ -16,10 +18,10 @@ class TranscriptionStatusUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets;
 
     /**
-     * @param  Video  $video  The video whose transcription changed
-     * @param  TranscriptionStatus  $status  New transcription status
-     * @param  Carbon|null  $startedAt  When transcription began (set on PROCESSING)
-     * @param  float|null  $estimatedSeconds  Expected total seconds to complete (set on PROCESSING)
+     * @param Video $video The video whose transcription changed
+     * @param TranscriptionStatus $status New transcription status
+     * @param Carbon|null $startedAt When transcription began (set on PROCESSING)
+     * @param float|null $estimatedSeconds Expected total seconds to complete (set on PROCESSING)
      */
     public function __construct(
         public readonly Video $video,

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Exceptions\InvalidCredentialsException;
 use App\Models\User;
 use App\Services\AuthService;
@@ -105,19 +107,19 @@ describe('AuthService', function () {
     });
 
     test('sendPasswordResetLink throws ValidationException for unknown email', function () use (&$service) {
-        config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
+        config(['app.key' => 'base64:' . base64_encode(random_bytes(32))]);
 
         expect(fn () => $service->sendPasswordResetLink('nobody@example.com'))
             ->toThrow(ValidationException::class);
     });
 
     test('resetPassword throws ValidationException when broker returns invalid status', function () use (&$service) {
-        $brokerMock = Mockery::mock(\Illuminate\Auth\Passwords\PasswordBroker::class);
+        $brokerMock = Mockery::mock(Illuminate\Auth\Passwords\PasswordBroker::class);
         $brokerMock->shouldReceive('reset')
             ->once()
-            ->andReturn(\Illuminate\Support\Facades\Password::INVALID_TOKEN);
+            ->andReturn(Illuminate\Support\Facades\Password::INVALID_TOKEN);
 
-        \Illuminate\Support\Facades\Password::shouldReceive('broker')
+        Illuminate\Support\Facades\Password::shouldReceive('broker')
             ->andReturn($brokerMock);
 
         expect(fn () => $service->resetPassword([

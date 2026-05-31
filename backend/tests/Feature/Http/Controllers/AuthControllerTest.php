@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -122,7 +124,7 @@ describe('AuthController', function () {
     });
 
     test('forgot password fails with unknown email', function () {
-        config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
+        config(['app.key' => 'base64:' . base64_encode(random_bytes(32))]);
 
         $response = $this->postJson('/api/password-resets', [
             'email' => 'nobody@example.com',
