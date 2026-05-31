@@ -4,17 +4,13 @@ namespace App\Jobs;
 
 use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
-use App\Models\Transcription;
 use App\Models\Video;
-use App\Services\VideoStorageService;
+use App\Services\TranscriptionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class TranscribeVideo implements ShouldQueue
 {
@@ -41,92 +37,35 @@ class TranscribeVideo implements ShouldQueue
     }
 
     /**
-     * Call the Whisper service, persist the transcription, and generate the original VTT caption file.
+     * Orchestrate transcription: mark as processing, transcribe, mark as completed, and dispatch AI metadata generation.
      *
-     * Only the original-language pass runs here. When the source language is not English,
-     * a separate TranslateVideoCaptions job is dispatched so the slower translate pass does
-     * not block the captions, transcription, and AI summary from becoming available.
+     * When the source language is not English, a separate TranslateVideoCaptions job is dispatched
+     * so the slower translate pass does not block the captions, transcription, and AI summary.
      *
-     * @throws ConnectionException
+     * @throws \App\Exceptions\WhisperException If transcription fails
      */
-    public function handle(VideoStorageService $storage): void
+    public function handle(TranscriptionService $service): void
     {
-        $video = Video::find($this->video->id);
+        $video = Video::with('transcription')->find($this->video->id);
 
         if ($video === null || $video->video_url === null) {
             return;
         }
 
-        $video->loadMissing('transcription');
-        $isAlreadyDone = $video->transcription !== null && $video->transcription->status === TranscriptionStatus::COMPLETED;
-
+        $isAlreadyDone = $video->transcription?->status === TranscriptionStatus::COMPLETED;
         if ($isAlreadyDone) {
             return;
         }
 
-        $startedAt = Carbon::now();
-        $estimatedSeconds = $video->duration !== null
-            ? round($video->duration / self::SPEED_FACTOR)
-            : null;
+        $this->markProcessing($video);
 
-        $transcription = Transcription::updateOrCreate(
-            ['video_id' => $video->id],
-            ['status' => TranscriptionStatus::PROCESSING, 'content' => null, 'language' => null, 'started_at' => $startedAt],
-        );
-
-        $video->loadMissing('channel');
-
-        $isFirstAttempt = $this->attempts() === 1;
-        if ($isFirstAttempt) {
-            event(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING, $startedAt, $estimatedSeconds));
-        }
-
-        $whisperUrl = config('services.whisper.url', 'http://whisper:8001');
-
-        $transcribeResponse = Http::timeout(3600)->post("{$whisperUrl}/transcribe", [
-            'file_path' => $video->video_url,
-            'task' => 'transcribe',
-        ]);
-
-        $isSuccess = $transcribeResponse->successful();
-
-        if (! $isSuccess) {
-            Log::error('Whisper transcription failed', [
-                'vuid' => $video->vuid,
-                'status' => $transcribeResponse->status(),
-                'body' => $transcribeResponse->body(),
-            ]);
-
-            $transcription->update(['status' => TranscriptionStatus::FAILED]);
-
-            throw new \RuntimeException("Whisper returned HTTP {$transcribeResponse->status()} for video {$video->vuid}");
-        }
-
-        $detectedLang = (string) $transcribeResponse->json('language');
-        $plainText = (string) $transcribeResponse->json('text');
-        $originalVtt = (string) $transcribeResponse->json('vtt');
-
-        $originalCaptionPath = $storage->publishCaption($originalVtt, $video->vuid, $detectedLang);
-
-        $video->update(['captions' => [
-            [
-                'lang' => $detectedLang,
-                'label' => $this->languageLabel($detectedLang),
-                'url' => $originalCaptionPath,
-            ],
-        ]]);
-
-        $transcription->update([
-            'status' => TranscriptionStatus::COMPLETED,
-            'content' => $plainText,
-            'language' => $detectedLang,
-        ]);
+        $service->transcribe($video);
 
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
-
         dispatch(new GenerateAiMetadata($video));
 
-        $isNotEnglish = $detectedLang !== 'en';
+        $video->refresh();
+        $isNotEnglish = $video->transcription !== null && $video->transcription->language !== 'en';
         if ($isNotEnglish) {
             dispatch(new TranslateVideoCaptions($video));
         }
@@ -138,37 +77,34 @@ class TranscribeVideo implements ShouldQueue
     public function failed(\Throwable $_): void
     {
         $video = Video::find($this->video->id);
-
         if ($video === null) {
             return;
         }
 
-        Transcription::updateOrCreate(
-            ['video_id' => $video->id],
-            ['status' => TranscriptionStatus::FAILED],
+        $video->transcription()->updateOrCreate(
+            [], ['status' => TranscriptionStatus::FAILED]
         );
 
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
     }
 
     /**
-     * Return a human-readable language label for a BCP-47 code.
+     * Mark transcription as processing and emit broadcast event with ETA.
+     *
+     * Only broadcasts on first attempt to avoid duplicate notifications.
      */
-    private function languageLabel(string $lang): string
+    private function markProcessing(Video $video): void
     {
-        return match ($lang) {
-            'pt' => 'Português',
-            'en' => 'English',
-            'es' => 'Español',
-            'fr' => 'Français',
-            'de' => 'Deutsch',
-            'it' => 'Italiano',
-            'ja' => '日本語',
-            'zh' => '中文',
-            'ko' => '한국어',
-            'ru' => 'Русский',
-            'ar' => 'العربية',
-            default => strtoupper($lang),
-        };
+        $startedAt = Carbon::now();
+        $estimatedSeconds = $video->duration !== null ? round($video->duration / self::SPEED_FACTOR) : null;
+
+        $video->transcription()->updateOrCreate(
+            [], ['status' => TranscriptionStatus::PROCESSING, 'started_at' => $startedAt]
+        );
+
+        $isFirstAttempt = $this->attempts() === 1;
+        if ($isFirstAttempt) {
+            event(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING, $startedAt, $estimatedSeconds));
+        }
     }
 }
