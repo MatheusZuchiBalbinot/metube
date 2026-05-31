@@ -61,4 +61,38 @@ describe('WhisperClient', function () {
             return str_contains($request->url(), 'custom-whisper:9000');
         });
     });
+
+    test('translate sends POST request to Whisper with translate task', function () {
+        Http::fake([
+            'http://whisper:8001/transcribe' => Http::response([
+                'language' => 'en',
+                'text' => 'Hello world',
+                'vtt' => 'WEBVTT\n\n00:00:00.000 --> 00:00:02.000\nHello world',
+            ], 200),
+        ]);
+
+        $client = app(WhisperClient::class);
+        $result = $client->translate('/path/to/video.mp4');
+
+        expect($result)->toBeInstanceOf(TranscriptionResult::class);
+        expect($result->language)->toBe('en');
+        expect($result->text)->toBe('Hello world');
+
+        Http::assertSent(function (Request $request) {
+            return $request->method() === 'POST'
+                && $request['file_path'] === '/path/to/video.mp4'
+                && $request['task'] === 'translate';
+        });
+    });
+
+    test('translate throws WhisperException on HTTP error', function () {
+        Http::fake([
+            'http://whisper:8001/transcribe' => Http::response('Timeout', 504),
+        ]);
+
+        $client = app(WhisperClient::class);
+
+        expect(fn () => $client->translate('/path/to/video.mp4'))
+            ->toThrow(WhisperException::class, 'Whisper returned HTTP 504');
+    });
 });

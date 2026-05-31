@@ -4,12 +4,11 @@ namespace App\Jobs;
 
 use App\Models\Video;
 use App\Services\VideoStorageService;
+use App\Services\WhisperClient;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -18,6 +17,10 @@ use Illuminate\Support\Facades\Log;
  * Runs after TranscribeVideo so the original-language captions and AI summary are
  * available immediately; the English translation is appended to the video's caption
  * list once this slower second Whisper pass completes.
+ *
+ * Translation is best-effort: if it fails after all retries, the video keeps its
+ * original-language captions and a warning is logged. The failed() method ensures
+ * we don't silently drop translation failures.
  */
 class TranslateVideoCaptions implements ShouldQueue
 {
@@ -38,49 +41,46 @@ class TranslateVideoCaptions implements ShouldQueue
     }
 
     /**
-     * Call Whisper in translate mode and append the English caption track to the video.
+     * Translate the video to English captions via Whisper and append to the video.
      *
-     * @throws ConnectionException
+     * WhisperException is allowed to bubble up and trigger retries. If all retries
+     * exhaust, failed() logs the issue and the video keeps its original captions.
+     *
+     * @throws \App\Exceptions\WhisperException If Whisper returns an error
      */
-    public function handle(VideoStorageService $storage): void
+    public function handle(WhisperClient $whisper, VideoStorageService $storage): void
     {
         $video = Video::find($this->video->id);
-
         if ($video === null || $video->video_url === null) {
             return;
         }
 
-        $existingCaptions = $video->captions ?? [];
-        $hasEnglishAlready = in_array('en', array_column($existingCaptions, 'lang'), true);
-        if ($hasEnglishAlready) {
+        if ($video->hasEnglishCaptions()) {
             return;
         }
 
-        $whisperUrl = config('services.whisper.url', 'http://whisper:8001');
+        $result = $whisper->translate($video->video_url);
+        $captionPath = $storage->publishCaption($result->vtt, $video->vuid, 'en');
 
-        $response = Http::timeout(3600)->post("{$whisperUrl}/transcribe", [
-            'file_path' => $video->video_url,
-            'task' => 'translate',
+        $video->appendCaption(lang: 'en', label: 'English', url: $captionPath);
+    }
+
+    /**
+     * Log translation failure after all retries exhausted.
+     *
+     * Translation is best-effort: video already has original-language captions,
+     * so this is a nice-to-have that doesn't block the user experience.
+     */
+    public function failed(\Throwable $e): void
+    {
+        $video = Video::find($this->video->id);
+        if ($video === null) {
+            return;
+        }
+
+        Log::warning('English caption translation failed after all retries', [
+            'vuid' => $video->vuid,
+            'error' => $e->getMessage(),
         ]);
-
-        if (! $response->successful()) {
-            Log::warning('Whisper translation to English failed, leaving video without English captions', [
-                'vuid' => $video->vuid,
-                'status' => $response->status(),
-            ]);
-
-            return;
-        }
-
-        $englishVtt = (string) $response->json('vtt');
-        $englishCaptionPath = $storage->publishCaption($englishVtt, $video->vuid, 'en');
-
-        $existingCaptions[] = [
-            'lang' => 'en',
-            'label' => 'English',
-            'url' => $englishCaptionPath,
-        ];
-
-        $video->update(['captions' => $existingCaptions]);
     }
 }
