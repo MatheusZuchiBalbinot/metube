@@ -73,17 +73,21 @@ class VideoPublishingService
     public function publishDueVideos(): int
     {
         $vuids = Video::scheduledDue()->pluck('vuid');
-        if ($vuids->isEmpty()) {
+
+        $hasVideos = !$vuids->isEmpty();
+        if (!$hasVideos) {
             return 0;
         }
 
+        $updatePayload = [
+            'status' => VideoStatus::PUBLISHED,
+            'published_at' => DB::raw('scheduled_at'),
+            'updated_at' => now(),
+        ];
+
         $count = Video::query()
             ->whereIn('vuid', $vuids)
-            ->update([
-                'status' => VideoStatus::PUBLISHED,
-                'published_at' => DB::raw('scheduled_at'),
-                'updated_at' => now(),
-            ]);
+            ->update($updatePayload);
 
         foreach ($vuids as $vuid) {
             $this->cache->forgetVideo($vuid);
