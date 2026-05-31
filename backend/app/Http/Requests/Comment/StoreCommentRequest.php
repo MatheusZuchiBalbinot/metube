@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Comment;
 
+use App\DTOs\StoreCommentDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCommentRequest extends FormRequest
@@ -27,5 +28,10 @@ class StoreCommentRequest extends FormRequest
             'content' => ['required', 'string', 'min:1', 'max:2000'],
             'parent_cuid' => ['nullable', 'string', 'exists:comments,cuid'],
         ];
+    }
+
+    public function getDTO(): StoreCommentDTO
+    {
+        return StoreCommentDTO::fromRequest($this->validated());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Comment;
 
+use App\DTOs\UpdateCommentDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCommentRequest extends FormRequest
@@ -26,5 +27,10 @@ class UpdateCommentRequest extends FormRequest
         return [
             'content' => ['required', 'string', 'min:1', 'max:2000'],
         ];
+    }
+
+    public function getDTO(): UpdateCommentDTO
+    {
+        return UpdateCommentDTO::fromRequest($this->validated());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Playlist;
 
+use App\DTOs\CreatePlaylistDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -45,5 +46,10 @@ class StorePlaylistRequest extends FormRequest
             'name.min' => 'Playlist name cannot be empty.',
             'name.max' => 'Playlist name cannot exceed 255 characters.',
         ];
+    }
+
+    public function getDTO(): CreatePlaylistDTO
+    {
+        return CreatePlaylistDTO::fromRequest($this->validated());
     }
 }

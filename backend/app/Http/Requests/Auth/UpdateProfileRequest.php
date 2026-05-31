@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\DTOs\UpdateUserProfileDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -46,5 +47,10 @@ class UpdateProfileRequest extends FormRequest
             'name.max' => 'Name cannot exceed 255 characters.',
             'bio.max' => 'Bio cannot exceed 1000 characters.',
         ];
+    }
+
+    public function getDTO(): UpdateUserProfileDTO
+    {
+        return UpdateUserProfileDTO::fromRequest($this->validated());
     }
 }

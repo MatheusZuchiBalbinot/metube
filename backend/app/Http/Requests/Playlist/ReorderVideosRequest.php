@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Playlist;
 
+use App\DTOs\ReorderPlaylistVideosDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -47,5 +48,10 @@ class ReorderVideosRequest extends FormRequest
             'vuids.min' => 'At least one video must be provided.',
             'vuids.*.exists' => 'Each video identifier must reference an existing video.',
         ];
+    }
+
+    public function getDTO(): ReorderPlaylistVideosDTO
+    {
+        return ReorderPlaylistVideosDTO::fromRequest($this->validated());
     }
 }
