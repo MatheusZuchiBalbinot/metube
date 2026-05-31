@@ -73,7 +73,6 @@ class VideoPublishingService
     public function publishDueVideos(): int
     {
         $vuids = Video::scheduledDue()->pluck('vuid');
-
         if ($vuids->isEmpty()) {
             return 0;
         }

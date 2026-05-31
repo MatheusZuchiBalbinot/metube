@@ -250,6 +250,19 @@ class Video extends Model
     }
 
     /**
+     * Filter video by UUID.
+     *
+     * @param Builder<Video> $query
+     * @param string $vuid Video UUID
+     *
+     * @return Builder<Video>
+     */
+    public function scopeByVuid(Builder $query, string $vuid): Builder
+    {
+        return $query->where('vuid', $vuid);
+    }
+
+    /**
      * Filter videos from a specific channel.
      *
      * @param Builder<Video> $query

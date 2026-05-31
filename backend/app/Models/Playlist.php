@@ -57,6 +57,19 @@ class Playlist extends Model
     }
 
     /**
+     * Filter playlist by PUID.
+     *
+     * @param Builder<Playlist> $query
+     * @param string $puid Playlist unique ID
+     *
+     * @return Builder<Playlist>
+     */
+    public function scopeByPuid(Builder $query, string $puid): Builder
+    {
+        return $query->where('puid', $puid);
+    }
+
+    /**
      * Filter playlists owned by a specific user.
      *
      * @param Builder<Playlist> $query

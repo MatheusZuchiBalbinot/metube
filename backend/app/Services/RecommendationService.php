@@ -74,9 +74,8 @@ class RecommendationService
      */
     private function getUserEventScores(int $userId): Collection
     {
-        $events = UserAnalytic::query()
-            ->where('user_id', $userId)
-            ->where('occurred_at', '>=', now()->subDays(30))
+        $events = UserAnalytic::forUser($userId)
+            ->recentDays(30)
             ->get();
 
         return $events
