@@ -10,6 +10,7 @@ use App\DTOs\UpdatePlaylistDTO;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -62,7 +63,7 @@ class PlaylistService
      *
      * @param string $puid Playlist UUID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function getPlaylistByPuid(string $puid): Playlist
     {
@@ -105,7 +106,7 @@ class PlaylistService
      *
      * @param string $vuid Video UUID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Playlist Updated playlist
      */
@@ -126,7 +127,7 @@ class PlaylistService
      *
      * @param string $vuid Video UUID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function removeVideoFromPlaylist(Playlist $playlist, string $vuid): void
     {
@@ -143,7 +144,7 @@ class PlaylistService
      *
      * @param ReorderPlaylistVideosDTO $data Reorder data containing ordered video UUIDs
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Playlist Reordered playlist
      */
@@ -160,7 +161,7 @@ class PlaylistService
             $missing = array_diff($data->vuids, array_keys($idByVuid));
 
             if ($missing !== []) {
-                throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)
+                throw (new ModelNotFoundException)
                     ->setModel(Video::class, array_values($missing));
             }
 

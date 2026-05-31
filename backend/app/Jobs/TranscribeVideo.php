@@ -8,6 +8,7 @@ use App\Enums\TranscriptionStatus;
 use App\Events\TranscriptionStatusUpdated;
 use App\Events\VideoTranscriptionCompleted;
 use App\Events\VideoTranscriptionStarted;
+use App\Exceptions\WhisperException;
 use App\Models\Video;
 use App\Services\TranscriptionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -47,7 +48,7 @@ class TranscribeVideo implements ShouldQueue
      * When the source language is not English, a separate TranslateVideoCaptions job is dispatched
      * so the slower translate pass does not block the captions, transcription, and AI summary.
      *
-     * @throws \App\Exceptions\WhisperException If transcription fails
+     * @throws WhisperException If transcription fails
      */
     public function handle(TranscriptionService $service): void
     {

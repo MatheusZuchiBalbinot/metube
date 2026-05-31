@@ -9,6 +9,8 @@ use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Models\Video;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +30,7 @@ class ChannelService
      *
      * @param string $uuid User UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return User Channel user
      */
@@ -49,7 +51,7 @@ class ChannelService
      *
      * @param User $channel Channel to list videos for
      *
-     * @return LengthAwarePaginator<\App\Models\Video>
+     * @return LengthAwarePaginator<Video>
      */
     public function listVideos(User $channel, bool $includeAllStatuses = false): LengthAwarePaginator
     {
@@ -76,7 +78,7 @@ class ChannelService
      * @param User $subscriber User subscribing
      * @param string $uuid Channel UUID
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function toggleSubscription(User $subscriber, string $uuid): void
     {

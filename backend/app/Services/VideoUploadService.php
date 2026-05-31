@@ -27,8 +27,6 @@ use TusPhp\Cache\RedisStore as TusRedisStore;
  */
 class VideoUploadService
 {
-    public function __construct(private readonly CacheService $cache) {}
-
     /**
      * Create a new video from a direct file upload.
      *

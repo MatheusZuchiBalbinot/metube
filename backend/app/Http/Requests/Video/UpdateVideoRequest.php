@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Video;
 
+use App\DTOs\UpdateVideoDTO;
 use App\Enums\VideoStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * UpdateVideoRequest — Validates video update input.
@@ -61,7 +63,7 @@ class UpdateVideoRequest extends FormRequest
     /**
      * Custom validation logic.
      *
-     * @param \Illuminate\Validation\Validator $validator
+     * @param Validator $validator
      */
     public function withValidator($validator): void
     {
@@ -78,10 +80,10 @@ class UpdateVideoRequest extends FormRequest
     /**
      * Get the DTO for updating a video.
      *
-     * @return \App\DTOs\UpdateVideoDTO
+     * @return UpdateVideoDTO
      */
-    public function getDTO(): \App\DTOs\UpdateVideoDTO
+    public function getDTO(): UpdateVideoDTO
     {
-        return \App\DTOs\UpdateVideoDTO::fromRequest($this->validated());
+        return UpdateVideoDTO::fromRequest($this->validated());
     }
 }

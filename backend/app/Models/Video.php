@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -27,8 +28,8 @@ use Illuminate\Support\Str;
  * @property int $comments_count
  * @property string|null $video_url
  * @property string|null $thumbnail_url
- * @property \Illuminate\Support\Carbon|null $published_at
- * @property \Illuminate\Support\Carbon|null $scheduled_at
+ * @property Carbon|null $published_at
+ * @property Carbon|null $scheduled_at
  * @property bool $is_batch
  * @property VideoSummary|null $summary
  * @property Transcription|null $transcription
@@ -291,13 +292,13 @@ class Video extends Model
      * Filter videos published on a specific date.
      *
      * @param Builder<Video> $query
-     * @param \Illuminate\Support\Carbon|string $date
+     * @param Carbon|string $date
      *
      * @return Builder<Video>
      */
     public function scopePublishedOn(Builder $query, $date): Builder
     {
-        $date = \is_string($date) ? \Illuminate\Support\Carbon::parse($date) : $date;
+        $date = \is_string($date) ? Carbon::parse($date) : $date;
 
         return $query->whereDate('published_at', $date);
     }

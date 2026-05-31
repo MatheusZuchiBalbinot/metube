@@ -9,6 +9,7 @@ use App\Enums\TranscriptionLimit;
 use App\Enums\TranscriptionStatus;
 use App\Http\Requests\Video\VideoChatRequest;
 use App\Http\Resources\VideoChatAnswerResource;
+use App\Models\Video;
 use App\Services\IAService;
 use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
@@ -75,7 +76,7 @@ class VideoChatController extends Controller
      *
      * @param string $transcriptionContent Full transcription text
      */
-    private function buildSystemPrompt(\App\Models\Video $video, string $transcriptionContent): string
+    private function buildSystemPrompt(Video $video, string $transcriptionContent): string
     {
         $truncatedTranscription = mb_substr($transcriptionContent, 0, TranscriptionLimit::MAX_CHARS_FOR_CHAT->value);
 

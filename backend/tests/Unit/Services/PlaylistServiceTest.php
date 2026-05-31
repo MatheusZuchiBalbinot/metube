@@ -6,6 +6,7 @@ use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\PlaylistService;
+use Faker\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -18,7 +19,7 @@ describe('PlaylistService', function () {
     });
 
     test('create playlist for user', function () use (&$service) {
-        $faker = Faker\Factory::create();
+        $faker = Factory::create();
         $user = User::factory()->create();
         $playlistName = $faker->unique()->words(rand(1, 3), true);
 
@@ -38,7 +39,7 @@ describe('PlaylistService', function () {
     });
 
     test('update playlist name', function () use (&$service) {
-        $faker = Faker\Factory::create();
+        $faker = Factory::create();
         $oldName = $faker->words(2, true);
         $newName = $faker->words(2, true);
         $playlist = Playlist::factory()->create(['name' => $oldName]);

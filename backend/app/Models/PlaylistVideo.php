@@ -37,16 +37,31 @@ class PlaylistVideo extends Pivot
         return $this->belongsTo(Video::class);
     }
 
+    /**
+     * @param Builder<PlaylistVideo> $query
+     *
+     * @return Builder<PlaylistVideo>
+     */
     public function scopeForPlaylist(Builder $query, int $playlistId): Builder
     {
         return $query->where('playlist_id', $playlistId);
     }
 
+    /**
+     * @param Builder<PlaylistVideo> $query
+     *
+     * @return Builder<PlaylistVideo>
+     */
     public function scopeForVideo(Builder $query, int $videoId): Builder
     {
         return $query->where('video_id', $videoId);
     }
 
+    /**
+     * @param Builder<PlaylistVideo> $query
+     *
+     * @return Builder<PlaylistVideo>
+     */
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('position');

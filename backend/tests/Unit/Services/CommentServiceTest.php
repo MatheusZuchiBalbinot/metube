@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
+use App\DTOs\StoreCommentDTO;
+use App\DTOs\UpdateCommentDTO;
 use App\Events\CommentLiked;
-use App\Http\Requests\Comment\StoreCommentRequest;
-use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Models\Comment;
+use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\CommentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
@@ -46,10 +48,9 @@ describe('CommentService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $request = Mockery::mock(StoreCommentRequest::class);
-        $request->shouldReceive('validated')->andReturn(['content' => 'Hello world']);
+        $dto = new StoreCommentDTO(content: 'Hello world');
 
-        $comment = $service->store($video->vuid, $request, $user);
+        $comment = $service->store($video->vuid, $dto, $user);
 
         expect($comment->content)->toBe('Hello world')
             ->and($comment->video_id)->toBe($video->id)
@@ -61,10 +62,9 @@ describe('CommentService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['comments_count' => 0]);
 
-        $request = Mockery::mock(StoreCommentRequest::class);
-        $request->shouldReceive('validated')->andReturn(['content' => 'A comment']);
+        $dto = new StoreCommentDTO(content: 'A comment');
 
-        $service->store($video->vuid, $request, $user);
+        $service->store($video->vuid, $dto, $user);
 
         $this->assertDatabaseHas('videos', ['id' => $video->id, 'comments_count' => 1]);
     });
@@ -74,11 +74,9 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $parent = Comment::factory()->create(['video_id' => $video->id, 'parent_id' => null]);
 
-        $request = Mockery::mock(StoreCommentRequest::class);
-        $request->shouldReceive('validated')
-            ->andReturn(['content' => 'A reply', 'parent_cuid' => $parent->cuid]);
+        $dto = new StoreCommentDTO(content: 'A reply', parentCuid: $parent->cuid);
 
-        $reply = $service->store($video->vuid, $request, $user);
+        $reply = $service->store($video->vuid, $dto, $user);
 
         expect($reply->parent_id)->toBe($parent->id);
         $parent->refresh();
@@ -90,12 +88,9 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id, 'user_id' => $user->id]);
 
-        $request = Mockery::mock(UpdateCommentRequest::class);
-        $request->shouldReceive('validated')
-            ->with('content')
-            ->andReturn('Updated content');
+        $dto = new UpdateCommentDTO(content: 'Updated content');
 
-        $updated = $service->update($comment, $request, $user);
+        $updated = $service->update($comment, $dto, $user);
 
         expect($updated->content)->toBe('Updated content')
             ->and($updated->current_version_id)->not->toBeNull();
@@ -143,7 +138,7 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id, 'likes_count' => 1]);
 
-        Illuminate\Support\Facades\DB::table('comment_likes')->insert([
+        DB::table('comment_likes')->insert([
             'user_id' => $user->id,
             'comment_id' => $comment->id,
             'created_at' => now(),
@@ -183,8 +178,8 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id]);
 
-        App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v1', 'version' => 1]);
-        App\Models\CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v2', 'version' => 2]);
+        CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v1', 'version' => 1]);
+        CommentVersion::create(['comment_id' => $comment->id, 'content' => 'v2', 'version' => 2]);
 
         $versions = $service->versions($comment);
 

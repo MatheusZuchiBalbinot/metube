@@ -11,6 +11,7 @@ use App\Models\WatchHistory;
 use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -28,7 +29,7 @@ describe('UserService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        Illuminate\Support\Facades\DB::table('user_video_reactions')->insert([
+        DB::table('user_video_reactions')->insert([
             'user_id' => $user->id,
             'video_id' => $video->id,
             'type' => ReactionType::LIKE->value,

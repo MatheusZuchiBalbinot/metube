@@ -36,6 +36,10 @@ parameters:
         # Builder return type variations from when() chains
         - '#should return.*Builder.*but returns.*Builder.*\|.*Query\\Builder#'
 
+        # Eloquent scope methods that proxy to Query\Builder (orderByDesc, orderBy, whereNull, whereIn, whereDate)
+        # return Query\Builder per PHP stubs without Larastan — false positives at this level.
+        - '#should return.*Builder.*but returns Illuminate\\Database\\Query\\Builder#'
+
         # Pivot model covariance (custom pivot models in BelongsToMany relationships)
         - '#Playlist::videos.*should return.*but returns#'
         - '#User::(reactions|likes|dislikes|savedVideos|subscriptions|subscribers).*should return.*but returns#'

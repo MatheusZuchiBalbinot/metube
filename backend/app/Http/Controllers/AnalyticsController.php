@@ -11,6 +11,7 @@ use App\Http\Requests\Analytics\LogSearchRequest;
 use App\Http\Requests\Analytics\LogSkipRequest;
 use App\Services\AnalyticsService;
 use App\Services\VideoService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Response;
 
 /**
@@ -52,7 +53,7 @@ class AnalyticsController extends Controller
      *
      * @param LogClickRequest $request Validated click
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -98,7 +99,7 @@ class AnalyticsController extends Controller
      *
      * @param LogSkipRequest $request Validated skip
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */

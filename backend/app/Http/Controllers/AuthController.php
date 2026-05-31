@@ -14,6 +14,7 @@ use App\Services\AuthService;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -24,7 +25,7 @@ class AuthController extends Controller
      *
      * @param LoginRequest $request Validated: email, password
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      *
      * @return JsonResponse {user: User}
      */
@@ -99,7 +100,7 @@ class AuthController extends Controller
      *
      * @param ForgotPasswordRequest $request Validated: email
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      *
      * @return JsonResponse {message: string}
      */
@@ -118,7 +119,7 @@ class AuthController extends Controller
      * @param string $token Password reset token (from URL)
      * @param ResetPasswordRequest $request Validated: email, password, password_confirmation
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      *
      * @return JsonResponse {message: string}
      */

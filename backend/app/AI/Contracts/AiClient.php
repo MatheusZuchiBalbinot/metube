@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\AI\Contracts;
 
+use App\Exceptions\AiException;
+
 /**
  * Interface for AI provider clients (Gemini, Claude, etc).
  *
@@ -17,7 +19,7 @@ interface AiClient
      *
      * @param AiPrompt $prompt The prompt with request structure and parser
      *
-     * @throws \App\Exceptions\AiException On API errors
+     * @throws AiException On API errors
      *
      * @return mixed The parsed response (DTO or array)
      */

@@ -15,6 +15,7 @@ use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\VideoService;
+use Faker\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -36,7 +37,7 @@ describe('VideoService', function () {
     });
 
     test('create video stores data correctly and dispatches upload job', function () use (&$service) {
-        $faker = Faker\Factory::create();
+        $faker = Factory::create();
         $user = User::factory()->create();
         $title = $faker->unique()->sentence(3);
         $description = $faker->paragraph();
@@ -91,7 +92,7 @@ describe('VideoService', function () {
     });
 
     test('update video changes attributes', function () use (&$service) {
-        $faker = Faker\Factory::create();
+        $faker = Factory::create();
         $oldTitle = $faker->sentence(2);
         $newTitle = $faker->sentence(2);
         $newDescription = $faker->paragraph();

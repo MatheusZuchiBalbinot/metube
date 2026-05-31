@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\AiSuggestionStatus;
 use App\Enums\VideoStatus;
 use App\Models\Transcription;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Models\VideoAiSuggestion;
 use App\Models\VideoProgress;
 use App\Models\VideoSummary;
 use App\Models\WatchHistory;
+use Faker\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 
@@ -106,7 +108,7 @@ describe('Video Model', function () {
     });
 
     test('video can have tags as array', function () {
-        $faker = Faker\Factory::create();
+        $faker = Factory::create();
         $tagsCount = rand(1, 8);
         $tags = array_slice($faker->words($tagsCount), 0, $tagsCount);
 
@@ -142,7 +144,7 @@ describe('Video Model', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         VideoAiSuggestion::create([
             'video_id' => $video->id,
-            'status' => App\Enums\AiSuggestionStatus::PENDING,
+            'status' => AiSuggestionStatus::PENDING,
             'suggested_tags' => [],
         ]);
 

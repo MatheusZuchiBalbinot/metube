@@ -9,6 +9,7 @@ use App\DTOs\FinalizeUploadDTO;
 use App\DTOs\UpdateVideoDTO;
 use App\DTOs\VideoListFilterDTO;
 use App\Enums\TranscriptionStatus;
+use App\Enums\VideoSource;
 use App\Http\Requests\Video\RecordViewRequest;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
@@ -27,6 +28,8 @@ use App\Services\VideoPublishingService;
 use App\Services\VideoReactionService;
 use App\Services\VideoService;
 use App\Services\VideoUploadService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -98,7 +101,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return JsonResponse Video with full metadata
      */
@@ -119,8 +122,8 @@ class VideoController extends Controller
      * @param UpdateVideoRequest $request Partial payload
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return JsonResponse Updated video
      */
@@ -139,8 +142,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return Response HTTP 204 No Content
      */
@@ -160,7 +163,7 @@ class VideoController extends Controller
      * @param RecordViewRequest $request Optional body: source, session_id
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -169,7 +172,7 @@ class VideoController extends Controller
         $video = $this->videoService->getVideoByUuid($vuid);
         $validated = $request->validated();
 
-        $source = isset($validated['source']) ? \App\Enums\VideoSource::from($validated['source']) : null;
+        $source = isset($validated['source']) ? VideoSource::from($validated['source']) : null;
         $sessionId = $validated['session_id'] ?? null;
 
         $this->reactionService->recordView(
@@ -187,7 +190,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -205,7 +208,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -223,7 +226,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -242,7 +245,7 @@ class VideoController extends Controller
      * @param UpdateProgressRequest $request Validated: percent (0-100)
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */
@@ -260,7 +263,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return JsonResponse {keyPoints: string[], chapters: {timestamp, title}[], readingMode: string}
      */
@@ -281,7 +284,7 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return JsonResponse {status: string, language: string|null, content: string|null}
      */
@@ -305,8 +308,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return Response HTTP 204 No Content
      */
@@ -330,8 +333,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return JsonResponse AI suggestion or 404
      */
@@ -356,8 +359,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return Response HTTP 204 No Content
      */
@@ -376,8 +379,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return JsonResponse Published video resource
      */
@@ -396,8 +399,8 @@ class VideoController extends Controller
      *
      * @param string $vuid Video public identifier
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ModelNotFoundException
+     * @throws AuthorizationException
      *
      * @return Response HTTP 204 No Content
      */

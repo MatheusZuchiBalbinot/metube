@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\VideoResource;
 use App\Services\ChannelService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -24,7 +25,7 @@ class ChannelController extends Controller
      *
      * @param string $uuid User UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return JsonResponse User profile data
      */
@@ -44,7 +45,7 @@ class ChannelController extends Controller
      *
      * @param string $uuid User UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return JsonResponse array{data: Video[], meta: {total: int}}
      */
@@ -62,7 +63,7 @@ class ChannelController extends Controller
      *
      * @param string $uuid Channel user UUID (v4)
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      *
      * @return Response HTTP 204 No Content
      */

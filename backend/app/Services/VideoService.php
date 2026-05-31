@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Config\PaginationSize;
 use App\DTOs\VideoListFilterDTO;
 use App\Models\Video;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -50,7 +51,7 @@ class VideoService
      *
      * Result is cached for 300 s with the channel relation eager-loaded.
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function getVideoByUuid(string $vuid): Video
     {

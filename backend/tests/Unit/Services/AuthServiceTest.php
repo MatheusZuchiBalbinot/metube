@@ -6,10 +6,12 @@ use App\Exceptions\InvalidCredentialsException;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
@@ -114,12 +116,12 @@ describe('AuthService', function () {
     });
 
     test('resetPassword throws ValidationException when broker returns invalid status', function () use (&$service) {
-        $brokerMock = Mockery::mock(Illuminate\Auth\Passwords\PasswordBroker::class);
+        $brokerMock = Mockery::mock(PasswordBroker::class);
         $brokerMock->shouldReceive('reset')
             ->once()
-            ->andReturn(Illuminate\Support\Facades\Password::INVALID_TOKEN);
+            ->andReturn(Password::INVALID_TOKEN);
 
-        Illuminate\Support\Facades\Password::shouldReceive('broker')
+        Password::shouldReceive('broker')
             ->andReturn($brokerMock);
 
         expect(fn () => $service->resetPassword([
