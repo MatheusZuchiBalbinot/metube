@@ -15,6 +15,7 @@ use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
 use App\Models\User;
+use App\Models\UserVideoReaction;
 use App\Models\Video;
 use Illuminate\Support\Facades\DB;
 
@@ -40,10 +41,9 @@ class VideoReactionService
     public function toggleLike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $unliked = DB::table('user_video_reactions')
-                ->where('user_id', $user->id)
-                ->where('video_id', $video->id)
-                ->where('type', ReactionType::LIKE->value)
+            $unliked = UserVideoReaction::byUser($user->id)
+                ->forVideo($video->id)
+                ->likes()
                 ->delete();
 
             if ($unliked > 0) {
@@ -52,17 +52,16 @@ class VideoReactionService
                 return;
             }
 
-            $wasDisliked = DB::table('user_video_reactions')
-                ->where('user_id', $user->id)
-                ->where('video_id', $video->id)
-                ->where('type', ReactionType::DISLIKE->value)
+            $wasDisliked = UserVideoReaction::byUser($user->id)
+                ->forVideo($video->id)
+                ->dislikes()
                 ->delete();
 
             if ($wasDisliked > 0) {
                 event(new VideoUndisliked($user, $video));
             }
 
-            $inserted = DB::table('user_video_reactions')->insertOrIgnore([
+            $inserted = UserVideoReaction::insertOrIgnore([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'type' => ReactionType::LIKE->value,
@@ -70,9 +69,8 @@ class VideoReactionService
 
             if ($inserted > 0) {
                 event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
-                $likeCount = DB::table('user_video_reactions')
-                    ->where('video_id', $video->id)
-                    ->where('type', ReactionType::LIKE->value)
+                $likeCount = UserVideoReaction::forVideo($video->id)
+                    ->likes()
                     ->count();
                 event(new VideoLiked($video, $user, $likeCount));
             }
@@ -91,10 +89,9 @@ class VideoReactionService
     public function toggleDislike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $undisliked = DB::table('user_video_reactions')
-                ->where('user_id', $user->id)
-                ->where('video_id', $video->id)
-                ->where('type', ReactionType::DISLIKE->value)
+            $undisliked = UserVideoReaction::byUser($user->id)
+                ->forVideo($video->id)
+                ->dislikes()
                 ->delete();
 
             if ($undisliked > 0) {
@@ -103,17 +100,16 @@ class VideoReactionService
                 return;
             }
 
-            $wasLiked = DB::table('user_video_reactions')
-                ->where('user_id', $user->id)
-                ->where('video_id', $video->id)
-                ->where('type', ReactionType::LIKE->value)
+            $wasLiked = UserVideoReaction::byUser($user->id)
+                ->forVideo($video->id)
+                ->likes()
                 ->delete();
 
             if ($wasLiked > 0) {
                 event(new VideoUnliked($user, $video));
             }
 
-            $inserted = DB::table('user_video_reactions')->insertOrIgnore([
+            $inserted = UserVideoReaction::insertOrIgnore([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'type' => ReactionType::DISLIKE->value,
