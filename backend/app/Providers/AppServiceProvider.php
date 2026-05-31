@@ -26,7 +26,6 @@ use App\Events\VideoUndisliked;
 use App\Events\VideoUnliked;
 use App\Events\VideoUnsaved;
 use App\Events\VideoViewed;
-use App\Jobs\TranscribeVideo;
 use App\Listeners\InvalidateCacheSubscriber;
 use App\Listeners\LogImpressionsBatch;
 use App\Listeners\LogUserAnalytic;
@@ -37,6 +36,7 @@ use App\Listeners\SendVideoLikedNotification;
 use App\Listeners\SendVideoProcessedNotification;
 use App\Listeners\SendVideoPublishedNotifications;
 use App\Listeners\SendVideoTranscribedNotification;
+use App\Listeners\TranscribeVideoListener;
 use App\Models\Comment;
 use App\Models\Playlist;
 use App\Models\User;
@@ -123,10 +123,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(CommentLiked::class, SendCommentLikedNotification::class);
         Event::listen(VideoLiked::class, SendVideoLikedNotification::class);
         Event::listen(ChannelSubscribed::class, SendNewSubscriberNotification::class);
+        Event::listen(VideoPublished::class, TranscribeVideoListener::class);
         Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
-        Event::listen(VideoPublished::class, function (VideoPublished $event): void {
-            dispatch(new TranscribeVideo($event->video));
-        });
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
         Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscribedNotification::class);
 
