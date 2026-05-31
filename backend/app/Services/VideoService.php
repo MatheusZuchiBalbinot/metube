@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\PaginationSize;
+use App\DTOs\VideoListFilterDTO;
 use App\Models\Video;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -30,51 +31,49 @@ class VideoService
      * Get paginated videos with filters.
      *
      * Caches the default feed (no search/tags/status filters) for 60 seconds.
-     *
-     * @param array<string, mixed> $filters
      */
-    public function listVideos(array $filters): LengthAwarePaginator
+    public function listVideos(VideoListFilterDTO $filters): LengthAwarePaginator
     {
-        $hasFilters = isset($filters['search']) || isset($filters['tags']) || isset($filters['status']);
+        $shouldCache = !$filters->hasFilters();
 
-        if ($hasFilters) {
+        if (!$shouldCache) {
             return $this->queryVideos($filters);
         }
 
-        $page = (int) ($filters['page'] ?? 1);
+        $cachedQuery = fn () => $this->queryVideos($filters);
 
-        return $this->cache->rememberFeed($page, fn () => $this->queryVideos($filters));
+        return $this->cache->rememberFeed($filters->page, $cachedQuery);
     }
 
     /**
      * Get a specific video by UUID.
      *
-     * Result is cached for 300 s with the channel relation eager-loaded so that
-     * `VideoResource` can render channel name/id without an extra query.
-     *
-     * @param string $vuid Video UUID
+     * Result is cached for 300 s with the channel relation eager-loaded.
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getVideoByUuid(string $vuid): Video
     {
-        return $this->cache->rememberVideoMeta(
-            $vuid,
-            fn () => Video::where('vuid', $vuid)->with('channel')->firstOrFail(),
-        );
+        $queryFn = fn () => Video::byVuid($vuid)->with('channel')->firstOrFail();
+
+        return $this->cache->rememberVideoMeta($vuid, $queryFn);
     }
 
     /**
      * Execute the base video query with filters applied.
-     *
-     * @param array<string, mixed> $filters
      */
-    private function queryVideos(array $filters): LengthAwarePaginator
+    private function queryVideos(VideoListFilterDTO $filters): LengthAwarePaginator
     {
-        $hasStatusFilter = isset($filters['status']);
-        $query = Video::filter($filters)->with('channel');
+        $query = Video::filter([
+            'page' => $filters->page,
+            'search' => $filters->search,
+            'tags' => $filters->tags,
+            'status' => $filters->status,
+        ])->with('channel');
 
-        if (!$hasStatusFilter) {
+        $shouldApplyPublished = $filters->status === null;
+
+        if ($shouldApplyPublished) {
             $query = $query->published();
         }
 
