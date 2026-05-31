@@ -250,6 +250,46 @@ class Video extends Model
     }
 
     /**
+     * Filter videos from a specific channel.
+     *
+     * @param Builder<Video> $query
+     * @param int $channelId Channel ID
+     *
+     * @return Builder<Video>
+     */
+    public function scopeOfChannel(Builder $query, int $channelId): Builder
+    {
+        return $query->where('channel_id', $channelId);
+    }
+
+    /**
+     * Order by publication date, newest first.
+     *
+     * @param Builder<Video> $query
+     *
+     * @return Builder<Video>
+     */
+    public function scopeOrderByPublished(Builder $query): Builder
+    {
+        return $query->orderByDesc('published_at');
+    }
+
+    /**
+     * Filter videos published on a specific date.
+     *
+     * @param Builder<Video> $query
+     * @param \Illuminate\Support\Carbon|string $date
+     *
+     * @return Builder<Video>
+     */
+    public function scopePublishedOn(Builder $query, $date): Builder
+    {
+        $date = \is_string($date) ? \Illuminate\Support\Carbon::parse($date) : $date;
+
+        return $query->whereDate('published_at', $date);
+    }
+
+    /**
      * Check if this video already has English captions.
      */
     public function hasEnglishCaptions(): bool
