@@ -141,7 +141,7 @@ describe('RecommendationService', function () {
         $user = User::factory()->create();
         $service = app(RecommendationService::class);
 
-        config(['cache.vidsum.recommendations.active' => false]);
+        config(['cache.metube.recommendations.active' => false]);
 
         $recommendations = $service->forUser($user, 1);
 

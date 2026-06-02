@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\DB;
  */
 class VideoReactionService
 {
+    public function __construct(private readonly ViewCounterService $viewCounter) {}
+
     /**
      * Toggle like reaction on a video.
      *
@@ -174,30 +176,58 @@ class VideoReactionService
     public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
         DB::transaction(function () use ($user, $video, $source, $sessionId) {
-            $now = now();
+            $watchedAt = now();
+            // copy() prevents startOfHour() from mutating $watchedAt in-place
+            $watchedHour = $watchedAt->copy()->startOfHour();
+            $isNotPgsql = DB::connection()->getDriverName() !== 'pgsql';
 
-            $row = [
+            // Check dedup before inserting — avoids relying on insertOrIgnore's
+            // return value, which can be unreliable through the Eloquent chain.
+            $hasViewedThisHour = VideoView::where('user_id', $user->id)
+                ->where('video_id', $video->id)
+                ->where('watched_hour', $watchedHour)
+                ->exists();
+
+            if ($hasViewedThisHour) {
+                return;
+            }
+
+            $viewRow = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
-                'watched_at' => $now,
+                'watched_at' => $watchedAt,
             ];
 
             // On PostgreSQL, watched_hour is a GENERATED ALWAYS AS column and
             // must not be set manually. On SQLite (tests), it is a plain nullable
             // column that we populate so the unique constraint can deduplicate.
-            if (DB::connection()->getDriverName() !== 'pgsql') {
-                $row['watched_hour'] = $now->startOfHour();
+            if ($isNotPgsql) {
+                $viewRow['watched_hour'] = $watchedHour;
             }
 
             if ($source !== null) {
-                $row['source'] = $source->value;
+                $viewRow['source'] = $source->value;
             }
 
             if ($sessionId !== null) {
-                $row['session_id'] = $sessionId;
+                $viewRow['session_id'] = $sessionId;
             }
 
-            VideoView::insertOrIgnore($row);
+            VideoView::insertOrIgnore($viewRow);
+
+            $historyRow = [
+                'user_id' => $user->id,
+                'video_id' => $video->id,
+                'watched_at' => $watchedAt,
+            ];
+
+            if ($isNotPgsql) {
+                $historyRow['watched_hour'] = $watchedHour;
+            }
+
+            DB::table('watch_histories')->insertOrIgnore($historyRow);
+
+            $this->viewCounter->increment($video->id);
 
             event(new VideoViewed($user, $video, $source));
         });

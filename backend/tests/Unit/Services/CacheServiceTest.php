@@ -23,7 +23,7 @@ describe('CacheService', function () {
     });
 
     test('rememberFeed calls callback on cache miss and caches result', function () use (&$service) {
-        config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
 
         $callCount = 0;
         $paginator = new LengthAwarePaginator([], 0, 20);
@@ -39,7 +39,7 @@ describe('CacheService', function () {
     });
 
     test('rememberFeed returns cached result on second call without invoking callback again', function () use (&$service) {
-        config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
 
         $callCount = 0;
         $paginator = new LengthAwarePaginator([], 0, 20);
@@ -60,7 +60,7 @@ describe('CacheService', function () {
     });
 
     test('rememberFeed bypasses cache when feed.active is false', function () use (&$service) {
-        config(['cache.vidsum.feed.active' => false]);
+        config(['cache.metube.feed.active' => false]);
 
         $callCount = 0;
         $paginator = new LengthAwarePaginator([], 0, 20);
@@ -81,7 +81,7 @@ describe('CacheService', function () {
     });
 
     test('forgetFeed flushes the feed cache', function () use (&$service) {
-        config(['cache.vidsum.feed.active' => true, 'cache.vidsum.feed.ttl' => 60]);
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
 
         $callCount = 0;
         $paginator = new LengthAwarePaginator([], 0, 20);
@@ -104,7 +104,7 @@ describe('CacheService', function () {
     });
 
     test('rememberChannelInfo caches the channel user', function () use (&$service) {
-        config(['cache.vidsum.channel.info.active' => true, 'cache.vidsum.channel.info.ttl' => 600]);
+        config(['cache.metube.channel.info.active' => true, 'cache.metube.channel.info.ttl' => 600]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -125,7 +125,7 @@ describe('CacheService', function () {
     });
 
     test('rememberChannelInfo bypasses cache when channel.info.active is false', function () use (&$service) {
-        config(['cache.vidsum.channel.info.active' => false]);
+        config(['cache.metube.channel.info.active' => false]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -146,7 +146,7 @@ describe('CacheService', function () {
     });
 
     test('forgetChannel flushes channel cache', function () use (&$service) {
-        config(['cache.vidsum.channel.info.active' => true, 'cache.vidsum.channel.info.ttl' => 600]);
+        config(['cache.metube.channel.info.active' => true, 'cache.metube.channel.info.ttl' => 600]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -169,7 +169,7 @@ describe('CacheService', function () {
     });
 
     test('rememberVideoMeta caches video metadata', function () use (&$service) {
-        config(['cache.vidsum.video.meta.active' => true, 'cache.vidsum.video.meta.ttl' => 300]);
+        config(['cache.metube.video.meta.active' => true, 'cache.metube.video.meta.ttl' => 300]);
 
         $video = Video::factory()->create();
         $callCount = 0;
@@ -190,7 +190,7 @@ describe('CacheService', function () {
     });
 
     test('getOrCacheVideoSummary caches summary when present', function () use (&$service) {
-        config(['cache.vidsum.video.summary.active' => true]);
+        config(['cache.metube.video.summary.active' => true]);
 
         $video = Video::factory()->create();
         $summary = VideoSummary::factory()->for($video)->create();
@@ -212,7 +212,7 @@ describe('CacheService', function () {
     });
 
     test('getOrCacheVideoSummary does not cache null results', function () use (&$service) {
-        config(['cache.vidsum.video.summary.active' => true]);
+        config(['cache.metube.video.summary.active' => true]);
 
         $video = Video::factory()->create();
         $callCount = 0;
@@ -233,7 +233,7 @@ describe('CacheService', function () {
     });
 
     test('forgetVideo flushes video meta and summary cache', function () use (&$service) {
-        config(['cache.vidsum.video.meta.active' => true, 'cache.vidsum.video.meta.ttl' => 300]);
+        config(['cache.metube.video.meta.active' => true, 'cache.metube.video.meta.ttl' => 300]);
 
         $video = Video::factory()->create();
         $callCount = 0;
@@ -256,7 +256,7 @@ describe('CacheService', function () {
     });
 
     test('rememberUserPlaylists caches playlists', function () use (&$service) {
-        config(['cache.vidsum.user.playlists.active' => true, 'cache.vidsum.user.playlists.ttl' => 300]);
+        config(['cache.metube.user.playlists.active' => true, 'cache.metube.user.playlists.ttl' => 300]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -278,7 +278,7 @@ describe('CacheService', function () {
     });
 
     test('forgetUserPlaylists invalidates playlist cache', function () use (&$service) {
-        config(['cache.vidsum.user.playlists.active' => true, 'cache.vidsum.user.playlists.ttl' => 300]);
+        config(['cache.metube.user.playlists.active' => true, 'cache.metube.user.playlists.ttl' => 300]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -302,7 +302,7 @@ describe('CacheService', function () {
     });
 
     test('rememberHistoryEvents caches history heatmap', function () use (&$service) {
-        config(['cache.vidsum.user.history_events.active' => true, 'cache.vidsum.user.history_events.ttl' => 300]);
+        config(['cache.metube.user.history_events.active' => true, 'cache.metube.user.history_events.ttl' => 300]);
 
         $user = User::factory()->create();
         $callCount = 0;
@@ -324,7 +324,7 @@ describe('CacheService', function () {
     });
 
     test('forgetHistoryEvents invalidates history events cache', function () use (&$service) {
-        config(['cache.vidsum.user.history_events.active' => true, 'cache.vidsum.user.history_events.ttl' => 300]);
+        config(['cache.metube.user.history_events.active' => true, 'cache.metube.user.history_events.ttl' => 300]);
 
         $user = User::factory()->create();
         $callCount = 0;

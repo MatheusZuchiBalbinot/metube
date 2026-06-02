@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Cache;
 /**
  * CacheService — Typed cache wrapper for all application cache groups.
  *
- * Each group is controlled by two config keys under cache.vidsum.*:
+ * Each group is controlled by two config keys under cache.metube.*:
  *   ttl    → seconds to cache the value (integers only)
  *   active → when false the callback is called directly, bypassing cache
  *
@@ -40,12 +40,12 @@ class CacheService
      */
     public function rememberFeed(int $page, Closure $callback): LengthAwarePaginator
     {
-        if (!(bool) config('cache.vidsum.feed.active')) {
+        if (!(bool) config('cache.metube.feed.active')) {
             return $callback();
         }
 
         return Cache::tags(['feed'])
-            ->remember("feed:page:{$page}", config('cache.vidsum.feed.ttl'), $callback);
+            ->remember("feed:page:{$page}", config('cache.metube.feed.ttl'), $callback);
     }
 
     /**
@@ -65,12 +65,12 @@ class CacheService
      */
     public function rememberChannelInfo(string $uuid, Closure $callback): User
     {
-        if (!(bool) config('cache.vidsum.channel.info.active')) {
+        if (!(bool) config('cache.metube.channel.info.active')) {
             return $callback();
         }
 
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:info:{$uuid}", config('cache.vidsum.channel.info.ttl'), $callback);
+            ->remember("channel:info:{$uuid}", config('cache.metube.channel.info.ttl'), $callback);
     }
 
     /**
@@ -82,12 +82,12 @@ class CacheService
      */
     public function rememberChannelVideos(string $uuid, int $page, Closure $callback): LengthAwarePaginator
     {
-        if (!(bool) config('cache.vidsum.channel.videos.active')) {
+        if (!(bool) config('cache.metube.channel.videos.active')) {
             return $callback();
         }
 
         return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.vidsum.channel.videos.ttl'), $callback);
+            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.metube.channel.videos.ttl'), $callback);
     }
 
     /**
@@ -105,12 +105,12 @@ class CacheService
      */
     public function rememberVideoMeta(string $vuid, Closure $callback): Video
     {
-        if (!(bool) config('cache.vidsum.video.meta.active')) {
+        if (!(bool) config('cache.metube.video.meta.active')) {
             return $callback();
         }
 
         return Cache::tags(["video:{$vuid}"])
-            ->remember("video:meta:{$vuid}", config('cache.vidsum.video.meta.ttl'), $callback);
+            ->remember("video:meta:{$vuid}", config('cache.metube.video.meta.ttl'), $callback);
     }
 
     /**
@@ -124,7 +124,7 @@ class CacheService
      */
     public function getOrCacheVideoSummary(string $vuid, Closure $callback): ?VideoSummary
     {
-        if (!(bool) config('cache.vidsum.video.summary.active')) {
+        if (!(bool) config('cache.metube.video.summary.active')) {
             return $callback();
         }
 
@@ -163,12 +163,12 @@ class CacheService
      */
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {
-        if (!(bool) config('cache.vidsum.user.playlists.active')) {
+        if (!(bool) config('cache.metube.user.playlists.active')) {
             return $callback();
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:playlists:{$userId}", config('cache.vidsum.user.playlists.ttl'), $callback);
+            ->remember("user:playlists:{$userId}", config('cache.metube.user.playlists.ttl'), $callback);
     }
 
     /**
@@ -188,12 +188,12 @@ class CacheService
      */
     public function rememberUserSubscriptions(int $userId, Closure $callback): Collection
     {
-        if (!(bool) config('cache.vidsum.user.subscriptions.active')) {
+        if (!(bool) config('cache.metube.user.subscriptions.active')) {
             return $callback();
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:subscriptions:{$userId}", config('cache.vidsum.user.subscriptions.ttl'), $callback);
+            ->remember("user:subscriptions:{$userId}", config('cache.metube.user.subscriptions.ttl'), $callback);
     }
 
     /**
@@ -213,12 +213,12 @@ class CacheService
      */
     public function rememberHistoryEvents(int $userId, Closure $callback): array
     {
-        if (!(bool) config('cache.vidsum.user.history_events.active')) {
+        if (!(bool) config('cache.metube.user.history_events.active')) {
             return $callback();
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:history-events:{$userId}", config('cache.vidsum.user.history_events.ttl'), $callback);
+            ->remember("user:history-events:{$userId}", config('cache.metube.user.history_events.ttl'), $callback);
     }
 
     /**
@@ -238,12 +238,12 @@ class CacheService
      */
     public function rememberRecommendations(int $userId, int $page, Closure $callback): Collection
     {
-        if (!(bool) config('cache.vidsum.recommendations.active')) {
+        if (!(bool) config('cache.metube.recommendations.active')) {
             return $callback();
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:recommendations:{$userId}:page:{$page}", config('cache.vidsum.recommendations.ttl'), $callback);
+            ->remember("user:recommendations:{$userId}:page:{$page}", config('cache.metube.recommendations.ttl'), $callback);
     }
 
     /**

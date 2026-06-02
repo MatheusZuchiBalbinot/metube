@@ -62,7 +62,7 @@ describe('UserService', function () {
     });
 
     test('getUserSubscriptions returns channels user is subscribed to', function () use (&$service) {
-        config(['cache.vidsum.user.subscriptions.active' => false]);
+        config(['cache.metube.user.subscriptions.active' => false]);
 
         $user = User::factory()->create();
         $channel = User::factory()->create();
@@ -75,7 +75,7 @@ describe('UserService', function () {
     });
 
     test('getUserSubscriptions returns empty collection when no subscriptions', function () use (&$service) {
-        config(['cache.vidsum.user.subscriptions.active' => false]);
+        config(['cache.metube.user.subscriptions.active' => false]);
 
         $user = User::factory()->create();
 
@@ -171,7 +171,7 @@ describe('UserService', function () {
     });
 
     test('getHistoryEvents returns aggregated watch activity', function () use (&$service) {
-        config(['cache.vidsum.user.history_events.active' => false]);
+        config(['cache.metube.user.history_events.active' => false]);
 
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
