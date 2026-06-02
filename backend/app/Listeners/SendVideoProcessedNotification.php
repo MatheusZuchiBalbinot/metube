@@ -14,9 +14,6 @@ class SendVideoProcessedNotification implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /** @var int */
-    public $tries = 3;
-
     /**
      * Notify the video owner when their video finishes processing (published or failed).
      *

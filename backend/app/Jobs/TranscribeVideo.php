@@ -16,6 +16,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class TranscribeVideo implements ShouldQueue
@@ -54,7 +55,13 @@ class TranscribeVideo implements ShouldQueue
     {
         $video = Video::with('transcription')->find($this->video->id);
 
-        if ($video === null || $video->video_url === null) {
+        if ($video === null) {
+            return;
+        }
+
+        $isAudioMissing = !Storage::disk('public')->exists($video->audioPath());
+
+        if ($isAudioMissing) {
             return;
         }
 

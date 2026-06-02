@@ -198,4 +198,16 @@ describe('Video Model', function () {
 
         expect($video->is_batch)->toBeTrue();
     });
+
+    test('hlsDirectory is scoped by vuid', function () {
+        $video = Video::factory()->create();
+
+        expect($video->hlsDirectory())->toBe("hls/{$video->vuid}");
+    });
+
+    test('audioPath lives inside the HLS directory', function () {
+        $video = Video::factory()->create();
+
+        expect($video->audioPath())->toBe("hls/{$video->vuid}/audio.m4a");
+    });
 });

@@ -9,8 +9,13 @@ use App\Enums\TranscriptionStatus;
 use App\Exceptions\WhisperException;
 use App\Models\Video;
 
-class TranscriptionService
+final class TranscriptionService
 {
+    public function __construct(
+        private readonly WhisperClient $client,
+        private readonly VideoStorageService $storage,
+    ) {}
+
     /**
      * Transcribe a video and persist the transcription with original-language captions.
      *
@@ -20,11 +25,14 @@ class TranscriptionService
      */
     public function transcribe(Video $video): void
     {
-        if ($video->video_url === null) {
+        $audioPath = $video->audioPath();
+        $isAudioMissing = !$this->storage->exists($audioPath);
+
+        if ($isAudioMissing) {
             return;
         }
 
-        $result = $this->client->transcribe($video->video_url);
+        $result = $this->client->transcribe($audioPath);
 
         $captionPath = $this->storage->publishCaption(
             $result->vtt,
@@ -48,9 +56,4 @@ class TranscriptionService
         ];
         $video->transcription()->updateOrCreate([], $transcriptionPayload);
     }
-
-    public function __construct(
-        private WhisperClient $client,
-        private VideoStorageService $storage,
-    ) {}
 }

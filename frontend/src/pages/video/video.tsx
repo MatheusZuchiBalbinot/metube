@@ -119,6 +119,8 @@ export default function VideoPage() {
     const isAutoplayActive = autoplayCountdown !== null;
     const nextVideo = relatedVideos[0];
     const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
+    // Prefer the HLS manifest; fall back to the raw file while transcoding is still in flight.
+    const playbackSrc = video.hlsUrl ?? video.videoUrl ?? '';
 
     function handleRetryTranscription() {
         if (!video) {
@@ -149,8 +151,8 @@ export default function VideoPage() {
                         onRetryTranscription={handleRetryTranscription}
                         getCurrentTime={getCurrentTime}
                         videoRef={videoRef}
-                        hasVideoFile={video.videoUrl !== undefined && video.videoUrl !== ''}
-                        src={video.videoUrl ?? ''}
+                        hasVideoFile={playbackSrc !== ''}
+                        src={playbackSrc}
                         autoPlay={autoplay}
                         captions={video.captions}
                         chapters={summary?.chapters}

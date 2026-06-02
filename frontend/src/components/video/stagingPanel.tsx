@@ -45,6 +45,8 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
     }
 
     useEffect(() => {
+        // fetchSuggestion flips the loading flag on mount; intended initial state, not a cascade.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void fetchSuggestion();
     }, [video.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -198,7 +200,7 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
                 }
             >
                 <div className="staging-modal__ai-bar" aria-hidden="true" />
-            <div className="staging-modal__body">
+                <div className="staging-modal__body">
                     <Input
                         label={t('video.title')}
                         value={editTitle}

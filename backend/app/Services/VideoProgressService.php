@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  * - Detecting video completion
  * - Dispatching relevant viewing events
  */
-class VideoProgressService
+final class VideoProgressService
 {
     /**
      * Update watch progress for a video.

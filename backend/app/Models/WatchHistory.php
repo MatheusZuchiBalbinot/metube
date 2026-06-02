@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\HistoryPeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -18,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 class WatchHistory extends Model
 {
+    use HasFactory;
+
     /** @var bool */
     public $timestamps = false;
 
@@ -91,5 +95,24 @@ class WatchHistory extends Model
     public function scopeByVideoVuid(Builder $query, string $vuid): Builder
     {
         return $query->whereHas('video', fn ($q) => $q->where('vuid', $vuid));
+    }
+
+    /**
+     * Restrict history to a time window. HistoryPeriod::ALL applies no constraint.
+     *
+     * @param Builder<WatchHistory> $query
+     * @param HistoryPeriod $period Time window to filter by
+     *
+     * @return Builder<WatchHistory>
+     */
+    public function scopeFilterByPeriod(Builder $query, HistoryPeriod $period): Builder
+    {
+        $startDate = $period->startDate();
+
+        if ($startDate === null) {
+            return $query;
+        }
+
+        return $query->where('watched_at', '>=', $startDate);
     }
 }

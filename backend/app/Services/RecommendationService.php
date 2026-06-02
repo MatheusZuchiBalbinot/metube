@@ -13,7 +13,7 @@ use App\Models\Video;
 use App\Models\WatchHistory;
 use Illuminate\Support\Collection;
 
-class RecommendationService
+final class RecommendationService
 {
     public function __construct(private readonly CacheService $cache) {}
 

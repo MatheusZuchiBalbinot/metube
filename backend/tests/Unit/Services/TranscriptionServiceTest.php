@@ -16,10 +16,7 @@ uses(RefreshDatabase::class);
 describe('TranscriptionService', function () {
     test('transcribe saves transcription and captions from Whisper result', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->for($user, 'channel')->create([
-            'video_url' => 'storage/app/public/videos/test.mp4',
-            'duration' => 120,
-        ]);
+        $video = Video::factory()->for($user, 'channel')->create(['duration' => 120]);
 
         $result = new TranscriptionResult(
             language: 'pt',
@@ -29,15 +26,15 @@ describe('TranscriptionService', function () {
 
         $mockWhisper = $this->mock(WhisperClient::class)
             ->shouldReceive('transcribe')
-            ->with('storage/app/public/videos/test.mp4')
+            ->with($video->audioPath())
             ->andReturn($result)
             ->getMock();
 
-        $mockStorage = $this->mock(VideoStorageService::class)
-            ->shouldReceive('publishCaption')
+        $mockStorage = $this->mock(VideoStorageService::class);
+        $mockStorage->shouldReceive('exists')->with($video->audioPath())->andReturn(true);
+        $mockStorage->shouldReceive('publishCaption')
             ->with($result->vtt, $video->vuid, 'pt')
-            ->andReturn('captions/test.pt.vtt')
-            ->getMock();
+            ->andReturn('captions/test.pt.vtt');
 
         $service = new TranscriptionService($mockWhisper, $mockStorage);
         $service->transcribe($video);
@@ -58,9 +55,7 @@ describe('TranscriptionService', function () {
 
     test('transcribe uses correct captions path with language code', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->for($user, 'channel')->create([
-            'video_url' => 'storage/app/public/videos/test.mp4',
-        ]);
+        $video = Video::factory()->for($user, 'channel')->create();
 
         $result = new TranscriptionResult(
             language: 'en',
@@ -73,15 +68,32 @@ describe('TranscriptionService', function () {
             ->andReturn($result)
             ->getMock();
 
-        $mockStorage = $this->mock(VideoStorageService::class)
-            ->shouldReceive('publishCaption')
+        $mockStorage = $this->mock(VideoStorageService::class);
+        $mockStorage->shouldReceive('exists')->andReturn(true);
+        $mockStorage->shouldReceive('publishCaption')
             ->withArgs(fn ($vtt, $vuid, $lang) => $vuid === $video->vuid && $lang === 'en')
-            ->andReturn('captions/test.en.vtt')
-            ->getMock();
+            ->andReturn('captions/test.en.vtt');
 
         $service = new TranscriptionService($mockWhisper, $mockStorage);
         $service->transcribe($video);
 
         expect($video->refresh()->transcription->language)->toBe('en');
+    });
+
+    test('transcribe skips when the extracted audio file is missing', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+
+        $mockWhisper = $this->mock(WhisperClient::class)
+            ->shouldNotReceive('transcribe')
+            ->getMock();
+        $mockStorage = $this->mock(VideoStorageService::class);
+        $mockStorage->shouldReceive('exists')->andReturn(false);
+        $mockStorage->shouldNotReceive('publishCaption');
+
+        $service = new TranscriptionService($mockWhisper, $mockStorage);
+        $service->transcribe($video);
+
+        expect($video->refresh()->transcription)->toBeNull();
     });
 });

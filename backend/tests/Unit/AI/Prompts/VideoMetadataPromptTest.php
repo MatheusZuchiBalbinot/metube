@@ -50,7 +50,7 @@ describe('VideoMetadataPrompt', function () {
     });
 
     test('requiredKeys returns all expected keys', function () {
-        $video = new Video();
+        $video = new Video;
         $prompt = new VideoMetadataPrompt($video);
 
         expect($prompt->requiredKeys())->toBe([

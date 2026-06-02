@@ -16,7 +16,7 @@ use App\Models\VideoSummary;
  * Handles storing summaries, applying suggestions in batch mode,
  * and creating pending suggestions for single uploads.
  */
-class AiMetadataService
+final class AiMetadataService
 {
     /**
      * Apply AI metadata result to a video.

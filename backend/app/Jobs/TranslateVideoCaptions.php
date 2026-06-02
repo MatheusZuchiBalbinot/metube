@@ -13,6 +13,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -56,7 +57,13 @@ class TranslateVideoCaptions implements ShouldQueue
     {
         $video = Video::find($this->video->id);
 
-        if ($video === null || $video->video_url === null) {
+        if ($video === null) {
+            return;
+        }
+
+        $isAudioMissing = !Storage::disk('public')->exists($video->audioPath());
+
+        if ($isAudioMissing) {
             return;
         }
 
@@ -64,7 +71,7 @@ class TranslateVideoCaptions implements ShouldQueue
             return;
         }
 
-        $result = $whisper->translate($video->video_url);
+        $result = $whisper->translate($video->audioPath());
         $captionPath = $storage->publishCaption($result->vtt, $video->vuid, 'en');
 
         $video->appendCaption(lang: 'en', label: 'English', url: $captionPath);

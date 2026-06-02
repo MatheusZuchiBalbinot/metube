@@ -7,9 +7,10 @@ import { renderWithProviders } from '../../helpers/renderWithProviders';
 import { makeAuthState, makeRootState, makeUser } from '../../helpers/factories';
 import type { VideoTranscription } from '@api';
 import type { Vuid } from '@api';
+import type * as Api from '@api';
 
 vi.mock('@api', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@api')>();
+    const actual = await importOriginal<typeof Api>();
     return {
         ...actual,
         chat: {
@@ -207,7 +208,9 @@ describe('ChatSection', () => {
     it('disables textarea and send button while loading', async () => {
         const { chat } = await import('@api');
         let resolve!: (v: unknown) => void;
-        vi.mocked(chat.ask).mockReturnValue(new Promise(r => { resolve = r; }));
+        vi.mocked(chat.ask).mockReturnValue(new Promise(r => {
+            resolve = r;
+        }));
 
         const user = userEvent.setup();
         renderChat(completedTranscription);

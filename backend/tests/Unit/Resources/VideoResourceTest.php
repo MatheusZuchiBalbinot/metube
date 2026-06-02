@@ -20,7 +20,7 @@ describe('VideoResource', function () {
 
         expect($array)->toHaveKeys([
             'vuid', 'title', 'description', 'status', 'views', 'duration',
-            'video_url', 'thumbnail_url', 'published_at', 'scheduled_at',
+            'video_url', 'hls_url', 'thumbnail_url', 'published_at', 'scheduled_at',
             'created_at', 'tags', 'captions',
         ]);
     });
@@ -69,6 +69,25 @@ describe('VideoResource', function () {
         $array = (new VideoResource($video))->toArray(new Request);
 
         expect($array['video_url'])->toContain('test.mp4');
+    });
+
+    test('hls_url is null when hls_url field is null', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create(['hls_url' => null]);
+
+        $array = (new VideoResource($video))->toArray(new Request);
+
+        expect($array['hls_url'])->toBeNull();
+    });
+
+    test('hls_url is resolved via Storage when set', function () {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create(['hls_url' => 'hls/abc/master.m3u8']);
+
+        $array = (new VideoResource($video))->toArray(new Request);
+
+        expect($array['hls_url'])->toContain('hls/abc/master.m3u8');
     });
 
     test('created_at is ISO 8601 string', function () {

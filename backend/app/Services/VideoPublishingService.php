@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * - Publishing scheduled videos when due
  * - Updating video metadata (title, description, tags)
  */
-class VideoPublishingService
+final class VideoPublishingService
 {
     public function __construct(private readonly CacheService $cache) {}
 

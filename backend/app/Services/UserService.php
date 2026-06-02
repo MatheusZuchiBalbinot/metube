@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * - User library (likes, saves, subscriptions)
  * - Watch history management
  */
-class UserService
+final class UserService
 {
     public function __construct(private readonly CacheService $cache) {}
 

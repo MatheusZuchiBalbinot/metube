@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * - Subscription management (coordination logic)
  * - Complex channel operations
  */
-class ChannelService
+final class ChannelService
 {
     public function __construct(private readonly CacheService $cache) {}
 

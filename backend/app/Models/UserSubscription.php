@@ -31,6 +31,16 @@ class UserSubscription extends Pivot
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * The subscribing user. Semantic alias of {@see user()} (the user_id side).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function subscriber(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function channel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'channel_id');

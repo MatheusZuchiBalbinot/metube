@@ -116,12 +116,13 @@ describe('UserController', function () {
         $response->assertOk();
     });
 
-    test('history treats invalid period as all', function () {
+    test('history rejects an invalid period with a validation error', function () {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->getJson('/api/users/me/history?period=invalid');
 
-        $response->assertOk();
+        $response->assertStatus(422)
+            ->assertJsonValidationErrorFor('period');
     });
 
     test('clearHistory removes all history for the user and returns 204', function () {

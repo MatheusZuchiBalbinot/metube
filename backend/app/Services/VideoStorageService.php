@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\VideoStorageException;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 
 class VideoStorageService
 {
@@ -40,7 +40,7 @@ class VideoStorageService
         $moved = rename($src, $dst);
 
         if (!$moved) {
-            throw new RuntimeException("Could not move video file: {$src} → {$dst}");
+            throw VideoStorageException::moveFailed($src, $dst);
         }
 
         return $finalPath;
@@ -82,6 +82,18 @@ class VideoStorageService
         Storage::disk('public')->put($captionPath, $vttContent);
 
         return $captionPath;
+    }
+
+    /**
+     * Determine whether a published file exists on the public disk.
+     *
+     * @param string $path Path relative to the public disk
+     *
+     * @return bool True when the file exists
+     */
+    public function exists(string $path): bool
+    {
+        return Storage::disk('public')->exists($path);
     }
 
     /**

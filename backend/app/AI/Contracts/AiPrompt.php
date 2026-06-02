@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\AI\Contracts;
 
-use RuntimeException;
+use App\Exceptions\InvalidAiResponseException;
 
 /**
  * Interface for AI prompts.
@@ -35,7 +35,7 @@ interface AiPrompt
      *
      * @param array<string, mixed> $raw Decoded JSON response
      *
-     * @throws RuntimeException If required keys are missing or invalid
+     * @throws InvalidAiResponseException If required keys are missing or invalid
      *
      * @return mixed The parsed result (DTO, array, or other)
      */

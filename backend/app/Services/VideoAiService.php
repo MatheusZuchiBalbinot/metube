@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  * - Retrieving AI summaries (with caching)
  * - Managing AI-generated suggestions (accept/dismiss)
  */
-class VideoAiService
+final class VideoAiService
 {
     public function __construct(private readonly CacheService $cache) {}
 

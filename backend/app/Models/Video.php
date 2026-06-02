@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
  * @property int $views
  * @property int $comments_count
  * @property string|null $video_url
+ * @property string|null $hls_url
  * @property string|null $thumbnail_url
  * @property Carbon|null $published_at
  * @property Carbon|null $scheduled_at
@@ -51,6 +52,7 @@ class Video extends Model
         'duration',
         'views',
         'video_url',
+        'hls_url',
         'thumbnail_url',
         'published_at',
         'scheduled_at',
@@ -320,5 +322,23 @@ class Video extends Model
         $captions[] = compact('lang', 'label', 'url');
 
         $this->update(['captions' => $captions]);
+    }
+
+    /**
+     * Public-disk-relative directory holding this video's HLS package
+     * (master.m3u8, segments and the extracted audio track).
+     */
+    public function hlsDirectory(): string
+    {
+        return "hls/{$this->vuid}";
+    }
+
+    /**
+     * Public-disk-relative path to the audio track extracted during HLS
+     * transcoding. This is the input fed to Whisper for transcription/translation.
+     */
+    public function audioPath(): string
+    {
+        return "{$this->hlsDirectory()}/audio.m4a";
     }
 }

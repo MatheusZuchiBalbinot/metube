@@ -7,9 +7,9 @@ namespace App\AI\Clients;
 use App\AI\Contracts\AiClient;
 use App\AI\Contracts\AiPrompt;
 use App\Enums\ApiTimeout;
+use App\Exceptions\InvalidAiResponseException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 /**
  * Groq AI provider client (OpenAI-compatible).
@@ -18,7 +18,7 @@ use RuntimeException;
  * - Prompt-based JSON extraction (via execute())
  * - Multi-turn conversational responses (via chat())
  */
-class GroqClient implements AiClient
+final class GroqClient implements AiClient
 {
     private readonly string $apiKey;
 
@@ -46,7 +46,7 @@ class GroqClient implements AiClient
      * @param AiPrompt $prompt The prompt to execute
      *
      * @throws RequestException When the API returns a non-2xx response
-     * @throws RuntimeException When the response is not valid JSON or required keys are missing
+     * @throws InvalidAiResponseException When the response is not valid JSON or required keys are missing
      *
      * @return mixed The prompt's parse() result
      */
@@ -60,14 +60,14 @@ class GroqClient implements AiClient
         $isInvalidJson = !\is_array($decoded);
 
         if ($isInvalidJson) {
-            throw new RuntimeException('AI service response is not valid JSON: ' . $text);
+            throw InvalidAiResponseException::invalidJson($text);
         }
 
         foreach ($prompt->requiredKeys() as $key) {
             $isMissing = !\array_key_exists($key, $decoded);
 
             if ($isMissing) {
-                throw new RuntimeException("AI response missing required key '{$key}'");
+                throw InvalidAiResponseException::missingKey($key);
             }
         }
 
@@ -80,7 +80,7 @@ class GroqClient implements AiClient
      * @param string $prompt Full prompt text to send
      *
      * @throws RequestException When the API returns a non-2xx response
-     * @throws RuntimeException When the response content is missing or invalid
+     * @throws InvalidAiResponseException When the response content is missing or invalid
      *
      * @return string The plain-text response from the model
      */
@@ -113,13 +113,15 @@ class GroqClient implements AiClient
      * @param array<int, array{role: string, content: string}> $history Previous turns
      *
      * @throws RequestException When the API returns a non-2xx response
-     * @throws RuntimeException When the response content is missing
+     * @throws InvalidAiResponseException When the response content is missing
      *
      * @return string The model's plain-text answer
      */
     public function chat(string $question, string $systemPrompt, array $history): string
     {
-        $messages = array_merge([['role' => 'system', 'content' => $systemPrompt]], $history,
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $systemPrompt]],
+            $history,
             [['role' => 'user', 'content' => $question]],
         );
 
@@ -138,7 +140,7 @@ class GroqClient implements AiClient
      * @param array<string, mixed> $payload
      *
      * @throws RequestException
-     * @throws RuntimeException
+     * @throws InvalidAiResponseException
      *
      * @return string The response content
      */
@@ -152,8 +154,9 @@ class GroqClient implements AiClient
         $text = $response->json('choices.0.message.content');
 
         $isTextMissing = !is_string($text) || $text === '';
+
         if ($isTextMissing) {
-            throw new RuntimeException('AI service returned an empty response.');
+            throw InvalidAiResponseException::empty();
         }
 
         return $text;

@@ -4,29 +4,39 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\TusResolverContract;
+use App\Contracts\VideoStorageContract;
 use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
-use App\Enums\VideoStatus;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
+use App\Support\VideoFileManager;
+use App\Support\VideoPayloadBuilder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use RuntimeException;
-use TusPhp\Cache\RedisStore as TusRedisStore;
 
 /**
- * VideoUploadService — Handles video upload and deletion workflows.
+ * VideoUploadService — Orchestrates the video upload and deletion workflows.
  *
  * Responsible for:
  * - Creating new videos from single-POST uploads
  * - Finalizing tus resumable uploads
  * - Deleting videos and their associated files
+ *
+ * Infrastructure concerns are delegated to collaborators: file moves go through
+ * {@see VideoFileManager}, tus cache access through {@see TusResolverContract},
+ * file deletion through {@see VideoStorageContract}, and payload construction
+ * through {@see VideoPayloadBuilder}.
  */
-class VideoUploadService
+final class VideoUploadService
 {
+    public function __construct(
+        private readonly VideoFileManager $fileManager,
+        private readonly TusResolverContract $tusResolver,
+        private readonly VideoStorageContract $storage,
+    ) {}
+
     /**
      * Create a new video from a direct file upload.
      *
@@ -38,17 +48,7 @@ class VideoUploadService
     public function createVideo(User $user, CreateVideoDTO $data): Video
     {
         return DB::transaction(function () use ($user, $data) {
-            $videoPayload = [
-                'channel_id' => $user->id,
-                'title' => $data->title,
-                'description' => $data->description,
-                'tags' => $data->tags,
-                'status' => VideoStatus::PROCESSING,
-                'scheduled_at' => $data->scheduledAt,
-                'is_batch' => $data->isBatch,
-            ];
-
-            $video = Video::create($videoPayload);
+            $video = Video::create(VideoPayloadBuilder::fromCreateDTO($user, $data));
 
             $ext = $data->videoFile->getClientOriginalExtension();
             $tmpPath = $data->videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
@@ -79,62 +79,31 @@ class VideoUploadService
      * @param FinalizeUploadDTO $data Validated metadata + upload keys
      *
      * @throws ModelNotFoundException When the upload_key is not found in tus cache
-     * @throws RuntimeException When the assembled file cannot be moved
+     * @throws \App\Exceptions\VideoStorageException When the assembled file cannot be moved
      *
      * @return Video Freshly created Video (status=PROCESSING)
      */
     public function finalizeUpload(User $user, FinalizeUploadDTO $data): Video
     {
-        $tusCache = new TusRedisStore;
-        // TusServer sets prefix via reflection: 'tus:' + strtolower(ShortName) + ':'
-        $tusCache->setPrefix('tus:server:');
-
-        $fileMeta = $tusCache->get($data->uploadKey);
-        $isFileReady = $fileMeta !== null && isset($fileMeta['file_path']) && file_exists($fileMeta['file_path']);
+        $fileMeta = $this->tusResolver->get($data->uploadKey);
+        $isFileReady = $fileMeta !== null
+            && isset($fileMeta['file_path'])
+            && file_exists((string) $fileMeta['file_path']);
 
         if (!$isFileReady) {
             throw new ModelNotFoundException('Upload session not found or file is incomplete.');
         }
 
-        return DB::transaction(function () use ($user, $data, $tusCache, $fileMeta) {
-            $videoPayload = [
-                'channel_id' => $user->id,
-                'title' => $data->title,
-                'description' => $data->description,
-                'tags' => $data->tags,
-                'status' => VideoStatus::PROCESSING,
-                'scheduled_at' => $data->scheduledAt,
-                'is_batch' => $data->isBatch,
-            ];
+        return DB::transaction(function () use ($user, $data, $fileMeta) {
+            $video = Video::create(VideoPayloadBuilder::fromFinalizeDTO($user, $data));
 
-            $video = Video::create($videoPayload);
-
-            $rawExt = strtolower(pathinfo((string) ($fileMeta['name'] ?? 'video.mp4'), PATHINFO_EXTENSION));
-            $ext = $rawExt !== '' ? $rawExt : 'mp4';
-            $tmpPath = "uploads/tmp/{$video->vuid}.{$ext}";
-            rename((string) $fileMeta['file_path'], Storage::disk('local')->path($tmpPath));
-
-            $tmpThumbPath = null;
-            $hasThumbnailKey = $data->thumbnailKey !== null;
-
-            if ($hasThumbnailKey) {
-                $thumbMeta = $tusCache->get($data->thumbnailKey);
-                $isThumbReady = $thumbMeta !== null && isset($thumbMeta['file_path']) && file_exists((string) $thumbMeta['file_path']);
-
-                if ($isThumbReady) {
-                    $rawThumbExt = strtolower(pathinfo((string) ($thumbMeta['name'] ?? 'thumb.jpg'), PATHINFO_EXTENSION));
-                    $thumbExt = $rawThumbExt !== '' ? $rawThumbExt : 'jpg';
-                    $tmpThumbPath = "uploads/tmp/thumb_{$video->vuid}.{$thumbExt}";
-                    rename((string) $thumbMeta['file_path'], Storage::disk('local')->path($tmpThumbPath));
-                    $tusCache->delete($data->thumbnailKey);
-                    Cache::forget("tus:owner:{$data->thumbnailKey}");
-                }
-            }
+            $tmpPath = $this->fileManager->moveVideoFromTus($fileMeta, $video->vuid);
+            $tmpThumbPath = $this->resolveThumbnail($data, $video->vuid);
 
             ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
 
-            $tusCache->delete($data->uploadKey);
-            Cache::forget("tus:owner:{$data->uploadKey}");
+            $this->tusResolver->delete($data->uploadKey);
+            $this->tusResolver->clearOwnerCache($data->uploadKey);
 
             return $video->load('channel');
         });
@@ -149,19 +118,56 @@ class VideoUploadService
     {
         $videoPath = $video->video_url;
         $thumbnailPath = $video->thumbnail_url;
+        $hlsDirectory = $video->hlsDirectory();
 
         DB::transaction(function () use ($video) {
             $video->delete();
         });
 
         $this->deleteVideoFiles($videoPath, $thumbnailPath);
+        $this->storage->deleteDirectory($hlsDirectory);
     }
 
     /**
-     * Delete video files from storage.
+     * Move the finalized thumbnail out of tus storage, if one was uploaded.
      *
-     * @param string|null $videoPath Path to video file
-     * @param string|null $thumbnailPath Path to thumbnail file
+     * @param FinalizeUploadDTO $data Validated metadata + upload keys
+     * @param string $vuid Video public identifier used as the filename stem
+     *
+     * @throws \App\Exceptions\VideoStorageException When the thumbnail cannot be moved
+     *
+     * @return string|null Disk-relative thumbnail path, or null when absent or incomplete
+     */
+    private function resolveThumbnail(FinalizeUploadDTO $data, string $vuid): ?string
+    {
+        $thumbnailKey = $data->thumbnailKey;
+
+        if ($thumbnailKey === null) {
+            return null;
+        }
+
+        $thumbMeta = $this->tusResolver->get($thumbnailKey);
+        $isThumbReady = $thumbMeta !== null
+            && isset($thumbMeta['file_path'])
+            && file_exists((string) $thumbMeta['file_path']);
+
+        if (!$isThumbReady) {
+            return null;
+        }
+
+        $tmpThumbPath = $this->fileManager->moveThumbnailFromTus($thumbMeta, $vuid);
+
+        $this->tusResolver->delete($thumbnailKey);
+        $this->tusResolver->clearOwnerCache($thumbnailKey);
+
+        return $tmpThumbPath;
+    }
+
+    /**
+     * Delete published video files from storage.
+     *
+     * @param string|null $videoPath Path to the video file on the public disk
+     * @param string|null $thumbnailPath Path to the thumbnail file on the public disk
      */
     private function deleteVideoFiles(?string $videoPath, ?string $thumbnailPath): void
     {
@@ -170,7 +176,7 @@ class VideoUploadService
                 continue;
             }
 
-            Storage::disk('public')->delete($path);
+            $this->storage->delete($path);
         }
     }
 }

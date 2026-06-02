@@ -179,6 +179,20 @@ describe('parseVideo', () => {
         expect(result!.videoUrl).toBeUndefined();
     });
 
+    it('maps hls_url to hlsUrl', () => {
+        const result = parseVideo(makeRawVideo({ hls_url: 'https://cdn.example.com/hls/abc/master.m3u8' }));
+
+        expect(result).not.toBeNull();
+        expect(result!.hlsUrl).toBe('https://cdn.example.com/hls/abc/master.m3u8');
+    });
+
+    it('sets hlsUrl to undefined when hls_url is absent', () => {
+        const result = parseVideo(makeRawVideo({ hls_url: '' }));
+
+        expect(result).not.toBeNull();
+        expect(result!.hlsUrl).toBeUndefined();
+    });
+
     it('sets scheduledAt to undefined when scheduled_at is absent', () => {
         const result = parseVideo(makeRawVideo({ scheduled_at: '' }));
 

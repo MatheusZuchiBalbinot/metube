@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Enums\VideoStatus;
 use App\Events\VideoPublished;
 use App\Jobs\ProcessVideoUpload;
-use App\Jobs\TranscribeVideo;
+use App\Jobs\TranscodeVideoToHls;
 use App\Models\Video;
 use App\Services\VideoStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -72,6 +72,14 @@ describe('ProcessVideoUpload', function () {
 
             Event::assertDispatched(VideoPublished::class);
         });
+
+        test('dispatches TranscodeVideoToHls for batch video', function () {
+            $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
+
+            Queue::assertPushed(TranscodeVideoToHls::class);
+        });
     });
 
     describe('handle — single (non-batch) upload', function () {
@@ -83,12 +91,12 @@ describe('ProcessVideoUpload', function () {
             expect($video->fresh()->status)->toBe(VideoStatus::DRAFT);
         });
 
-        test('dispatches TranscribeVideo for non-batch video', function () {
+        test('dispatches TranscodeVideoToHls for non-batch video', function () {
             $video = Video::factory()->processing()->create(['is_batch' => false]);
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
 
-            Queue::assertPushed(TranscribeVideo::class);
+            Queue::assertPushed(TranscodeVideoToHls::class);
         });
 
         test('does not fire VideoPublished for non-batch video', function () {

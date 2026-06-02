@@ -6,8 +6,8 @@ namespace App\AI\Prompts;
 
 use App\AI\Contracts\AiPrompt;
 use App\DTOs\VideoMetadataResult;
+use App\Exceptions\InvalidAiResponseException;
 use App\Models\Video;
-use RuntimeException;
 
 class VideoMetadataPrompt implements AiPrompt
 {
@@ -66,19 +66,11 @@ PROMPT;
      *
      * @param array<string, mixed> $raw Decoded JSON from the model
      *
-     * @throws RuntimeException If required keys are missing
+     * @throws InvalidAiResponseException If required keys are missing
      */
     public function parse(array $raw): VideoMetadataResult
     {
-        $chapters = \array_values(\array_map(function (mixed $chapter): array {
-            $chapter = (array) $chapter;
-
-            if (isset($chapter['timestamp']) && \is_string($chapter['timestamp'])) {
-                $chapter['timestamp'] = (string) \preg_replace('/\.\d+$/', '', $chapter['timestamp']);
-            }
-
-            return $chapter;
-        }, (array) $raw['chapters']));
+        $chapters = \array_values(\array_map($this->normalizeChapter(...), (array) $raw['chapters']));
 
         return new VideoMetadataResult(
             keyPoints: \array_values((array) $raw['key_points']),
@@ -88,5 +80,28 @@ PROMPT;
             suggestedTitle: (string) $raw['suggested_title'],
             suggestedDescription: (string) $raw['suggested_description'],
         );
+    }
+
+    /**
+     * Normalize a raw chapter entry into the strict shape expected by the result DTO.
+     *
+     * The sub-second portion of the timestamp is stripped so chapters anchor to whole
+     * seconds (HH:MM:SS).
+     *
+     * @param mixed $chapter Raw chapter value from the decoded JSON
+     *
+     * @return array{timestamp: string, title: string}
+     */
+    private function normalizeChapter(mixed $chapter): array
+    {
+        $chapter = (array) $chapter;
+
+        $hasTimestamp = isset($chapter['timestamp']) && \is_string($chapter['timestamp']);
+        $timestamp = $hasTimestamp ? (string) \preg_replace('/\.\d+$/', '', $chapter['timestamp']) : '';
+
+        $hasTitle = isset($chapter['title']) && \is_string($chapter['title']);
+        $title = $hasTitle ? $chapter['title'] : '';
+
+        return ['timestamp' => $timestamp, 'title' => $title];
     }
 }
