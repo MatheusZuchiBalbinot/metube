@@ -6,10 +6,8 @@ import ReactionPill from '@components/video/reactionPill';
 import SavePopover from '@components/video/savePopover';
 import TagBadge from '@components/tag/badge';
 import { Avatar } from '@ui';
-import { useAppDispatch } from '@store';
-import { videoActions } from '@store/videoSlice';
 import { Format, ROUTES, formatRelativeDate, cn } from '@utils';
-import type { Video, VideoId, ViewCount } from '@models';
+import type { Video, VideoId, ViewCount, Tag } from '@models';
 import type { VideoTranscription } from '@api';
 import ShareMenu from './ShareMenu';
 import type { UseVideoReactionsResult } from '../hooks/useVideoReactions';
@@ -30,6 +28,7 @@ interface VideoInfoProps {
     descExpanded: boolean
     onDescExpandToggle: () => void
     language: string
+    onTagClick: (tag: Tag) => void
     onScrollToChat?: () => void
 }
 
@@ -37,10 +36,9 @@ export default function VideoInfo({
     video, isOwner, isAuthenticated, isChannelSubscribed, onSubscribe,
     reactions, isSaved, share,
     transcription, readingMode, onReadingModeToggle,
-    descExpanded, onDescExpandToggle, language, onScrollToChat,
+    descExpanded, onDescExpandToggle, language, onTagClick, onScrollToChat,
 }: VideoInfoProps) {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
 
     const videoId = video.id as VideoId;
     const hasLongDesc = (video.description ?? '').length > 220;
@@ -181,7 +179,7 @@ export default function VideoInfo({
                             key={tag}
                             tag={tag}
                             prefix="#"
-                            onClick={() => dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }))}
+                            onClick={() => onTagClick(tag)}
                         />
                     ))}
                 </div>

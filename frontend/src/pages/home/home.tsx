@@ -2,19 +2,18 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, type Transition } from 'framer-motion';
-import { useDispatch } from 'react-redux';
 import { Filter, Flame, PlayCircle, Shuffle } from 'lucide-react';
+import { domain } from '@domain';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import Button from '@ui/button/button';
 import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
-import { videoActions } from '@store/videoSlice';
-import { video } from '@api';
 import './home.css';
 import { useInView, useVideo, useFilterState } from '@hooks';
 import { VideoFilter, ROUTES, videoUrl } from '@utils';
 import type { Tag, Video, VideoId } from '@models';
+import { useHomeFeed } from './hooks/useHomeFeed';
 
 // 2 years: long enough to include recent uploads but short enough to filter
 // out truly old content from the trending carousel.
@@ -24,23 +23,17 @@ const TRENDING_WINDOW_DAYS = 730;
 // the most common desktop viewport widths (1280–1920 px).
 const TRENDING_COUNT = 8;
 
-// Treat a video as "in progress" only when the user has watched at least 4 %
-// (avoids showing videos they barely started) but no more than 96 % (avoids
-// showing videos they effectively finished).
-const CONTINUE_WATCHING_MIN_PROGRESS = 4;
-const CONTINUE_WATCHING_MAX_PROGRESS = 96;
-
 const SECTION_VISIBLE = { opacity: 1, y: 0 };
 const SECTION_HIDDEN = { opacity: 0, y: 16 };
 const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1] };
 
-// eslint-disable-next-line complexity
 export default function HomePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const dispatch = useDispatch();
     const { recommendations, publishedVideos, videoProgress, watchHistory, videos } = useVideo();
     const { filterState, setFilterState, hasActiveFilters, clearFilters } = useFilterState();
+
+    useHomeFeed();
     const trendingRef = useRef<HTMLDivElement>(null);
     const continueRef = useRef<HTMLDivElement>(null);
     const { ref: trendingSectionRef, inView: trendingVisible } = useInView({ rootMargin: '-40px' });
@@ -81,7 +74,7 @@ export default function HomePage() {
                     return false;
                 }
                 const progress = videoProgress[video.id] ?? 0;
-                const isInProgress = progress > CONTINUE_WATCHING_MIN_PROGRESS && progress < CONTINUE_WATCHING_MAX_PROGRESS;
+                const isInProgress = domain.video.hasActiveProgress(progress);
                 return isInProgress;
             })
             .slice(0, 8);
@@ -125,16 +118,6 @@ export default function HomePage() {
         el.addEventListener('scroll', update, { passive: true });
         return () => el.removeEventListener('scroll', update);
     }, [hasContinueWatching]);
-
-    useEffect(() => {
-        async function fetchRecommendations() {
-            dispatch(videoActions.setRecommendationsLoading(true));
-            const items = await video.recommendations(1);
-            dispatch(videoActions.setServerRecommendations(items));
-            dispatch(videoActions.setRecommendationsLoading(false));
-        }
-        void fetchRecommendations();
-    }, [dispatch]);
 
     function scrollCarousel(ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') {
         const el = ref.current;
