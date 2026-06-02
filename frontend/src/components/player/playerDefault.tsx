@@ -141,7 +141,9 @@ export function DefaultVideoPlayer({
     // ─── Effects ──────────────────────────────────────────────────────────────
 
     // Sync activeTrack → native TextTrack.mode once Shaka has loaded the tracks.
-    // Shaka's SimpleTextDisplayer respects track.mode to drive its own <div> renderer.
+    // Use 'hidden' (not 'showing') so the browser's native renderer stays silent while
+    // Shaka's SimpleTextDisplayer still reads the cues and renders its own <div> overlay.
+    // 'showing' would cause both renderers to fire simultaneously → duplicate subtitles.
     useEffect(() => {
         if (!tracksLoaded) {
             return;
@@ -152,7 +154,7 @@ export function DefaultVideoPlayer({
         }
         for (let i = 0; i < el.textTracks.length; i++) {
             const track = el.textTracks[i];
-            track.mode = track.language === activeTrack ? 'showing' : 'disabled';
+            track.mode = track.language === activeTrack ? 'hidden' : 'disabled';
         }
     }, [activeTrack, tracksLoaded, videoRef]);
 
