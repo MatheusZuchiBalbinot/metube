@@ -10,6 +10,7 @@ use App\DTOs\UpdateVideoDTO;
 use App\DTOs\VideoListFilterDTO;
 use App\Enums\TranscriptionStatus;
 use App\Enums\VideoSource;
+use App\Enums\VideoStatus;
 use App\Http\Requests\Video\RecordViewRequest;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
@@ -388,6 +389,12 @@ class VideoController extends Controller
     {
         $video = $this->videoService->getVideoByUuid($vuid);
         $this->authorize('publish', $video);
+
+        $isNotDraft = $video->status !== VideoStatus::DRAFT;
+
+        if ($isNotDraft) {
+            abort(409, 'Video is not in draft status.');
+        }
 
         $this->publishingService->publishVideo($video);
 

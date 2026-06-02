@@ -75,18 +75,13 @@ class VideoPolicy
     }
 
     /**
-     * Determine if user can publish this video.
+     * Determine if user can publish this video (ownership check only).
      *
-     * Video must be in DRAFT status to be published.
+     * Status validation (draft-only) is the controller's responsibility
+     * and returns 409 rather than 403.
      */
     public function publish(User $user, Video $video): bool
     {
-        $isOwner = $user->id === $video->channel_id;
-
-        if (!$isOwner) {
-            return false;
-        }
-
-        return $video->status === VideoStatus::DRAFT;
+        return $user->id === $video->channel_id;
     }
 }
