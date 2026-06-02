@@ -5,39 +5,39 @@ import { STORAGE_KEYS } from '@utils/storageKeys';
 
 describe('STORAGE_KEYS', () => {
     it('has the WATCH_HISTORY key', () => {
-        expect(STORAGE_KEYS.WATCH_HISTORY).toBe('vidsum:watch-history');
+        expect(STORAGE_KEYS.WATCH_HISTORY).toBe('metube:watch-history');
     });
 
     it('has the LIKED_VIDEOS key', () => {
-        expect(STORAGE_KEYS.LIKED_VIDEOS).toBe('vidsum:liked-videos');
+        expect(STORAGE_KEYS.LIKED_VIDEOS).toBe('metube:liked-videos');
     });
 
     it('has the DISLIKED_VIDEOS key', () => {
-        expect(STORAGE_KEYS.DISLIKED_VIDEOS).toBe('vidsum:disliked-videos');
+        expect(STORAGE_KEYS.DISLIKED_VIDEOS).toBe('metube:disliked-videos');
     });
 
     it('has the SAVED_VIDEOS key', () => {
-        expect(STORAGE_KEYS.SAVED_VIDEOS).toBe('vidsum:saved-videos');
+        expect(STORAGE_KEYS.SAVED_VIDEOS).toBe('metube:saved-videos');
     });
 
     it('has the VIDEO_PROGRESS key', () => {
-        expect(STORAGE_KEYS.VIDEO_PROGRESS).toBe('vidsum:video-progress');
+        expect(STORAGE_KEYS.VIDEO_PROGRESS).toBe('metube:video-progress');
     });
 
     it('has the AUTOPLAY key', () => {
-        expect(STORAGE_KEYS.AUTOPLAY).toBe('vidsum:autoplay');
+        expect(STORAGE_KEYS.AUTOPLAY).toBe('metube:autoplay');
     });
 
     it('has the PINNED_VIDEO key', () => {
-        expect(STORAGE_KEYS.PINNED_VIDEO).toBe('vidsum:pinned-video');
+        expect(STORAGE_KEYS.PINNED_VIDEO).toBe('metube:pinned-video');
     });
 
     it('has the SHORTS_MUTED key', () => {
-        expect(STORAGE_KEYS.SHORTS_MUTED).toBe('vidsum:shorts-muted');
+        expect(STORAGE_KEYS.SHORTS_MUTED).toBe('metube:shorts-muted');
     });
 
     it('has the SHORTS_VOLUME key', () => {
-        expect(STORAGE_KEYS.SHORTS_VOLUME).toBe('vidsum:shorts-volume');
+        expect(STORAGE_KEYS.SHORTS_VOLUME).toBe('metube:shorts-volume');
     });
 
     it('has the THEME_MODE key', () => {
@@ -53,15 +53,15 @@ describe('STORAGE_KEYS', () => {
     });
 
     it('has the RECENT_SEARCHES key', () => {
-        expect(STORAGE_KEYS.RECENT_SEARCHES).toBe('vidsum:recent-searches');
+        expect(STORAGE_KEYS.RECENT_SEARCHES).toBe('metube:recent-searches');
     });
 
     it('has the SUBSCRIPTIONS key', () => {
-        expect(STORAGE_KEYS.SUBSCRIPTIONS).toBe('vidsum:subscriptions');
+        expect(STORAGE_KEYS.SUBSCRIPTIONS).toBe('metube:subscriptions');
     });
 
     it('has the PLAYLISTS key', () => {
-        expect(STORAGE_KEYS.PLAYLISTS).toBe('vidsum:playlists');
+        expect(STORAGE_KEYS.PLAYLISTS).toBe('metube:playlists');
     });
 
     it('all storage keys are unique strings', () => {

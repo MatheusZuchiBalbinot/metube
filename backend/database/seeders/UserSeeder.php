@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::firstOrCreate(
-            ['email' => 'admin@vidsum.com'],
+            ['email' => 'admin@metube.com'],
             [
                 'name' => 'Admin',
                 'password' => 'password',

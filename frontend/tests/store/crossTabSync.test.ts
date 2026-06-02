@@ -213,7 +213,7 @@ describe('crossTabSync', () => {
             expect(dispatch).not.toHaveBeenCalled();
         });
 
-        it('does not dispatch anything for vidsum:sidebar-collapsed', () => {
+        it('does not dispatch anything for metube:sidebar-collapsed', () => {
             fireStorageEvent(STORAGE_KEYS.SIDEBAR_COLLAPSED, 'true');
 
             expect(dispatch).not.toHaveBeenCalled();

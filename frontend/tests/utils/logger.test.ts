@@ -21,11 +21,11 @@ describe('logger', () => {
         debugSpy.mockRestore();
     });
 
-    it('error prefixes the message with [Vidsum] and [ERROR]', () => {
+    it('error prefixes the message with [MeTube] and [ERROR]', () => {
         logger.error('boom');
         expect(errorSpy).toHaveBeenCalled();
         const msg = errorSpy.mock.calls[0][0] as string;
-        expect(msg).toContain('[Vidsum]');
+        expect(msg).toContain('[MeTube]');
         expect(msg).toContain('[ERROR]');
         expect(msg).toContain('boom');
     });

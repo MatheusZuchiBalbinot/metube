@@ -7,7 +7,7 @@ services:
     volumes:
       - ./nginx/prod:/etc/nginx/conf.d:ro
       - ./frontend/dist:/var/www/frontend:ro
-      - vidsum_storage:/var/www/storage-root:ro
+      - metube_storage:/var/www/storage-root:ro
     depends_on:
       - backend
       - reverb

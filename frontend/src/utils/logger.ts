@@ -4,7 +4,7 @@ type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 type LogContext = Record<string, unknown>;
 
 class Logger {
-    private readonly prefix = '[Vidsum]';
+    private readonly prefix = '[MeTube]';
 
     private format(level: LogLevel, message: string, context?: LogContext): string {
         const timestamp = new Date().toISOString();

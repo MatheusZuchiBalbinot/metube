@@ -23,13 +23,13 @@ describe('searchSlice — initial state', () => {
     });
 
     it('loads recentSearches from localStorage if present', () => {
-        localStorage.setItem('vidsum:recent-searches', JSON.stringify(['react', 'typescript']));
+        localStorage.setItem('metube:recent-searches', JSON.stringify(['react', 'typescript']));
         const state = reducer(undefined, { type: '@@INIT' });
         expect(state.recentSearches).toEqual(['react', 'typescript']);
     });
 
     it('returns empty array when localStorage value is malformed JSON', () => {
-        localStorage.setItem('vidsum:recent-searches', 'not-json{');
+        localStorage.setItem('metube:recent-searches', 'not-json{');
         const state = reducer(undefined, { type: '@@INIT' });
         expect(state.recentSearches).toEqual([]);
     });

@@ -1,6 +1,6 @@
-# Vidsum
+# MeTube
 
-Plataforma de vídeo full-stack com pipeline de IA integrado — transcrição automática, geração de metadados e resumos via Gemini. Construída do zero com foco em experiência de produto real.
+Plataforma de vídeo full-stack com pipeline de IA integrado — transcrição automática, geração de metadados e resumos. Construída do zero com foco em experiência de produto real.
 
 ---
 
@@ -68,7 +68,7 @@ Segue arquitetura **orientada a hooks** com separação estrita entre lógica e 
 - **Fila** — Laravel Horizon com filas separadas por prioridade
 - **WebSockets** — Laravel Reverb (self-hosted, Pusher-compatible)
 - **Upload** — protocolo tus (tus-php + tus-js-client)
-- **IA** — Whisper ASR (transcrição, self-hosted) + Google Gemini (metadados e resumos)
+- **IA** — Whisper ASR (transcrição, self-hosted) + LLM via interface agnóstica de provider (metadados e resumos)
 - **Auth** — Laravel Sanctum stateful (cookie HttpOnly, sem JWT)
 - **Proxy** — Nginx Alpine como único ponto de entrada
 
@@ -77,7 +77,7 @@ Segue arquitetura **orientada a hooks** com separação estrita entre lógica e 
 ## Pipeline de IA
 
 ```
-Upload → ProcessVideoUpload → TranscribeVideo (Whisper) → GenerateAiMetadata (Gemini)
+Upload → ProcessVideoUpload → TranscribeVideo (Whisper) → GenerateAiMetadata (LLM)
                                       ↓                            ↓
                                broadcast ETA              broadcast sugestões prontas
                                       ↓                            ↓

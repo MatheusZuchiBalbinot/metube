@@ -1,6 +1,6 @@
 {
     "common": {
-        "app_name": "Vidsum",
+        "app_name": "MeTube",
         "loading": "Carregando...",
         "sign_out": "Sair",
         "cancel": "Cancelar",
@@ -45,7 +45,7 @@
         "continue_as_guest": "Continuar como visitante",
         "signup": {
             "title": "Criar conta",
-            "subtitle": "Junte-se ao Vidsum para assistir e enviar vídeos",
+            "subtitle": "Junte-se ao MeTube para assistir e enviar vídeos",
             "name": "Nome",
             "name_placeholder": "Seu nome",
             "confirm_password": "Confirmar senha",

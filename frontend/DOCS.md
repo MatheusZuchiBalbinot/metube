@@ -1,6 +1,6 @@
-# Vidsum — Frontend Documentation
+# MeTube — Frontend Documentation
 
-Bem-vindo à documentação do frontend do Vidsum. Este documento descreve a arquitetura, padrões e APIs disponíveis.
+Bem-vindo à documentação do frontend do MeTube. Este documento descreve a arquitetura, padrões e APIs disponíveis.
 
 ## Navegação Rápida
 

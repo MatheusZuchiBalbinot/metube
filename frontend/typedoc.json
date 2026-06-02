@@ -6,7 +6,7 @@
     "src/context/index.ts"
   ],
   "out": "docs",
-  "name": "Vidsum — Frontend Documentation",
+  "name": "MeTube — Frontend Documentation",
   "readme": "DOCS.md",
   "theme": "default",
   "includeVersion": true,

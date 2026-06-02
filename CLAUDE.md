@@ -1,4 +1,4 @@
-# Vidsum
+# MeTube
 
 Plataforma de video com resumos gerados por IA, inspirada no YouTube.
 
