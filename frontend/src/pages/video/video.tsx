@@ -184,6 +184,7 @@ export default function VideoPage() {
                         descExpanded={descExpanded}
                         onDescExpandToggle={() => setDescExpanded(v => !v)}
                         language={i18n.language}
+                        onTagClick={openTagView}
                         onScrollToChat={authUser !== null ? handleScrollToChat : undefined}
                     />
 
