@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Generate AI-powered metadata from video transcription via Gemini.
+ * Generate AI-powered metadata from video transcription.
  *
  * Stores summary (key_points, chapters, reading_mode). For batch uploads,
  * auto-applies suggested tags/title/description. For single uploads, creates

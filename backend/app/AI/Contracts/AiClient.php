@@ -7,7 +7,7 @@ namespace App\AI\Contracts;
 use App\Exceptions\AiException;
 
 /**
- * Interface for AI provider clients (Gemini, Claude, etc).
+ * Interface for AI provider clients.
  *
  * Clients handle HTTP communication and response parsing.
  * Prompts encapsulate the request structure and parsing logic.

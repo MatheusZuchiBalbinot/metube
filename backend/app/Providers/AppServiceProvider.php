@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\AI\Clients\GeminiClient;
 use App\AI\Clients\GroqClient;
 use App\AI\Contracts\AiClient;
 use App\Events\ChannelSubscribed;
@@ -67,7 +66,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(AiClient::class, GeminiClient::class);
+        $this->app->bind(AiClient::class, GroqClient::class);
         $this->app->singleton(GroqClient::class);
     }
 

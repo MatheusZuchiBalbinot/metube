@@ -10,26 +10,34 @@ use RuntimeException;
  * Interface for AI prompts.
  *
  * Prompts encapsulate:
- * - The request structure (buildRequest() for HTTP payload)
- * - Response parsing (parse() to convert API response to DTO or array)
+ * - The text prompt (buildPrompt()) sent to the AI model
+ * - Required response keys (requiredKeys()) for validation
+ * - Response parsing (parse()) to convert decoded JSON to a DTO
  */
 interface AiPrompt
 {
     /**
-     * Build the request payload for the AI provider.
+     * Build the plain-text prompt to send to the AI model.
      *
-     * @return array<string, mixed> The HTTP request body
+     * @return string The prompt text
      */
-    public function buildRequest(): array;
+    public function buildPrompt(): string;
 
     /**
-     * Parse and validate the AI provider response.
+     * Return the list of JSON keys that must be present in the response.
      *
-     * @param array<string, mixed> $response Raw API response
+     * @return string[]
+     */
+    public function requiredKeys(): array;
+
+    /**
+     * Parse and validate the decoded JSON response from the AI model.
+     *
+     * @param array<string, mixed> $raw Decoded JSON response
      *
      * @throws RuntimeException If required keys are missing or invalid
      *
      * @return mixed The parsed result (DTO, array, or other)
      */
-    public function parse(array $response): mixed;
+    public function parse(array $raw): mixed;
 }

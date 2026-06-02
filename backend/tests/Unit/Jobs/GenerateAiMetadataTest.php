@@ -30,17 +30,9 @@ describe('GenerateAiMetadata', function () {
 
     beforeEach(function () use (&$mockResponse) {
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [
-                    [
-                        'content' => [
-                            'parts' => [
-                                [
-                                    'text' => json_encode($mockResponse),
-                                ],
-                            ],
-                        ],
-                    ],
+            'api.groq.com/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => json_encode($mockResponse)]],
                 ],
             ]),
         ]);
@@ -122,17 +114,17 @@ describe('GenerateAiMetadata', function () {
         expect(VideoSummary::where('video_id', $video->id)->exists())->toBeFalse();
     });
 
-    test('handles Gemini API failure gracefully', function () {
+    test('handles AI API failure gracefully', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['is_batch' => false]);
         Transcription::factory()->for($video)->create(['content' => 'Full transcription text.']);
 
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([], 500),
+            'api.groq.com/*' => Http::response([], 500),
         ]);
 
         $job = new GenerateAiMetadata($video);
-        $exception = new Exception('Gemini API error');
+        $exception = new Exception('Groq API error');
 
         // Verify failed() method exists and can be called
         $job->failed($exception);
