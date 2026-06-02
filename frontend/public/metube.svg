@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <!-- Container -->
+    <rect
+        x="56"
+        y="116"
+        width="400"
+        height="280"
+        rx="70"
+        fill="#FF0000"
+    />
+
+    <!-- Quadrado perfeito -->
+    <rect
+        x="185"
+        y="180"
+        width="150"
+        height="150"
+        fill="#FFFFFF"
+    />
+</svg>

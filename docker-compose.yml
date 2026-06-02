@@ -1,4 +1,4 @@
-name: vidsum
+name: metube
 
 services:
   postgres:
@@ -48,7 +48,7 @@ services:
       - ./backend:/app
       - backend_vendor:/app/vendor
       - backend_cache:/app/bootstrap/cache
-      - vidsum_storage:/app/storage
+      - metube_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -65,7 +65,7 @@ services:
       - WHISPER_LANGUAGE=pt
       - STORAGE_ROOT=/storage/app/public
     volumes:
-      - vidsum_storage:/storage:ro
+      - metube_storage:/storage:ro
     networks:
       - app_net
 
@@ -86,7 +86,7 @@ services:
       - ./backend:/app
       - backend_vendor:/app/vendor
       - backend_cache:/app/bootstrap/cache
-      - vidsum_storage:/app/storage
+      - metube_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -107,7 +107,7 @@ services:
       - ./backend:/app
       - backend_vendor:/app/vendor
       - backend_cache:/app/bootstrap/cache
-      - vidsum_storage:/app/storage
+      - metube_storage:/app/storage
     working_dir: /app
     networks:
       - app_net
@@ -140,7 +140,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - vidsum_storage:/var/www/storage-root:ro
+      - metube_storage:/var/www/storage-root:ro
     depends_on:
       - backend
     networks:
@@ -152,7 +152,7 @@ networks:
 
 volumes:
   pgdata:
-  vidsum_storage:
+  metube_storage:
   backend_vendor:
   backend_cache:
   frontend_node_modules:

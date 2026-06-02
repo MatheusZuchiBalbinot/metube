@@ -552,25 +552,25 @@ describe('videoSlice — initialState from localStorage', () => {
     });
 
     it('reads pinnedVideoId from localStorage when set', async () => {
-        localStorage.setItem('vidsum:pinned-video', 'vid-pinned');
+        localStorage.setItem('metube:pinned-video', 'vid-pinned');
         const { default: slice } = await import('@store/videoSlice');
         expect(slice.getInitialState().pinnedVideoId).toBe('vid-pinned');
     });
 
     it('boolean validator passes for a valid stored boolean', async () => {
-        localStorage.setItem('vidsum:autoplay', 'false');
+        localStorage.setItem('metube:autoplay', 'false');
         const { default: slice } = await import('@store/videoSlice');
         expect(slice.getInitialState().autoplay).toBe(false);
     });
 
     it('boolean validator rejects a non-boolean and resets to seed', async () => {
-        localStorage.setItem('vidsum:autoplay', '"not-a-bool"');
+        localStorage.setItem('metube:autoplay', '"not-a-bool"');
         const { default: slice } = await import('@store/videoSlice');
         expect(slice.getInitialState().autoplay).toBe(true);
     });
 
     it('shortsMuted boolean validator passes for stored false', async () => {
-        localStorage.setItem('vidsum:shorts-muted', 'false');
+        localStorage.setItem('metube:shorts-muted', 'false');
         const { default: slice } = await import('@store/videoSlice');
         expect(slice.getInitialState().shortsMuted).toBe(false);
     });

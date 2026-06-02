@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon, LogIn } from 'lucide-react';
+import { Square, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon, LogIn } from 'lucide-react';
 import { ROUTES, videoUrl } from '@utils';
 import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
@@ -225,7 +225,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
                 <Link to={ROUTES.HOME} className="app-header__brand">
                     <div className="app-header__brand-icon">
-                        <Play size={15} fill="white" strokeWidth={0} />
+                        <Square size={15} fill="white" strokeWidth={0} />
                     </div>
                     <span className="app-header__brand-name">{t('common.app_name')}</span>
                 </Link>

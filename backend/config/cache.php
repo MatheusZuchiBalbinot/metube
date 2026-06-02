@@ -111,11 +111,11 @@ return [
     | that reason, you may prefix every cache key to avoid collisions.
     |
     */
-    'prefix' => env('CACHE_PREFIX', 'vidsum'),
+    'prefix' => env('CACHE_PREFIX', 'metube'),
 
     /*
     |--------------------------------------------------------------------------
-    | Vidsum cache groups
+    | MeTube cache groups
     |--------------------------------------------------------------------------
     |
     | Each group has:
@@ -124,7 +124,7 @@ return [
     |            for that group without changing any code
     |
     */
-    'vidsum' => [
+    'metube' => [
         'feed' => [
             'ttl' => env('CACHE_FEED_TTL', 60),
             'active' => env('CACHE_FEED_ACTIVE', true),

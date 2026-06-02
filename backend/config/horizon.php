@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 return [
 
-    'name' => env('HORIZON_NAME', 'Vidsum'),
+    'name' => env('HORIZON_NAME', 'MeTube'),
 
     'domain' => env('HORIZON_DOMAIN'),
 
