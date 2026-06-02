@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $video_id
  * @property string|null $language
  * @property string|null $content
+ * @property string|null $vtt
  * @property TranscriptionStatus $status
  * @property Carbon|null $started_at
  * @property Carbon $created_at
@@ -26,7 +27,7 @@ class Transcription extends Model
     use HasFactory;
 
     /** @var list<string> */
-    protected $fillable = ['video_id', 'language', 'content', 'status', 'started_at'];
+    protected $fillable = ['video_id', 'language', 'content', 'vtt', 'status', 'started_at'];
 
     /** @return array<string, string> */
     protected function casts(): array

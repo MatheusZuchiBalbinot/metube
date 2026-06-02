@@ -43,6 +43,7 @@ class TranscriptionService
         $transcriptionPayload = [
             'status' => TranscriptionStatus::COMPLETED,
             'content' => $result->text,
+            'vtt' => $result->vtt,
             'language' => $result->language,
         ];
         $video->transcription()->updateOrCreate([], $transcriptionPayload);
