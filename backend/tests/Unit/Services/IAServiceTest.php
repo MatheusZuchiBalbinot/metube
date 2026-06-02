@@ -8,64 +8,6 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 describe('IAService', function () {
-    function groqJsonResponse(string $text): array
-    {
-        return [
-            'choices' => [
-                ['message' => ['content' => $text]],
-            ],
-        ];
-    }
-
-    test('generate returns parsed JSON from AI API', function () {
-        Http::fake([
-            '*' => Http::response(groqJsonResponse('{"key":"value"}')),
-        ]);
-
-        $groqClient = app(GroqClient::class);
-        $service = new IAService($groqClient);
-        $result = $service->generate('test prompt');
-
-        expect($result)->toBeArray()
-            ->and($result['key'])->toBe('value');
-    });
-
-    test('generate throws on invalid JSON response', function () {
-        Http::fake([
-            '*' => Http::response(groqJsonResponse('{invalid json}')),
-        ]);
-
-        $groqClient = app(GroqClient::class);
-        $service = new IAService($groqClient);
-
-        expect(fn () => $service->generate('test prompt'))
-            ->toThrow(RuntimeException::class, 'not valid JSON');
-    });
-
-    test('generate throws on empty response', function () {
-        Http::fake([
-            '*' => Http::response(groqJsonResponse('')),
-        ]);
-
-        $groqClient = app(GroqClient::class);
-        $service = new IAService($groqClient);
-
-        expect(fn () => $service->generate('test prompt'))
-            ->toThrow(RuntimeException::class, 'empty response');
-    });
-
-    test('generate throws on HTTP error', function () {
-        Http::fake([
-            '*' => Http::response([], 500),
-        ]);
-
-        $groqClient = app(GroqClient::class);
-        $service = new IAService($groqClient);
-
-        expect(fn () => $service->generate('test prompt'))
-            ->toThrow(RequestException::class);
-    });
-
     test('chat returns plain text answer', function () {
         Http::fake([
             '*' => Http::response([

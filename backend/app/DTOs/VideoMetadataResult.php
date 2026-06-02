@@ -7,7 +7,7 @@ namespace App\DTOs;
 /**
  * AI-generated metadata for a video.
  *
- * Returned by Gemini after analyzing a video transcription.
+ * Returned by the AI provider after analyzing a video transcription.
  */
 readonly class VideoMetadataResult
 {
