@@ -52,6 +52,7 @@ describe('TranscriptionService', function () {
 
         expect($video->transcription->status)->toBe(TranscriptionStatus::COMPLETED);
         expect($video->transcription->content)->toBe('Olá mundo');
+        expect($video->transcription->vtt)->toBe('WEBVTT\n\n00:00:00.000 --> 00:00:02.000\nOlá mundo');
         expect($video->transcription->language)->toBe('pt');
     });
 
