@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Video;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 /**
@@ -16,14 +15,14 @@ use Illuminate\Support\Facades\Redis;
  * then flush periodically via `views:flush` to one UPDATE per dirty video id.
  *
  * Keys:
- *   vidsum:views:pending:{id}   counter (deleted at flush time)
- *   vidsum:views:dirty          set of ids with pending increments
+ *   metube:views:pending:{id}   counter (deleted at flush time)
+ *   metube:views:dirty          set of ids with pending increments
  */
 class ViewCounterService
 {
-    private const COUNTER_KEY = 'vidsum:views:pending:';
+    private const COUNTER_KEY = 'metube:views:pending:';
 
-    private const DIRTY_SET = 'vidsum:views:dirty';
+    private const DIRTY_SET = 'metube:views:dirty';
 
     /**
      * Record a view in the buffer. Lock-free for concurrent writers.
@@ -33,10 +32,7 @@ class ViewCounterService
         // Tests assert against videos.views directly; bypass the Redis buffer
         // so the DB reflects the new count immediately.
         if (app()->runningUnitTests()) {
-            $updateData = [
-                'views' => DB::raw('views + 1'),
-            ];
-            Video::find($videoId)?->update($updateData);
+            Video::where('id', $videoId)->increment('views');
 
             return;
         }
@@ -80,10 +76,7 @@ class ViewCounterService
                 continue;
             }
 
-            $updateData = [
-                'views' => DB::raw("views + {$count}"),
-            ];
-            Video::find($videoId)?->update($updateData);
+            Video::where('id', $videoId)->increment('views', $count);
             $updated++;
         }
 

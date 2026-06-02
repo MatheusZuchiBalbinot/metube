@@ -60,6 +60,19 @@ export function useRealtime(): void {
                 }
 
                 dispatch(notificationsActions.addNotification(notification));
+
+                if (notification.type === NotificationType.VIDEO_AI_SUMMARY_READY) {
+                    const vuid = notification.data.vuid as string | undefined;
+
+                    if (vuid) {
+                        void videoApi.get(vuid as Vuid).then(result => {
+                            if (result.ok) {
+                                dispatch(videoActions.updateVideo(result.data));
+                            }
+                        });
+                    }
+                }
+
                 const hasDedicatedBroadcastHandler = BROADCAST_HANDLED_TYPES.has(notification.type);
 
                 if (!hasDedicatedBroadcastHandler) {

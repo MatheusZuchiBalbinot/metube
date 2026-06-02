@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Events;
 
 use App\Models\Video;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -19,9 +20,15 @@ class AiSuggestionReady implements ShouldBroadcast
         public readonly Video $video,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /**
+     * @return array<int, Channel|PrivateChannel>
+     */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("users.{$this->video->channel->uuid}");
+        return [
+            new Channel("videos.{$this->video->vuid}"),
+            new PrivateChannel("users.{$this->video->channel->uuid}"),
+        ];
     }
 
     /**

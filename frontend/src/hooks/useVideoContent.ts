@@ -89,10 +89,17 @@ export function useVideoContent(id: string | undefined, videoStatus: VideoStatus
 
             const ch = echo.channel(`videos.${id}`);
 
-            ch.listen('.TranscriptionStatusUpdated', () => {
-                videoApi.getTranscription(toVuid(id)).then(result => {
+            const refetchTranscription = (): void => {
+                void videoApi.getTranscription(toVuid(id)).then(result => {
                     setTranscription(result.ok ? result.data : null);
                 });
+            };
+
+            ch.listen('.TranscriptionStatusUpdated', refetchTranscription);
+            ch.listen('.VideoTranscriptionCompleted', refetchTranscription);
+
+            ch.listen('.AiSuggestionReady', () => {
+                void videoApi.getSummary(toVuid(id)).then(r => setSummary(r.ok ? r.data : null));
             });
         });
 

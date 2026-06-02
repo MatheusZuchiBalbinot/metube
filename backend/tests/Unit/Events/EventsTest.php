@@ -30,15 +30,18 @@ use Illuminate\Support\Carbon;
 uses(RefreshDatabase::class);
 
 describe('AiSuggestionReady', function () {
-    test('broadcastOn returns channel for video owner', function () {
+    test('broadcastOn returns video channel and owner private channel', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
         $event = new AiSuggestionReady($video);
 
-        $channel = $event->broadcastOn();
+        $channels = $event->broadcastOn();
 
-        expect($channel)->toBeInstanceOf(PrivateChannel::class)
-            ->and($channel->name)->toContain($user->uuid);
+        expect($channels)->toBeArray()->toHaveCount(2);
+        expect($channels[0])->toBeInstanceOf(Channel::class)
+            ->and($channels[0]->name)->toContain($video->vuid);
+        expect($channels[1])->toBeInstanceOf(PrivateChannel::class)
+            ->and($channels[1]->name)->toContain($user->uuid);
     });
 
     test('broadcastWith contains vuid and title', function () {
