@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\DB;
  * - Recording video views
  * - Dispatching reaction events for notifications and analytics
  */
-class VideoReactionService
+final class VideoReactionService
 {
     public function __construct(private readonly ViewCounterService $viewCounter) {}
 

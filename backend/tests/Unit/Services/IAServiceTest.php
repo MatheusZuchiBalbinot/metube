@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\AI\Clients\GroqClient;
+use App\Exceptions\InvalidAiResponseException;
 use App\Services\IAService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -70,7 +71,7 @@ describe('IAService', function () {
         $service = new IAService($groqClient);
 
         expect(fn () => $service->chat('Question?', 'Context.', []))
-            ->toThrow(RuntimeException::class, 'empty response');
+            ->toThrow(InvalidAiResponseException::class, 'empty response');
     });
 
     test('chat throws on HTTP error', function () {

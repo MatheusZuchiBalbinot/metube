@@ -18,7 +18,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\DB;
 
-class CommentService
+final class CommentService
 {
     /**
      * List top-level comments for a video, paginated.

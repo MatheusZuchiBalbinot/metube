@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\DTOs\CreatePlaylistDTO;
+use App\DTOs\UpdatePlaylistDTO;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
@@ -23,7 +25,7 @@ describe('PlaylistService', function () {
         $user = User::factory()->create();
         $playlistName = $faker->unique()->words(rand(1, 3), true);
 
-        $playlist = $service->createPlaylist($user, $playlistName);
+        $playlist = $service->createPlaylist($user, new CreatePlaylistDTO($playlistName));
 
         expect($playlist->name)->toBe($playlistName);
         expect($playlist->user_id)->toBe($user->id);
@@ -44,7 +46,7 @@ describe('PlaylistService', function () {
         $newName = $faker->words(2, true);
         $playlist = Playlist::factory()->create(['name' => $oldName]);
 
-        $updated = $service->updatePlaylist($playlist, $newName);
+        $updated = $service->updatePlaylist($playlist, new UpdatePlaylistDTO($newName));
 
         expect($updated->name)->toBe($newName);
         expect($updated->name)->not->toBe($oldName);

@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  * - Managing playlist videos
  * - Reordering videos in playlists
  */
-class PlaylistService
+final class PlaylistService
 {
     public function __construct(private readonly CacheService $cache) {}
 

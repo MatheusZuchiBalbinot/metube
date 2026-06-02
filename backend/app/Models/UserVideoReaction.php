@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ReactionType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -95,7 +96,7 @@ class UserVideoReaction extends Pivot
      */
     public function scopeLikes(Builder $query): Builder
     {
-        return $query->where('type', 'LIKE');
+        return $query->where('type', ReactionType::LIKE->value);
     }
 
     /**
@@ -107,6 +108,6 @@ class UserVideoReaction extends Pivot
      */
     public function scopeDislikes(Builder $query): Builder
     {
-        return $query->where('type', 'DISLIKE');
+        return $query->where('type', ReactionType::DISLIKE->value);
     }
 }

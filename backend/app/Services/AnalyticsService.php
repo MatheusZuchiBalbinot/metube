@@ -18,7 +18,7 @@ use App\Models\Video;
  * The frontend reports impressions, clicks, searches and skips through this
  * service so the recommendation pipeline gets the implicit signals it needs.
  */
-class AnalyticsService
+final class AnalyticsService
 {
     /**
      * Record that a list of videos was rendered to the user (impressions).

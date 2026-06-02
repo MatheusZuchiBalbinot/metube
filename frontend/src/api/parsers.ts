@@ -86,6 +86,7 @@ export function parseVideo(raw: unknown): Video | null {
         views: num(rawData['views']) as unknown as ViewCount,
         duration: typeof rawData['duration'] === 'number' ? rawData['duration'] as unknown as Seconds : undefined,
         videoUrl: str(rawData['video_url']) || undefined,
+        hlsUrl: str(rawData['hls_url']) || undefined,
         thumbnail: str(rawData['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
         publishedAt: str(rawData['published_at']) || createdAt,
         createdAt,

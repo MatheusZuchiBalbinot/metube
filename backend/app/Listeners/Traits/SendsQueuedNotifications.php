@@ -24,6 +24,9 @@ trait SendsQueuedNotifications
 
     public int $delay = 0;
 
+    /** @var int Attempts before the queued notification is marked as failed */
+    public int $tries = 3;
+
     /**
      * Determine if notification should be skipped because user is notifying themselves.
      *

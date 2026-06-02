@@ -35,5 +35,6 @@ export interface Video {
     status: VideoStatus
     duration?: Seconds
     videoUrl?: string
+    hlsUrl?: string
     captions?: VideoCaption[]
 }

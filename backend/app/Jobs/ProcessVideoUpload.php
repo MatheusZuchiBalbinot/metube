@@ -98,6 +98,8 @@ class ProcessVideoUpload implements ShouldQueue
         if ($isPublished && $statusChanged) {
             event(new VideoPublished($video));
         }
+
+        TranscodeVideoToHls::dispatch($video);
     }
 
     /**
@@ -119,7 +121,7 @@ class ProcessVideoUpload implements ShouldQueue
 
         event(new VideoStatusUpdated($video, VideoStatus::DRAFT));
 
-        TranscribeVideo::dispatch($video);
+        TranscodeVideoToHls::dispatch($video);
     }
 
     /**

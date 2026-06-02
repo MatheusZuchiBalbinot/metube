@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\AI\Clients\GroqClient;
 use App\AI\Contracts\AiPrompt;
 use App\DTOs\VideoMetadataResult;
+use App\Exceptions\InvalidAiResponseException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;
@@ -47,7 +48,7 @@ describe('GroqClient::execute', function () {
         expect($result)->toBeInstanceOf(VideoMetadataResult::class);
     });
 
-    test('throws RuntimeException when required key is missing', function () use (&$mockResponse) {
+    test('throws InvalidAiResponseException when required key is missing', function () use (&$mockResponse) {
         $incomplete = $mockResponse;
         unset($incomplete['chapters']);
 
@@ -65,10 +66,10 @@ describe('GroqClient::execute', function () {
         $client = app(GroqClient::class);
 
         expect(fn () => $client->execute($mockPrompt))
-            ->toThrow(RuntimeException::class, "missing required key 'chapters'");
+            ->toThrow(InvalidAiResponseException::class, "missing required key 'chapters'");
     });
 
-    test('throws RuntimeException when response is not valid JSON', function () {
+    test('throws InvalidAiResponseException when response is not valid JSON', function () {
         Http::fake([
             'api.groq.com/*' => Http::response([
                 'choices' => [['message' => ['content' => '{invalid json}']]],
@@ -82,7 +83,7 @@ describe('GroqClient::execute', function () {
         $client = app(GroqClient::class);
 
         expect(fn () => $client->execute($mockPrompt))
-            ->toThrow(RuntimeException::class, 'not valid JSON');
+            ->toThrow(InvalidAiResponseException::class, 'not valid JSON');
     });
 
     test('throws on HTTP error', function () {

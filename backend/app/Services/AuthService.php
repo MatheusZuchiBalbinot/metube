@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
-class AuthService
+final class AuthService
 {
     /**
      * Attempt login, regenerate session, and return the authenticated user.

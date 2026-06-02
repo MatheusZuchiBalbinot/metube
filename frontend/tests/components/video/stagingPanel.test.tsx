@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import StagingPanel from '@components/video/stagingPanel';
-import { video as videoApi, toVuid } from '@api/videos';
+import type { toVuid } from '@api/videos';
+import { video as videoApi } from '@api/videos';
 import { renderWithProviders } from '../../helpers/renderWithProviders';
 import { makeRootState, makeUser } from '../../helpers/factories';
 import type { Video, VideoId } from '@models/video';
@@ -118,7 +119,9 @@ describe('StagingPanel', () => {
             const user = userEvent.setup();
             let resolve!: (v: ReturnType<typeof videoApi.publish>) => void;
             vi.mocked(videoApi.publish).mockImplementation(
-                () => new Promise(r => { resolve = r; }),
+                () => new Promise(r => {
+                    resolve = r;
+                }),
             );
 
             renderPanel();

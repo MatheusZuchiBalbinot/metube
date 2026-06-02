@@ -24,7 +24,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * - VideoProgressService — watch progress
  * - VideoAiService — AI suggestions and summaries
  */
-class VideoService
+final class VideoService
 {
     public function __construct(private readonly CacheService $cache) {}
 
