@@ -13,7 +13,6 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -61,7 +60,7 @@ class TranslateVideoCaptions implements ShouldQueue
             return;
         }
 
-        $isAudioMissing = !Storage::disk('public')->exists($video->audioPath());
+        $isAudioMissing = !$storage->exists($video->audioPath());
 
         if ($isAudioMissing) {
             return;

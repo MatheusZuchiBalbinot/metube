@@ -132,10 +132,12 @@ class ProcessVideoUpload implements ShouldQueue
         app(VideoStorageService::class)->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
         $video = Video::find($this->video->id);
 
-        if ($video !== null) {
-            $video->update(['status' => VideoStatus::FAILED]);
-            event(new VideoStatusUpdated($video, VideoStatus::FAILED));
+        if ($video === null) {
+            return;
         }
+
+        $video->update(['status' => VideoStatus::FAILED]);
+        event(new VideoStatusUpdated($video, VideoStatus::FAILED));
     }
 
     /**
