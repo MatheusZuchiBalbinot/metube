@@ -41,7 +41,7 @@ export default function VideoPage() {
         videos, likedVideos, dislikedVideos,
         likeVideo, dislikeVideo, watchVideo,
         updateProgress, videoProgress, autoplay, closeMiniPlayer,
-        consumePendingVideoSeek,
+        consumePendingVideoSeek, openTagView,
     } = useVideo();
 
     const { user: authUser } = useAuth();

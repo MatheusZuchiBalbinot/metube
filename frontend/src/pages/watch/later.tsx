@@ -5,7 +5,7 @@ import VideoActionCard from '@components/video/actionCard';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { useAppDispatch, useAppSelector } from '@store';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
-import { selectWatchLaterIds } from '@store/playlistSlice';
+import { selectWatchLaterIds } from '@store/playlistSelectors';
 import { domain } from '@domain';
 import { toastActions } from '@store/toastSlice';
 import { VideoFilter, cn } from '@utils';

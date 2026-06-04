@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Bell as BellIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@store';
+import { selectNotificationsUnreadCount } from '@store/notificationsSelectors';
 import { Tooltip } from '@ui';
 import NotificationsPanel from './panel';
 import './bell.css';
@@ -9,7 +10,7 @@ import { useClickOutside } from '@hooks';
 
 export default function NotificationsBell() {
     const { t } = useTranslation();
-    const unreadCount = useAppSelector(s => s.notifications.unreadCount);
+    const unreadCount = useAppSelector(selectNotificationsUnreadCount);
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
+import { selectToasts } from '@store/toastSelectors';
 import { cn } from '@utils';
 import './toast.css';
 
@@ -91,7 +92,7 @@ function ToastItem({ toast }: ToastItemProps) {
 }
 
 export default function ToastContainer() {
-    const toasts = useAppSelector(state => state.toast.toasts);
+    const toasts = useAppSelector(selectToasts);
 
     return (
         <div className="toast-container" aria-live="polite" aria-atomic="true">

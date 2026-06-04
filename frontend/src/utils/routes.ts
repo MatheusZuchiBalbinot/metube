@@ -14,6 +14,7 @@ export const ROUTES = {
     VIDEO:       '/watch',
     SEARCH:      '/search',
     CHANNEL:     '/channel/:id',
+    INSIGHTS:    '/insights',
 } as const;
 
 export function videoUrl(vuid: string): string {
