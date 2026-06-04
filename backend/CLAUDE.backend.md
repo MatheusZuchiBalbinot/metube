@@ -36,6 +36,7 @@ app/
 
   Contracts/
     LoggableUserEvent.php           # Interface para eventos que o LogUserAnalytic persiste
+    StorageContract.php             # Abstrai todas as ops de disco (temp + public); implementado por StorageService
 
   Data/                             # DTOs tipados — criados a partir de $request->validated()
     CreateVideoData.php
@@ -300,8 +301,8 @@ Todos os controllers usam JsonResource. **Nunca retorne models crus.**
     'status'        => $this->status->value,
     'views'         => $this->views,
     'duration'      => $this->duration,
-    'video_url'     => Storage::disk('public')->url($this->video_url),  // null-safe
-    'thumbnail_url' => Storage::disk('public')->url($this->thumbnail_url),
+    'video_url'     => app(StorageContract::class)->publicUrl($this->video_url),  // null-safe
+    'thumbnail_url' => app(StorageContract::class)->publicUrl($this->thumbnail_url),
     'published_at'  => $this->published_at?->toIso8601String(),
     'scheduled_at'  => $this->scheduled_at?->toIso8601String(),
     'created_at'    => $this->created_at->toIso8601String(),
@@ -577,7 +578,8 @@ Controllers são thin: recebem request, autorizam, chamam service, formatam resp
 |------------------------|------------------------------------------------------------------------------|
 | `AuthService`          | login, logout, me, register, updateProfile, sendPasswordResetLink, resetPassword |
 | `VideoService`         | CRUD, finalizeUpload (tus), toggleLike/Dislike/Save, updateProgress, getSummary, transcription, AI suggestion |
-| `VideoStorageService`  | publishVideo, publishThumbnail, cleanupTmp                                   |
+| `StorageService`       | Única classe que chama `Storage::disk()`. Implementa `StorageContract`. Troca por S3 = mudar o binding em `AppServiceProvider` |
+| `VideoStorageService`  | publishVideo, publishThumbnail, publishCaption, cleanupTmp. Injeta `StorageContract` |
 | `ThumbnailService`     | redimensiona e salva thumbnail                                               |
 | `ChannelService`       | show, videos, toggleSubscription                                             |
 | `PlaylistService`      | CRUD, addVideo, removeVideo, reorderVideos                                   |
@@ -820,8 +822,13 @@ TUS_MAX_UPLOAD_BYTES=5368709120  # 5 GB (opcional — padrão no config/tus.php)
 
 # IA / Transcrição
 WHISPER_URL=http://whisper:9000  # serviço whisper-asr no docker-compose
-GEMINI_API_KEY=...
-GEMINI_MODEL=gemini-2.0-flash
+AI_API_KEY=...                   # chave da API do provider (Groq por padrão)
+AI_MODEL=llama-3.3-70b-versatile
+AI_URL=https://api.groq.com/openai/v1
+
+# Monitoramento (New Relic APM)
+NEW_RELIC_LICENSE_KEY=           # chave de 40 chars; deixar vazio desativa o agente
+NEW_RELIC_APP_NAME=MeTube
 
 # Reverb (WebSockets)
 REVERB_APP_ID=...
