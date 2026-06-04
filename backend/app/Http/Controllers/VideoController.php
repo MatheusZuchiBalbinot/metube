@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\DTOs\CreateVideoDTO;
-use App\DTOs\FinalizeUploadDTO;
 use App\DTOs\UpdateVideoDTO;
 use App\DTOs\VideoListFilterDTO;
-use App\Enums\TranscriptionStatus;
 use App\Enums\VideoSource;
 use App\Enums\VideoStatus;
 use App\Http\Requests\Video\RecordViewRequest;
@@ -19,18 +16,15 @@ use App\Http\Resources\TranscriptionResource;
 use App\Http\Resources\VideoAiSuggestionResource;
 use App\Http\Resources\VideoResource;
 use App\Http\Resources\VideoSummaryResource;
-use App\Jobs\TranscribeVideo;
-use App\Models\Transcription;
 use App\Models\Video;
 use App\Services\RecommendationService;
+use App\Services\TranscriptionService;
 use App\Services\VideoAiService;
 use App\Services\VideoProgressService;
 use App\Services\VideoPublishingService;
 use App\Services\VideoReactionService;
 use App\Services\VideoService;
 use App\Services\VideoUploadService;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -38,7 +32,8 @@ use Illuminate\Http\Response;
 /**
  * VideoController — Routes video HTTP requests to services.
  *
- * Responsibility: Parse input, authorize, call service, format response.
+ * Responsibility: Parse input, call service, format response.
+ * Authorization is enforced by route ->can() middleware in api.php.
  */
 class VideoController extends Controller
 {
@@ -49,15 +44,12 @@ class VideoController extends Controller
         private readonly VideoReactionService $reactionService,
         private readonly VideoProgressService $progressService,
         private readonly VideoAiService $aiService,
+        private readonly TranscriptionService $transcriptionService,
         private readonly RecommendationService $recommendationService,
     ) {}
 
     /**
      * List all videos with pagination and filters.
-     *
-     * @param Request $request Query: page?, perPage?, search?, tags[]?, status?
-     *
-     * @return JsonResponse array{data: Video[], meta: {total: int, page: int}}
      */
     public function index(Request $request): JsonResponse
     {
@@ -70,48 +62,20 @@ class VideoController extends Controller
     /**
      * Create a new video from a direct file upload or a completed tus session.
      *
-     * Two upload modes are accepted:
-     *   - Direct: multipart/form-data with `video_file` (+ optional `thumbnail_file`)
-     *   - Resumable: JSON with `upload_key` from a completed tus session (+ optional `thumbnail_key`)
-     *
-     * @param StoreVideoRequest $request Validated video data
-     *
-     * @return JsonResponse Created video (202 Accepted — still processing)
+     * @return JsonResponse 202 Accepted — still processing
      */
     public function store(StoreVideoRequest $request): JsonResponse
     {
-        $isTusUpload = $request->has('upload_key');
-
-        if ($isTusUpload) {
-            $video = $this->uploadService->finalizeUpload(
-                auth()->user(),
-                FinalizeUploadDTO::fromRequest($request->validated()),
-            );
-        } else {
-            $video = $this->uploadService->createVideo(
-                auth()->user(),
-                CreateVideoDTO::fromRequest($request->validated()),
-            );
-        }
+        $video = $this->uploadService->handleUpload(auth()->user(), $request->validated());
 
         return $this->json(new VideoResource($video), 202);
     }
 
     /**
-     * Get a specific video by UUID.
-     *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
-     * @return JsonResponse Video with full metadata
+     * Get a specific video with subscriber count.
      */
-    public function show(string $vuid): JsonResponse
+    public function show(Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('view', $video);
-
-        $video->load('channel');
         $video->channel->loadCount('subscribers');
 
         return $this->json(new VideoResource($video));
@@ -119,20 +83,9 @@ class VideoController extends Controller
 
     /**
      * Update a video's metadata.
-     *
-     * @param UpdateVideoRequest $request Partial payload
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
-     * @return JsonResponse Updated video
      */
-    public function update(UpdateVideoRequest $request, string $vuid): JsonResponse
+    public function update(UpdateVideoRequest $request, Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('update', $video);
-
         $updated = $this->publishingService->updateVideo($video, UpdateVideoDTO::fromRequest($request->validated()));
 
         return $this->json(new VideoResource($updated->load('channel')));
@@ -141,18 +94,10 @@ class VideoController extends Controller
     /**
      * Delete a video permanently.
      *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function destroy(string $vuid): Response
+    public function destroy(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('delete', $video);
-
         $this->uploadService->deleteVideo($video);
 
         return $this->noContent();
@@ -161,27 +106,16 @@ class VideoController extends Controller
     /**
      * Record that a user viewed a video.
      *
-     * @param RecordViewRequest $request Optional body: source, session_id
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function recordView(RecordViewRequest $request, string $vuid): Response
+    public function recordView(RecordViewRequest $request, Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
         $validated = $request->validated();
 
         $source = isset($validated['source']) ? VideoSource::from($validated['source']) : null;
         $sessionId = $validated['session_id'] ?? null;
 
-        $this->reactionService->recordView(
-            auth()->user(),
-            $video,
-            $source,
-            $sessionId,
-        );
+        $this->reactionService->recordView(auth()->user(), $video, $source, $sessionId);
 
         return $this->noContent();
     }
@@ -189,16 +123,10 @@ class VideoController extends Controller
     /**
      * Toggle like status for a video.
      *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function toggleLike(string $vuid): Response
+    public function toggleLike(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-
         $this->reactionService->toggleLike(auth()->user(), $video);
 
         return $this->noContent();
@@ -207,16 +135,10 @@ class VideoController extends Controller
     /**
      * Toggle dislike status for a video.
      *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function toggleDislike(string $vuid): Response
+    public function toggleDislike(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-
         $this->reactionService->toggleDislike(auth()->user(), $video);
 
         return $this->noContent();
@@ -225,16 +147,10 @@ class VideoController extends Controller
     /**
      * Toggle save status for a video.
      *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function toggleSave(string $vuid): Response
+    public function toggleSave(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-
         $this->reactionService->toggleSave(auth()->user(), $video);
 
         return $this->noContent();
@@ -243,17 +159,10 @@ class VideoController extends Controller
     /**
      * Update user's watch progress for a video.
      *
-     * @param UpdateProgressRequest $request Validated: percent (0-100)
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function updateProgress(UpdateProgressRequest $request, string $vuid): Response
+    public function updateProgress(UpdateProgressRequest $request, Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-
         $this->progressService->updateProgress(auth()->user(), $video, $request->validated()['percent']);
 
         return $this->noContent();
@@ -261,43 +170,24 @@ class VideoController extends Controller
 
     /**
      * Get AI-generated summary for a video.
-     *
-     * @param string $vuid Video UUID (v4)
-     *
-     * @throws ModelNotFoundException
-     *
-     * @return JsonResponse {keyPoints: string[], chapters: {timestamp, title}[], readingMode: string}
      */
-    public function summary(string $vuid): JsonResponse
+    public function summary(Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-
         $summary = $this->aiService->getSummary($video);
 
         return $this->json(new VideoSummaryResource($summary));
     }
 
     /**
-     * Get the speech-to-text transcription for a video.
-     *
-     * Returns the transcription record if it exists, or a 404 when no
-     * transcription has been started yet (e.g. video still processing).
-     *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     *
-     * @return JsonResponse {status: string, language: string|null, content: string|null}
+     * Get the speech-to-text transcription for a video, or 404 when not started.
      */
-    public function transcription(string $vuid): JsonResponse
+    public function transcription(Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
+        $transcription = $this->transcriptionService->findForVideo($video);
 
-        $transcription = $video->transcription()->with('video')->first();
+        $hasTranscription = $transcription !== null;
 
-        $hasNoTranscription = $transcription === null;
-
-        if ($hasNoTranscription) {
+        if (!$hasTranscription) {
             return $this->json(['message' => 'Transcription not available.'], 404);
         }
 
@@ -305,45 +195,22 @@ class VideoController extends Controller
     }
 
     /**
-     * Retry a failed transcription for a video the authenticated user owns.
-     *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
+     * Retry a failed transcription.
      *
      * @return Response HTTP 204 No Content
      */
-    public function retryTranscription(string $vuid): Response
+    public function retryTranscription(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('retryTranscription', $video);
-
-        $searchAttributes = ['video_id' => $video->id];
-        $updateData = ['status' => TranscriptionStatus::PENDING, 'content' => null, 'language' => null];
-
-        Transcription::updateOrCreate($searchAttributes, $updateData);
-
-        dispatch(new TranscribeVideo($video));
+        $this->transcriptionService->resetForRetry($video);
 
         return $this->noContent();
     }
 
     /**
-     * Get pending AI suggestions for a video.
-     *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
-     * @return JsonResponse AI suggestion or 404
+     * Get pending AI suggestions for a video, or 404 when none exist.
      */
-    public function aiSuggestion(string $vuid): JsonResponse
+    public function aiSuggestion(Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('manageSuggestion', $video);
-
         $suggestion = $video->aiSuggestion;
 
         $hasSuggestion = $suggestion !== null;
@@ -358,18 +225,10 @@ class VideoController extends Controller
     /**
      * Accept pending AI suggestions and apply to video.
      *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function acceptSuggestion(string $vuid): Response
+    public function acceptSuggestion(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('manageSuggestion', $video);
-
         $this->aiService->acceptAiSuggestion($video);
 
         return $this->noContent();
@@ -377,19 +236,9 @@ class VideoController extends Controller
 
     /**
      * Publish a draft video, making it publicly visible.
-     *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
-     * @return JsonResponse Published video resource
      */
-    public function publish(string $vuid): JsonResponse
+    public function publish(Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('publish', $video);
-
         $isNotDraft = $video->status !== VideoStatus::DRAFT;
 
         if ($isNotDraft) {
@@ -404,18 +253,10 @@ class VideoController extends Controller
     /**
      * Dismiss pending AI suggestions without applying them.
      *
-     * @param string $vuid Video public identifier
-     *
-     * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
      * @return Response HTTP 204 No Content
      */
-    public function dismissSuggestion(string $vuid): Response
+    public function dismissSuggestion(Video $video): Response
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('manageSuggestion', $video);
-
         $this->aiService->dismissAiSuggestion($video);
 
         return $this->noContent();
@@ -423,10 +264,6 @@ class VideoController extends Controller
 
     /**
      * Get personalized video recommendations for the authenticated user.
-     *
-     * @param Request $request Query: page? (default 1)
-     *
-     * @return JsonResponse array{data: Video[], meta: {total: int, page: int, ...}}
      */
     public function recommendations(Request $request): JsonResponse
     {

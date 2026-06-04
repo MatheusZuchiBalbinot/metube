@@ -57,8 +57,6 @@ class CommentController extends Controller
      */
     public function update(Comment $comment, UpdateCommentRequest $request): JsonResponse
     {
-        $this->authorize('update', $comment);
-
         $updated = $this->commentService->update($comment, $request->getDTO(), $request->user());
 
         return $this->json(new CommentResource($updated));
@@ -71,8 +69,6 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment): Response
     {
-        $this->authorize('delete', $comment);
-
         $this->commentService->destroy($comment);
 
         return $this->noContent();

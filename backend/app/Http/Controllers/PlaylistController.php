@@ -10,8 +10,8 @@ use App\Http\Requests\Playlist\StorePlaylistRequest;
 use App\Http\Requests\Playlist\UpdatePlaylistRequest;
 use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\VideoResource;
+use App\Models\Playlist;
 use App\Services\PlaylistService;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -19,7 +19,8 @@ use Illuminate\Http\Response;
 /**
  * PlaylistController — Routes playlist HTTP requests to services.
  *
- * Responsibility: Parse input, authorize, call service, format response.
+ * Responsibility: Parse input, call service, format response.
+ * Authorization is enforced by route ->can() middleware in api.php.
  */
 class PlaylistController extends Controller
 {
@@ -37,8 +38,6 @@ class PlaylistController extends Controller
 
     /**
      * Create a new playlist.
-     *
-     * @param StorePlaylistRequest $request Validated playlist data
      */
     public function store(StorePlaylistRequest $request): JsonResponse
     {
@@ -53,35 +52,21 @@ class PlaylistController extends Controller
     /**
      * Get a specific playlist with all its videos.
      *
-     * @param string $puid Playlist ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function show(string $puid): JsonResponse
+    public function show(Playlist $playlist): JsonResponse
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('view', $playlist);
-
         return $this->json(new PlaylistResource($playlist));
     }
 
     /**
      * List all videos in a playlist, ordered by position.
      *
-     * @param string $puid Playlist identifier
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
-     *
-     * @return JsonResponse Ordered collection of video resources
      */
-    public function listVideos(string $puid): JsonResponse
+    public function listVideos(Playlist $playlist): JsonResponse
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('view', $playlist);
-
-        $videos = $playlist->videos()->with('channel')->get();
+        $videos = $this->playlistService->getPlaylistVideos($playlist);
 
         return $this->json(VideoResource::collection($videos));
     }
@@ -89,21 +74,11 @@ class PlaylistController extends Controller
     /**
      * Update a playlist (rename).
      *
-     * @param UpdatePlaylistRequest $request Validated playlist data
-     * @param string $puid Playlist ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function update(UpdatePlaylistRequest $request, string $puid): JsonResponse
+    public function update(UpdatePlaylistRequest $request, Playlist $playlist): JsonResponse
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('update', $playlist);
-
-        $updated = $this->playlistService->updatePlaylist(
-            $playlist,
-            $request->getDTO(),
-        );
+        $updated = $this->playlistService->updatePlaylist($playlist, $request->getDTO());
 
         return $this->json(new PlaylistResource($updated));
     }
@@ -111,16 +86,10 @@ class PlaylistController extends Controller
     /**
      * Delete a playlist permanently.
      *
-     * @param string $puid Playlist ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function destroy(string $puid): Response
+    public function destroy(Playlist $playlist): Response
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('delete', $playlist);
-
         $this->playlistService->deletePlaylist($playlist);
 
         return $this->noContent();
@@ -129,17 +98,10 @@ class PlaylistController extends Controller
     /**
      * Add a video to a playlist.
      *
-     * @param AddVideoRequest $request Validated video ULID
-     * @param string $puid Playlist ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function addVideo(AddVideoRequest $request, string $puid): JsonResponse
+    public function addVideo(AddVideoRequest $request, Playlist $playlist): JsonResponse
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('addVideo', $playlist);
-
         $updated = $this->playlistService->addVideoToPlaylist(
             $playlist,
             $request->validated()['vuid'],
@@ -151,17 +113,10 @@ class PlaylistController extends Controller
     /**
      * Remove a video from a playlist.
      *
-     * @param string $puid Playlist ULID
-     * @param string $vuid Video ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function removeVideo(string $puid, string $vuid): Response
+    public function removeVideo(Playlist $playlist, string $vuid): Response
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('removeVideo', $playlist);
-
         $this->playlistService->removeVideoFromPlaylist($playlist, $vuid);
 
         return $this->noContent();
@@ -170,17 +125,10 @@ class PlaylistController extends Controller
     /**
      * Reorder videos in a playlist using drag-and-drop.
      *
-     * @param ReorderVideosRequest $request Ordered video ULIDs
-     * @param string $puid Playlist ULID
-     *
      * @throws ModelNotFoundException
-     * @throws AuthorizationException
      */
-    public function reorderVideos(ReorderVideosRequest $request, string $puid): JsonResponse
+    public function reorderVideos(ReorderVideosRequest $request, Playlist $playlist): JsonResponse
     {
-        $playlist = $this->playlistService->getPlaylistByPuid($puid);
-        $this->authorize('reorderVideos', $playlist);
-
         $updated = $this->playlistService->reorderPlaylistVideos(
             $playlist,
             $request->getDTO(),
