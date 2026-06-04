@@ -24,7 +24,7 @@ final class RecommendationService
      */
     public function forUser(User $user, int $page = 1): Collection
     {
-        $recommendations = $this->cache->rememberRecommendations(
+        return $this->cache->rememberRecommendations(
             $user->id,
             $page,
             /**
@@ -51,14 +51,17 @@ final class RecommendationService
                 $maxChannelAffinity = $channelAffinity !== [] ? max($channelAffinity) : 0.0;
 
                 $scored = $candidates
-                    ->map(function (Video $v) use ($tagAffinity, $channelAffinity, $subscribedChannelIds, $maxViews, $maxChannelAffinity) {
-                        $itemData = [
-                            'video' => $v,
-                            'score' => $this->score($v, $tagAffinity, $channelAffinity, $subscribedChannelIds, $maxViews, $maxChannelAffinity),
-                        ];
-
-                        return $itemData;
-                    })
+                    ->map(fn (Video $v) => [
+                        'video' => $v,
+                        'score' => $this->score(
+                            $v,
+                            $tagAffinity,
+                            $channelAffinity,
+                            $subscribedChannelIds,
+                            $maxViews,
+                            $maxChannelAffinity,
+                        ),
+                    ])
                     ->sortByDesc('score')
                     ->values();
 
@@ -67,8 +70,6 @@ final class RecommendationService
                 return $paginated->map(fn (array $item) => $item['video'])->values();
             },
         );
-
-        return $recommendations;
     }
 
     /**
@@ -175,7 +176,7 @@ final class RecommendationService
     /**
      * Get IDs of channels the user is subscribed to.
      *
-     * @return int[]
+     * @return array<int>
      */
     private function getSubscribedChannelIds(int $userId): array
     {
@@ -188,7 +189,7 @@ final class RecommendationService
     /**
      * Get IDs of videos the user has already watched.
      *
-     * @return int[]
+     * @return array<int>
      */
     private function getWatchedVideoIds(int $userId): array
     {
@@ -198,7 +199,7 @@ final class RecommendationService
     /**
      * Get candidate videos (published, excluding watched).
      *
-     * @param int[] $excludeIds
+     * @param array<int> $excludeIds
      *
      * @return Collection<int, Video>
      */
@@ -217,7 +218,7 @@ final class RecommendationService
      *
      * @param array<string, float> $tagAffinity
      * @param array<int, float> $channelAffinity
-     * @param int[] $subscribedChannelIds
+     * @param array<int> $subscribedChannelIds
      */
     private function score(
         Video $video,
@@ -263,7 +264,7 @@ final class RecommendationService
      * Behavioral affinity (log-normalized watch history) contributes the remaining 0.60.
      *
      * @param array<int, float> $channelAffinity
-     * @param int[] $subscribedChannelIds
+     * @param array<int> $subscribedChannelIds
      */
     private function channelScore(
         Video $video,
