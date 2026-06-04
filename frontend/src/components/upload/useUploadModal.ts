@@ -1,0 +1,528 @@
+import { useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import * as tus from 'tus-js-client';
+import { useAppDispatch, useAppSelector } from '@store';
+import { toastActions } from '@store/toastSlice';
+import { video as videoApi, toVuid } from '@api';
+import type { Vuid } from '@api';
+import { videoUrl } from '@utils';
+import { ToastType } from '@enums/toastType';
+import { UploadMode } from '@enums/uploadMode';
+import { UploadStatus } from '@enums/uploadStatus';
+import { useVideo, useTusUpload } from '@hooks';
+import { VideoStatus, type Tag } from '@models';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface FormState {
+    title: string
+    description: string
+    tags: Tag[]
+    videoFile: File | null
+    thumbnailFile: File | null
+    thumbnailPreviewUrl: string | null
+    videoObjectUrl: string | null
+    titleError: string | null
+}
+
+export interface BatchItem {
+    id: string
+    file: File
+    title: string
+    status: 'pending' | 'uploading' | 'done' | 'error'
+    progress: number
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const TUS_CHUNK_SIZE = 5 * 1024 * 1024;
+const TUS_RETRY_DELAYS = [0, 1_000, 3_000, 5_000, 10_000];
+
+function uploadViaTus(file: File, onProgress: (pct: number) => void): Promise<string | null> {
+    return new Promise(resolve => {
+        const upload = new tus.Upload(file, {
+            endpoint: '/api/uploads/tus',
+            retryDelays: TUS_RETRY_DELAYS,
+            chunkSize: TUS_CHUNK_SIZE,
+            metadata: { filename: file.name, filetype: file.type },
+            onError: () => resolve(null),
+            onProgress: (loaded, total) => {
+                const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+                onProgress(pct);
+            },
+            onSuccess: () => {
+                const url = upload.url;
+                const isUrlMissing = url === null || url === undefined;
+
+                if (isUrlMissing) {
+                    resolve(null);
+                    return;
+                }
+
+                resolve(url.split('/').pop() ?? null);
+            },
+        });
+        upload.start();
+    });
+}
+
+function titleFromFilename(file: File): string {
+    const base = file.name.replace(/\.[^.]+$/, '');
+    // eslint-disable-next-line no-useless-escape
+    const cleaned = base.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return cleaned.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || file.name;
+}
+
+const INITIAL_FORM: FormState = {
+    title: '',
+    description: '',
+    tags: [] as Tag[],
+    videoFile: null,
+    thumbnailFile: null,
+    thumbnailPreviewUrl: null,
+    videoObjectUrl: null,
+    titleError: null,
+};
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export interface UseUploadModalReturn {
+    // Redux/nav
+    uploadModalOpen: boolean
+    // Mode
+    mode: UploadMode
+    handleModeToSingle: () => void
+    handleModeToBatch: () => void
+    // Single form state
+    form: FormState
+    titleShakeKey: number
+    pollingVuids: Vuid[]
+    isUploading: boolean
+    hasPreview: boolean
+    isBusy: boolean
+    progress: ReturnType<typeof useTusUpload>['progress']
+    // Single form handlers
+    handleTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    handleDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+    handleTagsChange: (tags: Tag[]) => void
+    handleThumbnailFile: (file: File) => void
+    clearThumbnail: () => void
+    handleVideoFile: (file: File) => void
+    clearVideoFile: () => void
+    handleSingleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>
+    runSingleUpload: () => Promise<void>
+    // Batch state
+    batchItems: BatchItem[]
+    isBatchUploading: boolean
+    batchDragging: boolean
+    batchPending: BatchItem[]
+    batchHasItems: boolean
+    batchInputRef: React.RefObject<HTMLInputElement | null>
+    // Batch handlers
+    addBatchFiles: (files: FileList | File[]) => void
+    removeBatchItem: (id: string) => void
+    updateBatchTitle: (id: string, title: string) => void
+    handleBatchDrop: (e: React.DragEvent<HTMLDivElement>) => void
+    handleBatchDragOver: (e: React.DragEvent<HTMLDivElement>) => void
+    handleBatchDragLeave: () => void
+    handleBatchZoneClick: () => void
+    handleBatchInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    handleBatchUpload: () => Promise<void>
+    // Common
+    handleClose: () => void
+    existingTags: Tag[]
+}
+
+export function useUploadModal(): UseUploadModalReturn {
+    const { t } = useTranslation();
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
+    const { progress, status: tusStatus, uploadFile, reset: resetTus } = useTusUpload();
+    const allVideos = useAppSelector(s => s.video.videos);
+
+    const existingTags = useMemo(() => {
+        const tagSet = new Set<Tag>();
+
+        for (const video of allVideos) {
+            for (const tag of video.tags) {
+                tagSet.add(tag);
+            }
+        }
+
+        return Array.from(tagSet).sort();
+    }, [allVideos]);
+
+    const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);
+
+    // ─── Single mode state ────────────────────────────────────────────────────
+    const [form, setForm] = useState<FormState>(INITIAL_FORM);
+    const [titleShakeKey, setTitleShakeKey] = useState(0);
+    const [pollingVuids, setPollingVuids] = useState<Vuid[]>([]);
+    const videoObjectUrlRef = useRef<string | null>(null);
+    const thumbObjectUrlRef = useRef<string | null>(null);
+
+    // ─── Batch mode state ─────────────────────────────────────────────────────
+    const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+    const [isBatchUploading, setIsBatchUploading] = useState(false);
+    const [batchDragging, setBatchDragging] = useState(false);
+    const batchInputRef = useRef<HTMLInputElement | null>(null);
+
+    const isUploading = tusStatus === UploadStatus.UPLOADING;
+    const hasPreview = form.thumbnailPreviewUrl !== null || form.videoObjectUrl !== null;
+    const isBusy = isUploading || isBatchUploading;
+
+    const batchPending = batchItems.filter(i => i.status === 'pending');
+    const batchHasItems = batchItems.length > 0;
+
+    // ─── Single mode handlers ─────────────────────────────────────────────────
+
+    function handleThumbnailFile(file: File) {
+        const hasPrevious = thumbObjectUrlRef.current !== null;
+
+        if (hasPrevious) {
+            URL.revokeObjectURL(thumbObjectUrlRef.current!);
+        }
+
+        const previewUrl = URL.createObjectURL(file);
+        thumbObjectUrlRef.current = previewUrl;
+        setForm(prev => ({ ...prev, thumbnailFile: file, thumbnailPreviewUrl: previewUrl }));
+    }
+
+    function clearThumbnail() {
+        const hasPrevious = thumbObjectUrlRef.current !== null;
+
+        if (hasPrevious) {
+            URL.revokeObjectURL(thumbObjectUrlRef.current!);
+            thumbObjectUrlRef.current = null;
+        }
+
+        setForm(prev => ({ ...prev, thumbnailFile: null, thumbnailPreviewUrl: null }));
+    }
+
+    function handleVideoFile(file: File) {
+        const hasPrevious = videoObjectUrlRef.current !== null;
+
+        if (hasPrevious) {
+            URL.revokeObjectURL(videoObjectUrlRef.current!);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        videoObjectUrlRef.current = objectUrl;
+        setForm(prev => ({ ...prev, videoFile: file, videoObjectUrl: objectUrl }));
+    }
+
+    function clearVideoFile() {
+        const hasPrevious = videoObjectUrlRef.current !== null;
+
+        if (hasPrevious) {
+            URL.revokeObjectURL(videoObjectUrlRef.current!);
+            videoObjectUrlRef.current = null;
+        }
+
+        setForm(prev => ({ ...prev, videoFile: null, videoObjectUrl: null }));
+    }
+
+    function revokeObjectUrls() {
+        if (videoObjectUrlRef.current !== null) {
+            URL.revokeObjectURL(videoObjectUrlRef.current);
+            videoObjectUrlRef.current = null;
+        }
+
+        if (thumbObjectUrlRef.current !== null) {
+            URL.revokeObjectURL(thumbObjectUrlRef.current);
+            thumbObjectUrlRef.current = null;
+        }
+    }
+
+    function resetSingleForm() {
+        revokeObjectUrls();
+        setForm(INITIAL_FORM);
+        resetTus();
+    }
+
+    function validateForm(): boolean {
+        const isTitleEmpty = form.title.trim() === '';
+
+        if (isTitleEmpty) {
+            setForm(prev => ({ ...prev, titleError: t('video.title_required') }));
+            setTitleShakeKey(k => k + 1);
+            return false;
+        }
+
+        const hasNoVideoFile = form.videoFile === null;
+
+        if (hasNoVideoFile) {
+            dispatch(toastActions.addToast({ message: t('video.video_file_required'), type: ToastType.ERROR }));
+            return false;
+        }
+
+        return true;
+    }
+
+    async function runSingleUpload() {
+        const isValid = validateForm();
+
+        if (!isValid) {
+            return;
+        }
+
+        const videoResult = await uploadFile(form.videoFile!);
+        const hasVideoError = videoResult === null;
+
+        if (hasVideoError) {
+            dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: ToastType.ERROR }));
+            return;
+        }
+
+        let thumbnailKey: string | undefined;
+        const hasThumbnail = form.thumbnailFile !== null;
+
+        if (hasThumbnail) {
+            const thumbResult = await uploadFile(form.thumbnailFile!);
+            thumbnailKey = thumbResult?.uploadKey;
+        }
+
+        const result = await videoApi.finalize({
+            uploadKey: videoResult.uploadKey,
+            thumbnailKey,
+            title: form.title.trim(),
+            description: form.description.trim(),
+            tags: form.tags,
+            status: VideoStatus.DRAFT,
+        });
+
+        if (!result.ok) {
+            dispatch(toastActions.addToast({ message: t('toast.upload_error'), type: ToastType.ERROR }));
+            return;
+        }
+
+        addVideo(result.data);
+        setPollingVuids(prev => [...prev, toVuid(result.data.id)]);
+        dispatch(toastActions.addToast({ message: t('video.processing_toast'), type: ToastType.INFO }));
+        closeUploadModal();
+        resetSingleForm();
+        navigate(videoUrl(result.data.id));
+    }
+
+    async function handleSingleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        await runSingleUpload();
+    }
+
+    // ─── Batch mode handlers ──────────────────────────────────────────────────
+
+    function addBatchFiles(files: FileList | File[]) {
+        const newItems: BatchItem[] = Array.from(files)
+            .filter(f => f.type.startsWith('video/'))
+            .map(f => ({
+                id: crypto.randomUUID(),
+                file: f,
+                title: titleFromFilename(f),
+                status: 'pending' as const,
+                progress: 0,
+            }));
+        setBatchItems(prev => [...prev, ...newItems]);
+    }
+
+    function removeBatchItem(id: string) {
+        setBatchItems(prev => prev.filter(i => i.id !== id));
+    }
+
+    function updateBatchTitle(id: string, title: string) {
+        setBatchItems(prev => prev.map(i => i.id === id ? { ...i, title } : i));
+    }
+
+    function handleBatchDrop(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        setBatchDragging(false);
+        addBatchFiles(e.dataTransfer.files);
+    }
+
+    async function handleBatchUpload() {
+        const toUpload = batchItems.filter(i => i.status === 'pending');
+        const hasNothing = toUpload.length === 0;
+
+        if (hasNothing) {
+            return;
+        }
+
+        setIsBatchUploading(true);
+        let doneCount = 0;
+        let errorCount = 0;
+
+        await Promise.all(toUpload.map(async (item) => {
+            setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading' } : i));
+
+            function onBatchProgress(pct: number) {
+                setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: pct } : i));
+            }
+
+            const uploadKey = await uploadViaTus(item.file, onBatchProgress);
+
+            const hasUploadError = uploadKey === null;
+
+            if (hasUploadError) {
+                errorCount++;
+                setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error' } : i));
+                return;
+            }
+
+            const result = await videoApi.finalize({
+                uploadKey,
+                title: item.title,
+                description: '',
+                tags: [],
+                status: VideoStatus.PUBLISHED,
+                is_batch: true,
+            });
+
+            if (result.ok) {
+                doneCount++;
+                addVideo(result.data);
+                setPollingVuids(prev => [...prev, toVuid(result.data.id)]);
+            } else {
+                errorCount++;
+            }
+
+            setBatchItems(prev => prev.map(i =>
+                i.id === item.id
+                    ? { ...i, status: result.ok ? 'done' : 'error', progress: result.ok ? 100 : i.progress }
+                    : i,
+            ));
+        }));
+
+        setIsBatchUploading(false);
+
+        if (doneCount > 0) {
+            dispatch(toastActions.addToast({
+                message: t('toast.batch_uploaded', { count: doneCount }),
+                type: ToastType.SUCCESS,
+            }));
+        }
+
+        if (errorCount > 0) {
+            dispatch(toastActions.addToast({
+                message: t('toast.batch_upload_error', { count: errorCount }),
+                type: ToastType.ERROR,
+            }));
+        }
+
+        const allDone = errorCount === 0;
+
+        if (allDone) {
+            closeUploadModal();
+            setBatchItems([]);
+        }
+    }
+
+    // ─── Form field handlers ──────────────────────────────────────────────────
+
+    function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setForm(prev => ({ ...prev, title: e.target.value, titleError: null }));
+    }
+
+    function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+        setForm(prev => ({ ...prev, description: e.target.value }));
+    }
+
+    function handleTagsChange(tags: Tag[]) {
+        setForm(prev => ({ ...prev, tags }));
+    }
+
+    function handleModeToSingle() {
+        handleModeChange(UploadMode.SINGLE);
+    }
+
+    function handleModeToBatch() {
+        handleModeChange(UploadMode.BATCH);
+    }
+
+    function handleBatchDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        setBatchDragging(true);
+    }
+
+    function handleBatchDragLeave() {
+        setBatchDragging(false);
+    }
+
+    function handleBatchZoneClick() {
+        const canClick = !isBatchUploading;
+
+        if (canClick) {
+            batchInputRef.current?.click();
+        }
+    }
+
+    function handleBatchInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+        if (e.target.files) {
+            addBatchFiles(e.target.files);
+        }
+
+        e.target.value = '';
+    }
+
+    // ─── Common handlers ──────────────────────────────────────────────────────
+
+    function handleClose() {
+        if (isBusy) {
+            return;
+        }
+
+        closeUploadModal();
+        resetSingleForm();
+        setBatchItems([]);
+    }
+
+    function handleModeChange(next: UploadMode) {
+        if (isBusy) {
+            return;
+        }
+
+        setMode(next);
+        resetSingleForm();
+        setBatchItems([]);
+    }
+
+    return {
+        uploadModalOpen,
+        mode,
+        handleModeToSingle,
+        handleModeToBatch,
+        form,
+        titleShakeKey,
+        pollingVuids,
+        isUploading,
+        hasPreview,
+        isBusy,
+        progress,
+        handleTitleChange,
+        handleDescriptionChange,
+        handleTagsChange,
+        handleThumbnailFile,
+        clearThumbnail,
+        handleVideoFile,
+        clearVideoFile,
+        handleSingleSubmit,
+        runSingleUpload,
+        batchItems,
+        isBatchUploading,
+        batchDragging,
+        batchPending,
+        batchHasItems,
+        batchInputRef,
+        addBatchFiles,
+        removeBatchItem,
+        updateBatchTitle,
+        handleBatchDrop,
+        handleBatchDragOver,
+        handleBatchDragLeave,
+        handleBatchZoneClick,
+        handleBatchInputChange,
+        handleBatchUpload,
+        handleClose,
+        existingTags,
+    };
+}

@@ -1,7 +1,7 @@
 import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@ui';
-import type { BatchItem } from './modal';
+import type { BatchItem } from './useUploadModal';
 
 interface BatchItemRowProps {
     item: BatchItem
