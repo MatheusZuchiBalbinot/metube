@@ -8,8 +8,7 @@ docker-compose.override.yml
 *.log
 
 .vscode/
-.claude/settings.json
-.claude/settings.local.json
+.claude/
 
 frontend/coverage/
 
