@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\StorageContract;
 use App\DTOs\HlsRenditionProfile;
 use App\Exceptions\TranscodeException;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -23,6 +23,8 @@ use Symfony\Component\Process\Process;
  */
 class HlsTranscodeService
 {
+    public function __construct(private readonly StorageContract $storage) {}
+
     /**
      * Probe the duration of a media file in seconds.
      *
@@ -126,7 +128,7 @@ class HlsTranscodeService
     public function extractThumbnail(string $sourceAbsPath, string $vuid, float $durationSeconds): string
     {
         $seekSeconds = (string) max(1.0, $durationSeconds * 0.20);
-        $dest = Storage::disk('local')->path("uploads/tmp/thumb_{$vuid}.jpg");
+        $dest = $this->storage->tempPath("uploads/tmp/thumb_{$vuid}.jpg");
 
         $this->run([
             $this->ffmpeg(), '-y',
@@ -551,7 +553,7 @@ class HlsTranscodeService
      */
     private function ensureHlsDirectory(string $vuid): string
     {
-        $dir = Storage::disk('public')->path($this->hlsDirectory($vuid));
+        $dir = $this->storage->publicPath($this->hlsDirectory($vuid));
         $isMissing = !is_dir($dir);
 
         if ($isMissing) {
