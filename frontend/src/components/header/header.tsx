@@ -1,124 +1,54 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Square, Plus, Menu, LogOut, Search, Clock, X, User, Tag as TagIcon, LogIn } from 'lucide-react';
+import { Square, Plus, Menu, LogIn } from 'lucide-react';
 import { ROUTES, videoUrl } from '@utils';
-import { useSearch } from '@context/search';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
-import { Avatar, Button, Input, Tooltip } from '@ui';
-import PreferencesPanel from '@components/preferences/preferences';
+import { selectRecentSearches } from '@store/searchSelectors';
+import { Button, Tooltip } from '@ui';
 import NotificationsBell from '@components/notifications/bell';
 import './header.css';
+import { useAuth, useVideo } from '@hooks';
 import { SuggestionKind } from '@enums/suggestionKind';
-import { useAuth, useVideo, useClickOutside } from '@hooks';
+import HeaderSearch from './headerSearch';
+import HeaderUserMenu from './headerUserMenu';
+import { buildSuggestions } from './headerSuggestions';
+import type { Suggestion } from './types';
 
 interface AppHeaderProps {
     onToggleSidebar: () => void
 }
 
-const MAX_SUGGESTIONS = 8 as const;
-
-
-
-interface Suggestion {
-    kind: SuggestionKind
-    label: string
-    value: string
-    targetId: string
-}
-
-// eslint-disable-next-line complexity
 export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { t } = useTranslation();
     const { user, signOut } = useAuth();
     const navigate = useNavigate();
 
     const dispatch = useAppDispatch();
-    const recentSearches = useAppSelector(s => s.search.recentSearches);
+    const recentSearches = useAppSelector(selectRecentSearches);
     const videos = useAppSelector(s => s.video.videos);
     const { openUploadModal } = useVideo();
+
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentDropdownOpen, setRecentDropdownOpen] = useState(false);
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
-    const { registerSearchInput } = useSearch();
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const searchWrapRef = useRef<HTMLDivElement>(null);
-
     const trimmedQuery = searchQuery.trim();
     const hasQuery = trimmedQuery.length > 0;
     const isRecentDropdownVisible = recentDropdownOpen && recentSearches.length > 0 && !hasQuery;
 
-    // eslint-disable-next-line complexity
-    const suggestions = useMemo<Suggestion[]>(() => {
-        if (!hasQuery) {
-            return [];
-        }
-
-        const needle = trimmedQuery.toLowerCase();
-        const seen = new Set<string>();
-        const result: Suggestion[] = [];
-
-        function pushUnique(item: Suggestion) {
-            const key = `${item.kind}:${item.value.toLowerCase()}`;
-            const isAlreadySeen = seen.has(key);
-            const isFull = result.length >= MAX_SUGGESTIONS;
-
-            if (isAlreadySeen || isFull) {
-                return;
-            }
-
-            seen.add(key);
-            result.push(item);
-        }
-
-        for (const video of videos) {
-            const isMatch = video.title.toLowerCase().includes(needle);
-
-            if (isMatch) {
-                pushUnique({ kind: SuggestionKind.VIDEO, label: video.title, value: video.title, targetId: video.id });
-            }
-        }
-
-        for (const video of videos) {
-            const isMatch = video.channel.toLowerCase().includes(needle);
-
-            if (isMatch) {
-                pushUnique({ kind: SuggestionKind.CHANNEL, label: video.channel, value: video.channel, targetId: video.channelId });
-            }
-        }
-
-        for (const video of videos) {
-            for (const tag of video.tags) {
-                const isMatch = tag.toLowerCase().includes(needle);
-
-                if (isMatch) {
-                    pushUnique({ kind: SuggestionKind.TAG, label: `#${tag}`, value: tag, targetId: tag });
-                }
-            }
-        }
-
-        return result;
-    }, [trimmedQuery, hasQuery, videos]);
+    const suggestions = useMemo<Suggestion[]>(
+        () => (hasQuery ? buildSuggestions(trimmedQuery, videos) : []),
+        [trimmedQuery, hasQuery, videos],
+    );
 
     const isSuggestionsDropdownVisible = suggestionsOpen && hasQuery && suggestions.length > 0;
 
-    useClickOutside(dropdownRef, () => setDropdownOpen(false), dropdownOpen);
-
-    useClickOutside(searchWrapRef, () => {
+    function closeSearchDropdowns() {
         setRecentDropdownOpen(false);
         setSuggestionsOpen(false);
-    }, recentDropdownOpen || suggestionsOpen);
-
-    function handleAvatarClick() {
-        setDropdownOpen(v => !v);
-    }
-
-    async function handleLogout() {
-        await signOut();
-        navigate(ROUTES.LOGIN, { replace: true });
     }
 
     function submitSearch(query: string) {
@@ -130,8 +60,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         }
 
         dispatch(searchActions.addRecentSearch(trimmed));
-        setRecentDropdownOpen(false);
-        setSuggestionsOpen(false);
+        closeSearchDropdowns();
         navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
     }
 
@@ -196,16 +125,9 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         submitSearch(s.value);
     }
 
-    function renderSuggestionIcon(kind: SuggestionKind) {
-        if (kind === SuggestionKind.VIDEO) {
-            return <Play size={13} className="app-header__recent-icon" />;
-        }
-
-        if (kind === SuggestionKind.CHANNEL) {
-            return <User size={13} className="app-header__recent-icon" />;
-        }
-
-        return <TagIcon size={13} className="app-header__recent-icon" />;
+    async function handleLogout() {
+        await signOut();
+        navigate(ROUTES.LOGIN, { replace: true });
     }
 
     return (
@@ -231,72 +153,21 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 </Link>
             </div>
 
-            <div className="app-header__search" ref={searchWrapRef}>
-                <form className="app-header__search-form" onSubmit={handleSearchSubmit}>
-                    <Input
-                        ref={registerSearchInput}
-                        icon={
-                            <Search
-                                size={15}
-                                style={{ cursor: 'pointer' }}
-                                onClick={handleSearchIconClick}
-                            />
-                        }
-                        placeholder={t('header.searchPlaceholder', 'Search videos, channels, tags...')}
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        onFocus={handleSearchFocus}
-                        className="app-header__search-input"
-                    />
-                </form>
-
-                {isRecentDropdownVisible && (
-                    <div className="app-header__recent-dropdown" role="listbox" aria-label={t('header.recentSearches', 'Recent searches')}>
-                        <p className="app-header__recent-label">{t('header.recentSearches', 'Recent searches')}</p>
-                        {recentSearches.map(term => (
-                            <div
-                                key={term}
-                                className="app-header__recent-item"
-                                role="option"
-                                aria-selected={false}
-                                onClick={() => handleRecentItemClick(term)}
-                            >
-                                <Clock size={13} className="app-header__recent-icon" />
-                                <span className="app-header__recent-text">{term}</span>
-                                <Tooltip content={t('header.removeRecent', 'Remove')} side="right">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="app-header__recent-remove"
-                                        aria-label={t('header.removeRecent', 'Remove')}
-                                        onClick={e => handleRemoveRecent(e, term)}
-                                    >
-                                        <X size={12} />
-                                    </Button>
-                                </Tooltip>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {isSuggestionsDropdownVisible && (
-                    <div className="app-header__recent-dropdown" role="listbox" aria-label={t('header.suggestions', 'Suggestions')}>
-                        <p className="app-header__recent-label">{t('header.suggestions', 'Suggestions')}</p>
-                        {suggestions.map(s => (
-                            <div
-                                key={`${s.kind}:${s.value.toLowerCase()}`}
-                                className="app-header__recent-item"
-                                role="option"
-                                aria-selected={false}
-                                onClick={() => handleSuggestionClick(s)}
-                            >
-                                {renderSuggestionIcon(s.kind)}
-                                <span className="app-header__recent-text">{s.label}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <HeaderSearch
+                searchQuery={searchQuery}
+                suggestions={suggestions}
+                recentSearches={recentSearches}
+                isRecentDropdownVisible={isRecentDropdownVisible}
+                isSuggestionsDropdownVisible={isSuggestionsDropdownVisible}
+                onQueryChange={handleSearchChange}
+                onFocus={handleSearchFocus}
+                onSubmit={handleSearchSubmit}
+                onSearchIconClick={handleSearchIconClick}
+                onRecentItemClick={handleRecentItemClick}
+                onRemoveRecent={handleRemoveRecent}
+                onSuggestionClick={handleSuggestionClick}
+                onDropdownClose={closeSearchDropdowns}
+            />
 
             <div className="app-header__right">
                 {user ? (
@@ -316,42 +187,13 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             </Button>
                         </Tooltip>
 
-                        <div className="app-header__avatar-wrap" ref={dropdownRef}>
-                            <Tooltip content={user.name} side="bottom">
-                                <Button
-                                    variant="ghost"
-                                    className={`app-header__avatar-btn${dropdownOpen ? ' open' : ''}`}
-                                    onClick={handleAvatarClick}
-                                    aria-label={user.name}
-                                    aria-expanded={dropdownOpen}
-                                    aria-haspopup="true"
-                                >
-                                    <Avatar name={user.name} size="sm" />
-                                </Button>
-                            </Tooltip>
-
-                            {dropdownOpen && (
-                                <div className="app-header__dropdown">
-                                    <div className="app-header__dropdown-user">
-                                        <span className="app-header__dropdown-name">{user.name}</span>
-                                        <span className="app-header__dropdown-email">{user.email}</span>
-                                    </div>
-
-                                    <div className="app-header__dropdown-sep" />
-
-                                    <PreferencesPanel inline />
-
-                                    <div className="app-header__dropdown-sep" />
-
-                                    <Tooltip content={t('common.sign_out')} side="left">
-                                        <Button variant="ghost" className="app-header__dropdown-logout" onClick={handleLogout} aria-label={t('common.sign_out')}>
-                                            <LogOut size={14} strokeWidth={1.75} />
-                                            {t('common.sign_out')}
-                                        </Button>
-                                    </Tooltip>
-                                </div>
-                            )}
-                        </div>
+                        <HeaderUserMenu
+                            user={user}
+                            dropdownOpen={dropdownOpen}
+                            onAvatarClick={() => setDropdownOpen(v => !v)}
+                            onLogout={handleLogout}
+                            onDropdownClose={() => setDropdownOpen(false)}
+                        />
                     </>
                 ) : (
                     <Link to={ROUTES.LOGIN} className="app-header__sign-in-btn">
@@ -365,7 +207,6 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     </Link>
                 )}
             </div>
-
         </header>
     );
 }
