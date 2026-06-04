@@ -12,7 +12,7 @@ return [
     | Ensure the directory is writable and excluded from public access.
     |
     */
-    'upload_dir' => storage_path('app/uploads/tus'),
+    'upload_dir' => storage_path('app/private/uploads/tus'),
 
     /*
     |--------------------------------------------------------------------------
