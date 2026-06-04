@@ -11,12 +11,12 @@ use App\Events\VideoTranscriptionStarted;
 use App\Exceptions\WhisperException;
 use App\Models\Video;
 use App\Services\TranscriptionService;
+use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class TranscribeVideo implements ShouldQueue
@@ -44,14 +44,15 @@ class TranscribeVideo implements ShouldQueue
     }
 
     /**
-     * Orchestrate transcription: mark as processing, transcribe, mark as completed, and dispatch AI metadata generation.
+     * Orchestrate transcription: mark as processing, transcribe, mark as completed,
+     * and dispatch AI metadata generation.
      *
      * When the source language is not English, a separate TranslateVideoCaptions job is dispatched
      * so the slower translate pass does not block the captions, transcription, and AI summary.
      *
      * @throws WhisperException If transcription fails
      */
-    public function handle(TranscriptionService $service): void
+    public function handle(TranscriptionService $service, VideoStorageService $storage): void
     {
         $video = Video::with('transcription')->find($this->video->id);
 
@@ -59,7 +60,7 @@ class TranscribeVideo implements ShouldQueue
             return;
         }
 
-        $isAudioMissing = !Storage::disk('public')->exists($video->audioPath());
+        $isAudioMissing = !$storage->exists($video->audioPath());
 
         if ($isAudioMissing) {
             return;
@@ -81,9 +82,11 @@ class TranscribeVideo implements ShouldQueue
         $video->refresh();
         $isNotEnglish = $video->transcription !== null && $video->transcription->language !== 'en';
 
-        if ($isNotEnglish) {
-            dispatch(new TranslateVideoCaptions($video));
+        if (!$isNotEnglish) {
+            return;
         }
+
+        dispatch(new TranslateVideoCaptions($video));
     }
 
     /**
@@ -124,8 +127,10 @@ class TranscribeVideo implements ShouldQueue
 
         $isFirstAttempt = $this->attempts() === 1;
 
-        if ($isFirstAttempt) {
-            event(new VideoTranscriptionStarted($video, $startedAt, $estimatedSeconds));
+        if (!$isFirstAttempt) {
+            return;
         }
+
+        event(new VideoTranscriptionStarted($video, $startedAt, $estimatedSeconds));
     }
 }

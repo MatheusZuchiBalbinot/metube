@@ -31,8 +31,10 @@ class SendVideoTranscribedNotification implements ShouldQueueAfterCommit
             return;
         }
 
-        if ($event->status === TranscriptionStatus::COMPLETED) {
-            $owner->notify(new VideoTranscribedNotification($event->video));
+        if ($event->status !== TranscriptionStatus::COMPLETED) {
+            return;
         }
+
+        $owner->notify(new VideoTranscribedNotification($event->video));
     }
 }

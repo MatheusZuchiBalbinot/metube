@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $started_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ *
  * @property-read Video $video
  */
 class Transcription extends Model
@@ -46,5 +47,15 @@ class Transcription extends Model
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * Whether this transcription is complete and has usable content for AI chat.
+     */
+    public function isReadyForChat(): bool
+    {
+        return $this->status === TranscriptionStatus::COMPLETED
+            && is_string($this->content)
+            && $this->content !== '';
     }
 }
