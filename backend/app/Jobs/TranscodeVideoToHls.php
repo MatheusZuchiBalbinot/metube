@@ -8,11 +8,11 @@ use App\Enums\VideoStatus;
 use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\HlsTranscodeService;
+use App\Services\VideoStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -24,8 +24,9 @@ use Throwable;
  * HLS becomes the only delivery format.
  *
  * For single uploads it also extracts an audio track and kicks off transcription, which
- * reads that audio rather than the (now deleted) source video. Batch uploads are not
- * transcribed, matching the existing pipeline.
+ * reads that audio rather than the (now deleted) source video. If no thumbnail was
+ * provided, a frame is extracted automatically at 20% of the video duration.
+ * Batch uploads are not transcribed, matching the existing pipeline.
  */
 class TranscodeVideoToHls implements ShouldQueue
 {
@@ -43,10 +44,10 @@ class TranscodeVideoToHls implements ShouldQueue
     public function __construct(private readonly Video $video) {}
 
     /**
-     * Build the HLS package, extract audio (single uploads), drop the source file,
-     * and dispatch transcription.
+     * Build the HLS package, auto-generate thumbnail if missing, extract audio
+     * (single uploads), drop the source file, and dispatch transcription.
      */
-    public function handle(HlsTranscodeService $hls): void
+    public function handle(HlsTranscodeService $hls, VideoStorageService $storage): void
     {
         $video = Video::find($this->video->id);
 
@@ -57,30 +58,40 @@ class TranscodeVideoToHls implements ShouldQueue
         }
 
         $sourcePath = $video->video_url;
-        $sourceAbsPath = Storage::disk('public')->path($sourcePath);
+        $sourceAbsPath = $storage->absolutePublicPath($sourcePath);
 
         $duration = $hls->probeDuration($sourceAbsPath);
         $hlsUrl = $hls->transcode($sourceAbsPath, $video->vuid);
 
         $isSingle = !$video->is_batch;
+        $isThumbnailMissing = $video->thumbnail_url === null && $duration !== null;
 
         if ($isSingle) {
             $hls->extractAudio($sourceAbsPath, $video->vuid);
         }
 
-        $video->update([
+        $updates = [
             'hls_url' => $hlsUrl,
             'duration' => $duration,
             'video_url' => null,
-        ]);
+        ];
 
-        Storage::disk('public')->delete($sourcePath);
+        if ($isThumbnailMissing) {
+            $thumbAbsPath = $hls->extractThumbnail($sourceAbsPath, $video->vuid, $duration);
+            $updates['thumbnail_url'] = $storage->publishThumbnailFromAbsPath($thumbAbsPath, $video->vuid);
+        }
+
+        $video->update($updates);
+
+        $storage->deletePublished($sourcePath);
 
         event(new VideoStatusUpdated($video, $video->status));
 
-        if ($isSingle) {
-            TranscribeVideo::dispatch($video);
+        if (!$isSingle) {
+            return;
         }
+
+        TranscribeVideo::dispatch($video);
     }
 
     /**
