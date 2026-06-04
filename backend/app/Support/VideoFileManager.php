@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Contracts\VideoStorageContract;
+use App\Contracts\StorageContract;
 
 /**
  * Moves assembled tus uploads from their temporary location into the standard
  * uploads/tmp area, resolving each file's extension with a safe fallback.
  *
- * All physical access is delegated to {@see VideoStorageContract}, so the manager
+ * All physical access is delegated to {@see StorageContract}, so the manager
  * is agnostic of the underlying disk.
  */
 final class VideoFileManager
 {
     public function __construct(
-        private readonly VideoStorageContract $storage,
+        private readonly StorageContract $storage,
     ) {}
 
     /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Notifications\Concerns;
 
+use App\Contracts\StorageContract;
 use App\Models\Video;
-use Illuminate\Support\Facades\Storage;
 
 trait IncludesVideoThumbnail
 {
@@ -23,6 +23,6 @@ trait IncludesVideoThumbnail
             return null;
         }
 
-        return Storage::disk('public')->url($video->thumbnail_url);
+        return app(StorageContract::class)->publicUrl($video->thumbnail_url);
     }
 }

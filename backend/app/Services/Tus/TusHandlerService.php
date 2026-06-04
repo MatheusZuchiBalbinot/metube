@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Tus;
 
+use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
-use App\Contracts\VideoStorageContract;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use TusPhp\Tus\Server as TusServer;
 
@@ -26,7 +26,7 @@ final class TusHandlerService
 {
     public function __construct(
         private readonly TusResolverContract $resolver,
-        private readonly VideoStorageContract $storage,
+        private readonly StorageContract $storage,
     ) {}
 
     /**

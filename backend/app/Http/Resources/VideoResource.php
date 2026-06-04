@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Contracts\StorageContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class VideoResource extends JsonResource
 {
@@ -54,7 +54,7 @@ class VideoResource extends JsonResource
      */
     private function storageUrl(string $diskPath): string
     {
-        $absolute = Storage::disk('public')->url($diskPath);
+        $absolute = app(StorageContract::class)->publicUrl($diskPath);
 
         return (string) parse_url($absolute, PHP_URL_PATH);
     }

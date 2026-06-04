@@ -6,8 +6,8 @@ namespace App\Providers;
 
 use App\AI\Clients\GroqClient;
 use App\AI\Contracts\AiClient;
+use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
-use App\Contracts\VideoStorageContract;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
@@ -53,7 +53,7 @@ use App\Observers\VideoObserver;
 use App\Policies\CommentPolicy;
 use App\Policies\PlaylistPolicy;
 use App\Policies\VideoPolicy;
-use App\Services\Storage\LocalVideoStorage;
+use App\Services\StorageService;
 use App\Services\Tus\TusUploadResolver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -73,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AiClient::class, GroqClient::class);
         $this->app->singleton(GroqClient::class);
 
-        $this->app->bind(VideoStorageContract::class, LocalVideoStorage::class);
+        $this->app->bind(StorageContract::class, StorageService::class);
         $this->app->bind(TusResolverContract::class, TusUploadResolver::class);
     }
 

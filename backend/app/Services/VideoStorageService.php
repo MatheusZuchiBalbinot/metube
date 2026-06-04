@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\StorageContract;
 use App\Exceptions\VideoStorageException;
-use Illuminate\Support\Facades\Storage;
 
 class VideoStorageService
 {
-    public function __construct(private readonly ThumbnailService $thumbnails) {}
+    public function __construct(
+        private readonly ThumbnailService $thumbnails,
+        private readonly StorageContract $storage,
+    ) {}
 
     /**
      * Move a video from temporary local storage to public storage.
@@ -27,8 +30,8 @@ class VideoStorageService
         $ext = pathinfo($tmpPath, PATHINFO_EXTENSION);
         $finalPath = "videos/{$vuid}.{$ext}";
 
-        $src = Storage::disk('local')->path($tmpPath);
-        $dst = Storage::disk('public')->path($finalPath);
+        $src = $this->storage->tempPath($tmpPath);
+        $dst = $this->storage->publicPath($finalPath);
 
         $dstDir = dirname($dst);
         $isDirMissing = !is_dir($dstDir);
@@ -57,12 +60,12 @@ class VideoStorageService
     public function publishThumbnail(string $tmpPath, string $vuid): string
     {
         $thumbPath = "thumbnails/{$vuid}.webp";
-        $absolutePath = Storage::disk('local')->path($tmpPath);
+        $absolutePath = $this->storage->tempPath($tmpPath);
 
         $webp = $this->thumbnails->convertToWebp($absolutePath);
 
-        Storage::disk('public')->put($thumbPath, $webp);
-        Storage::disk('local')->delete($tmpPath);
+        $this->storage->putPublic($thumbPath, $webp);
+        $this->storage->deleteTempFile($tmpPath);
 
         return $thumbPath;
     }
@@ -79,7 +82,7 @@ class VideoStorageService
     public function publishCaption(string $vttContent, string $vuid, string $lang): string
     {
         $captionPath = "captions/{$vuid}.{$lang}.vtt";
-        Storage::disk('public')->put($captionPath, $vttContent);
+        $this->storage->putPublic($captionPath, $vttContent);
 
         return $captionPath;
     }
@@ -93,7 +96,7 @@ class VideoStorageService
      */
     public function exists(string $path): bool
     {
-        return Storage::disk('public')->exists($path);
+        return $this->storage->existsPublic($path);
     }
 
     /**
@@ -114,7 +117,7 @@ class VideoStorageService
 
         $webp = $this->thumbnails->convertToWebp($absPath);
 
-        Storage::disk('public')->put($thumbPath, $webp);
+        $this->storage->putPublic($thumbPath, $webp);
 
         if (is_file($absPath)) {
             unlink($absPath);
@@ -132,7 +135,7 @@ class VideoStorageService
      */
     public function absolutePublicPath(string $diskPath): string
     {
-        return Storage::disk('public')->path($diskPath);
+        return $this->storage->publicPath($diskPath);
     }
 
     /**
@@ -142,7 +145,7 @@ class VideoStorageService
      */
     public function deletePublished(string $diskPath): void
     {
-        Storage::disk('public')->delete($diskPath);
+        $this->storage->deleteFile($diskPath);
     }
 
     /**
@@ -153,12 +156,12 @@ class VideoStorageService
      */
     public function cleanupTmp(string $videoPath, ?string $thumbnailPath): void
     {
-        Storage::disk('local')->delete($videoPath);
+        $this->storage->deleteTempFile($videoPath);
 
         if ($thumbnailPath === null) {
             return;
         }
 
-        Storage::disk('local')->delete($thumbnailPath);
+        $this->storage->deleteTempFile($thumbnailPath);
     }
 }

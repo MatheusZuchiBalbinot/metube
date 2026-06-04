@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
-use App\Contracts\VideoStorageContract;
 use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
 use App\Jobs\ProcessVideoUpload;
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Infrastructure concerns are delegated to collaborators: file moves go through
  * {@see VideoFileManager}, tus cache access through {@see TusResolverContract},
- * file deletion through {@see VideoStorageContract}, and payload construction
+ * file deletion through {@see StorageContract}, and payload construction
  * through {@see VideoPayloadBuilder}.
  */
 final class VideoUploadService
@@ -34,7 +34,7 @@ final class VideoUploadService
     public function __construct(
         private readonly VideoFileManager $fileManager,
         private readonly TusResolverContract $tusResolver,
-        private readonly VideoStorageContract $storage,
+        private readonly StorageContract $storage,
     ) {}
 
     /**
@@ -199,7 +199,7 @@ final class VideoUploadService
                 continue;
             }
 
-            $this->storage->delete($path);
+            $this->storage->deleteFile($path);
         }
     }
 }
