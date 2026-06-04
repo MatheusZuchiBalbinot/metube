@@ -19,6 +19,7 @@ use PhpCsFixer\Fixer\Basic\BracesFixer;
 use PhpCsFixer\Fixer\ClassNotation\OrderedClassElementsFixer;
 use SlevomatCodingStandard\Sniffs\Classes\ForbiddenPublicPropertySniff as SlevomatForbiddenPublicPropertySniff;
 use SlevomatCodingStandard\Sniffs\Classes\SuperfluousExceptionNamingSniff;
+use SlevomatCodingStandard\Sniffs\Commenting\DocCommentSpacingSniff;
 use SlevomatCodingStandard\Sniffs\Commenting\UselessFunctionDocCommentSniff;
 use SlevomatCodingStandard\Sniffs\ControlStructures\EarlyExitSniff;
 use SlevomatCodingStandard\Sniffs\ControlStructures\UselessIfConditionWithReturnSniff;
@@ -83,6 +84,10 @@ return [
         // Standard PHP/Laravel convention to suffix exceptions with "Exception".
         SuperfluousExceptionNamingSniff::class,
 
+        // Pint groups @property/@property-read/@property-write in one block; Insights wants
+        // a blank line between them. Since Pint is the canonical formatter, defer to it.
+        DocCommentSpacingSniff::class,
+
         // Conflicts with Pint; `construct() {}` is valid PHP.
         ScopeClosingBraceSniff::class,
         FunctionClosingBraceSniff::class,
@@ -104,7 +109,6 @@ return [
             'lineLimit' => 120,
             'absoluteLineLimit' => 0,
         ],
-
 
         // 20 lines is too strict for service methods with branching logic.
         FunctionLengthSniff::class => [
