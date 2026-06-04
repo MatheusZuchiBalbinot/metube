@@ -30,10 +30,10 @@ Route::get('/recommendations', [VideoController::class, 'recommendations']);
 
 Route::prefix('videos')->group(function (): void {
     Route::get('/', [VideoController::class, 'index']);
-    Route::get('/{vuid}', [VideoController::class, 'show']);
-    Route::get('/{vuid}/summary', [VideoController::class, 'summary']);
-    Route::get('/{vuid}/transcription', [VideoController::class, 'transcription']);
-    Route::prefix('{vuid}/comments')->group(function (): void {
+    Route::get('/{video}', [VideoController::class, 'show'])->can('view', 'video');
+    Route::get('/{video}/summary', [VideoController::class, 'summary']);
+    Route::get('/{video}/transcription', [VideoController::class, 'transcription']);
+    Route::prefix('{video}/comments')->group(function (): void {
         Route::get('/', [CommentController::class, 'index']);
     });
 });
@@ -90,30 +90,34 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
 
     Route::prefix('videos')->group(function (): void {
         Route::post('/', [VideoController::class, 'store']);
-        Route::patch('/{vuid}', [VideoController::class, 'update']);
-        Route::delete('/{vuid}', [VideoController::class, 'destroy']);
+        Route::patch('/{video}', [VideoController::class, 'update'])->can('update', 'video');
+        Route::delete('/{video}', [VideoController::class, 'destroy'])->can('delete', 'video');
 
-        Route::post('/{vuid}/views', [VideoController::class, 'recordView']);
-        Route::post('/{vuid}/like', [VideoController::class, 'toggleLike']);
-        Route::post('/{vuid}/dislike', [VideoController::class, 'toggleDislike']);
-        Route::post('/{vuid}/save', [VideoController::class, 'toggleSave']);
-        Route::put('/{vuid}/progress', [VideoController::class, 'updateProgress']);
-        Route::post('/{vuid}/publish', [VideoController::class, 'publish']);
-        Route::post('/{vuid}/transcription/retry', [VideoController::class, 'retryTranscription']);
-        Route::get('/{vuid}/ai-suggestion', [VideoController::class, 'aiSuggestion']);
-        Route::post('/{vuid}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion']);
-        Route::post('/{vuid}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion']);
+        Route::post('/{video}/views', [VideoController::class, 'recordView']);
+        Route::post('/{video}/like', [VideoController::class, 'toggleLike']);
+        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike']);
+        Route::post('/{video}/save', [VideoController::class, 'toggleSave']);
+        Route::put('/{video}/progress', [VideoController::class, 'updateProgress']);
+        Route::post('/{video}/publish', [VideoController::class, 'publish'])->can('publish', 'video');
+        Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
+            ->can('retryTranscription', 'video');
+        Route::get('/{video}/ai-suggestion', [VideoController::class, 'aiSuggestion'])
+            ->can('manageSuggestion', 'video');
+        Route::post('/{video}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion'])
+            ->can('manageSuggestion', 'video');
+        Route::post('/{video}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion'])
+            ->can('manageSuggestion', 'video');
 
-        Route::post('/{vuid}/chat', VideoChatController::class)->middleware('throttle:20,1');
+        Route::post('/{video}/chat', VideoChatController::class)->middleware('throttle:20,1');
 
-        Route::prefix('{vuid}/comments')->group(function (): void {
+        Route::prefix('{video}/comments')->group(function (): void {
             Route::post('/', [CommentController::class, 'store']);
         });
     });
 
     Route::prefix('comments/{comment}')->group(function (): void {
-        Route::patch('/', [CommentController::class, 'update']);
-        Route::delete('/', [CommentController::class, 'destroy']);
+        Route::patch('/', [CommentController::class, 'update'])->can('update', 'comment');
+        Route::delete('/', [CommentController::class, 'destroy'])->can('delete', 'comment');
         Route::post('/like', [CommentController::class, 'toggleLike']);
         Route::get('/replies', [CommentController::class, 'replies']);
         Route::get('/versions', [CommentController::class, 'versions']);
@@ -126,15 +130,15 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
     Route::prefix('playlists')->group(function (): void {
         Route::get('/', [PlaylistController::class, 'index']);
         Route::post('/', [PlaylistController::class, 'store']);
-        Route::get('/{puid}', [PlaylistController::class, 'show']);
-        Route::patch('/{puid}', [PlaylistController::class, 'update']);
-        Route::delete('/{puid}', [PlaylistController::class, 'destroy']);
+        Route::get('/{playlist}', [PlaylistController::class, 'show'])->can('view', 'playlist');
+        Route::patch('/{playlist}', [PlaylistController::class, 'update'])->can('update', 'playlist');
+        Route::delete('/{playlist}', [PlaylistController::class, 'destroy'])->can('delete', 'playlist');
 
-        Route::prefix('{puid}/videos')->group(function (): void {
-            Route::get('/', [PlaylistController::class, 'listVideos']);
-            Route::post('/', [PlaylistController::class, 'addVideo']);
-            Route::put('/', [PlaylistController::class, 'reorderVideos']);
-            Route::delete('/{vuid}', [PlaylistController::class, 'removeVideo']);
+        Route::prefix('{playlist}/videos')->group(function (): void {
+            Route::get('/', [PlaylistController::class, 'listVideos'])->can('view', 'playlist');
+            Route::post('/', [PlaylistController::class, 'addVideo'])->can('addVideo', 'playlist');
+            Route::put('/', [PlaylistController::class, 'reorderVideos'])->can('reorderVideos', 'playlist');
+            Route::delete('/{vuid}', [PlaylistController::class, 'removeVideo'])->can('removeVideo', 'playlist');
         });
     });
 
