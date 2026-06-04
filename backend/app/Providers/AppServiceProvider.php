@@ -82,6 +82,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerRateLimiters();
+        $this->registerPolicies();
+        $this->registerObservers();
+
+        Horizon::auth(function (Request $request): bool {
+            return app()->isLocal();
+        });
+
+        $this->registerEventListeners();
+    }
+
+    private function registerRateLimiters(): void
+    {
         RateLimiter::for('login', function (Request $request) {
             return [
                 Limit::perMinute(5)->by($request->ip()),
@@ -96,19 +109,24 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('email-verification', function (Request $request) {
             return Limit::perMinute(6)->by($request->ip());
         });
+    }
 
+    private function registerPolicies(): void
+    {
         Gate::policy(Video::class, VideoPolicy::class);
         Gate::policy(Playlist::class, PlaylistPolicy::class);
         Gate::policy(Comment::class, CommentPolicy::class);
+    }
 
+    private function registerObservers(): void
+    {
         Video::observe(VideoObserver::class);
         Playlist::observe(PlaylistObserver::class);
         User::observe(UserObserver::class);
+    }
 
-        Horizon::auth(function (Request $request): bool {
-            return app()->isLocal();
-        });
-
+    private function registerEventListeners(): void
+    {
         $loggableEvents = [
             VideoViewed::class,
             VideoReactionApplied::class,
