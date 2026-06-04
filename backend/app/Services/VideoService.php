@@ -61,6 +61,22 @@ final class VideoService
     }
 
     /**
+     * Get a video fully loaded for display, including the channel's subscriber count.
+     *
+     * Builds on getVideoByUuid (cached) and adds the subscriber count which changes
+     * frequently and therefore must not be cached alongside the video record.
+     *
+     * @throws ModelNotFoundException
+     */
+    public function getVideoForDisplay(string $vuid): Video
+    {
+        $video = $this->getVideoByUuid($vuid);
+        $video->channel->loadCount('subscribers');
+
+        return $video;
+    }
+
+    /**
      * Execute the base video query with filters applied.
      */
     private function queryVideos(VideoListFilterDTO $filters): LengthAwarePaginator
