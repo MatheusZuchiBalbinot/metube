@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store';
-import { selectWatchLaterIds } from '@store/playlistSlice';
+import { selectWatchLaterIds } from '@store/playlistSelectors';
 import { toastActions } from '@store/toastSlice';
 import { usePlaylist } from '@hooks';
 import { useBurstAnimation } from '@hooks';

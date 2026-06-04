@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store';
 import { notificationsActions } from '@store/notificationsSlice';
+import { selectNotifications } from '@store/notificationsSelectors';
 import { notifications as notificationsApi } from '@api';
 import type { AppNotification as Notification } from '@api';
 import NotificationItem from './item';
@@ -14,7 +15,7 @@ interface NotificationsPanelProps {
 export default function NotificationsPanel({ onClose }: NotificationsPanelProps) {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { items, loading, hasMore } = useAppSelector(s => s.notifications);
+    const { items, loading, hasMore } = useAppSelector(selectNotifications);
 
     useEffect(() => {
         const load = async (): Promise<void> => {

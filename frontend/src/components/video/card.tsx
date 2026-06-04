@@ -5,7 +5,7 @@ import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } 
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
-import { selectWatchLaterIds } from '@store/playlistSlice';
+import { selectWatchLaterIds } from '@store/playlistSelectors';
 import { analytics, toVuid, AnalyticsSource } from '@api';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
