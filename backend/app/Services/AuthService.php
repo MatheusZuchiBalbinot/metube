@@ -24,7 +24,7 @@ final class AuthService
     public function login(array $credentials): User
     {
         if (!Auth::attempt($credentials)) {
-            throw new InvalidCredentialsException;
+            throw new InvalidCredentialsException();
         }
 
         /** @var User $user */
@@ -45,10 +45,12 @@ final class AuthService
     {
         Auth::guard('web')->logout();
 
-        if (request()->hasSession()) {
-            request()->session()->invalidate();
-            request()->session()->regenerateToken();
+        if (!request()->hasSession()) {
+            return;
         }
+
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
     }
 
     /**
@@ -56,8 +58,8 @@ final class AuthService
      */
     public function me(): User
     {
-        /** @var User $user */
         $user = Auth::user();
+        assert($user instanceof User);
 
         return $user;
     }

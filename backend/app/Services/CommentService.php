@@ -271,9 +271,11 @@ final class CommentService
             ->all();
 
         foreach ($comments as $comment) {
-            if ($comment instanceof Comment) {
-                $comment->is_liked = isset($likedIds[$comment->id]);
+            if (!($comment instanceof Comment)) {
+                continue;
             }
+
+            $comment->is_liked = isset($likedIds[$comment->id]);
         }
     }
 }

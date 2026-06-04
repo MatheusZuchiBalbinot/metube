@@ -66,7 +66,13 @@ final class AnalyticsService
      * @param int|null $position Render position when clicked
      * @param string|null $sessionId Client session id
      */
-    public function recordClick(User $user, Video $video, VideoSource $source, ?int $position = null, ?string $sessionId = null): void
+    public function recordClick(
+        User $user,
+        Video $video,
+        VideoSource $source,
+        ?int $position = null,
+        ?string $sessionId = null,
+    ): void
     {
         event(new VideoClickedFromFeed($user, $video, $source, $position, $sessionId));
     }

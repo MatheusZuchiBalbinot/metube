@@ -61,9 +61,11 @@ final class VideoProgressService
             // User skipped (stopped watching, went backwards, or low progress)
             $isSkipped = $previousPercent > 0 && $percent < $previousPercent - 5;
 
-            if ($isSkipped) {
-                event(new VideoSkipped($user, $video, $percent));
+            if (!$isSkipped) {
+                return;
             }
+
+            event(new VideoSkipped($user, $video, $percent));
         });
     }
 }

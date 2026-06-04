@@ -20,9 +20,11 @@ class VideoObserver
 
         $affectsFeed = $video->wasChanged('status') || $video->wasChanged('published_at');
 
-        if ($affectsFeed) {
-            $this->cache->forgetFeed();
+        if (!$affectsFeed) {
+            return;
         }
+
+        $this->cache->forgetFeed();
     }
 
     /**

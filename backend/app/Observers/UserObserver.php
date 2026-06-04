@@ -19,8 +19,10 @@ class UserObserver
         $channelFields = ['name', 'avatar', 'bio'];
         $isChannelDataChanged = collect($channelFields)->contains(fn (string $field) => $user->wasChanged($field));
 
-        if ($isChannelDataChanged) {
-            $this->cache->forgetChannel($user->uuid);
+        if (!$isChannelDataChanged) {
+            return;
         }
+
+        $this->cache->forgetChannel($user->uuid);
     }
 }

@@ -22,7 +22,7 @@ class ResetPasswordNotification extends ResetPassword
         $frontendUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
         $resetUrl = "{$frontendUrl}/reset-password/{$this->token}?email=" . urlencode((string) $notifiable->email);
 
-        return (new MailMessage)
+        return (new MailMessage())
             ->subject('Reset Your Password')
             ->line('You are receiving this email because we received a password reset request for your account.')
             ->action('Reset Password', $resetUrl)
