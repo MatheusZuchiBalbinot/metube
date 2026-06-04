@@ -55,7 +55,10 @@ class StoreVideoRequest extends FormRequest
             'tags.*' => ['string', 'max:50'],
             'status' => ['required', 'string', Rule::enum(VideoStatus::class)],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
-            'video_file' => ['required_without:upload_key', 'nullable', 'file', 'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152'],
+            'video_file' => [
+                'required_without:upload_key', 'nullable', 'file',
+                'mimes:mp4,webm,ogg,quicktime,x-msvideo', 'max:2097152',
+            ],
             'thumbnail_file' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2097152'],
             'upload_key' => ['required_without:video_file', 'nullable', 'string'],
             'thumbnail_key' => ['nullable', 'string'],
@@ -108,9 +111,11 @@ class StoreVideoRequest extends FormRequest
 
             $hasThumbnailKey = is_string($thumbnailKey) && $thumbnailKey !== '';
 
-            if ($hasThumbnailKey) {
-                $this->assertKeyOwnership($v, $thumbnailKey, 'thumbnail_key');
+            if (!$hasThumbnailKey) {
+                return;
             }
+
+            $this->assertKeyOwnership($v, $thumbnailKey, 'thumbnail_key');
         });
     }
 
@@ -125,9 +130,11 @@ class StoreVideoRequest extends FormRequest
         $ownerId = Cache::get("tus:owner:{$key}");
         $isOwner = $ownerId !== null && (int) $ownerId === (int) auth()->id();
 
-        if (!$isOwner) {
-            $v->errors()->add($field, 'Upload session not found or has expired.');
+        if ($isOwner) {
+            return;
         }
+
+        $v->errors()->add($field, 'Upload session not found or has expired.');
     }
 
     /**

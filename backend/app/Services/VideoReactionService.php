@@ -72,13 +72,15 @@ final class VideoReactionService
             ];
             $inserted = UserVideoReaction::insertOrIgnore($likePayload);
 
-            if ($inserted > 0) {
-                event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
-                $likeCount = UserVideoReaction::forVideo($video->id)
-                    ->likes()
-                    ->count();
-                event(new VideoLiked($video, $user, $likeCount));
+            if ($inserted === 0) {
+                return;
             }
+
+            event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
+            $likeCount = UserVideoReaction::forVideo($video->id)
+                ->likes()
+                ->count();
+            event(new VideoLiked($video, $user, $likeCount));
         });
     }
 
@@ -121,9 +123,11 @@ final class VideoReactionService
             ];
             $inserted = UserVideoReaction::insertOrIgnore($dislikePayload);
 
-            if ($inserted > 0) {
-                event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
+            if ($inserted === 0) {
+                return;
             }
+
+            event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
         });
     }
 
