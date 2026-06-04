@@ -243,7 +243,11 @@ class CacheService
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember("user:recommendations:{$userId}:page:{$page}", config('cache.metube.recommendations.ttl'), $callback);
+            ->remember(
+                "user:recommendations:{$userId}:page:{$page}",
+                config('cache.metube.recommendations.ttl'),
+                $callback,
+            );
     }
 
     /**

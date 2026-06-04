@@ -101,9 +101,11 @@ final class ChannelService
             ];
             $inserted = UserSubscription::query()->insertOrIgnore($subscriptionData);
 
-            if ($inserted > 0) {
-                event(new ChannelSubscribed($subscriber, $channel));
+            if ($inserted === 0) {
+                return;
             }
+
+            event(new ChannelSubscribed($subscriber, $channel));
         });
     }
 }

@@ -71,9 +71,13 @@ class UpdateVideoRequest extends FormRequest
             $status = $this->input('status');
             $scheduledAt = $this->input('scheduled_at');
 
-            if ($status === VideoStatus::SCHEDULED->value && $scheduledAt === null) {
-                $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
+            $isMissingScheduledAt = $status === VideoStatus::SCHEDULED->value && $scheduledAt === null;
+
+            if (!$isMissingScheduledAt) {
+                return;
             }
+
+            $validator->errors()->add('scheduled_at', 'Scheduled date is required when status is scheduled.');
         });
     }
 

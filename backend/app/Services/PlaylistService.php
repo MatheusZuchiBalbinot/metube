@@ -102,6 +102,16 @@ final class PlaylistService
     }
 
     /**
+     * Get the ordered videos for a playlist, with channel eager-loaded.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Video>
+     */
+    public function getPlaylistVideos(Playlist $playlist): \Illuminate\Database\Eloquent\Collection
+    {
+        return $playlist->videos()->with('channel')->get();
+    }
+
+    /**
      * Add a video to a playlist (idempotent).
      *
      * @param string $vuid Video UUID
@@ -161,7 +171,7 @@ final class PlaylistService
             $missing = array_diff($data->vuids, array_keys($idByVuid));
 
             if ($missing !== []) {
-                throw (new ModelNotFoundException)
+                throw (new ModelNotFoundException())
                     ->setModel(Video::class, array_values($missing));
             }
 

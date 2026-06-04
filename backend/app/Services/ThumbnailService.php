@@ -29,7 +29,7 @@ class ThumbnailService
         $maxHeight = $maxHeight !== 0 ? $maxHeight : (int) config('media.thumbnail.max_height');
         $quality = $quality !== 0 ? $quality : (int) config('media.thumbnail.quality');
 
-        return (string) (new ImageManager(new Driver))
+        return (string) (new ImageManager(new Driver()))
             ->read($absolutePath)
             ->scaleDown(width: $maxWidth, height: $maxHeight)
             ->toWebp(quality: $quality);
