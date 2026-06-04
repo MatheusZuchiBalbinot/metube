@@ -97,6 +97,55 @@ class VideoStorageService
     }
 
     /**
+     * Convert a thumbnail from an absolute filesystem path to WebP and publish it.
+     *
+     * Used when a thumbnail is auto-generated (e.g. extracted from a video frame) and
+     * the file already exists at a known absolute path rather than on a named disk.
+     * The temporary file is removed after publication.
+     *
+     * @param string $absPath Absolute filesystem path to the source image
+     * @param string $vuid Video ULID used as the public filename
+     *
+     * @return string Disk-relative path: thumbnails/{vuid}.webp
+     */
+    public function publishThumbnailFromAbsPath(string $absPath, string $vuid): string
+    {
+        $thumbPath = "thumbnails/{$vuid}.webp";
+
+        $webp = $this->thumbnails->convertToWebp($absPath);
+
+        Storage::disk('public')->put($thumbPath, $webp);
+
+        if (is_file($absPath)) {
+            unlink($absPath);
+        }
+
+        return $thumbPath;
+    }
+
+    /**
+     * Resolve the absolute filesystem path for a public-disk-relative path.
+     *
+     * @param string $diskPath Path relative to the public disk
+     *
+     * @return string Absolute filesystem path
+     */
+    public function absolutePublicPath(string $diskPath): string
+    {
+        return Storage::disk('public')->path($diskPath);
+    }
+
+    /**
+     * Delete a published file from the public disk.
+     *
+     * @param string $diskPath Path relative to the public disk
+     */
+    public function deletePublished(string $diskPath): void
+    {
+        Storage::disk('public')->delete($diskPath);
+    }
+
+    /**
      * Delete temporary files from local storage.
      *
      * @param string $videoPath Path relative to the 'local' disk

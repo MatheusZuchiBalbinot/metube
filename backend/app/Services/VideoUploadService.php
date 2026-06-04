@@ -110,6 +110,29 @@ final class VideoUploadService
     }
 
     /**
+     * Route an upload request to the correct upload path.
+     *
+     * Determines whether the request carries a completed tus key (resumable upload)
+     * or a raw multipart file (direct upload) and dispatches to the appropriate
+     * method, so controllers do not need to branch on upload mode.
+     *
+     * @param User $user Authenticated channel owner
+     * @param array<string, mixed> $validated Validated request payload
+     *
+     * @return Video Created video with status=PROCESSING
+     */
+    public function handleUpload(User $user, array $validated): Video
+    {
+        $isTusUpload = isset($validated['upload_key']);
+
+        if ($isTusUpload) {
+            return $this->finalizeUpload($user, FinalizeUploadDTO::fromRequest($validated));
+        }
+
+        return $this->createVideo($user, CreateVideoDTO::fromRequest($validated));
+    }
+
+    /**
      * Delete a video and its associated files.
      *
      * @param Video $video Video to delete
