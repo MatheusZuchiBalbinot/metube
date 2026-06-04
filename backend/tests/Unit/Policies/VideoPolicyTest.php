@@ -14,7 +14,7 @@ describe('VideoPolicy', function () {
     test('view allows owner to see draft video', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::DRAFT]);
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->view($owner, $video);
 
@@ -24,7 +24,7 @@ describe('VideoPolicy', function () {
     test('view allows owner to see any status video', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::PROCESSING]);
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->view($owner, $video);
 
@@ -35,7 +35,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::PUBLISHED]);
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->view($other, $video);
 
@@ -46,7 +46,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::DRAFT]);
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->view($other, $video);
 
@@ -57,7 +57,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::PROCESSING]);
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->view($other, $video);
 
@@ -67,7 +67,7 @@ describe('VideoPolicy', function () {
     test('update allows owner to update video', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->update($owner, $video);
 
@@ -78,7 +78,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->update($other, $video);
 
@@ -88,7 +88,7 @@ describe('VideoPolicy', function () {
     test('delete allows owner to delete video', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->delete($owner, $video);
 
@@ -99,7 +99,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->delete($other, $video);
 
@@ -108,7 +108,7 @@ describe('VideoPolicy', function () {
 
     test('create allows any authenticated user', function () {
         $user = User::factory()->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->create($user);
 
@@ -118,7 +118,7 @@ describe('VideoPolicy', function () {
     test('retryTranscription allows owner', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->retryTranscription($owner, $video);
 
@@ -129,7 +129,7 @@ describe('VideoPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
-        $policy = new VideoPolicy;
+        $policy = new VideoPolicy();
 
         $result = $policy->retryTranscription($other, $video);
 

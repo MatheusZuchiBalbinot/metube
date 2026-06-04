@@ -35,13 +35,13 @@ describe('WatchHistory Model', function () {
     });
 
     test('watch history uses correct table', function () {
-        $history = new WatchHistory;
+        $history = new WatchHistory();
 
         expect($history->getTable())->toBe('watch_histories');
     });
 
     test('watch history has no timestamps', function () {
-        $history = new WatchHistory;
+        $history = new WatchHistory();
 
         expect($history->timestamps)->toBeFalse();
     });

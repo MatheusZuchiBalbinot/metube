@@ -17,7 +17,7 @@ describe('VideoLikedNotification', function () {
         $liker = User::factory()->create(['name' => 'Alice']);
         $video = Video::factory()->for($owner, 'channel')->published()->create(['title' => 'My Video']);
 
-        $payload = (new VideoLikedNotification($video, $liker))->toArray(new stdClass);
+        $payload = (new VideoLikedNotification($video, $liker))->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::VIDEO_LIKED->value)
             ->and($payload['liker_name'])->toBe('Alice')
@@ -30,7 +30,7 @@ describe('VideoLikedNotification', function () {
         $liker = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        $via = (new VideoLikedNotification($video, $liker))->via(new stdClass);
+        $via = (new VideoLikedNotification($video, $liker))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });
@@ -41,7 +41,7 @@ describe('VideoLikedNotification', function () {
         $video = Video::factory()->for($owner, 'channel')->published()->create(['title' => 'My Video']);
 
         $notification = new VideoLikedNotification($video, $liker);
-        $broadcast = $notification->toBroadcast(new stdClass);
+        $broadcast = $notification->toBroadcast(new stdClass());
 
         expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)
             ->and($broadcast->data['type'])->toBe(NotificationType::VIDEO_LIKED->value)

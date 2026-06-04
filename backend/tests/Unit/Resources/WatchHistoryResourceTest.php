@@ -27,7 +27,7 @@ describe('WatchHistoryResource', function () {
 
         $history->load('video');
         $resource = new WatchHistoryResource($history);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array)->toHaveKey('vuid')
             ->and($array)->toHaveKey('watched_at')
@@ -48,7 +48,7 @@ describe('WatchHistoryResource', function () {
 
         $history->load('video');
         $resource = new WatchHistoryResource($history);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array['watched_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });

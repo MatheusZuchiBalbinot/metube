@@ -16,7 +16,7 @@ describe('VideoStorageService', function () {
         test('moves the file to public disk and returns disk-relative path', function () {
             Storage::disk('local')->put('uploads/tmp/abc123.mp4', 'fake video content');
 
-            $service = new VideoStorageService(new ThumbnailService);
+            $service = new VideoStorageService(new ThumbnailService());
             $path = $service->publishVideo('uploads/tmp/abc123.mp4', 'abc123');
 
             expect($path)->toBe('videos/abc123.mp4');
@@ -27,7 +27,7 @@ describe('VideoStorageService', function () {
         test('preserves the original file extension', function () {
             Storage::disk('local')->put('uploads/tmp/abc123.webm', 'fake video');
 
-            $service = new VideoStorageService(new ThumbnailService);
+            $service = new VideoStorageService(new ThumbnailService());
             $path = $service->publishVideo('uploads/tmp/abc123.webm', 'abc123');
 
             expect($path)->toBe('videos/abc123.webm');
@@ -70,7 +70,7 @@ describe('VideoStorageService', function () {
             Storage::disk('local')->put('uploads/tmp/video.mp4', 'content');
             Storage::disk('local')->put('uploads/tmp/thumb.jpg', 'content');
 
-            $service = new VideoStorageService(new ThumbnailService);
+            $service = new VideoStorageService(new ThumbnailService());
             $service->cleanupTmp('uploads/tmp/video.mp4', 'uploads/tmp/thumb.jpg');
 
             Storage::disk('local')->assertMissing('uploads/tmp/video.mp4');
@@ -80,7 +80,7 @@ describe('VideoStorageService', function () {
         test('deletes only the video file when thumbnail path is null', function () {
             Storage::disk('local')->put('uploads/tmp/video.mp4', 'content');
 
-            $service = new VideoStorageService(new ThumbnailService);
+            $service = new VideoStorageService(new ThumbnailService());
             $service->cleanupTmp('uploads/tmp/video.mp4', null);
 
             Storage::disk('local')->assertMissing('uploads/tmp/video.mp4');

@@ -16,7 +16,7 @@ describe('PlaylistResource', function () {
         $user = User::factory()->create();
         $playlist = Playlist::factory()->for($user)->create(['name' => 'My List']);
 
-        $array = (new PlaylistResource($playlist))->toArray(new Request);
+        $array = (new PlaylistResource($playlist))->toArray(new Request());
 
         expect($array)->toHaveKeys(['puid', 'name', 'video_ids', 'created_at']);
     });
@@ -25,7 +25,7 @@ describe('PlaylistResource', function () {
         $user = User::factory()->create();
         $playlist = Playlist::factory()->for($user)->create();
 
-        $array = (new PlaylistResource($playlist))->toArray(new Request);
+        $array = (new PlaylistResource($playlist))->toArray(new Request());
 
         expect($array['name'])->toBe($playlist->name);
     });
@@ -34,7 +34,7 @@ describe('PlaylistResource', function () {
         $user = User::factory()->create();
         $playlist = Playlist::factory()->for($user)->create();
 
-        $array = (new PlaylistResource($playlist))->toArray(new Request);
+        $array = (new PlaylistResource($playlist))->toArray(new Request());
 
         expect($array['video_ids'])->toBe([]);
     });
@@ -46,7 +46,7 @@ describe('PlaylistResource', function () {
         $playlist->videos()->attach($video->id, ['position' => 0]);
 
         $playlist->load('videos');
-        $array = (new PlaylistResource($playlist))->toArray(new Request);
+        $array = (new PlaylistResource($playlist))->toArray(new Request());
 
         expect($array['video_ids'])->toContain($video->vuid);
     });
@@ -55,7 +55,7 @@ describe('PlaylistResource', function () {
         $user = User::factory()->create();
         $playlist = Playlist::factory()->for($user)->create();
 
-        $array = (new PlaylistResource($playlist))->toArray(new Request);
+        $array = (new PlaylistResource($playlist))->toArray(new Request());
 
         expect($array['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });

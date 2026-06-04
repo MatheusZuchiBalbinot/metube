@@ -16,7 +16,7 @@ describe('VideoFromSubscriptionNotification', function () {
         $channel = User::factory()->create(['name' => 'Tech Channel']);
         $video = Video::factory()->for($channel, 'channel')->published()->create(['title' => 'New Episode']);
 
-        $payload = (new VideoFromSubscriptionNotification($video->load('channel')))->toArray(new stdClass);
+        $payload = (new VideoFromSubscriptionNotification($video->load('channel')))->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::VIDEO_FROM_SUBSCRIPTION->value)
             ->and($payload['channel_name'])->toBe('Tech Channel')
@@ -28,7 +28,7 @@ describe('VideoFromSubscriptionNotification', function () {
         $channel = User::factory()->create();
         $video = Video::factory()->for($channel, 'channel')->published()->create();
 
-        $via = (new VideoFromSubscriptionNotification($video->load('channel')))->via(new stdClass);
+        $via = (new VideoFromSubscriptionNotification($video->load('channel')))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });
@@ -38,7 +38,7 @@ describe('VideoFromSubscriptionNotification', function () {
         $video = Video::factory()->for($channel, 'channel')->published()->create(['title' => 'Episode 1']);
 
         $notification = new VideoFromSubscriptionNotification($video->load('channel'));
-        $broadcast = $notification->toBroadcast(new stdClass);
+        $broadcast = $notification->toBroadcast(new stdClass());
 
         expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)
             ->and($broadcast->data['type'])->toBe(NotificationType::VIDEO_FROM_SUBSCRIPTION->value)

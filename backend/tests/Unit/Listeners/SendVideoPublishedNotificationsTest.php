@@ -23,7 +23,7 @@ describe('SendVideoPublishedNotifications', function () {
         $subscriber2 = User::factory()->create();
         $channel->subscribers()->attach([$subscriber1->id, $subscriber2->id]);
 
-        (new SendVideoPublishedNotifications)->handle(new VideoPublished($video));
+        (new SendVideoPublishedNotifications())->handle(new VideoPublished($video));
 
         Queue::assertPushed(NotifySubscribersChunk::class);
     });
@@ -34,7 +34,7 @@ describe('SendVideoPublishedNotifications', function () {
         $channel = User::factory()->create();
         $video = Video::factory()->for($channel, 'channel')->published()->create();
 
-        (new SendVideoPublishedNotifications)->handle(new VideoPublished($video));
+        (new SendVideoPublishedNotifications())->handle(new VideoPublished($video));
 
         Queue::assertNothingPushed();
     });
@@ -49,13 +49,13 @@ describe('SendVideoPublishedNotifications', function () {
         $videoPublished = new VideoPublished($video);
         $video->delete();
 
-        (new SendVideoPublishedNotifications)->handle($videoPublished);
+        (new SendVideoPublishedNotifications())->handle($videoPublished);
 
         Queue::assertNothingPushed();
     });
 
     test('listener is queued on the notifications queue', function () {
-        $listener = new SendVideoPublishedNotifications;
+        $listener = new SendVideoPublishedNotifications();
 
         expect($listener->queue)->toBe('notifications')
             ->and($listener->tries)->toBe(3);

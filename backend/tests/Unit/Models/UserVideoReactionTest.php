@@ -37,13 +37,13 @@ describe('UserVideoReaction Model', function () {
     });
 
     test('reaction uses correct table', function () {
-        $reaction = new UserVideoReaction;
+        $reaction = new UserVideoReaction();
 
         expect($reaction->table)->toBe('user_video_reactions');
     });
 
     test('reaction has no timestamps', function () {
-        $reaction = new UserVideoReaction;
+        $reaction = new UserVideoReaction();
 
         expect($reaction->timestamps)->toBeFalse();
     });

@@ -9,7 +9,7 @@ describe('RecordViewRequest', function () {
     test('source is optional', function () {
         $validator = Validator::make(
             [],
-            (new RecordViewRequest)->rules(),
+            (new RecordViewRequest())->rules(),
         );
 
         expect($validator->errors()->has('source'))->toBeFalse();
@@ -18,7 +18,7 @@ describe('RecordViewRequest', function () {
     test('source must be a valid VideoSource value when provided', function () {
         $validator = Validator::make(
             ['source' => 'invalid_source'],
-            (new RecordViewRequest)->rules(),
+            (new RecordViewRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -31,7 +31,7 @@ describe('RecordViewRequest', function () {
         foreach ($validSources as $source) {
             $validator = Validator::make(
                 ['source' => $source],
-                (new RecordViewRequest)->rules(),
+                (new RecordViewRequest())->rules(),
             );
 
             expect($validator->fails())->toBeFalse()
@@ -42,7 +42,7 @@ describe('RecordViewRequest', function () {
     test('session_id is optional', function () {
         $validator = Validator::make(
             [],
-            (new RecordViewRequest)->rules(),
+            (new RecordViewRequest())->rules(),
         );
 
         expect($validator->errors()->has('session_id'))->toBeFalse();
@@ -51,7 +51,7 @@ describe('RecordViewRequest', function () {
     test('session_id cannot exceed 64 characters', function () {
         $validator = Validator::make(
             ['session_id' => str_repeat('a', 65)],
-            (new RecordViewRequest)->rules(),
+            (new RecordViewRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -61,7 +61,7 @@ describe('RecordViewRequest', function () {
     test('valid request passes validation', function () {
         $validator = Validator::make(
             ['source' => 'feed', 'session_id' => 'session123'],
-            (new RecordViewRequest)->rules(),
+            (new RecordViewRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

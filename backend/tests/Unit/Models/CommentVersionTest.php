@@ -33,7 +33,7 @@ describe('CommentVersion Model', function () {
     });
 
     test('version has expected fillable fields', function () {
-        $version = new CommentVersion;
+        $version = new CommentVersion();
         $fillable = $version->getFillable();
 
         expect($fillable)->toContain('comment_id');

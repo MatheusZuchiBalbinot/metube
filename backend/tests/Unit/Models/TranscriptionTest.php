@@ -35,7 +35,7 @@ describe('Transcription Model', function () {
     });
 
     test('transcription has expected fillable fields', function () {
-        $transcription = new Transcription;
+        $transcription = new Transcription();
         $fillable = $transcription->getFillable();
 
         expect($fillable)->toContain('video_id');

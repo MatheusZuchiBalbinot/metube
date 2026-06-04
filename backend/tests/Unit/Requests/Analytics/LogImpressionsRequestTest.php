@@ -14,7 +14,7 @@ describe('LogImpressionsRequest', function () {
     test('vuids is required', function () {
         $validator = Validator::make(
             ['source' => 'feed'],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -24,7 +24,7 @@ describe('LogImpressionsRequest', function () {
     test('vuids must be a non-empty array', function () {
         $validator = Validator::make(
             ['vuids' => [], 'source' => 'feed'],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -34,7 +34,7 @@ describe('LogImpressionsRequest', function () {
     test('vuids cannot contain more than 100 entries', function () {
         $validator = Validator::make(
             ['vuids' => array_fill(0, 101, 'x'), 'source' => 'feed'],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -47,7 +47,7 @@ describe('LogImpressionsRequest', function () {
 
         $validator = Validator::make(
             ['vuids' => [$video->vuid]],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -60,7 +60,7 @@ describe('LogImpressionsRequest', function () {
 
         $validator = Validator::make(
             ['vuids' => [$video->vuid], 'source' => 'bad-source'],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -73,7 +73,7 @@ describe('LogImpressionsRequest', function () {
 
         $validator = Validator::make(
             ['vuids' => [$video->vuid], 'source' => 'feed', 'session_id' => 'sess-1'],
-            (new LogImpressionsRequest)->rules(),
+            (new LogImpressionsRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

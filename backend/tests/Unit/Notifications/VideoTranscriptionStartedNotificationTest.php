@@ -16,7 +16,7 @@ describe('VideoTranscriptionStartedNotification', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['title' => 'My Transcription Video']);
 
-        $payload = (new VideoTranscriptionStartedNotification($video))->toArray(new stdClass);
+        $payload = (new VideoTranscriptionStartedNotification($video))->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::VIDEO_TRANSCRIPTION_STARTED->value)
             ->and($payload['vuid'])->toBe($video->vuid)
@@ -27,7 +27,7 @@ describe('VideoTranscriptionStartedNotification', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $via = (new VideoTranscriptionStartedNotification($video))->via(new stdClass);
+        $via = (new VideoTranscriptionStartedNotification($video))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });
@@ -37,7 +37,7 @@ describe('VideoTranscriptionStartedNotification', function () {
         $video = Video::factory()->for($user, 'channel')->create();
 
         $notification = new VideoTranscriptionStartedNotification($video);
-        $broadcast = $notification->toBroadcast(new stdClass);
+        $broadcast = $notification->toBroadcast(new stdClass());
 
         expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)
             ->and($broadcast->data['type'])->toBe(NotificationType::VIDEO_TRANSCRIPTION_STARTED->value)

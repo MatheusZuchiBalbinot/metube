@@ -13,7 +13,7 @@ describe('PlaylistPolicy', function () {
     test('view allows owner to view playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->view($owner, $playlist);
 
@@ -24,7 +24,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->view($other, $playlist);
 
@@ -34,7 +34,7 @@ describe('PlaylistPolicy', function () {
     test('update allows owner to update playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->update($owner, $playlist);
 
@@ -45,7 +45,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->update($other, $playlist);
 
@@ -55,7 +55,7 @@ describe('PlaylistPolicy', function () {
     test('delete allows owner to delete playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->delete($owner, $playlist);
 
@@ -66,7 +66,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->delete($other, $playlist);
 
@@ -76,7 +76,7 @@ describe('PlaylistPolicy', function () {
     test('addVideo allows owner to add videos to playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->addVideo($owner, $playlist);
 
@@ -87,7 +87,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->addVideo($other, $playlist);
 
@@ -97,7 +97,7 @@ describe('PlaylistPolicy', function () {
     test('removeVideo allows owner to remove videos from playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->removeVideo($owner, $playlist);
 
@@ -108,7 +108,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->removeVideo($other, $playlist);
 
@@ -118,7 +118,7 @@ describe('PlaylistPolicy', function () {
     test('reorderVideos allows owner to reorder videos in playlist', function () {
         $owner = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->reorderVideos($owner, $playlist);
 
@@ -129,7 +129,7 @@ describe('PlaylistPolicy', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $policy = new PlaylistPolicy;
+        $policy = new PlaylistPolicy();
 
         $result = $policy->reorderVideos($other, $playlist);
 

@@ -24,7 +24,7 @@ describe('CommentVersionResource', function () {
         ]);
 
         $resource = new CommentVersionResource($version);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array)->toHaveKey('version')
             ->and($array)->toHaveKey('content')
@@ -44,7 +44,7 @@ describe('CommentVersionResource', function () {
         ]);
 
         $resource = new CommentVersionResource($version);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });

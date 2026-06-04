@@ -17,7 +17,7 @@ describe('VideoProcessedNotification', function () {
         $video = Video::factory()->for($owner, 'channel')->published()->create(['title' => 'My Video']);
 
         $notification = new VideoProcessedNotification($video);
-        $payload = $notification->toArray(new stdClass);
+        $payload = $notification->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::VIDEO_PROCESSED->value)
             ->and($payload['vuid'])->toBe($video->vuid)
@@ -29,7 +29,7 @@ describe('VideoProcessedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::FAILED]);
 
-        $payload = (new VideoProcessedNotification($video))->toArray(new stdClass);
+        $payload = (new VideoProcessedNotification($video))->toArray(new stdClass());
 
         expect($payload['failed'])->toBeTrue();
     });
@@ -38,7 +38,7 @@ describe('VideoProcessedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        $via = (new VideoProcessedNotification($video))->via(new stdClass);
+        $via = (new VideoProcessedNotification($video))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });

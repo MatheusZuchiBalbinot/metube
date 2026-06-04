@@ -28,7 +28,7 @@ describe('LogImpressionsBatch', function () {
             sessionId: 'sess-abc',
         );
 
-        (new LogImpressionsBatch)->handle($event);
+        (new LogImpressionsBatch())->handle($event);
 
         expect(DB::table('user_analytics')->count())->toBe(2);
     });
@@ -43,13 +43,13 @@ describe('LogImpressionsBatch', function () {
             sessionId: null,
         );
 
-        (new LogImpressionsBatch)->handle($event);
+        (new LogImpressionsBatch())->handle($event);
 
         expect(DB::table('user_analytics')->count())->toBe(0);
     });
 
     test('listener is queued on the analytics queue', function () {
-        $listener = new LogImpressionsBatch;
+        $listener = new LogImpressionsBatch();
 
         expect($listener->queue)->toBe('analytics')
             ->and($listener->tries)->toBe(3);

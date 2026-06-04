@@ -26,7 +26,7 @@ describe('SendVideoTranscribedNotification (deprecated)', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        (new SendVideoTranscribedNotification)->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
+        (new SendVideoTranscribedNotification())->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::COMPLETED));
 
         Notification::assertSentTo($owner, VideoTranscribedNotification::class);
     });
@@ -37,7 +37,7 @@ describe('SendVideoTranscribedNotification (deprecated)', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        (new SendVideoTranscribedNotification)->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING));
+        (new SendVideoTranscribedNotification())->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING));
 
         Notification::assertSentTo($owner, VideoTranscriptionStartedNotification::class);
     });
@@ -48,7 +48,7 @@ describe('SendVideoTranscribedNotification (deprecated)', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        (new SendVideoTranscribedNotification)->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
+        (new SendVideoTranscribedNotification())->handle(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
 
         Notification::assertNothingSent();
     });
@@ -62,7 +62,7 @@ describe('SendVideoTranscriptionStartedListener', function () {
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
         $event = new VideoTranscriptionStarted($video, Carbon::now(), 120.0);
-        (new SendVideoTranscriptionStartedListener)->handle($event);
+        (new SendVideoTranscriptionStartedListener())->handle($event);
 
         Notification::assertSentTo($owner, VideoTranscriptionStartedNotification::class);
     });
@@ -76,7 +76,7 @@ describe('SendVideoTranscriptionCompletedListener', function () {
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
         $event = new VideoTranscriptionCompleted($video);
-        (new SendVideoTranscriptionCompletedListener)->handle($event);
+        (new SendVideoTranscriptionCompletedListener())->handle($event);
 
         Notification::assertSentTo($owner, VideoTranscribedNotification::class);
     });

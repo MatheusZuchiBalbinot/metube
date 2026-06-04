@@ -56,19 +56,19 @@ describe('PlaylistVideo Model', function () {
     });
 
     test('playlist video uses correct table', function () {
-        $entry = new PlaylistVideo;
+        $entry = new PlaylistVideo();
 
         expect($entry->table)->toBe('playlist_video');
     });
 
     test('playlist video has no timestamps', function () {
-        $entry = new PlaylistVideo;
+        $entry = new PlaylistVideo();
 
         expect($entry->timestamps)->toBeFalse();
     });
 
     test('playlist video has expected fillable fields', function () {
-        $entry = new PlaylistVideo;
+        $entry = new PlaylistVideo();
         $fillable = $entry->getFillable();
 
         expect($fillable)->toContain('playlist_id');

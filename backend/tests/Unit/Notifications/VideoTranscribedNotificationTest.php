@@ -15,7 +15,7 @@ describe('VideoTranscribedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create(['title' => 'My Video']);
 
-        $payload = (new VideoTranscribedNotification($video))->toArray(new stdClass);
+        $payload = (new VideoTranscribedNotification($video))->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::VIDEO_TRANSCRIBED->value)
             ->and($payload['vuid'])->toBe($video->vuid)
@@ -26,7 +26,7 @@ describe('VideoTranscribedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        $via = (new VideoTranscribedNotification($video))->via(new stdClass);
+        $via = (new VideoTranscribedNotification($video))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });

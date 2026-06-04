@@ -16,7 +16,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array)->toHaveKeys([
             'vuid', 'title', 'description', 'status', 'views', 'duration',
@@ -29,7 +29,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['vuid'])->toBe($video->vuid);
     });
@@ -38,7 +38,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['status' => 'published']);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['status'])->toBe('published');
     });
@@ -47,7 +47,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['description' => null]);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['description'])->toBe('');
     });
@@ -56,7 +56,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['video_url' => null]);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['video_url'])->toBeNull();
     });
@@ -66,7 +66,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['video_url' => 'videos/test.mp4']);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['video_url'])->toContain('test.mp4');
     });
@@ -75,7 +75,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['hls_url' => null]);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['hls_url'])->toBeNull();
     });
@@ -85,7 +85,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['hls_url' => 'hls/abc/master.m3u8']);
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['hls_url'])->toContain('hls/abc/master.m3u8');
     });
@@ -94,7 +94,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });
@@ -103,7 +103,7 @@ describe('VideoResource', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['channel'])->toBe('');
         expect($array['channel_id'])->toBe('');
@@ -114,7 +114,7 @@ describe('VideoResource', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $video->load('channel');
 
-        $array = (new VideoResource($video))->toArray(new Request);
+        $array = (new VideoResource($video))->toArray(new Request());
 
         expect($array['channel'])->toBe('Creator');
         expect($array['channel_id'])->toBe($user->uuid);

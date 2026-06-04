@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 
 describe('VideoPayloadBuilder', function () {
     test('fromCreateDTO maps the DTO fields and forces PROCESSING status', function () {
-        $user = new User;
+        $user = new User();
         $user->id = 7;
         $scheduledAt = Carbon::parse('2026-06-10 12:00:00');
 
@@ -41,7 +41,7 @@ describe('VideoPayloadBuilder', function () {
     });
 
     test('fromFinalizeDTO maps the DTO fields and forces PROCESSING status', function () {
-        $user = new User;
+        $user = new User();
         $user->id = 9;
 
         $dto = new FinalizeUploadDTO(

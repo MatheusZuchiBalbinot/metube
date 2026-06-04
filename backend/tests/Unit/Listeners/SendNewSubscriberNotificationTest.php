@@ -18,13 +18,13 @@ describe('SendNewSubscriberNotification', function () {
         $channel = User::factory()->create();
         $subscriber = User::factory()->create();
 
-        (new SendNewSubscriberNotification)->handle(new ChannelSubscribed($subscriber, $channel));
+        (new SendNewSubscriberNotification())->handle(new ChannelSubscribed($subscriber, $channel));
 
         Notification::assertSentTo($channel, NewSubscriberNotification::class);
     });
 
     test('listener is queued on the notifications queue', function () {
-        $listener = new SendNewSubscriberNotification;
+        $listener = new SendNewSubscriberNotification();
 
         expect($listener->queue)->toBe('notifications')
             ->and($listener->tries)->toBe(3);
