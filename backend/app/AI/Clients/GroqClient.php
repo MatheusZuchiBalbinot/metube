@@ -91,7 +91,10 @@ final class GroqClient implements AiClient
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a video content analyzer. Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
+                    'content' => implode('', [
+                        'You are a video content analyzer.',
+                        ' Always respond with valid JSON only — no markdown, no explanation, no code blocks.',
+                    ]),
                 ],
                 [
                     'role' => 'user',

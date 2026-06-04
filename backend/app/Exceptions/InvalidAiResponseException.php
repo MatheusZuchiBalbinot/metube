@@ -18,11 +18,6 @@ use RuntimeException;
  */
 class InvalidAiResponseException extends RuntimeException
 {
-    private function __construct(string $message)
-    {
-        parent::__construct($message);
-    }
-
     /**
      * The response body could not be decoded as JSON.
      *

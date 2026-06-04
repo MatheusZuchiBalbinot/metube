@@ -26,7 +26,7 @@ interface AiPrompt
     /**
      * Return the list of JSON keys that must be present in the response.
      *
-     * @return string[]
+     * @return array<string>
      */
     public function requiredKeys(): array;
 
