@@ -25,7 +25,7 @@ describe('VideoAiSuggestionResource', function () {
         ]);
 
         $resource = new VideoAiSuggestionResource($suggestion);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array)->toHaveKey('status')
             ->and($array)->toHaveKey('suggested_title')
@@ -47,7 +47,7 @@ describe('VideoAiSuggestionResource', function () {
         ]);
 
         $resource = new VideoAiSuggestionResource($suggestion);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array['status'])->toBe('accepted');
     });
@@ -62,7 +62,7 @@ describe('VideoAiSuggestionResource', function () {
         ]);
 
         $resource = new VideoAiSuggestionResource($suggestion);
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(new Request());
 
         expect($array['suggested_title'])->toBeNull()
             ->and($array['suggested_description'])->toBeNull();

@@ -45,7 +45,7 @@ describe('VideoProgress Model', function () {
     });
 
     test('progress has expected fillable fields', function () {
-        $progress = new VideoProgress;
+        $progress = new VideoProgress();
         $fillable = $progress->getFillable();
 
         expect($fillable)->toContain('user_id');

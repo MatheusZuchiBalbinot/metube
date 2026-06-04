@@ -13,7 +13,7 @@ describe('UserResource', function () {
     test('toArray includes expected keys', function () {
         $user = User::factory()->create();
 
-        $array = (new UserResource($user))->toArray(new Request);
+        $array = (new UserResource($user))->toArray(new Request());
 
         expect($array)->toHaveKeys(['uuid', 'name', 'email', 'bio', 'avatar', 'created_at']);
     });
@@ -21,7 +21,7 @@ describe('UserResource', function () {
     test('uuid matches the user uuid', function () {
         $user = User::factory()->create();
 
-        $array = (new UserResource($user))->toArray(new Request);
+        $array = (new UserResource($user))->toArray(new Request());
 
         expect($array['uuid'])->toBe($user->uuid);
     });
@@ -29,7 +29,7 @@ describe('UserResource', function () {
     test('email matches the user email', function () {
         $user = User::factory()->create(['email' => 'alice@example.com']);
 
-        $array = (new UserResource($user))->toArray(new Request);
+        $array = (new UserResource($user))->toArray(new Request());
 
         expect($array['email'])->toBe('alice@example.com');
     });
@@ -37,7 +37,7 @@ describe('UserResource', function () {
     test('bio is included in the output', function () {
         $user = User::factory()->create(['bio' => 'Content creator']);
 
-        $array = (new UserResource($user))->toArray(new Request);
+        $array = (new UserResource($user))->toArray(new Request());
 
         expect($array['bio'])->toBe('Content creator');
     });
@@ -45,7 +45,7 @@ describe('UserResource', function () {
     test('created_at is ISO 8601 string', function () {
         $user = User::factory()->create();
 
-        $array = (new UserResource($user))->toArray(new Request);
+        $array = (new UserResource($user))->toArray(new Request());
 
         expect($array['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });

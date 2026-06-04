@@ -9,7 +9,7 @@ describe('LogSearchRequest', function () {
     test('query is required', function () {
         $validator = Validator::make(
             ['result_count' => 5],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -19,7 +19,7 @@ describe('LogSearchRequest', function () {
     test('query cannot exceed 200 characters', function () {
         $validator = Validator::make(
             ['query' => str_repeat('a', 201), 'result_count' => 0],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -29,7 +29,7 @@ describe('LogSearchRequest', function () {
     test('result_count is required', function () {
         $validator = Validator::make(
             ['query' => 'cats'],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -39,7 +39,7 @@ describe('LogSearchRequest', function () {
     test('result_count cannot be negative', function () {
         $validator = Validator::make(
             ['query' => 'cats', 'result_count' => -1],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -49,7 +49,7 @@ describe('LogSearchRequest', function () {
     test('session_id is optional', function () {
         $validator = Validator::make(
             ['query' => 'cats', 'result_count' => 3],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();
@@ -58,7 +58,7 @@ describe('LogSearchRequest', function () {
     test('valid full payload passes', function () {
         $validator = Validator::make(
             ['query' => 'cats', 'result_count' => 10, 'session_id' => 'sess-abc'],
-            (new LogSearchRequest)->rules(),
+            (new LogSearchRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

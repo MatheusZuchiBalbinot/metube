@@ -31,7 +31,7 @@ describe('NotificationResource', function () {
         $user = User::factory()->create();
         $notification = makeDbNotification($user);
 
-        $array = (new NotificationResource($notification))->toArray(new Request);
+        $array = (new NotificationResource($notification))->toArray(new Request());
 
         expect($array)->toHaveKeys(['id', 'type', 'data', 'read_at', 'created_at']);
     });
@@ -40,7 +40,7 @@ describe('NotificationResource', function () {
         $user = User::factory()->create();
         $notification = makeDbNotification($user, ['type' => 'new_subscriber']);
 
-        $array = (new NotificationResource($notification))->toArray(new Request);
+        $array = (new NotificationResource($notification))->toArray(new Request());
 
         expect($array['type'])->toBe('new_subscriber');
     });
@@ -49,7 +49,7 @@ describe('NotificationResource', function () {
         $user = User::factory()->create();
         $notification = makeDbNotification($user);
 
-        $array = (new NotificationResource($notification))->toArray(new Request);
+        $array = (new NotificationResource($notification))->toArray(new Request());
 
         expect($array['read_at'])->toBeNull();
     });
@@ -58,7 +58,7 @@ describe('NotificationResource', function () {
         $user = User::factory()->create();
         $notification = makeDbNotification($user, [], Carbon::parse('2025-01-15 10:00:00+00:00'));
 
-        $array = (new NotificationResource($notification))->toArray(new Request);
+        $array = (new NotificationResource($notification))->toArray(new Request());
 
         expect($array['read_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });
@@ -67,7 +67,7 @@ describe('NotificationResource', function () {
         $user = User::factory()->create();
         $notification = makeDbNotification($user);
 
-        $array = (new NotificationResource($notification))->toArray(new Request);
+        $array = (new NotificationResource($notification))->toArray(new Request());
 
         expect($array['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
     });

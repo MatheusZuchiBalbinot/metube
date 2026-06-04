@@ -15,7 +15,7 @@ describe('CommentPolicy', function () {
         $author = User::factory()->create();
         $video = Video::factory()->create();
         $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
-        $policy = new CommentPolicy;
+        $policy = new CommentPolicy();
 
         $result = $policy->update($author, $comment);
 
@@ -27,7 +27,7 @@ describe('CommentPolicy', function () {
         $other = User::factory()->create();
         $video = Video::factory()->create();
         $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
-        $policy = new CommentPolicy;
+        $policy = new CommentPolicy();
 
         $result = $policy->update($other, $comment);
 
@@ -38,7 +38,7 @@ describe('CommentPolicy', function () {
         $author = User::factory()->create();
         $video = Video::factory()->create();
         $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
-        $policy = new CommentPolicy;
+        $policy = new CommentPolicy();
 
         $result = $policy->delete($author, $comment);
 
@@ -50,7 +50,7 @@ describe('CommentPolicy', function () {
         $other = User::factory()->create();
         $video = Video::factory()->create();
         $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
-        $policy = new CommentPolicy;
+        $policy = new CommentPolicy();
 
         $result = $policy->delete($other, $comment);
 

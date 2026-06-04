@@ -34,19 +34,19 @@ describe('UserSubscription Model', function () {
     });
 
     test('subscription uses correct table', function () {
-        $subscription = new UserSubscription;
+        $subscription = new UserSubscription();
 
         expect($subscription->table)->toBe('user_subscriptions');
     });
 
     test('subscription has no timestamps', function () {
-        $subscription = new UserSubscription;
+        $subscription = new UserSubscription();
 
         expect($subscription->timestamps)->toBeFalse();
     });
 
     test('subscription has expected fillable fields', function () {
-        $subscription = new UserSubscription;
+        $subscription = new UserSubscription();
         $fillable = $subscription->getFillable();
 
         expect($fillable)->toContain('user_id');

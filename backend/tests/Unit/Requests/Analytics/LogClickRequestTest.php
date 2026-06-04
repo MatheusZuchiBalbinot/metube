@@ -14,7 +14,7 @@ describe('LogClickRequest', function () {
     test('vuid is required', function () {
         $validator = Validator::make(
             ['source' => 'feed'],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -24,7 +24,7 @@ describe('LogClickRequest', function () {
     test('vuid must exist in videos table', function () {
         $validator = Validator::make(
             ['vuid' => 'nonexistent11', 'source' => 'feed'],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -37,7 +37,7 @@ describe('LogClickRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -50,7 +50,7 @@ describe('LogClickRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'source' => 'invalid-source'],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -63,7 +63,7 @@ describe('LogClickRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'source' => 'feed', 'position' => -1],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -76,7 +76,7 @@ describe('LogClickRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid, 'source' => 'feed', 'position' => 2, 'session_id' => 'sess-1'],
-            (new LogClickRequest)->rules(),
+            (new LogClickRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

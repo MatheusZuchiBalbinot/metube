@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 describe('AddVideoRequest', function () {
     test('vuid is required', function () {
-        $validator = Validator::make([], (new AddVideoRequest)->rules());
+        $validator = Validator::make([], (new AddVideoRequest())->rules());
 
         expect($validator->fails())->toBeTrue()
             ->and($validator->errors()->has('vuid'))->toBeTrue();
@@ -21,7 +21,7 @@ describe('AddVideoRequest', function () {
     test('vuid must exist in videos table', function () {
         $validator = Validator::make(
             ['vuid' => 'nonexistent11'],
-            (new AddVideoRequest)->rules(),
+            (new AddVideoRequest())->rules(),
         );
 
         expect($validator->fails())->toBeTrue()
@@ -34,7 +34,7 @@ describe('AddVideoRequest', function () {
 
         $validator = Validator::make(
             ['vuid' => $video->vuid],
-            (new AddVideoRequest)->rules(),
+            (new AddVideoRequest())->rules(),
         );
 
         expect($validator->fails())->toBeFalse();

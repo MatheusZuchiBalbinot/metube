@@ -20,7 +20,7 @@ describe('SendVideoProcessedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->published()->create();
 
-        (new SendVideoProcessedNotification)->handle(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
+        (new SendVideoProcessedNotification())->handle(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
 
         Notification::assertSentTo($owner, VideoProcessedNotification::class);
     });
@@ -31,7 +31,7 @@ describe('SendVideoProcessedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create(['status' => VideoStatus::FAILED]);
 
-        (new SendVideoProcessedNotification)->handle(new VideoStatusUpdated($video, VideoStatus::FAILED));
+        (new SendVideoProcessedNotification())->handle(new VideoStatusUpdated($video, VideoStatus::FAILED));
 
         Notification::assertSentTo($owner, VideoProcessedNotification::class);
     });
@@ -42,7 +42,7 @@ describe('SendVideoProcessedNotification', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->processing()->create();
 
-        (new SendVideoProcessedNotification)->handle(new VideoStatusUpdated($video, VideoStatus::PROCESSING));
+        (new SendVideoProcessedNotification())->handle(new VideoStatusUpdated($video, VideoStatus::PROCESSING));
 
         Notification::assertNothingSent();
     });

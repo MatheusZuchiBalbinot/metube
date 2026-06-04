@@ -90,13 +90,13 @@ describe('UserAnalytic Model', function () {
     });
 
     test('user analytic uses correct table', function () {
-        $analytic = new UserAnalytic;
+        $analytic = new UserAnalytic();
 
         expect($analytic->getTable())->toBe('user_analytics');
     });
 
     test('user analytic has no timestamps', function () {
-        $analytic = new UserAnalytic;
+        $analytic = new UserAnalytic();
 
         expect($analytic->timestamps)->toBeFalse();
     });

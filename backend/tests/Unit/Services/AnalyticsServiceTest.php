@@ -28,7 +28,7 @@ describe('AnalyticsService', function () {
         $videos = Video::factory(3)->create();
         $vuids = $videos->pluck('vuid')->all();
 
-        (new AnalyticsService)->recordImpressions($user, $vuids, VideoSource::FEED, 'sess-1');
+        (new AnalyticsService())->recordImpressions($user, $vuids, VideoSource::FEED, 'sess-1');
 
         Event::assertDispatchedTimes(VideoImpressionsBatch::class, 1);
 
@@ -64,7 +64,7 @@ describe('AnalyticsService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new AnalyticsService)->recordImpressions($user, [$video->vuid, 'unknownvuid'], VideoSource::HOME);
+        (new AnalyticsService())->recordImpressions($user, [$video->vuid, 'unknownvuid'], VideoSource::HOME);
 
         Event::assertDispatched(
             VideoImpressionsBatch::class,
@@ -77,7 +77,7 @@ describe('AnalyticsService', function () {
 
         $user = User::factory()->create();
 
-        (new AnalyticsService)->recordImpressions($user, ['notexist1', 'notexist2'], VideoSource::FEED);
+        (new AnalyticsService())->recordImpressions($user, ['notexist1', 'notexist2'], VideoSource::FEED);
 
         Event::assertNotDispatched(VideoImpressionsBatch::class);
     });
@@ -93,7 +93,7 @@ describe('AnalyticsService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new AnalyticsService)->recordClick($user, $video, VideoSource::RECOMMENDED, 2, 'sess-9');
+        (new AnalyticsService())->recordClick($user, $video, VideoSource::RECOMMENDED, 2, 'sess-9');
 
         Event::assertDispatched(
             VideoClickedFromFeed::class,
@@ -114,7 +114,7 @@ describe('AnalyticsService', function () {
 
         $user = User::factory()->create();
 
-        (new AnalyticsService)->recordSearch($user, 'laravel queues', 7);
+        (new AnalyticsService())->recordSearch($user, 'laravel queues', 7);
 
         Event::assertDispatched(
             SearchPerformed::class,
@@ -134,7 +134,7 @@ describe('AnalyticsService', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new AnalyticsService)->recordSkip($user, $video, 8);
+        (new AnalyticsService())->recordSkip($user, $video, 8);
 
         Event::assertDispatched(
             VideoSkipped::class,

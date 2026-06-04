@@ -22,7 +22,7 @@ describe('CommentRepliedNotification', function () {
             'parent_id' => $parent->id,
         ]);
 
-        $payload = (new CommentRepliedNotification($reply, $replier))->toArray(new stdClass);
+        $payload = (new CommentRepliedNotification($reply, $replier))->toArray(new stdClass());
 
         expect($payload['type'])->toBe(NotificationType::COMMENT_REPLIED->value)
             ->and($payload['replier_name'])->toBe('John Smith')
@@ -39,7 +39,7 @@ describe('CommentRepliedNotification', function () {
             'parent_id' => $parent->id,
         ]);
 
-        $via = (new CommentRepliedNotification($reply, $replier))->via(new stdClass);
+        $via = (new CommentRepliedNotification($reply, $replier))->via(new stdClass());
 
         expect($via)->toContain('database')->toContain('broadcast');
     });
@@ -54,7 +54,7 @@ describe('CommentRepliedNotification', function () {
         ]);
 
         $notification = new CommentRepliedNotification($reply, $replier);
-        $broadcast = $notification->toBroadcast(new stdClass);
+        $broadcast = $notification->toBroadcast(new stdClass());
 
         expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)
             ->and($broadcast->data['type'])->toBe(NotificationType::COMMENT_REPLIED->value)

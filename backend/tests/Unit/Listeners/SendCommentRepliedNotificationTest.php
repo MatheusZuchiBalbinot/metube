@@ -25,7 +25,7 @@ describe('SendCommentRepliedNotification', function () {
             'parent_id' => $parent->id,
         ]);
 
-        (new SendCommentRepliedNotification)->handle(new CommentCreated($reply, $replier, $video, 2));
+        (new SendCommentRepliedNotification())->handle(new CommentCreated($reply, $replier, $video, 2));
 
         Notification::assertSentTo($parentAuthor, CommentRepliedNotification::class);
     });
@@ -37,7 +37,7 @@ describe('SendCommentRepliedNotification', function () {
         $video = Video::factory()->for($author, 'channel')->published()->create();
         $comment = Comment::factory()->for($video)->for($author, 'user')->create(['parent_id' => null]);
 
-        (new SendCommentRepliedNotification)->handle(new CommentCreated($comment, $author, $video, 1));
+        (new SendCommentRepliedNotification())->handle(new CommentCreated($comment, $author, $video, 1));
 
         Notification::assertNothingSent();
     });
@@ -52,7 +52,7 @@ describe('SendCommentRepliedNotification', function () {
             'parent_id' => $parent->id,
         ]);
 
-        (new SendCommentRepliedNotification)->handle(new CommentCreated($reply, $author, $video, 2));
+        (new SendCommentRepliedNotification())->handle(new CommentCreated($reply, $author, $video, 2));
 
         Notification::assertNothingSent();
     });
@@ -70,7 +70,7 @@ describe('SendCommentRepliedNotification', function () {
 
         $parent->delete();
 
-        (new SendCommentRepliedNotification)->handle(new CommentCreated($reply, $replier, $video, 1));
+        (new SendCommentRepliedNotification())->handle(new CommentCreated($reply, $replier, $video, 1));
 
         Notification::assertNothingSent();
     });

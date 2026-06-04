@@ -55,7 +55,7 @@ describe('VideoService — read', function () {
     test('list videos returns paginated results', function () {
         Video::factory(20)->create(['status' => VideoStatus::PUBLISHED]);
 
-        $result = app(VideoService::class)->listVideos(new VideoListFilterDTO);
+        $result = app(VideoService::class)->listVideos(new VideoListFilterDTO());
 
         expect($result->count())->toBe(15);
         expect($result->hasPages())->toBeTrue();
@@ -66,7 +66,7 @@ describe('VideoService — read', function () {
         Video::factory(2)->create(['status' => VideoStatus::PROCESSING]);
         Video::factory()->create(['status' => VideoStatus::FAILED]);
 
-        $result = app(VideoService::class)->listVideos(new VideoListFilterDTO);
+        $result = app(VideoService::class)->listVideos(new VideoListFilterDTO());
 
         expect($result->total())->toBe(3);
     });

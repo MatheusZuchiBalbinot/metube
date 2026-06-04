@@ -12,7 +12,7 @@ describe('ThumbnailService', function () {
     });
 
     test('converts source image to WebP format', function () {
-        $service = new ThumbnailService;
+        $service = new ThumbnailService();
         $source = createTestImage(100, 100);
 
         $webp = $service->convertToWebp($source);
@@ -26,7 +26,7 @@ describe('ThumbnailService', function () {
     });
 
     test('scales down images larger than the max dimensions', function () {
-        $service = new ThumbnailService;
+        $service = new ThumbnailService();
         $source = createTestImage(2000, 2000);
 
         $webp = $service->convertToWebp($source, maxWidth: 320, maxHeight: 180);
@@ -40,7 +40,7 @@ describe('ThumbnailService', function () {
     });
 
     test('does not upscale images smaller than the max dimensions', function () {
-        $service = new ThumbnailService;
+        $service = new ThumbnailService();
         $source = createTestImage(100, 50);
 
         $webp = $service->convertToWebp($source, maxWidth: 1280, maxHeight: 720);
@@ -54,7 +54,7 @@ describe('ThumbnailService', function () {
     });
 
     test('preserves aspect ratio when scaling', function () {
-        $service = new ThumbnailService;
+        $service = new ThumbnailService();
         // 1600×400 — very wide; constrained to maxWidth=800
         $source = createTestImage(1600, 400);
 

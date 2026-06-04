@@ -22,7 +22,7 @@ describe('SendCommentLikedNotification', function () {
         $video = Video::factory()->for($author, 'channel')->published()->create();
         $comment = Comment::factory()->for($video)->for($author, 'user')->create();
 
-        (new SendCommentLikedNotification)->handle(new CommentLiked($comment, $liker));
+        (new SendCommentLikedNotification())->handle(new CommentLiked($comment, $liker));
 
         Notification::assertSentTo($author, CommentLikedNotification::class);
     });
@@ -34,7 +34,7 @@ describe('SendCommentLikedNotification', function () {
         $video = Video::factory()->for($author, 'channel')->published()->create();
         $comment = Comment::factory()->for($video)->for($author, 'user')->create();
 
-        (new SendCommentLikedNotification)->handle(new CommentLiked($comment, $author));
+        (new SendCommentLikedNotification())->handle(new CommentLiked($comment, $author));
 
         Notification::assertNothingSent();
     });

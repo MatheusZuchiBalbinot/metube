@@ -15,7 +15,7 @@ describe('LocalVideoStorage', function () {
         $source = (string) tempnam(sys_get_temp_dir(), 'lvs');
         file_put_contents($source, 'video bytes');
 
-        $storage = new LocalVideoStorage;
+        $storage = new LocalVideoStorage();
         $storage->ensureDirectoryExists('uploads/tmp');
         $storage->moveFile($source, 'uploads/tmp/vid.mp4');
 
@@ -26,7 +26,7 @@ describe('LocalVideoStorage', function () {
     test('delete removes a file from the public disk', function () {
         Storage::disk('public')->put('videos/vid.mp4', 'x');
 
-        (new LocalVideoStorage)->delete('videos/vid.mp4');
+        (new LocalVideoStorage())->delete('videos/vid.mp4');
 
         Storage::disk('public')->assertMissing('videos/vid.mp4');
     });
@@ -34,7 +34,7 @@ describe('LocalVideoStorage', function () {
     test('deleteDirectory removes a directory from the public disk', function () {
         Storage::disk('public')->put('hls/vid/master.m3u8', 'x');
 
-        (new LocalVideoStorage)->deleteDirectory('hls/vid');
+        (new LocalVideoStorage())->deleteDirectory('hls/vid');
 
         Storage::disk('public')->assertMissing('hls/vid/master.m3u8');
     });

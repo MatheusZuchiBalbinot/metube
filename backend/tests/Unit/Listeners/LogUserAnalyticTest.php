@@ -21,14 +21,14 @@ uses(RefreshDatabase::class);
 
 describe('LogUserAnalytic', function () {
     test('listener implements ShouldQueueAfterCommit', function () {
-        expect(new LogUserAnalytic)->toBeInstanceOf(ShouldQueueAfterCommit::class);
+        expect(new LogUserAnalytic())->toBeInstanceOf(ShouldQueueAfterCommit::class);
     });
 
     test('persists VideoViewed with source and session_id', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoViewed($user, $video, VideoSource::FEED, 'sess-123'));
+        (new LogUserAnalytic())->handle(new VideoViewed($user, $video, VideoSource::FEED, 'sess-123'));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
@@ -43,7 +43,7 @@ describe('LogUserAnalytic', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
+        (new LogUserAnalytic())->handle(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
 
         expect(UserAnalytic::firstWhere('user_id', $user->id)->event_type)->toBe(VideoEventType::DISLIKE);
     });
@@ -52,7 +52,7 @@ describe('LogUserAnalytic', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoSkipped($user, $video, 7));
+        (new LogUserAnalytic())->handle(new VideoSkipped($user, $video, 7));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
@@ -64,7 +64,7 @@ describe('LogUserAnalytic', function () {
         $user = User::factory()->create();
         $video = Video::factory()->create();
 
-        (new LogUserAnalytic)->handle(new VideoImpressed($user, $video, VideoSource::RECOMMENDED, 4, 'sess-x'));
+        (new LogUserAnalytic())->handle(new VideoImpressed($user, $video, VideoSource::RECOMMENDED, 4, 'sess-x'));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
@@ -78,7 +78,7 @@ describe('LogUserAnalytic', function () {
         $subscriber = User::factory()->create();
         $channel = User::factory()->create();
 
-        (new LogUserAnalytic)->handle(new ChannelSubscribed($subscriber, $channel));
+        (new LogUserAnalytic())->handle(new ChannelSubscribed($subscriber, $channel));
 
         $row = UserAnalytic::firstWhere('user_id', $subscriber->id);
 
@@ -90,7 +90,7 @@ describe('LogUserAnalytic', function () {
     test('persists SearchPerformed with query payload and null video', function () {
         $user = User::factory()->create();
 
-        (new LogUserAnalytic)->handle(new SearchPerformed($user, 'react hooks', 12, 'sess-q'));
+        (new LogUserAnalytic())->handle(new SearchPerformed($user, 'react hooks', 12, 'sess-q'));
 
         $row = UserAnalytic::firstWhere('user_id', $user->id);
 
