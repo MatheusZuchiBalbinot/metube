@@ -20,7 +20,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $started_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
- *
  * @property-read Video $video
  */
 class Transcription extends Model

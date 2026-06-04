@@ -72,8 +72,7 @@ final class AnalyticsService
         VideoSource $source,
         ?int $position = null,
         ?string $sessionId = null,
-    ): void
-    {
+    ): void {
         event(new VideoClickedFromFeed($user, $video, $source, $position, $sessionId));
     }
 

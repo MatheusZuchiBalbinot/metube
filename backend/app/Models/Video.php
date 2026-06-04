@@ -35,7 +35,6 @@ use Illuminate\Support\Str;
  * @property VideoSummary|null $summary
  * @property Transcription|null $transcription
  * @property VideoAiSuggestion|null $aiSuggestion
- *
  * @property-read User $channel
  */
 class Video extends Model
