@@ -1,12 +1,13 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { signInThunk, signOutThunk, signUpThunk, authActions } from '@store/authSlice';
+import { selectAuth } from '@store/authSelectors';
 import type { User } from '@api';
 
 export type { User };
 
 export function useAuth() {
     const dispatch = useAppDispatch();
-    const { user, loading, sessionError } = useAppSelector(s => s.auth);
+    const { user, loading, sessionError } = useAppSelector(selectAuth);
 
     async function signIn(email: string, password: string): Promise<void> {
         await dispatch(signInThunk({ email, password })).unwrap();

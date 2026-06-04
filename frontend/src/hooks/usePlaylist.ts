@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@store';
 import { playlistActions } from '@store/playlistSlice';
+import { selectPlaylists } from '@store/playlistSelectors';
 import { toastActions } from '@store/toastSlice';
 import { playlist as playlistApi, toPuid, toVuid } from '@api';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ export type { Playlist };
 export function usePlaylist() {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
-    const playlists = useAppSelector(s => s.playlist.playlists);
+    const playlists = useAppSelector(selectPlaylists);
 
     function showGenericError() {
         dispatch(toastActions.addToast({ message: t('errors.generic'), type: ToastType.ERROR }));

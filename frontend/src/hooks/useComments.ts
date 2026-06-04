@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { commentActions } from '@store/commentSlice';
+import {
+    selectCommentById,
+    selectCommentRepliesById,
+    selectCommentLoadingReplies,
+} from '@store/commentSelectors';
 import { comments as commentsApi } from '@api';
 import type { Comment } from '@models';
 import type { Cuid, Vuid } from '@api';
@@ -10,7 +15,7 @@ const EMPTY_IDS: Cuid[] = [];
 export function useComments(vuid: Vuid) {
     const dispatch = useAppDispatch();
     const commentIds = useAppSelector(s => s.comment.byVideo[vuid] ?? EMPTY_IDS);
-    const byId = useAppSelector(s => s.comment.byId);
+    const byId = useAppSelector(selectCommentById);
     const pagination = useAppSelector(s => s.comment.pagination[vuid]);
     const isLoading = useAppSelector(s => s.comment.loadingVideos[vuid] ?? false);
 
@@ -115,7 +120,7 @@ export function useComments(vuid: Vuid) {
         dispatch(commentActions.setReplies({ parentCuid: cuid, comments: result.data }));
     }, [dispatch]);
 
-    const repliesById = useAppSelector(s => s.comment.repliesById);
+    const repliesById = useAppSelector(selectCommentRepliesById);
 
     const getReplies = useCallback((cuid: Cuid): Comment[] => {
         const replyIds = repliesById[cuid] ?? [];
@@ -125,7 +130,7 @@ export function useComments(vuid: Vuid) {
             .filter((c): c is Comment => c !== undefined);
     }, [byId, repliesById]);
 
-    const loadingReplies = useAppSelector(s => s.comment.loadingReplies);
+    const loadingReplies = useAppSelector(selectCommentLoadingReplies);
 
     return {
         comments: commentList,

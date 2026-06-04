@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store/index';
+import { selectAuthUser } from '@store/authSelectors';
 import { notificationsActions } from '@store/notificationsSlice';
 import { toastActions } from '@store/toastSlice';
 import { videoActions } from '@store/videoSlice';
@@ -17,7 +18,7 @@ import type { Toast } from '@store/toastSlice';
 export function useRealtime(): void {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const user = useAppSelector(state => state.auth.user);
+    const user = useAppSelector(selectAuthUser);
     const videos = useAppSelector(state => state.video.videos);
     const videosRef = useRef<Video[]>(videos);
     useLayoutEffect(() => {
