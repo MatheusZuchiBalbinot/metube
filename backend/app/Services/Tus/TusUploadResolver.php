@@ -21,7 +21,7 @@ final class TusUploadResolver implements TusResolverContract
 
     public function __construct()
     {
-        $store = new TusRedisStore;
+        $store = new TusRedisStore();
         $store->setPrefix('tus:server:');
 
         $this->store = $store;
@@ -37,6 +37,11 @@ final class TusUploadResolver implements TusResolverContract
     public function delete(string $key): void
     {
         $this->store->delete($key);
+    }
+
+    public function cacheOwner(string $key, int $userId, int $ttl): void
+    {
+        Cache::put("tus:owner:{$key}", $userId, $ttl);
     }
 
     public function clearOwnerCache(string $key): void

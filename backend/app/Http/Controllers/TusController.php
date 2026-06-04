@@ -4,52 +4,32 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\Tus\TusHandlerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use TusPhp\Tus\Server as TusServer;
 
 /**
- * TusController — Handles resumable file uploads via the tus protocol.
+ * TusController — Routes resumable file uploads via the tus protocol.
  *
  * All tus verbs (POST / HEAD / PATCH / DELETE / OPTIONS) are routed here.
  * Authentication is enforced by the auth:sanctum middleware declared in api.php,
  * so by the time this controller runs, auth()->id() is always set.
+ *
+ * The actual protocol handling is delegated to {@see TusHandlerService}.
  */
 class TusController extends Controller
 {
     /**
-     * Handle any tus protocol request.
+     * Handle any tus protocol request by delegating to the service layer.
      *
      * @param Request $request Incoming Laravel request (passed through but tus-php reads
      *                         from the global Symfony request internally)
+     * @param TusHandlerService $tusHandler Service layer for tus protocol handling
      *
      * @return SymfonyResponse tus-php Symfony response (Laravel renders it transparently)
      */
-    public function handle(Request $request): SymfonyResponse
+    public function handle(Request $request, TusHandlerService $tusHandler): SymfonyResponse
     {
-        $uploadDir = config('tus.upload_dir');
-
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
-        }
-
-        $server = new TusServer('redis');
-        $server
-            ->setApiPath(config('tus.api_path'))
-            ->setUploadDir($uploadDir)
-            ->setMaxUploadSize(config('tus.max_size'));
-
-        $userId = auth()->id();
-
-        $server->event()->addListener(
-            'tus-server.upload.created',
-            function ($event) use ($userId): void {
-                $key = $event->getFile()->getKey();
-                Cache::put("tus:owner:{$key}", $userId, config('tus.ttl'));
-            },
-        );
-
-        return $server->serve();
+        return $tusHandler->handle((int) auth()->id());
     }
 }
