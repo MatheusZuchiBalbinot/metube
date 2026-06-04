@@ -116,6 +116,10 @@
         "no_useless_concat_operator": true,
         "yoda_style": false,
         "no_useless_return": true,
-        "no_useless_else": true
+        "no_useless_else": true,
+        "new_with_parentheses": {
+            "named_class": true,
+            "anonymous_class": true
+        }
     }
 }

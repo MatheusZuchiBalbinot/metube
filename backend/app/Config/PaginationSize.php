@@ -25,6 +25,8 @@ final class PaginationSize
 
     public const COMMENT_LIST = 20;
 
+    public const NOTIFICATION_LIST = 20;
+
     public const HISTORY_EVENTS_DAYS = 365;
 
     private function __construct() {}
