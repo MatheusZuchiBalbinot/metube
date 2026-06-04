@@ -96,11 +96,9 @@ final class UserService
             ->with('video:id,vuid')
             ->get()
             ->mapWithKeys(function ($p) {
-                $progressMap = [
+                return [
                     $p->video->vuid => $p->percent,
                 ];
-
-                return $progressMap;
             })
             ->toArray();
     }
@@ -117,27 +115,34 @@ final class UserService
     {
         return $this->cache->rememberHistoryEvents(
             $user->id,
-            function () use ($user): array {
-                /** @var list<array{date: string, count: int}> */
-                return WatchHistory::query()
-                    ->forUser($user->id)
-                    ->select(
-                        DB::raw('DATE(watched_at) as date'),
-                        DB::raw('COUNT(*) as count'),
-                    )
-                    ->groupBy(DB::raw('DATE(watched_at)'))
-                    ->orderByDesc(DB::raw('DATE(watched_at)'))
-                    ->limit(PaginationSize::HISTORY_EVENTS_DAYS)
-                    ->get()
-                    ->map(function (WatchHistory $row): array {
-                        return [
-                            'date' => (string) $row->getAttribute('date'),
-                            'count' => (int) $row->getAttribute('count'),
-                        ];
-                    })
-                    ->values()
-                    ->toArray();
-            },
+            fn () => $this->queryHistoryEvents($user),
         );
+    }
+
+    /**
+     * Query daily watch-history event counts for a user.
+     *
+     * @return list<array{date: string, count: int}>
+     */
+    private function queryHistoryEvents(User $user): array
+    {
+        return WatchHistory::query()
+            ->forUser($user->id)
+            ->select(
+                DB::raw('DATE(watched_at) as date'),
+                DB::raw('COUNT(*) as count'),
+            )
+            ->groupBy(DB::raw('DATE(watched_at)'))
+            ->orderByDesc(DB::raw('DATE(watched_at)'))
+            ->limit(PaginationSize::HISTORY_EVENTS_DAYS)
+            ->get()
+            ->map(function (WatchHistory $row): array {
+                return [
+                    'date' => (string) $row->getAttribute('date'),
+                    'count' => (int) $row->getAttribute('count'),
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 }
