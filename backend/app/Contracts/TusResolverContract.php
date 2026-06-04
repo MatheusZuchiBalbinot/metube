@@ -27,6 +27,15 @@ interface TusResolverContract
     public function delete(string $key): void;
 
     /**
+     * Cache the authenticated user as the owner of an upload session.
+     *
+     * @param string $key The tus upload key
+     * @param int $userId Authenticated user ID
+     * @param int $ttl Cache lifetime in seconds
+     */
+    public function cacheOwner(string $key, int $userId, int $ttl): void;
+
+    /**
      * Forget the ownership cache entry associated with an upload key.
      *
      * @param string $key The tus upload key
