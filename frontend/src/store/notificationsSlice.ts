@@ -23,7 +23,8 @@ const notificationsSlice = createSlice({
             state.loading = action.payload;
         },
         setNotifications(state, action: PayloadAction<{ items: Notification[]; hasMore: boolean }>) {
-            state.items = action.payload.items;
+            const uniqueItems = Array.from(new Map(action.payload.items.map(item => [item.id, item])).values());
+            state.items = uniqueItems;
             state.hasMore = action.payload.hasMore;
         },
         addNotification(state, action: PayloadAction<Notification>) {
