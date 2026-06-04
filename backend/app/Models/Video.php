@@ -35,6 +35,7 @@ use Illuminate\Support\Str;
  * @property VideoSummary|null $summary
  * @property Transcription|null $transcription
  * @property VideoAiSuggestion|null $aiSuggestion
+ *
  * @property-read User $channel
  */
 class Video extends Model
@@ -73,6 +74,20 @@ class Video extends Model
             'comments_count' => 'integer',
             'is_batch' => 'boolean',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'vuid';
+    }
+
+    /**
+     * @param mixed $value
+     * @param string|null $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return $this->where('vuid', $value)->with('channel')->first();
     }
 
     protected static function boot(): void
