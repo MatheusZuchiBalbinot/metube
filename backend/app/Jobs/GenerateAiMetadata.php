@@ -38,7 +38,7 @@ class GenerateAiMetadata implements ShouldQueue
     /**
      * Exponential backoff: 60s, 5min, 15min, 30min between retries.
      *
-     * @return int[]
+     * @return array<int>
      */
     public function backoff(): array
     {
@@ -66,7 +66,9 @@ class GenerateAiMetadata implements ShouldQueue
             return;
         }
 
-        $hasContent = $video->transcription !== null && \is_string($video->transcription->content) && \trim($video->transcription->content) !== '';
+        $hasContent = $video->transcription !== null
+            && \is_string($video->transcription->content)
+            && \trim($video->transcription->content) !== '';
 
         if (!$hasContent) {
             Log::warning('GenerateAiMetadata: skipping — transcription content is empty', ['vuid' => $video->vuid]);
@@ -81,9 +83,11 @@ class GenerateAiMetadata implements ShouldQueue
 
         $video->channel->notify(new VideoAiSummaryReadyNotification($video));
 
-        if (!$video->is_batch) {
-            event(new AiSuggestionReady($video));
+        if ($video->is_batch) {
+            return;
         }
+
+        event(new AiSuggestionReady($video));
     }
 
     /**

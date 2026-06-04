@@ -54,7 +54,7 @@ PROMPT;
     /**
      * Return the JSON keys that must be present in the AI response.
      *
-     * @return string[]
+     * @return array<string>
      */
     public function requiredKeys(): array
     {

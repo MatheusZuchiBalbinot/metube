@@ -35,6 +35,6 @@ final readonly class VideoSummaryDTO
      */
     public static function empty(): self
     {
-        return new self;
+        return new self();
     }
 }
