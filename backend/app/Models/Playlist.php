@@ -24,6 +24,22 @@ class Playlist extends Model
     /** @var list<string> */
     protected $fillable = ['user_id', 'name'];
 
+    public function getRouteKeyName(): string
+    {
+        return 'puid';
+    }
+
+    /**
+     * @param mixed $value
+     * @param string|null $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return self::byPuid((string) $value)
+            ->with(['videos' => fn ($q) => $q->orderByPivot('position')])
+            ->first();
+    }
+
     protected static function boot(): void
     {
         parent::boot();
