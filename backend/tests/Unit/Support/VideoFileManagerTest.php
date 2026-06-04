@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Contracts\VideoStorageContract;
+use App\Contracts\StorageContract;
 use App\Support\VideoFileManager;
 
 describe('VideoFileManager', function () {
     test('moveVideoFromTus ensures the tmp directory, moves the file, and returns the path', function () {
-        $storage = Mockery::mock(VideoStorageContract::class);
+        $storage = Mockery::mock(StorageContract::class);
         $storage->shouldReceive('ensureDirectoryExists')->once()->with('uploads/tmp');
         $storage->shouldReceive('moveFile')->once()->with('/tmp/tus/abc', 'uploads/tmp/vid_1.mp4');
 
@@ -18,7 +18,7 @@ describe('VideoFileManager', function () {
     });
 
     test('moveVideoFromTus falls back to mp4 when the source name has no extension', function () {
-        $storage = Mockery::mock(VideoStorageContract::class);
+        $storage = Mockery::mock(StorageContract::class);
         $storage->shouldReceive('ensureDirectoryExists')->once();
         $storage->shouldReceive('moveFile')->once()->with('/tmp/tus/abc', 'uploads/tmp/vid_2.mp4');
 
@@ -29,7 +29,7 @@ describe('VideoFileManager', function () {
     });
 
     test('moveVideoFromTus lowercases the resolved extension', function () {
-        $storage = Mockery::mock(VideoStorageContract::class);
+        $storage = Mockery::mock(StorageContract::class);
         $storage->shouldReceive('ensureDirectoryExists')->once();
         $storage->shouldReceive('moveFile')->once()->with('/tmp/tus/abc', 'uploads/tmp/vid_3.mov');
 
@@ -40,7 +40,7 @@ describe('VideoFileManager', function () {
     });
 
     test('moveThumbnailFromTus moves the thumbnail and falls back to jpg', function () {
-        $storage = Mockery::mock(VideoStorageContract::class);
+        $storage = Mockery::mock(StorageContract::class);
         $storage->shouldReceive('moveFile')->once()->with('/tmp/tus/thumb', 'uploads/tmp/thumb_vid_4.jpg');
 
         $manager = new VideoFileManager($storage);
