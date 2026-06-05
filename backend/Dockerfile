@@ -8,7 +8,8 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
-    --ignore-platform-reqs
+    --ignore-platform-reqs \
+    --no-scripts
 
 FROM dunglas/frankenphp:latest
 
@@ -20,14 +21,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo 'deb http://apt.newrelic.com/debian/ newrelic non-free' | tee /etc/apt/sources.list.d/newrelic.list \
-    && curl -fsSL https://download.newrelic.com/548C16BF.gpg | apt-key add - \
-    && apt-get update \
-    && apt-get install -y newrelic-php5 \
-    && NR_INSTALL_SILENT=1 NR_INSTALL_USE_CP_NOT_LN=1 newrelic-install install \
-    && find /usr/local/etc/php/conf.d/ -name '*newrelic*' -delete \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN install-php-extensions \
     pdo_pgsql \
     pgsql \
@@ -37,7 +30,8 @@ RUN install-php-extensions \
     sockets \
     opcache \
     redis \
-    gd
+    gd \
+    opentelemetry
 
 COPY --from=vendor /app /app
 
@@ -45,7 +39,6 @@ RUN cp -a /app/vendor /vendor-backup && \
     md5sum /app/composer.lock | awk '{print $1}' > /vendor-backup/.lock-hash
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
-COPY docker/newrelic.ini /usr/local/etc/php/conf.d/newrelic.ini
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
