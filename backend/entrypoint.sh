@@ -21,6 +21,11 @@ if [ "$VOLUME_HASH" != "$IMAGE_HASH" ]; then
     echo "$IMAGE_HASH" > /app/vendor/.lock-hash
 fi
 
+if [ -z "$APP_KEY" ]; then
+    echo "APP_KEY not set — generating..."
+    php artisan key:generate --force
+fi
+
 if [ "$APP_ENV" = "production" ]; then
     echo "Caching Laravel config, routes, events, views..."
     php artisan optimize || true
