@@ -11,6 +11,7 @@ import CarouselNav from '@components/ui/carouselNav/carouselNav';
 import EmptyState from '@ui/empty/empty';
 import './home.css';
 import { useInView, useVideo, useFilterState } from '@hooks';
+import Spinner from '@ui/spinner/spinner';
 import { VideoFilter, ROUTES, videoUrl } from '@utils';
 import type { Tag, Video, VideoId } from '@models';
 import { useHomeFeed } from './hooks/useHomeFeed';
@@ -30,7 +31,7 @@ const SECTION_TRANSITION: Transition = { duration: 0.35, ease: [0.16, 1, 0.3, 1]
 export default function HomePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { recommendations, publishedVideos, videoProgress, watchHistory, videos } = useVideo();
+    const { recommendations, recommendationsLoading, publishedVideos, videoProgress, watchHistory, videos } = useVideo();
     const { filterState, setFilterState, hasActiveFilters, clearFilters } = useFilterState();
 
     useHomeFeed();
@@ -210,7 +211,13 @@ export default function HomePage() {
                 </div>
             </div>
 
-            {isCompletelyEmpty && (
+            {recommendationsLoading && (
+                <div className="home-page__main">
+                    <Spinner />
+                </div>
+            )}
+
+            {!recommendationsLoading && isCompletelyEmpty && (
                 <div className="home-page__main">
                     <EmptyState
                         icon={<PlayCircle />}
