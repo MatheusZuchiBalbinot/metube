@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@store/index';
 import { selectAuthUser } from '@store/authSelectors';
@@ -19,6 +20,9 @@ export function useRealtime(): void {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectAuthUser);
+    const location = useLocation();
+    const locationRef = useRef(location);
+    useLayoutEffect(() => { locationRef.current = location; });
     const videos = useAppSelector(state => state.video.videos);
     const videosRef = useRef<Video[]>(videos);
     useLayoutEffect(() => {
@@ -64,8 +68,13 @@ export function useRealtime(): void {
 
                 if (notification.type === NotificationType.VIDEO_AI_SUMMARY_READY) {
                     const vuid = notification.data.vuid as string | undefined;
+                    const currentVuid = new URLSearchParams(locationRef.current.search).get('v');
+                    const isCurrentlyWatching = vuid !== undefined && vuid === currentVuid;
 
-                    if (vuid) {
+                    // VideoPage handles its own updates via useVideoFetch/useVideoContent.
+                    // Dispatching updateVideo here would cause a spurious re-render and
+                    // briefly re-trigger related video logic on the currently open page.
+                    if (vuid && !isCurrentlyWatching) {
                         void videoApi.get(vuid as Vuid).then(result => {
                             if (result.ok) {
                                 dispatch(videoActions.updateVideo(result.data));
