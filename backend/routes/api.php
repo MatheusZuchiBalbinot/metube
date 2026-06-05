@@ -26,7 +26,6 @@ Route::prefix('users')->group(function (): void {
 });
 
 // Guest-accessible reads (no auth required; auth()->user() is null for guests)
-Route::get('/recommendations', [VideoController::class, 'recommendations']);
 
 Route::prefix('videos')->group(function (): void {
     Route::get('/', [VideoController::class, 'index']);
@@ -53,6 +52,8 @@ Route::prefix('password-resets')->middleware('throttle:password-reset')->group(f
 Broadcast::routes(['middleware' => ['auth:sanctum', 'session.version']]);
 
 Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void {
+    Route::get('/recommendations', [VideoController::class, 'recommendations']);
+
     Route::prefix('sessions')->group(function (): void {
         Route::get('/current', [AuthController::class, 'me']);
         Route::delete('/current', [AuthController::class, 'logout']);
