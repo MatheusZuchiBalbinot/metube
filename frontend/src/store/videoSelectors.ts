@@ -42,6 +42,7 @@ export const selectDislikedSet = createSelector(
 );
 
 export const selectRecommendations = (s: WithVideo) => s.video.serverRecommendations;
+export const selectRecommendationsLoading = (s: WithVideo) => s.video.recommendationsLoading;
 
 export const selectWatchedTagFrequency = createSelector(
     [(s: WithVideo) => s.video.watchHistory, (s: WithVideo) => s.video.videos],

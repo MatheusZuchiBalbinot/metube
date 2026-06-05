@@ -8,6 +8,7 @@ import {
     selectLikedSet,
     selectDislikedSet,
     selectRecommendations,
+    selectRecommendationsLoading,
 } from '@store/videoSelectors';
 import { video as videoApi, toVuid } from '@api';
 import type { TagView, MiniPlayerState } from '@store/videoSlice';
@@ -37,6 +38,7 @@ export function useVideo() {
     const dislikedVideos = useAppSelector(selectDislikedSet);
 
     const recommendations = useAppSelector(selectRecommendations);
+    const recommendationsLoading = useAppSelector(selectRecommendationsLoading);
 
     // Stable function references — safe to use in React.memo'd children and useEffect deps
     const addVideo = useCallback(
@@ -150,6 +152,7 @@ export function useVideo() {
         historyTags,
         publishedVideos,
         recommendations,
+        recommendationsLoading,
         shortsMuted,
         shortsVolume,
 
