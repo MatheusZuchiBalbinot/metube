@@ -826,9 +826,15 @@ AI_API_KEY=...                   # chave da API do provider (Groq por padrão)
 AI_MODEL=llama-3.3-70b-versatile
 AI_URL=https://api.groq.com/openai/v1
 
-# Monitoramento (New Relic APM)
-NEW_RELIC_LICENSE_KEY=           # chave de 40 chars; deixar vazio desativa o agente
-NEW_RELIC_APP_NAME=MeTube
+# Monitoramento (OpenTelemetry → New Relic)
+OTEL_PHP_AUTOLOAD_ENABLED=true
+OTEL_SERVICE_NAME=MeTube
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net:4318
+OTEL_EXPORTER_OTLP_HEADERS=api-key=YOUR_LICENSE_KEY   # deixar vazio desativa o envio
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_TRACES_EXPORTER=otlp
+OTEL_METRICS_EXPORTER=otlp
+OTEL_LOGS_EXPORTER=otlp
 
 # Reverb (WebSockets)
 REVERB_APP_ID=...
