@@ -17,6 +17,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TranscribeVideo implements ShouldQueue
@@ -57,24 +58,38 @@ class TranscribeVideo implements ShouldQueue
         $video = Video::with('transcription')->find($this->video->id);
 
         if ($video === null) {
+            Log::warning('TranscribeVideo: video not found', ['id' => $this->video->id]);
+
             return;
         }
 
-        $isAudioMissing = !$storage->exists($video->audioPath());
+        $audioPath = $video->audioPath();
+        $isAudioMissing = !$storage->exists($audioPath);
 
         if ($isAudioMissing) {
+            Log::warning('TranscribeVideo: audio file missing — was TranscodeVideoToHls completed?', [
+                'vuid' => $video->vuid,
+                'expected_path' => $audioPath,
+            ]);
+
             return;
         }
 
         $isAlreadyDone = $video->transcription?->status === TranscriptionStatus::COMPLETED;
 
         if ($isAlreadyDone) {
+            Log::info('TranscribeVideo: already completed, skipping', ['vuid' => $video->vuid]);
+
             return;
         }
+
+        Log::info('TranscribeVideo: starting transcription', ['vuid' => $video->vuid, 'audio' => $audioPath]);
 
         $this->markProcessing($video);
 
         $service->transcribe($video);
+
+        Log::info('TranscribeVideo: transcription done, dispatching AI metadata', ['vuid' => $video->vuid]);
 
         event(new VideoTranscriptionCompleted($video));
         dispatch(new GenerateAiMetadata($video));
@@ -85,6 +100,11 @@ class TranscribeVideo implements ShouldQueue
         if (!$isNotEnglish) {
             return;
         }
+
+        Log::info('TranscribeVideo: non-English detected, dispatching caption translation', [
+            'vuid' => $video->vuid,
+            'language' => $video->transcription->language,
+        ]);
 
         dispatch(new TranslateVideoCaptions($video));
     }

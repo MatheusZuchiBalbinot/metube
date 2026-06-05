@@ -9,6 +9,7 @@ use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\HlsTranscodeService;
 use App\Services\VideoStorageService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -60,15 +61,20 @@ class TranscodeVideoToHls implements ShouldQueue
         $sourcePath = $video->video_url;
         $sourceAbsPath = $storage->absolutePublicPath($sourcePath);
 
+        Log::info('TranscodeVideoToHls: starting', ['vuid' => $video->vuid, 'source' => $sourcePath]);
+
         $duration = $hls->probeDuration($sourceAbsPath);
         $hlsUrl = $hls->transcode($sourceAbsPath, $video->vuid);
 
-        $isSingle = !$video->is_batch;
+        Log::info('TranscodeVideoToHls: HLS package ready', ['vuid' => $video->vuid, 'hls_url' => $hlsUrl]);
+
         $isThumbnailMissing = $video->thumbnail_url === null && $duration !== null;
 
-        if ($isSingle) {
-            $hls->extractAudio($sourceAbsPath, $video->vuid);
-        }
+        $hls->extractAudio($sourceAbsPath, $video->vuid);
+        Log::info('TranscodeVideoToHls: audio extracted', [
+            'vuid' => $video->vuid,
+            'audio_path' => $video->audioPath(),
+        ]);
 
         $updates = [
             'hls_url' => $hlsUrl,
@@ -87,9 +93,7 @@ class TranscodeVideoToHls implements ShouldQueue
 
         event(new VideoStatusUpdated($video, $video->status));
 
-        if (!$isSingle) {
-            return;
-        }
+        Log::info('TranscodeVideoToHls: dispatching TranscribeVideo', ['vuid' => $video->vuid]);
 
         TranscribeVideo::dispatch($video);
     }
