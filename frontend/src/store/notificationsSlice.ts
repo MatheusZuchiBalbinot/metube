@@ -29,7 +29,10 @@ const notificationsSlice = createSlice({
         },
         addNotification(state, action: PayloadAction<Notification>) {
             const alreadyExists = state.items.some(n => n.id === action.payload.id);
-            if (alreadyExists) return;
+            if (alreadyExists) {
+                return;
+            }
+
             state.items.unshift(action.payload);
             state.unreadCount += 1;
         },
