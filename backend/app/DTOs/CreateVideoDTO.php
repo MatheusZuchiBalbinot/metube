@@ -38,9 +38,8 @@ final readonly class CreateVideoDTO
             status: VideoStatus::from($validated['status']),
             videoFile: $validated['video_file'],
             thumbnailFile: $validated['thumbnail_file'] ?? null,
-            scheduledAt: isset($validated['scheduled_at'])
-                ? Carbon::parse($validated['scheduled_at'])
-                : null,
+            scheduledAt: isset($validated['scheduled_at']) ? Carbon::parse($validated['scheduled_at']) : null,
+            isBatch: (bool) ($validated['is_batch'] ?? false),
         );
     }
 }
