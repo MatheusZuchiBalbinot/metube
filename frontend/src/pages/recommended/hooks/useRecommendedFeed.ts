@@ -5,7 +5,7 @@ import { videoActions } from '@store/videoSlice';
 
 /**
  * Loads the server-scored recommendations into the store for the Recommended
- * page. Mirrors `useHomeFeed`, which powers the home recommendations carousel.
+ * page, the same way the home feed loads its recommendations.
  */
 export function useRecommendedFeed(): void {
     const dispatch = useAppDispatch();

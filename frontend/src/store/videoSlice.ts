@@ -48,7 +48,7 @@ const initialState: VideoState = {
     miniPlayer: null,
     pendingVideoSeek: null,
     pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
-    theaterMode: false,
+    theaterMode: loadFromStorage<boolean>(STORAGE_KEYS.THEATER_MODE, false, v => typeof v === 'boolean'),
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
     shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
     loading: false,
@@ -270,6 +270,12 @@ const videoSlice = createSlice({
 
         setServerRecommendations(state, action: PayloadAction<Video[]>) {
             state.serverRecommendations = action.payload;
+        },
+
+        appendServerRecommendations(state, action: PayloadAction<Video[]>) {
+            const existing = new Set(state.serverRecommendations.map(v => v.id));
+            const incoming = action.payload.filter(v => !existing.has(v.id));
+            state.serverRecommendations.push(...incoming);
         },
 
         setRecommendationsLoading(state, action: PayloadAction<boolean>) {
