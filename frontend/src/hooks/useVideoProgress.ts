@@ -248,6 +248,7 @@ export function useVideoProgress({
     const handleVideoEnded = useCallback(() => {
         if (id) {
             updateProgress(id, 100);
+            onBackendSyncRef.current?.(id, 100);
             dispatch(videoActions.videoFinished(id));
             onFinished?.(id);
         }

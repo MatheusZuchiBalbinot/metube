@@ -90,7 +90,6 @@ export default function VideoPage() {
         onBackendSync: (vid, pct) => videoApi.updateProgress(toVuid(vid), pct).catch(() => { }),
         consumePendingVideoSeek: (vid) => consumePendingVideoSeek(vid),
         onCompleted: startAutoplayCountdown,
-        onFinished: (vid) => videoApi.recordView(toVuid(vid)),
     });
 
     const reactions = useVideoReactions({ videoId: video?.id, likedVideos, dislikedVideos, likeVideo, dislikeVideo });

@@ -22,7 +22,9 @@ export function useRealtime(): void {
     const user = useAppSelector(selectAuthUser);
     const location = useLocation();
     const locationRef = useRef(location);
-    useLayoutEffect(() => { locationRef.current = location; });
+    useLayoutEffect(() => {
+        locationRef.current = location;
+    });
     const videos = useAppSelector(state => state.video.videos);
     const videosRef = useRef<Video[]>(videos);
     useLayoutEffect(() => {
