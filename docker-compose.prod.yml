@@ -1,13 +1,49 @@
 services:
+  # Dev frontend server is disabled; dist is built by frontend-build below.
   frontend:
     profiles:
       - dev
 
+  # One-shot container: builds the SPA and copies dist/ into the named volume.
+  # nginx waits for this to complete before starting.
+  frontend-build:
+    build:
+      context: ./frontend
+      target: builder
+      args:
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+    volumes:
+      - frontend_dist:/dist
+    command: sh -c "cp -r /app/dist/. /dist/"
+    restart: "no"
+    networks:
+      - app_net
+
+  # Don't expose postgres or redis ports to the host in production.
+  postgres:
+    ports: []
+
+  redis:
+    ports: []
+
   nginx:
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/prod:/etc/nginx/conf.d:ro
-      - ./frontend/dist:/var/www/frontend:ro
+      - frontend_dist:/var/www/frontend:ro
       - metube_storage:/var/www/storage-root:ro
     depends_on:
-      - backend
-      - reverb
+      backend:
+        condition: service_started
+      reverb:
+        condition: service_started
+      frontend-build:
+        condition: service_completed_successfully
+
+volumes:
+  frontend_dist:
