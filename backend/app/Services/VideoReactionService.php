@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Models\UserVideoReaction;
 use App\Models\Video;
 use App\Models\VideoView;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -168,9 +169,10 @@ final class VideoReactionService
     /**
      * Record a video view for a user.
      *
-     * Tracks watching to avoid duplicate impressions within an hour.
-     * On PostgreSQL, the watched_hour is auto-generated; on SQLite (tests),
-     * we populate it manually for deduplication.
+     * Uses a 60-second Redis TTL to throttle duplicate views per user per video.
+     * The watched_hour uniqueness constraint on video_views remains as a safety net
+     * for concurrent edge cases. On PostgreSQL, watched_hour is auto-generated;
+     * on SQLite (tests), we populate it manually for deduplication.
      *
      * @param User $user Authenticated user
      * @param Video $video Video being watched
@@ -179,22 +181,18 @@ final class VideoReactionService
      */
     public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
+        $throttleKey = "views:throttle:{$video->id}:{$user->id}";
+        $isThrottled = !Cache::add($throttleKey, 1, now()->addSeconds(60));
+
+        if ($isThrottled) {
+            return;
+        }
+
         DB::transaction(function () use ($user, $video, $source, $sessionId) {
             $watchedAt = now();
             // copy() prevents startOfHour() from mutating $watchedAt in-place
             $watchedHour = $watchedAt->copy()->startOfHour();
             $isNotPgsql = DB::connection()->getDriverName() !== 'pgsql';
-
-            // Check dedup before inserting — avoids relying on insertOrIgnore's
-            // return value, which can be unreliable through the Eloquent chain.
-            $hasViewedThisHour = VideoView::where('user_id', $user->id)
-                ->where('video_id', $video->id)
-                ->where('watched_hour', $watchedHour)
-                ->exists();
-
-            if ($hasViewedThisHour) {
-                return;
-            }
 
             $viewRow = [
                 'user_id' => $user->id,
