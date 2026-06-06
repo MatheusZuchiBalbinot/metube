@@ -59,20 +59,6 @@ final class PlaylistService
     }
 
     /**
-     * Get a specific playlist with all videos.
-     *
-     * @param string $puid Playlist UUID
-     *
-     * @throws ModelNotFoundException
-     */
-    public function getPlaylistByPuid(string $puid): Playlist
-    {
-        return Playlist::byPuid($puid)
-            ->with(['videos' => fn ($q) => $q->orderByPivot('position')])
-            ->firstOrFail();
-    }
-
-    /**
      * Update a playlist (rename).
      *
      * @param UpdatePlaylistDTO $data Playlist data
