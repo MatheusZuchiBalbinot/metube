@@ -106,6 +106,20 @@ export function formatEta(seconds: number): string {
     return t('time.hours_left', { count: Math.ceil(seconds / 3600) });
 }
 
+export function greetingPeriod(): 'morning' | 'afternoon' | 'evening' {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+        return 'morning';
+    }
+
+    if (hour < 18) {
+        return 'afternoon';
+    }
+
+    return 'evening';
+}
+
 export function isWithinDays(isoDate: string | null | undefined, days: number): boolean {
     if (!isoDate) {
         return false;
