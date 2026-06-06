@@ -109,8 +109,8 @@ describe('TranscodeVideoToHls', function () {
         });
     });
 
-    describe('handle — batch upload without thumbnail', function () {
-        test('builds HLS and auto-generates thumbnail without extracting audio or dispatching transcription', function () {
+    describe('handle — upload without thumbnail', function () {
+        test('builds HLS, auto-generates the thumbnail, extracts audio and dispatches transcription', function () {
             $video = makeSourceVideo(isBatch: true, thumbnailUrl: null);
             $storage = makeStorageMock();
             $storage->shouldReceive('publishThumbnailFromAbsPath')
@@ -121,7 +121,7 @@ describe('TranscodeVideoToHls', function () {
             $hls = Mockery::mock(HlsTranscodeService::class);
             $hls->shouldReceive('probeDuration')->once()->andReturn(60.0);
             $hls->shouldReceive('transcode')->once()->andReturn("hls/{$video->vuid}/master.m3u8");
-            $hls->shouldNotReceive('extractAudio');
+            $hls->shouldReceive('extractAudio')->once();
             $hls->shouldReceive('extractThumbnail')->once()
                 ->with(Mockery::any(), $video->vuid, 60.0)
                 ->andReturn('/tmp/thumb.jpg');
@@ -129,7 +129,7 @@ describe('TranscodeVideoToHls', function () {
             (new TranscodeVideoToHls($video))->handle($hls, $storage);
 
             expect($video->refresh()->hls_url)->toBe("hls/{$video->vuid}/master.m3u8");
-            Queue::assertNotPushed(TranscribeVideo::class);
+            Queue::assertPushed(TranscribeVideo::class);
         });
     });
 
