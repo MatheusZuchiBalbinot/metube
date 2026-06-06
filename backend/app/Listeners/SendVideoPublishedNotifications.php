@@ -34,6 +34,7 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
         }
 
         UserSubscription::toChannel($channel->id)
+            ->where('user_id', '!=', $channel->id)
             ->select('user_id')
             ->orderBy('user_id')
             ->chunkById(self::CHUNK_SIZE, function ($rows) use ($video): void {
