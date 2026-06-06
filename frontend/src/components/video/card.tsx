@@ -32,6 +32,8 @@ function buildVideoCardClass(showActions: boolean, notInteractive: boolean) {
         .join(' ');
 }
 
+const PREVIEW_DELAY_MS = 500;
+
 // eslint-disable-next-line complexity
 const VideoCard = memo(function VideoCard({
     video,
@@ -69,8 +71,11 @@ const VideoCard = memo(function VideoCard({
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [previewActive, setPreviewActive] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isTouchDevice = useMediaQuery('(hover: none)');
+    const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
     useEffect(() => {
         if (!menuOpen) {
@@ -98,6 +103,29 @@ const VideoCard = memo(function VideoCard({
     }
 
     const isNotInteractive = isVideoProcessing || isVideoFailed;
+    const hasPreviewSource = (video.videoUrl ?? '') !== '';
+    const canPreview = !isTouchDevice && !prefersReducedMotion && !isNotInteractive && hasPreviewSource;
+
+    useEffect(() => () => {
+        if (previewTimerRef.current) {
+            clearTimeout(previewTimerRef.current);
+        }
+    }, []);
+
+    function handleMouseEnter() {
+        if (!canPreview) {
+            return;
+        }
+        previewTimerRef.current = setTimeout(() => setPreviewActive(true), PREVIEW_DELAY_MS);
+    }
+
+    function handleMouseLeave() {
+        if (previewTimerRef.current) {
+            clearTimeout(previewTimerRef.current);
+            previewTimerRef.current = null;
+        }
+        setPreviewActive(false);
+    }
 
     function handleCardClick() {
         if (isNotInteractive) {
@@ -145,9 +173,11 @@ const VideoCard = memo(function VideoCard({
             tabIndex={isNotInteractive ? -1 : 0}
             onClick={handleCardClick}
             onKeyDown={handleCardKeyDown}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}
         >
-            <div className="video-card__thumb">
+            <div className={cn('video-card__thumb', !thumbLoaded && !isPriority && 'video-card__thumb--loading')}>
                 <img
                     className="video-card__thumb-img"
                     src={video.thumbnail}
@@ -158,6 +188,18 @@ const VideoCard = memo(function VideoCard({
                     onLoad={handleThumbLoad}
                     style={{ opacity: isPriority || thumbLoaded ? 1 : 0, transition: isPriority ? undefined : 'opacity 0.3s ease' }}
                 />
+                {previewActive && (
+                    <video
+                        className="video-card__preview"
+                        src={video.videoUrl}
+                        muted
+                        playsInline
+                        autoPlay
+                        loop
+                        preload="metadata"
+                        aria-hidden="true"
+                    />
+                )}
                 <div className="video-card__play-overlay" aria-hidden="true">
                     <svg className="video-card__play-icon" viewBox="0 0 24 24" fill="white">
                         <polygon points="6,3 20,12 6,21" />

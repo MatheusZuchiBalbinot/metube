@@ -5,6 +5,7 @@ import ReactionBtn from '@components/video/reactionBtn';
 import ReactionPill from '@components/video/reactionPill';
 import SavePopover from '@components/video/savePopover';
 import TagBadge from '@components/tag/badge';
+import TimestampedText from '@components/ui/timestamp/text';
 import { Avatar } from '@ui';
 import { Format, ROUTES, formatRelativeDate, cn } from '@utils';
 import type { Video, VideoId, ViewCount, Tag } from '@models';
@@ -30,13 +31,14 @@ interface VideoInfoProps {
     language: string
     onTagClick: (tag: Tag) => void
     onScrollToChat?: () => void
+    onSeek?: (seconds: number) => void
 }
 
 export default function VideoInfo({
     video, isOwner, isAuthenticated, isChannelSubscribed, onSubscribe,
     reactions, isSaved, share,
     transcription, readingMode, onReadingModeToggle,
-    descExpanded, onDescExpandToggle, language, onTagClick, onScrollToChat,
+    descExpanded, onDescExpandToggle, language, onTagClick, onScrollToChat, onSeek,
 }: VideoInfoProps) {
     const { t } = useTranslation();
 
@@ -158,7 +160,7 @@ export default function VideoInfo({
             {video.description && (
                 <div className="video-page__description-block">
                     <p className={cn('video-page__description', !descExpanded && hasLongDesc && 'video-page__description--clamped')}>
-                        {video.description}
+                        <TimestampedText text={video.description} onSeek={onSeek} />
                     </p>
                     {hasLongDesc && (
                         <button

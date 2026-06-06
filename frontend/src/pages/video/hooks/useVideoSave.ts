@@ -30,9 +30,14 @@ export function useVideoSave(videoId: VideoId | undefined): UseVideoSaveResult {
         }
 
         const isCurrentlySaved = watchLaterIds.has(videoId);
+        const undo = isCurrentlySaved
+            ? () => addVideoToPlaylist(watchLater.id, videoId)
+            : () => removeVideoFromPlaylist(watchLater.id, videoId);
+
         dispatch(toastActions.addToast({
             message: t(isCurrentlySaved ? 'toast.unsaved' : 'toast.saved'),
             type: ToastType.SUCCESS,
+            action: { label: t('common.undo'), onClick: undo },
         }));
 
         if (isCurrentlySaved) {

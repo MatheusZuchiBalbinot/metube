@@ -14,6 +14,7 @@ interface UseAutoplayOptions {
 export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions) {
     const navigate = useNavigate();
     const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
+    const [stopAfterCurrent, setStopAfterCurrent] = useState(false);
     const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function cancelAutoplay() {
@@ -24,16 +25,21 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
         }
     }
 
+    function toggleStopAfterCurrent() {
+        setStopAfterCurrent(prev => !prev);
+    }
+
     function startAutoplayCountdown() {
         const hasRelated = relatedVideos.length > 0;
-        if (!autoplay || !hasRelated) {
+        if (!autoplay || !hasRelated || stopAfterCurrent) {
             return;
         }
         setAutoplayCountdown(AUTOPLAY_COUNTDOWN);
     }
 
-    // Cancel autoplay when navigating to a different video
+    // Reset per-video state when navigating to a different video
     useEffect(() => {
+        setStopAfterCurrent(false);
         return () => cancelAutoplay();
 
     }, [id]);
@@ -69,5 +75,5 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoplayCountdown]);
 
-    return { autoplayCountdown, startAutoplayCountdown, cancelAutoplay };
+    return { autoplayCountdown, startAutoplayCountdown, cancelAutoplay, stopAfterCurrent, toggleStopAfterCurrent };
 }

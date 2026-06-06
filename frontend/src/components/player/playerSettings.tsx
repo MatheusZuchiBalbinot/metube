@@ -1,4 +1,4 @@
-import { Settings, Check } from 'lucide-react';
+import { Settings, Check, Repeat, Repeat1 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ShakaLevel } from '@hooks';
 import { cn } from '@utils';
@@ -14,14 +14,21 @@ interface PlayerSettingsProps {
     levels?: ShakaLevel[]
     currentQuality?: number
     onQualityChange?: (e: React.MouseEvent, index: number) => void
+    isLoop?: boolean
+    onToggleLoop?: () => void
+    abStatus?: number
+    onAbRepeat?: () => void
 }
+
+const AB_LABEL_KEYS = ['player.ab_start', 'player.ab_set_b', 'player.ab_active'] as const;
 
 export default function PlayerSettings({
     playbackRate, showSettings, settingsRef, onToggle, onSpeedChange,
-    levels, currentQuality, onQualityChange,
+    levels, currentQuality, onQualityChange, isLoop, onToggleLoop, abStatus, onAbRepeat,
 }: PlayerSettingsProps) {
     const { t } = useTranslation();
     const hasLevels = (levels?.length ?? 0) > 0;
+    const abLabelKey = AB_LABEL_KEYS[abStatus ?? 0] ?? AB_LABEL_KEYS[0];
 
     return (
         <div className="vp__settings" ref={settingsRef}>
@@ -77,6 +84,36 @@ export default function PlayerSettings({
                                     );
                                 })}
                             </div>
+                        </div>
+                    )}
+                    {onToggleLoop && (
+                        <div className="vp__settings-section">
+                            <button
+                                className={cn('vp__settings-option', isLoop && 'vp__settings-option--active')}
+                                onClick={onToggleLoop}
+                                role="switch"
+                                aria-checked={isLoop ?? false}
+                            >
+                                <span className="vp__settings-loop-label">
+                                    <Repeat size={13} />
+                                    {t('player.loop')}
+                                </span>
+                                {isLoop && <Check size={12} />}
+                            </button>
+                        </div>
+                    )}
+                    {onAbRepeat && (
+                        <div className="vp__settings-section">
+                            <button
+                                className={cn('vp__settings-option', (abStatus ?? 0) > 0 && 'vp__settings-option--active')}
+                                onClick={onAbRepeat}
+                            >
+                                <span className="vp__settings-loop-label">
+                                    <Repeat1 size={13} />
+                                    {t(abLabelKey)}
+                                </span>
+                                {(abStatus ?? 0) === 2 && <Check size={12} />}
+                            </button>
                         </div>
                     )}
                 </div>

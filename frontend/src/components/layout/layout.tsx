@@ -8,6 +8,7 @@ import MiniPlayer from '@components/mini/player';
 import ShortcutsModal from '@components/shortcuts/modal';
 import ToastContainer from '@components/ui/toast/toast';
 import NavProgress from '@components/ui/navProgress/navProgress';
+import ScrollTopButton from '@components/ui/scrollTop/scrollTop';
 import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
@@ -102,6 +103,7 @@ export default function AppLayout() {
                 </main>
             </div>
             <NavProgress />
+            <ScrollTopButton />
             {!isVideoPage && <MiniPlayer />}
             <ShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
             <ToastContainer />

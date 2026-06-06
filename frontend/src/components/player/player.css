@@ -1,3 +1,30 @@
+/* ─── Press-and-hold 2× indicator ───────────────────────────────────────────── */
+
+.vp__speed-hold {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, #000 65%, transparent);
+    color: #fff;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    animation: vp-speed-hold-in 0.15s var(--ease-out) both;
+}
+
+@keyframes vp-speed-hold-in {
+    from { opacity: 0; transform: translate(-50%, -4px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ─── Custom Video Player (.vp) ─────────────────────────────────────────────── */
 
 .vp {
@@ -400,6 +427,20 @@
     /* Fixed width prevents layout shifts when time string changes length.
        Sized for the longest expected format: "0:00:00 / 0:00:00" */
     min-width: 8em;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.vp__time:hover {
+    color: #fff;
+}
+
+.vp__settings-loop-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* ─── Inline volume control ─────────────────────────────────────────────────── */

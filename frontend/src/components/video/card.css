@@ -32,6 +32,46 @@
     background: var(--surface-2);
 }
 
+/* Shimmer placeholder shown until the lazy-loaded thumbnail fades in. */
+.video-card__thumb--loading {
+    background-image: linear-gradient(
+        100deg,
+        var(--surface-2) 30%,
+        var(--surface-3) 50%,
+        var(--surface-2) 70%
+    );
+    background-size: 200% 100%;
+    animation: video-card-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes video-card-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .video-card__thumb--loading {
+        animation: none;
+    }
+}
+
+/* Hover preview video — fades in over the static thumbnail. */
+.video-card__preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    background: #000;
+    animation: video-card-preview-in 0.2s ease both;
+}
+
+@keyframes video-card-preview-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 /* Pseudo-element shadow: opacity transition is GPU-composited, avoids paint on hover */
 .video-card__thumb::after {
     content: '';

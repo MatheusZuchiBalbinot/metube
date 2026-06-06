@@ -10,9 +10,10 @@ import { useComments, useAuth } from '@hooks';
 interface CommentSectionProps {
     vuid: Vuid
     videoChannelId?: string
+    onSeek?: (seconds: number) => void
 }
 
-export default function CommentSection({ vuid, videoChannelId }: CommentSectionProps) {
+export default function CommentSection({ vuid, videoChannelId, onSeek }: CommentSectionProps) {
     const { t } = useTranslation();
     const { user } = useAuth();
     const {
@@ -82,6 +83,7 @@ export default function CommentSection({ vuid, videoChannelId }: CommentSectionP
                             onAddReply={(content, parentCuid) => add(content, parentCuid)}
                             getReplies={getReplies}
                             onLoadReplies={loadReplies}
+                            onSeek={onSeek}
                         />
                     ))}
                 </div>

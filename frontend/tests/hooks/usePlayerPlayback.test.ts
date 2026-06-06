@@ -14,6 +14,7 @@ function makeVideoRef() {
 describe('usePlayerPlayback', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        localStorage.clear();
     });
 
     it('initialises with sensible defaults', () => {

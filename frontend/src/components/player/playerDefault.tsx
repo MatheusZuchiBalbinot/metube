@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
 import { cn } from '@utils';
+import { useTranslation } from 'react-i18next';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerControlsBar from './playerControlsBar';
@@ -22,6 +23,9 @@ import {
     useOutsideClick,
 } from '@hooks';
 
+const HOLD_SPEED_DELAY_MS = 350;
+const HOLD_SPEED_RATE = 2;
+
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({
     videoRef,
@@ -42,9 +46,20 @@ export function DefaultVideoPlayer({
     const settingsRef = useRef<HTMLDivElement>(null);
     const captionsMenuRef = useRef<HTMLDivElement>(null);
 
+    const { t } = useTranslation();
+
     const [showSettings, setShowSettings] = useState(false);
     const [showCaptionsMenu, setShowCaptionsMenu] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [holdSpeedActive, setHoldSpeedActive] = useState(false);
+    const [isLoop, setIsLoop] = useState(false);
+    const [abRepeat, setAbRepeat] = useState<{ a: number | null; b: number | null }>({ a: null, b: null });
+    const abRepeatRef = useRef(abRepeat);
+
+    // Press-and-hold anywhere on the video to temporarily play at 2×.
+    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const holdPrevRateRef = useRef(1);
+    const suppressClickRef = useRef(false);
 
     // ─── Hooks ────────────────────────────────────────────────────────────────
 
@@ -119,6 +134,47 @@ export function DefaultVideoPlayer({
     const { handleClick: handleContainerClick, handleDoubleClick: handleContainerDoubleClick } =
         useClickDoubleClick(handleTogglePlayWithFeedback, toggleFullscreen);
 
+    function handleSurfacePointerDown(e: React.PointerEvent) {
+        const isPrimary = e.button === 0;
+        const isOnControls = (e.target as HTMLElement).closest('.vp__controls') !== null;
+
+        if (!isPrimary || isOnControls) {
+            return;
+        }
+
+        holdTimerRef.current = setTimeout(() => {
+            holdPrevRateRef.current = playbackRate;
+            setHoldSpeedActive(true);
+            applyPlaybackRate(HOLD_SPEED_RATE);
+        }, HOLD_SPEED_DELAY_MS);
+    }
+
+    function handleSurfacePointerEnd() {
+        if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+
+        if (!holdSpeedActive) {
+            return;
+        }
+
+        applyPlaybackRate(holdPrevRateRef.current);
+        setHoldSpeedActive(false);
+        // A click event fires right after the hold ends — swallow it so playback
+        // doesn't toggle.
+        suppressClickRef.current = true;
+    }
+
+    function handleSurfaceClick(e: React.MouseEvent) {
+        if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            return;
+        }
+
+        handleContainerClick(e);
+    }
+
     const shouldCaptureKeyboard = captureKeyboard ?? true;
     usePlayerKeyboard({
         videoRef,
@@ -158,16 +214,86 @@ export function DefaultVideoPlayer({
         }
     }, [activeTrack, tracksLoaded, videoRef]);
 
-    // Reset local state when source changes
+    // Reset local state when source changes. Playback rate is intentionally NOT
+    // reset — the viewer's preferred speed persists across videos (usePlayerPlayback).
     useEffect(() => {
         resetPopIcon();
         resetSkipIndicator();
-        applyPlaybackRate(1);
         setShowSettings(false);
         setShowCaptionsMenu(false);
         setIsDragging(false);
+        setIsLoop(false);
+        setAbRepeat({ a: null, b: null });
+        if (videoRef.current) {
+            videoRef.current.loop = false;
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src]);
+
+    // Keep the A–B loop bounds in a ref so the timeupdate listener stays stable.
+    useEffect(() => {
+        abRepeatRef.current = abRepeat;
+    }, [abRepeat]);
+
+    // A–B repeat: jump back to A whenever playback passes B.
+    useEffect(() => {
+        const el = videoRef.current;
+        if (!el) {
+            return;
+        }
+
+        function onTimeUpdate() {
+            const { a, b } = abRepeatRef.current;
+            if (a !== null && b !== null && el.currentTime >= b) {
+                el.currentTime = a;
+            }
+        }
+
+        el.addEventListener('timeupdate', onTimeUpdate);
+        return () => el.removeEventListener('timeupdate', onTimeUpdate);
+    }, [videoRef]);
+
+    function handleToggleLoop() {
+        const el = videoRef.current;
+        const next = !isLoop;
+        setIsLoop(next);
+        if (el) {
+            el.loop = next;
+        }
+    }
+
+    function handleAbRepeat() {
+        const el = videoRef.current;
+        if (!el) {
+            return;
+        }
+
+        setAbRepeat(prev => {
+            if (prev.a === null) {
+                return { a: el.currentTime, b: null };
+            }
+
+            if (prev.b === null) {
+                const now = el.currentTime;
+                return now > prev.a ? { a: prev.a, b: now } : { a: now, b: prev.a };
+            }
+
+            return { a: null, b: null };
+        });
+    }
+
+    function getAbStatus() {
+        if (abRepeat.a === null) {
+            return 0;
+        }
+
+        if (abRepeat.b === null) {
+            return 1;
+        }
+
+        return 2;
+    }
+    const abStatus = getAbStatus();
 
     // ─── Event handlers ───────────────────────────────────────────────────────
 
@@ -246,8 +372,12 @@ export function DefaultVideoPlayer({
             onMouseMove={revealControls}
             onMouseLeave={handleMouseLeave}
             style={ambientColor ? ({ '--vp-ambient': ambientColor } as React.CSSProperties) : undefined}
-            onClick={handleContainerClick}
+            onClick={handleSurfaceClick}
             onDoubleClick={handleContainerDoubleClick}
+            onPointerDown={handleSurfacePointerDown}
+            onPointerUp={handleSurfacePointerEnd}
+            onPointerLeave={handleSurfacePointerEnd}
+            onPointerCancel={handleSurfacePointerEnd}
         >
             <video
                 ref={videoRef}
@@ -271,6 +401,12 @@ export function DefaultVideoPlayer({
                 skipIndicator={skipIndicator}
                 skipSeconds={KEYBOARD_SKIP_SECONDS}
             />
+
+            {holdSpeedActive && (
+                <div className="vp__speed-hold" aria-hidden="true">
+                    {t('player.speed_hold', { rate: HOLD_SPEED_RATE })}
+                </div>
+            )}
 
             <div className="vp__controls">
                 <PlayerSeekBar
@@ -318,6 +454,10 @@ export function DefaultVideoPlayer({
                     onCaptionSelect={handleCaptionSelect}
                     showTheaterButton={onTheaterToggle !== undefined}
                     fullscreenIcon={isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                    isLoop={isLoop}
+                    onToggleLoop={handleToggleLoop}
+                    abStatus={abStatus}
+                    onAbRepeat={handleAbRepeat}
                 />
             </div>
         </div>

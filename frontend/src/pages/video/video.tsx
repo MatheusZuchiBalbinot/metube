@@ -16,7 +16,8 @@ import {
     useAutoplay,
     useKeyboardShortcuts,
 } from '@hooks';
-import { TagColors } from '@utils';
+import { TagColors, cn } from '@utils';
+import { CirclePause } from 'lucide-react';
 import type { Video, VideoId } from '@models';
 import { useViewTracking } from './hooks/useViewTracking';
 import { useSkipAnalytics } from './hooks/useSkipAnalytics';
@@ -33,7 +34,7 @@ import VideoSidebar from './components/VideoSidebar';
 import ChatSection from '@components/chat/section';
 
 export default function VideoPage() {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
     const id = searchParams.get('v') ?? undefined;
 
@@ -77,7 +78,10 @@ export default function VideoPage() {
         closeMiniPlayer();
     }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const { autoplayCountdown, startAutoplayCountdown, cancelAutoplay } = useAutoplay({ id, autoplay, relatedVideos });
+    const {
+        autoplayCountdown, startAutoplayCountdown, cancelAutoplay,
+        stopAfterCurrent, toggleStopAfterCurrent,
+    } = useAutoplay({ id, autoplay, relatedVideos });
     const {
         showCompletion,
         handleLoadedMetadata, handleTimeUpdate, handleVideoEnded, getCurrentTime,
@@ -168,6 +172,18 @@ export default function VideoPage() {
                         <AutoplayBanner countdown={autoplayCountdown} nextVideo={nextVideo} onCancel={cancelAutoplay} />
                     )}
 
+                    {autoplay && nextVideo && !isAutoplayActive && (
+                        <button
+                            type="button"
+                            className={cn('video-page__stop-after', stopAfterCurrent && 'video-page__stop-after--active')}
+                            onClick={toggleStopAfterCurrent}
+                            aria-pressed={stopAfterCurrent}
+                        >
+                            <CirclePause size={14} strokeWidth={1.75} />
+                            {stopAfterCurrent ? t('video.stop_after_on') : t('video.stop_after')}
+                        </button>
+                    )}
+
                     <VideoInfo
                         video={video}
                         isOwner={isOwner}
@@ -185,6 +201,11 @@ export default function VideoPage() {
                         language={i18n.language}
                         onTagClick={openTagView}
                         onScrollToChat={authUser !== null ? handleScrollToChat : undefined}
+                        onSeek={(seconds) => {
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = seconds;
+                            }
+                        }}
                     />
 
                     {authUser !== null && (
@@ -193,7 +214,15 @@ export default function VideoPage() {
                         </div>
                     )}
 
-                    <CommentSection vuid={toVuid(video.id)} videoChannelId={video.channelId} />
+                    <CommentSection
+                        vuid={toVuid(video.id)}
+                        videoChannelId={video.channelId}
+                        onSeek={(seconds) => {
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = seconds;
+                            }
+                        }}
+                    />
                 </main>
 
                 <VideoSidebar

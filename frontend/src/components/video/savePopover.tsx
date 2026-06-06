@@ -57,10 +57,18 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
         if (isInWatchLater) {
             removeVideoFromPlaylist(watchLaterPlaylist.id, videoId);
-            dispatch(toastActions.addToast({ message: t('toast.unsaved'), type: ToastType.INFO }));
+            dispatch(toastActions.addToast({
+                message: t('toast.unsaved'),
+                type: ToastType.INFO,
+                action: { label: t('common.undo'), onClick: () => addVideoToPlaylist(watchLaterPlaylist.id, videoId) },
+            }));
         } else {
             addVideoToPlaylist(watchLaterPlaylist.id, videoId);
-            dispatch(toastActions.addToast({ message: t('toast.saved'), type: ToastType.SUCCESS }));
+            dispatch(toastActions.addToast({
+                message: t('toast.saved'),
+                type: ToastType.SUCCESS,
+                action: { label: t('common.undo'), onClick: () => removeVideoFromPlaylist(watchLaterPlaylist.id, videoId) },
+            }));
         }
     }
 
@@ -71,12 +79,14 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
             dispatch(toastActions.addToast({
                 message: t('toast.removed_from_playlist'),
                 type: ToastType.INFO,
+                action: { label: t('common.undo'), onClick: () => addVideoToPlaylist(playlistId, videoId) },
             }));
         } else {
             addVideoToPlaylist(playlistId, videoId);
             dispatch(toastActions.addToast({
                 message: t('toast.added_to_playlist', { name: playlistName }),
                 type: ToastType.SUCCESS,
+                action: { label: t('common.undo'), onClick: () => removeVideoFromPlaylist(playlistId, videoId) },
             }));
         }
     }
