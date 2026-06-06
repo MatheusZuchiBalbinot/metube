@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ListVideo, Plus } from 'lucide-react';
 import PlaylistCard from '@components/playlist/card';
@@ -14,6 +15,8 @@ export default function PlaylistsPage() {
     const { t } = useTranslation();
     const { playlists, createPlaylist } = usePlaylist();
     const { videos } = useVideo();
+    const [searchParams] = useSearchParams();
+    const openPlaylistId = searchParams.get('open');
 
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newName, setNewName] = useState('');
@@ -82,6 +85,7 @@ export default function PlaylistsPage() {
                             key={playlist.id}
                             playlist={playlist}
                             videos={resolved}
+                            defaultExpanded={playlist.id === openPlaylistId}
                         />
                     ))}
                 </div>

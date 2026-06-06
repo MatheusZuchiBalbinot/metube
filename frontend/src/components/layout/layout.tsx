@@ -13,20 +13,14 @@ import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { useSearch } from '@context/search';
 import './layout.css';
-import { useKeyboardShortcuts, useScrollRestoration } from '@hooks';
-import { ROUTES, cn } from '@utils';
+import { useKeyboardShortcuts, useScrollRestoration, useMediaQuery } from '@hooks';
+import { ROUTES, cn, STORAGE_KEYS } from '@utils';
 
 export default function AppLayout() {
     const { t } = useTranslation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED) === 'true');
 
-    const handleToggleSidebar = useCallback(() => {
-        setSidebarOpen(prev => !prev);
-    }, []);
-
-    const handleCloseSidebar = useCallback(() => {
-        setSidebarOpen(false);
-    }, []);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.video.activeTagView);
@@ -35,7 +29,26 @@ export default function AppLayout() {
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
     const isPermanentSidebar = !isVideoPage;
+    const isMediumScreen = useMediaQuery('(max-width: 1280px)');
+    const isRail = collapsed || isMediumScreen;
     useScrollRestoration();
+
+    const handleToggleSidebar = useCallback(() => {
+        if (isPermanentSidebar) {
+            setCollapsed(prev => {
+                const next = !prev;
+                localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
+                return next;
+            });
+            return;
+        }
+
+        setSidebarOpen(prev => !prev);
+    }, [isPermanentSidebar]);
+
+    const handleCloseSidebar = useCallback(() => {
+        setSidebarOpen(false);
+    }, []);
 
     useEffect(() => {
         const isTagViewOpen = activeTagView !== null;
@@ -67,7 +80,13 @@ export default function AppLayout() {
             <a href="#main-content" className="skip-link">{t('nav.skip_to_content')}</a>
             <AppHeader onToggleSidebar={handleToggleSidebar} />
             <div className="app-layout__body">
-                <AppSidebar open={sidebarOpen} permanent={isPermanentSidebar} hidden={theaterMode} onClose={handleCloseSidebar} />
+                <AppSidebar
+                    open={sidebarOpen}
+                    permanent={isPermanentSidebar}
+                    collapsed={isPermanentSidebar && isRail}
+                    hidden={theaterMode}
+                    onClose={handleCloseSidebar}
+                />
                 {sidebarOpen && !isPermanentSidebar && (
                     <button
                         type="button"

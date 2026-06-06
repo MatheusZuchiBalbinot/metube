@@ -24,6 +24,14 @@ describe('ROUTES', () => {
         expect(ROUTES.HOME).toBe('/');
     });
 
+    it('has a RECOMMENDED route', () => {
+        expect(ROUTES.RECOMMENDED).toBe('/recommended');
+    });
+
+    it('has a SUBSCRIPTIONS_FEED route', () => {
+        expect(ROUTES.SUBSCRIPTIONS_FEED).toBe('/subscriptions');
+    });
+
     it('has a SHORTS route', () => {
         expect(ROUTES.SHORTS).toBe('/shorts');
     });

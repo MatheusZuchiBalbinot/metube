@@ -263,7 +263,19 @@
         "your_videos": "Your videos",
         "dashboard": "Dashboard",
         "toggle_sidebar": "Toggle sidebar",
+        "explore": "Explore",
+        "recommended": "Recommended",
+        "subscriptions_feed": "Subscriptions",
         "subscriptions": "Subscriptions",
+        "no_subscriptions": "You're not following any channels yet.",
+        "explore_channels": "Explore channels",
+        "show_more": "Show more",
+        "show_less": "Show less",
+        "continue_watching": "Continue watching",
+        "topics": "Topics",
+        "new_videos": "New videos",
+        "recent_channels": "Recently visited",
+        "view_profile": "View profile",
         "skip_to_content": "Skip to main content"
     },
     "shorts": {
@@ -327,6 +339,12 @@
     "watch_later": {
         "remove": "Remove from watch later",
         "empty_text": "Save videos to watch them later"
+    },
+    "recommended": {
+        "empty_text": "Watch more videos to get recommendations"
+    },
+    "subscriptions_feed": {
+        "empty_text": "Videos from channels you follow will appear here"
     },
     "search": {
         "try_different": "Try a different search term",

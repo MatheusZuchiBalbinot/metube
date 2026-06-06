@@ -19,6 +19,7 @@ import type { Video, Playlist } from '@models';
 interface PlaylistCardProps {
     playlist: Playlist
     videos: Video[]
+    defaultExpanded?: boolean
 }
 
 interface PlaylistVideoRowProps {
@@ -80,12 +81,12 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
 }
 
 // eslint-disable-next-line complexity
-export default function PlaylistCard({ playlist, videos }: PlaylistCardProps) {
+export default function PlaylistCard({ playlist, videos, defaultExpanded = false }: PlaylistCardProps) {
     const { t } = useTranslation();
     const { renamePlaylist, deletePlaylist, reorderVideosInPlaylist } = usePlaylist();
     const dispatch = useAppDispatch();
 
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(defaultExpanded);
     const [renaming, setRenaming] = useState(false);
     const [renameName, setRenameName] = useState(playlist.name);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

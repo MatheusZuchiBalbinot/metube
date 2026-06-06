@@ -15,4 +15,7 @@ export const STORAGE_KEYS = {
     SUBSCRIPTIONS:    'metube:subscriptions',
     PLAYLISTS:        'metube:playlists',
     MOST_VIEWED_LAYOUT: 'metube:most-viewed-layout',
+    SIDEBAR_COLLAPSED: 'metube:sidebar-collapsed',
+    SIDEBAR_SECTIONS: 'metube:sidebar-sections',
+    RECENT_CHANNELS: 'metube:recent-channels',
 } as const;

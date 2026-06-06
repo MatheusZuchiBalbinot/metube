@@ -4,6 +4,8 @@ export const ROUTES = {
     FORGOT_PASSWORD: '/forgot-password',
     RESET_PASSWORD:  '/reset-password/:token',
     HOME:           '/',
+    RECOMMENDED: '/recommended',
+    SUBSCRIPTIONS_FEED: '/subscriptions',
     SHORTS:      '/shorts',
     HISTORY:     '/history',
     PLAYLISTS:   '/playlists',
@@ -14,7 +16,6 @@ export const ROUTES = {
     VIDEO:       '/watch',
     SEARCH:      '/search',
     CHANNEL:     '/channel/:id',
-    INSIGHTS:    '/insights',
 } as const;
 
 export function videoUrl(vuid: string): string {

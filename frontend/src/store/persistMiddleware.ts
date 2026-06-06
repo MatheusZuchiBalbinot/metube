@@ -72,6 +72,15 @@ class StorePersistence {
         localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(search.recentSearches));
     };
 
+    // ─── Recent channels ──────────────────────────────────────────────────────
+    private readonly _persistRecentChannels = async (_: unknown, api: EffectAPI): Promise<void> => {
+        api.cancelActiveListeners();
+        await api.delay(400);
+
+        const { recentChannels } = api.getState();
+        localStorage.setItem(STORAGE_KEYS.RECENT_CHANNELS, JSON.stringify(recentChannels.channels));
+    };
+
     register(): void {
         this._mw.startListening({
             predicate: (action) =>
@@ -96,6 +105,10 @@ class StorePersistence {
         this._mw.startListening({
             predicate: (action) => action.type.startsWith('search/'),
             effect: this._persistSearch,
+        });
+        this._mw.startListening({
+            predicate: (action) => action.type.startsWith('recentChannels/'),
+            effect: this._persistRecentChannels,
         });
     }
 }
