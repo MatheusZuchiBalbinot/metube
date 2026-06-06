@@ -6,6 +6,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\TusController;
@@ -26,6 +27,8 @@ Route::prefix('users')->group(function (): void {
 });
 
 // Guest-accessible reads (no auth required; auth()->user() is null for guests)
+
+Route::get('/feed', [FeedController::class, 'index']);
 
 Route::prefix('videos')->group(function (): void {
     Route::get('/', [VideoController::class, 'index']);
