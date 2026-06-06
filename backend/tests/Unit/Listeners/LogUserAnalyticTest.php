@@ -6,7 +6,6 @@ use App\Enums\VideoEventType;
 use App\Enums\VideoSource;
 use App\Events\ChannelSubscribed;
 use App\Events\SearchPerformed;
-use App\Events\VideoImpressed;
 use App\Events\VideoReactionApplied;
 use App\Events\VideoSkipped;
 use App\Events\VideoViewed;
@@ -58,20 +57,6 @@ describe('LogUserAnalytic', function () {
 
         expect($row->event_type)->toBe(VideoEventType::SKIP)
             ->and($row->payload)->toBe(['percent' => 7]);
-    });
-
-    test('persists VideoImpressed with position payload', function () {
-        $user = User::factory()->create();
-        $video = Video::factory()->create();
-
-        (new LogUserAnalytic())->handle(new VideoImpressed($user, $video, VideoSource::RECOMMENDED, 4, 'sess-x'));
-
-        $row = UserAnalytic::firstWhere('user_id', $user->id);
-
-        expect($row->event_type)->toBe(VideoEventType::IMPRESSION)
-            ->and($row->source)->toBe(VideoSource::RECOMMENDED->value)
-            ->and($row->session_id)->toBe('sess-x')
-            ->and($row->payload)->toBe(['position' => 4]);
     });
 
     test('persists ChannelSubscribed with channel_id and null video_id', function () {

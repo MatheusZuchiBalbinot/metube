@@ -249,12 +249,4 @@ class CacheService
                 $callback,
             );
     }
-
-    /**
-     * Invalidate all recommendation pages for a user.
-     */
-    public function forgetRecommendations(int $userId): void
-    {
-        Cache::tags(["user:{$userId}"])->forget("user:recommendations:{$userId}:*");
-    }
 }

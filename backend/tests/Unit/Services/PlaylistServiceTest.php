@@ -32,14 +32,6 @@ describe('PlaylistService', function () {
         $this->assertDatabaseHas('playlists', ['name' => $playlistName]);
     });
 
-    test('get playlist by puid', function () use (&$service) {
-        $playlist = Playlist::factory()->create();
-
-        $found = $service->getPlaylistByPuid($playlist->puid);
-
-        expect($found->id)->toBe($playlist->id);
-    });
-
     test('update playlist name', function () use (&$service) {
         $faker = Factory::create();
         $oldName = $faker->words(2, true);

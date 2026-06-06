@@ -16,7 +16,6 @@ use App\Events\SearchPerformed;
 use App\Events\TranscriptionStatusUpdated;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoFinished;
-use App\Events\VideoImpressed;
 use App\Events\VideoImpressionsBatch;
 use App\Events\VideoLiked;
 use App\Events\VideoPublished;
@@ -136,7 +135,6 @@ class AppServiceProvider extends ServiceProvider
             VideoUnliked::class,
             VideoUndisliked::class,
             VideoUnsaved::class,
-            VideoImpressed::class,
             VideoClickedFromFeed::class,
             ChannelSubscribed::class,
             ChannelUnsubscribed::class,

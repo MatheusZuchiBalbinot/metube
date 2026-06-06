@@ -9,11 +9,11 @@ use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\HlsTranscodeService;
 use App\Services\VideoStorageService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
