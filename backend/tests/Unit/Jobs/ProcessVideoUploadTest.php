@@ -36,41 +36,33 @@ describe('ProcessVideoUpload', function () {
     });
 
     describe('handle — batch happy path', function () {
-        test('publishes batch video and sets status to PUBLISHED when not scheduled', function () {
+        test('sets batch video to DRAFT for creator review', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
 
             $storage = mockStorage('videos/' . $video->vuid . '.mp4');
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
 
             $video->refresh();
-            expect($video->status)->toBe(VideoStatus::PUBLISHED)
+            expect($video->status)->toBe(VideoStatus::DRAFT)
                 ->and($video->video_url)->toBe('videos/' . $video->vuid . '.mp4');
         });
 
-        test('sets batch video to SCHEDULED when scheduled_at is in the future', function () {
+        test('ignores scheduled_at for batch video — always goes DRAFT', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => now()->addDay(), 'is_batch' => true]);
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
 
-            expect($video->fresh()->status)->toBe(VideoStatus::SCHEDULED);
+            expect($video->fresh()->status)->toBe(VideoStatus::DRAFT);
         });
 
-        test('sets batch video to PUBLISHED when scheduled_at is in the past', function () {
-            $video = Video::factory()->processing()->create(['scheduled_at' => now()->subDay(), 'is_batch' => true]);
-
-            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
-
-            expect($video->fresh()->status)->toBe(VideoStatus::PUBLISHED);
-        });
-
-        test('fires VideoPublished for batch video', function () {
+        test('does not fire VideoPublished for batch video', function () {
             Event::fake([VideoPublished::class]);
 
             $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
 
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle(mockStorage());
 
-            Event::assertDispatched(VideoPublished::class);
+            Event::assertNotDispatched(VideoPublished::class);
         });
 
         test('dispatches TranscodeVideoToHls for batch video', function () {
