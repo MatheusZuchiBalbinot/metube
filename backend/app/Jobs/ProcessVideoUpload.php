@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Enums\VideoStatus;
-use App\Events\VideoPublished;
 use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\VideoStorageService;
@@ -68,36 +67,22 @@ class ProcessVideoUpload implements ShouldQueue
     }
 
     /**
-     * Finalize a batch upload: publish immediately and notify subscribers.
+     * Finalize a batch upload: move to DRAFT so the creator reviews AI suggestions
+     * before publishing. VideoPublished fires only on explicit publish, same as single
+     * uploads — subscribers are never notified until the creator clicks "Publish".
      *
      * @param string $videoUrl Public URL of the published video file
      * @param string|null $thumbnailUrl Public URL of the thumbnail, or null
      */
     private function finalizeBatch(Video $video, string $videoUrl, ?string $thumbnailUrl): void
     {
-        $newStatus = $this->resolveStatus($video);
-        $publishedAt = $newStatus === VideoStatus::PUBLISHED ? now() : $video->scheduled_at;
-
-        $previousStatus = $video->status;
-
         $video->update([
             'thumbnail_url' => $thumbnailUrl,
             'video_url' => $videoUrl,
-            'status' => $newStatus,
-            'published_at' => $publishedAt,
+            'status' => VideoStatus::DRAFT,
         ]);
 
-        $statusChanged = $previousStatus !== $newStatus;
-
-        if ($statusChanged) {
-            event(new VideoStatusUpdated($video, $newStatus));
-        }
-
-        $isPublished = $newStatus === VideoStatus::PUBLISHED;
-
-        if ($isPublished && $statusChanged) {
-            event(new VideoPublished($video));
-        }
+        event(new VideoStatusUpdated($video, VideoStatus::DRAFT));
 
         TranscodeVideoToHls::dispatch($video);
     }
@@ -138,18 +123,5 @@ class ProcessVideoUpload implements ShouldQueue
 
         $video->update(['status' => VideoStatus::FAILED]);
         event(new VideoStatusUpdated($video, VideoStatus::FAILED));
-    }
-
-    /**
-     * Determine the final status after processing.
-     *
-     * A video with a future scheduled_at becomes SCHEDULED so it stays hidden
-     * until the scheduler publishes it. Otherwise it goes live immediately.
-     */
-    private function resolveStatus(Video $video): VideoStatus
-    {
-        $isScheduled = $video->scheduled_at !== null && $video->scheduled_at->isFuture();
-
-        return $isScheduled ? VideoStatus::SCHEDULED : VideoStatus::PUBLISHED;
     }
 }
