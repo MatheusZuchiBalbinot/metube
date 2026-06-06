@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\FeedSection;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
@@ -248,5 +249,26 @@ class CacheService
                 config('cache.metube.recommendations.ttl'),
                 $callback,
             );
+    }
+
+    /**
+     * Return the cached home feed sections for a user (or the shared guest feed),
+     * or resolve and store them.
+     *
+     * @param int|null $userId Authenticated user id, or null for guests
+     * @param Closure(): array<int, FeedSection> $callback Resolver on cache miss
+     *
+     * @return array<int, FeedSection>
+     */
+    public function rememberUserFeed(?int $userId, Closure $callback): array
+    {
+        if (!(bool) config('cache.metube.feed.active')) {
+            return $callback();
+        }
+
+        $tags = $userId !== null ? ['feed', "user:{$userId}"] : ['feed'];
+        $key = $userId !== null ? "feed:user:{$userId}" : 'feed:guest';
+
+        return Cache::tags($tags)->remember($key, config('cache.metube.feed.ttl'), $callback);
     }
 }

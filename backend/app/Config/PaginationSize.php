@@ -15,6 +15,8 @@ final class PaginationSize
 
     public const RECOMMENDATIONS = 15;
 
+    public const FEED_SHELF = 12;
+
     public const USER_LIKES = 15;
 
     public const USER_SAVED = 15;
