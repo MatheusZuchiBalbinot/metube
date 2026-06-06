@@ -106,6 +106,20 @@ export function formatEta(seconds: number): string {
     return t('time.hours_left', { count: Math.ceil(seconds / 3600) });
 }
 
+export function isWithinDays(isoDate: string | null | undefined, days: number): boolean {
+    if (!isoDate) {
+        return false;
+    }
+
+    const timestamp = Date.parse(isoDate);
+    if (Number.isNaN(timestamp)) {
+        return false;
+    }
+
+    const ageMs = Date.now() - timestamp;
+    return ageMs >= 0 && ageMs <= days * 24 * 60 * 60 * 1000;
+}
+
 export function parseTimestamp(timestamp: string): number {
     const parts = timestamp.split(':').map(Number);
     const isInvalid = parts.some(isNaN);

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Upload } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useAppSelector, useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
+import { recentChannelsActions } from '@store/recentChannelsSlice';
 import { VideoFilter, videoUrl, cn, ROUTES, type FilterState } from '@utils';
 import type { Video, Tag, VideoId, ChannelId } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
@@ -45,6 +46,22 @@ export default function ProfilePage() {
     const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
     const isLoadingVideos = videosState.kind === 'loading';
     const watchedTagFrequency = useAppSelector(selectWatchedTagFrequency);
+
+    // Track visits to other users' channels so the sidebar can surface them.
+    useEffect(() => {
+        if (isOwnProfile) {
+            return;
+        }
+
+        const channelName = ownVideos[0]?.channel;
+        const isMissingData = !channelName || !idParam;
+        if (isMissingData) {
+            return;
+        }
+
+        dispatch(recentChannelsActions.recordChannelVisit({ uuid: idParam, name: channelName }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOwnProfile, idParam, ownVideos]);
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
 

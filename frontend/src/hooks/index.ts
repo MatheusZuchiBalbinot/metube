@@ -22,6 +22,7 @@ export { usePlaylist } from './usePlaylist';
 export { usePopIcon } from './usePopIcon';
 export { useSkipIndicator } from './useSkipIndicator';
 export { useSubscription } from './useSubscription';
+export { useSubscriptions } from './useSubscriptions';
 export { useTheme } from './useTheme';
 export { useVideo } from './useVideo';
 export { useVideoProgress } from './useVideoProgress';

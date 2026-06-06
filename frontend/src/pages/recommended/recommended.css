@@ -1,0 +1,48 @@
+/* ─── RecommendedPage ─────────────────────────────────────────────────────── */
+
+.recommended-page {
+    display: flex;
+    flex-direction: column;
+    padding: var(--page-padding-y) var(--page-padding-x);
+    gap: 24px;
+    max-width: var(--page-max-width);
+    margin-inline: auto;
+    width: 100%;
+}
+
+.recommended-page__header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.recommended-page__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.recommended-page__count {
+    font-size: 0.875rem;
+    color: var(--text-3);
+    margin: 0;
+}
+
+.recommended-page__filters {
+    display: flex;
+}
+
+.recommended-page__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .recommended-page__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .recommended-page__grid { grid-template-columns: 1fr; }
+}

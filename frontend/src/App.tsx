@@ -25,8 +25,11 @@ import { useBootstrap, useRealtime } from '@hooks';
 import { APP_EVENTS, ROUTES } from '@utils';
 
 const HomePage = React.lazy(() => import('@pages/home/home'));
+const RecommendedPage = React.lazy(() => import('@pages/recommended/recommended'));
+const SubscriptionsFeedPage = React.lazy(() => import('@pages/subscriptions/subscriptions'));
 const HistoryPage = React.lazy(() => import('@pages/history/history'));
 const PlaylistsPage = React.lazy(() => import('@pages/playlists/playlists'));
+const WatchLaterPage = React.lazy(() => import('@pages/watch/later'));
 const LikedPage = React.lazy(() => import('@pages/liked/liked'));
 const ProfilePage = React.lazy(() => import('@pages/profile/profile'));
 const VideoPage = React.lazy(() => import('@pages/video/video'));
@@ -38,6 +41,7 @@ type RouteDef = { path: string; Page: React.LazyExoticComponent<() => React.Reac
 
 const GUEST_ROUTES: RouteDef[] = [
     { path: ROUTES.HOME, Page: HomePage },
+    { path: ROUTES.RECOMMENDED, Page: RecommendedPage },
     { path: ROUTES.SHORTS, Page: ShortsPage },
     { path: ROUTES.VIDEO, Page: VideoPage },
     { path: ROUTES.SEARCH, Page: SearchPage },
@@ -46,8 +50,10 @@ const GUEST_ROUTES: RouteDef[] = [
 ];
 
 const AUTH_ROUTES: RouteDef[] = [
+    { path: ROUTES.SUBSCRIPTIONS_FEED, Page: SubscriptionsFeedPage },
     { path: ROUTES.HISTORY, Page: HistoryPage },
     { path: ROUTES.PLAYLISTS, Page: PlaylistsPage },
+    { path: ROUTES.WATCH_LATER, Page: WatchLaterPage },
     { path: ROUTES.LIKED, Page: LikedPage },
     { path: ROUTES.PROFILE, Page: ProfilePage },
 ];
