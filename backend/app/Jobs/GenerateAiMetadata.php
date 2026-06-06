@@ -71,10 +71,14 @@ class GenerateAiMetadata implements ShouldQueue
             && \trim($video->transcription->content) !== '';
 
         if (!$hasContent) {
+            $contentLength = $video->transcription !== null
+                ? strlen((string) $video->transcription->content)
+                : 0;
+
             Log::warning('GenerateAiMetadata: skipping — transcription content is empty or missing', [
                 'vuid' => $video->vuid,
                 'has_transcription' => $video->transcription !== null,
-                'content_length' => $video->transcription !== null ? strlen((string) $video->transcription->content) : 0,
+                'content_length' => $contentLength,
             ]);
 
             return;
