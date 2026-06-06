@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Play, Pause, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '@utils';
@@ -40,6 +41,10 @@ interface PlayerControlsBarProps {
     onCaptionSelect: (lang: string | null) => void
     showTheaterButton: boolean
     fullscreenIcon: React.ReactNode
+    isLoop: boolean
+    onToggleLoop: () => void
+    abStatus: number
+    onAbRepeat: () => void
 }
 
 export default function PlayerControlsBar({
@@ -50,9 +55,15 @@ export default function PlayerControlsBar({
     onBarClick, onTogglePlay, onToggleMute, onVolumeChange,
     onToggleSettings, onToggleCaptionsMenu, onSpeedChange, onQualityChange,
     onPip, onTheater, onFullscreen, onCaptionSelect,
-    showTheaterButton, fullscreenIcon,
+    showTheaterButton, fullscreenIcon, isLoop, onToggleLoop, abStatus, onAbRepeat,
 }: PlayerControlsBarProps) {
     const { t } = useTranslation();
+    const [showRemaining, setShowRemaining] = useState(false);
+
+    function handleToggleTimeDisplay(e: React.MouseEvent) {
+        e.stopPropagation();
+        setShowRemaining(prev => !prev);
+    }
 
     function getVolumeIcon() {
         const isVolumeZero = isMuted || volume === 0;
@@ -104,9 +115,16 @@ export default function PlayerControlsBar({
                     />
                 </div>
 
-                <span className="vp__time">
-                    {formatDuration(currentTime)} / {formatDuration(duration)}
-                </span>
+                <button
+                    type="button"
+                    className="vp__time"
+                    onClick={handleToggleTimeDisplay}
+                    title={t('player.toggle_time')}
+                >
+                    {showRemaining
+                        ? `-${formatDuration(Math.max(duration - currentTime, 0))} / ${formatDuration(duration)}`
+                        : `${formatDuration(currentTime)} / ${formatDuration(duration)}`}
+                </button>
             </div>
 
             <div className="vp__bar-right">
@@ -128,6 +146,10 @@ export default function PlayerControlsBar({
                     levels={levels}
                     currentQuality={currentQuality}
                     onQualityChange={onQualityChange}
+                    isLoop={isLoop}
+                    onToggleLoop={onToggleLoop}
+                    abStatus={abStatus}
+                    onAbRepeat={onAbRepeat}
                 />
 
                 <PipButton

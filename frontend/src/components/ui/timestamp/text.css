@@ -1,0 +1,14 @@
+.ts-link {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: var(--accent);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+
+.ts-link:hover {
+    text-decoration: underline;
+}

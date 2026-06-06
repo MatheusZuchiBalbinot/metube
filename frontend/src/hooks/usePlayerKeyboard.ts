@@ -51,6 +51,14 @@ export function usePlayerKeyboard({
             // collapse to a single handler entry. Multi-char keys (Arrow*) are kept as-is.
             const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
 
+            // Number keys 0–9 jump to that tenth of the video (0 = start, 5 = 50%).
+            const isDigit = key.length === 1 && key >= '0' && key <= '9';
+            if (isDigit && Number.isFinite(el.duration)) {
+                e.preventDefault();
+                el.currentTime = el.duration * (Number(key) / 10);
+                return;
+            }
+
             function togglePlay() {
                 cbRef.current.onTogglePlay();
             }

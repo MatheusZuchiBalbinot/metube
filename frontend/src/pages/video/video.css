@@ -1305,6 +1305,34 @@
     position: relative;
 }
 
+/* Stop-after-this-video toggle */
+.video-page__stop-after {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: color var(--duration-default), background var(--duration-default), border-color var(--duration-default);
+}
+
+.video-page__stop-after:hover {
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+.video-page__stop-after--active {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: var(--accent-subtle);
+}
+
 .video-page__player-wrap {
     position: relative;
     border-radius: var(--radius-md);
@@ -1314,6 +1342,67 @@
 .video-page__player-wrap--hidden {
     visibility: hidden;
     pointer-events: none;
+}
+
+/* Pinned mini-player: floats in the corner once the player scrolls away. */
+.video-page__player-sentinel {
+    position: absolute;
+    top: 0;
+    height: 1px;
+    width: 100%;
+    pointer-events: none;
+}
+
+.video-page__player-wrap--pinned {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: min(380px, 40vw);
+    z-index: var(--z-modal);
+    box-shadow: var(--elevation-3);
+    animation: pin-player-in 0.2s var(--ease-out) both;
+}
+
+@keyframes pin-player-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.video-page__pin-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, #000 55%, transparent);
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--duration-default);
+}
+
+.video-page__player-wrap--pinned:hover .video-page__pin-close {
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .video-page__player-wrap--pinned {
+        width: 200px;
+        bottom: 12px;
+        right: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .video-page__player-wrap--pinned {
+        animation: none;
+    }
 }
 
 .video-page__reading-overlay {

@@ -6,6 +6,7 @@ import { Avatar, Button, Modal, Spinner, Tooltip } from '@ui';
 import CommentForm from './form';
 import CommentHistory from './history';
 import CommentReplies from './replies';
+import TimestampedText from '@components/ui/timestamp/text';
 import type { Comment, CommentVersion } from '@models';
 import type { Cuid } from '@api';
 import './item.css';
@@ -23,6 +24,7 @@ interface CommentItemProps {
     onAddReply: (content: string, parentCuid: Cuid) => Promise<void>
     getReplies: (cuid: Cuid) => Comment[]
     onLoadReplies: (cuid: Cuid) => Promise<void>
+    onSeek?: (seconds: number) => void
 }
 
 export default function CommentItem({
@@ -35,6 +37,7 @@ export default function CommentItem({
     onAddReply,
     getReplies,
     onLoadReplies,
+    onSeek,
 }: CommentItemProps) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
@@ -139,7 +142,9 @@ export default function CommentItem({
                         onCancel={() => setIsEditing(false)}
                     />
                 ) : (
-                    <p className="comment-item__content">{displayContent}</p>
+                    <p className="comment-item__content">
+                        <TimestampedText text={displayContent} onSeek={onSeek} />
+                    </p>
                 )}
 
                 <div className="comment-item__actions">
@@ -240,6 +245,7 @@ export default function CommentItem({
                         onDelete={onDelete}
                         onAddReply={onAddReply}
                         onLoadReplies={onLoadReplies}
+                        onSeek={onSeek}
                     />
                 )}
             </div>

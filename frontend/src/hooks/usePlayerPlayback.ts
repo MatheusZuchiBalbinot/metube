@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { STORAGE_KEYS, loadFromStorage, isNumberInRange } from '@utils';
 
 interface PlayerCallbacks {
     onTimeUpdate?: () => void
@@ -31,13 +32,18 @@ export function usePlayerPlayback(
         onMuteChange,
     } = options;
 
+    // Shorts drives volume/mute from the parent; the main player persists the
+    // viewer's preferred volume, mute and speed across videos and sessions.
+    const isVolumeControlled = controlledVolume !== undefined;
+    const isMuteControlled = controlledMuted !== undefined;
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [isBuffering, setIsBuffering] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(controlledMuted ?? false);
-    const [playbackRate, setPlaybackRate] = useState(1);
+    const [volume, setVolume] = useState(() => controlledVolume ?? loadFromStorage<number>(STORAGE_KEYS.PLAYER_VOLUME, 1, isNumberInRange(0, 1)));
+    const [isMuted, setIsMuted] = useState(() => controlledMuted ?? loadFromStorage<boolean>(STORAGE_KEYS.PLAYER_MUTED, false, v => typeof v === 'boolean'));
+    const [playbackRate, setPlaybackRate] = useState(() => loadFromStorage<number>(STORAGE_KEYS.PLAYER_RATE, 1, isNumberInRange(0.25, 4)));
     const [bufferedPct, setBufferedPct] = useState(0);
 
     // Keep callbacks in ref so handlers don't need to be recreated on prop change
@@ -102,8 +108,16 @@ export function usePlayerPlayback(
             return;
         }
         setDuration(el.duration);
+        if (!isVolumeControlled) {
+            el.volume = volume;
+        }
+
+        if (!isMuteControlled) {
+            el.muted = isMuted;
+        }
+        el.playbackRate = playbackRate;
         cbRef.current.onLoadedMetadata?.();
-    }, [videoRef]);
+    }, [videoRef, isVolumeControlled, isMuteControlled, volume, isMuted, playbackRate]);
 
     const handleVideoEnded = useCallback(() => {
         setIsPlaying(false);
@@ -145,6 +159,11 @@ export function usePlayerPlayback(
             el.volume = newVol;
             el.muted = shouldMute;
         }
+
+        if (!isVolumeControlled) {
+            localStorage.setItem(STORAGE_KEYS.PLAYER_VOLUME, String(newVol));
+            localStorage.setItem(STORAGE_KEYS.PLAYER_MUTED, JSON.stringify(shouldMute));
+        }
     }
 
     function applyMuteToggle() {
@@ -155,6 +174,9 @@ export function usePlayerPlayback(
         const newMuted = !isMuted;
         el.muted = newMuted;
         setIsMuted(newMuted);
+        if (!isMuteControlled) {
+            localStorage.setItem(STORAGE_KEYS.PLAYER_MUTED, JSON.stringify(newMuted));
+        }
         muteChangeRef.current?.(newMuted);
     }
 
@@ -164,6 +186,7 @@ export function usePlayerPlayback(
         if (el) {
             el.playbackRate = rate;
         }
+        localStorage.setItem(STORAGE_KEYS.PLAYER_RATE, String(rate));
     }
 
     const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;

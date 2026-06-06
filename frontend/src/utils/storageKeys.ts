@@ -18,4 +18,9 @@ export const STORAGE_KEYS = {
     SIDEBAR_COLLAPSED: 'metube:sidebar-collapsed',
     SIDEBAR_SECTIONS: 'metube:sidebar-sections',
     RECENT_CHANNELS: 'metube:recent-channels',
+    THEATER_MODE: 'metube:theater-mode',
+    PLAYER_VOLUME: 'metube:player-volume',
+    PLAYER_MUTED: 'metube:player-muted',
+    PLAYER_RATE: 'metube:player-rate',
+    PLAYER_QUALITY: 'metube:player-quality',
 } as const;

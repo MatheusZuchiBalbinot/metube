@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { default as ShakaNamespace } from 'shaka-player';
 import type { ShakaLevel } from '@components/player/playerTypes';
 import type { VideoCaption } from '@models';
+import { STORAGE_KEYS } from '@utils';
 
 export type { ShakaLevel };
 
@@ -9,6 +10,13 @@ type ShakaPlayer = InstanceType<typeof ShakaNamespace['Player']>;
 
 // Polyfills need to be installed once per page
 let polyfillsInstalled = false;
+
+// Persisted preferred quality as a resolution height; -1 means Auto (ABR).
+function getSavedQualityHeight(): number {
+    const raw = localStorage.getItem(STORAGE_KEYS.PLAYER_QUALITY);
+    const parsed = raw === null ? -1 : Number(raw);
+    return Number.isFinite(parsed) ? parsed : -1;
+}
 
 export function useShaka(
     videoRef: React.RefObject<HTMLVideoElement | null>,
@@ -85,6 +93,15 @@ export function useShaka(
 
             setLevels(uniqueLevels.sort((a, b) => b.height - a.height));
 
+            // Restore the viewer's preferred quality when this video offers it.
+            const savedHeight = getSavedQualityHeight();
+            const savedLevel = savedHeight > 0
+                ? uniqueLevels.find(level => level.height === savedHeight)
+                : undefined;
+            if (savedLevel) {
+                setQuality(savedLevel.index);
+            }
+
             // Load caption tracks via Shaka after video is ready.
             // Native <track> elements do not render when the video src is a MSE blob: URL.
             for (const caption of captions) {
@@ -141,6 +158,7 @@ export function useShaka(
         if (levelIndex === -1) {
             player.configure({ abr: { enabled: true } });
             setCurrentQuality(-1);
+            localStorage.setItem(STORAGE_KEYS.PLAYER_QUALITY, '-1');
             return;
         }
 
@@ -150,6 +168,7 @@ export function useShaka(
         if (isValid) {
             player.selectVariantTrack(tracks[levelIndex], true);
             setCurrentQuality(levelIndex);
+            localStorage.setItem(STORAGE_KEYS.PLAYER_QUALITY, String(tracks[levelIndex].height ?? -1));
         }
     }
 

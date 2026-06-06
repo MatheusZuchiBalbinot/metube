@@ -28,6 +28,7 @@ class StorePersistence {
         localStorage.setItem(STORAGE_KEYS.PINNED_VIDEO, video.pinnedVideoId ?? '');
         localStorage.setItem(STORAGE_KEYS.SHORTS_MUTED, JSON.stringify(video.shortsMuted));
         localStorage.setItem(STORAGE_KEYS.SHORTS_VOLUME, String(video.shortsVolume));
+        localStorage.setItem(STORAGE_KEYS.THEATER_MODE, JSON.stringify(video.theaterMode));
     };
 
     // ─── Theme ────────────────────────────────────────────────────────────────

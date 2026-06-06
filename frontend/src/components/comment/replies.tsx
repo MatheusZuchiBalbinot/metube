@@ -15,6 +15,7 @@ interface CommentRepliesProps {
     onDelete: (cuid: Cuid, parentCuid?: Cuid) => Promise<void>
     onAddReply: (content: string, parentCuid: Cuid) => Promise<void>
     onLoadReplies: (cuid: Cuid) => Promise<void>
+    onSeek?: (seconds: number) => void
 }
 
 export default function CommentReplies({
@@ -28,6 +29,7 @@ export default function CommentReplies({
     onDelete,
     onAddReply,
     onLoadReplies,
+    onSeek,
 }: CommentRepliesProps) {
     const replies = getReplies(parentCuid);
 
@@ -53,6 +55,7 @@ export default function CommentReplies({
                     onAddReply={onAddReply}
                     getReplies={getReplies}
                     onLoadReplies={onLoadReplies}
+                    onSeek={onSeek}
                 />
             ))}
         </div>
