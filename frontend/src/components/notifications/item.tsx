@@ -1,10 +1,10 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic, Sparkles } from 'lucide-react';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
 import { videoUrl, formatRelativeDate } from '@utils';
-import { useAppSelector } from '@store';
 import './item.css';
 
 const VIDEO_NOTIFICATION_TYPES = new Set<NotificationType>([
@@ -86,25 +86,24 @@ function getText(
     }
 }
 
-export default function NotificationItem({ notification, onRead }: NotificationItemProps) {
+function NotificationItem({ notification, onRead }: NotificationItemProps) {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const videos = useAppSelector(s => s.video.videos);
 
     const isUnread = notification.read_at === null;
     const text = getText(notification.type, notification.data, t);
     const subtitle = notification.data.video_title as string | undefined;
-    const vuid = notification.data.vuid as string | undefined;
 
     const isVideoType = VIDEO_NOTIFICATION_TYPES.has(notification.type);
-    const payloadThumbnail = notification.data.thumbnail_url as string | undefined;
-    const thumbnail = !isVideoType
-        ? undefined
-        : (payloadThumbnail ?? (vuid ? videos.find(v => v.videoUrl?.includes(vuid))?.thumbnail : undefined));
+    const thumbnail = isVideoType
+        ? notification.data.thumbnail_url as string | undefined
+        : undefined;
+
+    const dest = getDestination(notification);
 
     function handleClick(): void {
         onRead(notification.id);
-        const dest = getDestination(notification);
+
         if (dest) {
             navigate(dest);
         }
@@ -127,7 +126,21 @@ export default function NotificationItem({ notification, onRead }: NotificationI
                     {formatRelativeDate(notification.created_at, i18n.language)}
                 </span>
             </span>
-            {thumbnail !== undefined && (
+            {thumbnail !== undefined && dest !== null && (
+                <Link
+                    to={dest}
+                    onClick={(e) => e.stopPropagation()}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                >
+                    <img
+                        className="notification-item__thumb"
+                        src={thumbnail}
+                        alt=""
+                    />
+                </Link>
+            )}
+            {thumbnail !== undefined && dest === null && (
                 <img
                     className="notification-item__thumb"
                     src={thumbnail}
@@ -139,3 +152,5 @@ export default function NotificationItem({ notification, onRead }: NotificationI
         </button>
     );
 }
+
+export default React.memo(NotificationItem);
