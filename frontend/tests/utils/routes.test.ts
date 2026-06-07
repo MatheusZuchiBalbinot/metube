@@ -56,6 +56,10 @@ describe('ROUTES', () => {
         expect(ROUTES.PROFILE).toBe('/profile');
     });
 
+    it('has a SETTINGS route', () => {
+        expect(ROUTES.SETTINGS).toBe('/settings');
+    });
+
     it('has a USER route with :id param', () => {
         expect(ROUTES.USER).toBe('/user/:id');
     });

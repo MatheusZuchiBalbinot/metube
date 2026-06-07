@@ -1,8 +1,9 @@
 import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut } from 'lucide-react';
+import { LogOut, User as UserIcon, ListVideo, Clock, History, ThumbsUp, Settings, Keyboard, HelpCircle } from 'lucide-react';
 import { Avatar, Button, Tooltip } from '@ui';
-import PreferencesPanel from '@components/preferences/preferences';
+import { ROUTES, APP_EVENTS } from '@utils';
 import { useClickOutside } from '@hooks';
 import type { User } from '@models';
 
@@ -13,6 +14,14 @@ interface Props {
     onLogout: () => void
     onDropdownClose: () => void
 }
+
+const NAV_LINKS = [
+    { to: ROUTES.PROFILE, icon: UserIcon, labelKey: 'nav.your_videos' },
+    { to: ROUTES.PLAYLISTS, icon: ListVideo, labelKey: 'nav.playlists' },
+    { to: ROUTES.WATCH_LATER, icon: Clock, labelKey: 'nav.watch_later' },
+    { to: ROUTES.HISTORY, icon: History, labelKey: 'nav.history' },
+    { to: ROUTES.LIKED, icon: ThumbsUp, labelKey: 'nav.liked_videos' },
+] as const;
 
 export default function HeaderUserMenu({
     user,
@@ -26,6 +35,11 @@ export default function HeaderUserMenu({
 
     useClickOutside(dropdownRef, onDropdownClose, dropdownOpen);
 
+    function handleOpenShortcuts() {
+        onDropdownClose();
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.OPEN_SHORTCUTS));
+    }
+
     return (
         <div className="app-header__avatar-wrap" ref={dropdownRef}>
             <Tooltip content={user.name} side="bottom">
@@ -37,34 +51,56 @@ export default function HeaderUserMenu({
                     aria-expanded={dropdownOpen}
                     aria-haspopup="true"
                 >
-                    <Avatar name={user.name} size="sm" />
+                    <Avatar name={user.name} src={user.avatar} size="sm" />
                 </Button>
             </Tooltip>
 
             {dropdownOpen && (
                 <div className="app-header__dropdown">
-                    <div className="app-header__dropdown-user">
-                        <span className="app-header__dropdown-name">{user.name}</span>
-                        <span className="app-header__dropdown-email">{user.email}</span>
-                    </div>
+                    <Link to={ROUTES.PROFILE} className="app-header__dropdown-user" onClick={onDropdownClose}>
+                        <Avatar name={user.name} src={user.avatar} size="md" />
+                        <span className="app-header__dropdown-user-text">
+                            <span className="app-header__dropdown-name">{user.name}</span>
+                            <span className="app-header__dropdown-email">{user.email}</span>
+                        </span>
+                    </Link>
 
                     <div className="app-header__dropdown-sep" />
 
-                    <PreferencesPanel inline />
+                    <nav className="app-header__dropdown-nav">
+                        {NAV_LINKS.map(({ to, icon: Icon, labelKey }) => (
+                            <Link key={to} to={to} className="app-header__dropdown-item" onClick={onDropdownClose}>
+                                <Icon size={16} strokeWidth={1.75} />
+                                {t(labelKey)}
+                            </Link>
+                        ))}
+                    </nav>
 
                     <div className="app-header__dropdown-sep" />
 
-                    <Tooltip content={t('common.sign_out')} side="left">
-                        <Button
-                            variant="ghost"
-                            className="app-header__dropdown-logout"
-                            onClick={onLogout}
-                            aria-label={t('common.sign_out')}
-                        >
-                            <LogOut size={14} strokeWidth={1.75} />
-                            {t('common.sign_out')}
-                        </Button>
-                    </Tooltip>
+                    <Link to={ROUTES.SETTINGS} className="app-header__dropdown-item" onClick={onDropdownClose}>
+                        <Settings size={16} strokeWidth={1.75} />
+                        {t('settings.title')}
+                    </Link>
+                    <button type="button" className="app-header__dropdown-item" onClick={handleOpenShortcuts}>
+                        <Keyboard size={16} strokeWidth={1.75} />
+                        {t('settings.keyboard_shortcuts')}
+                    </button>
+                    <Link to={`${ROUTES.SETTINGS}#about`} className="app-header__dropdown-item" onClick={onDropdownClose}>
+                        <HelpCircle size={16} strokeWidth={1.75} />
+                        {t('settings.help_about')}
+                    </Link>
+
+                    <div className="app-header__dropdown-sep" />
+
+                    <button
+                        type="button"
+                        className="app-header__dropdown-item app-header__dropdown-logout"
+                        onClick={onLogout}
+                    >
+                        <LogOut size={16} strokeWidth={1.75} />
+                        {t('common.sign_out')}
+                    </button>
                 </div>
             )}
         </div>

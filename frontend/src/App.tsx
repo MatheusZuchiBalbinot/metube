@@ -32,6 +32,7 @@ const PlaylistsPage = React.lazy(() => import('@pages/playlists/playlists'));
 const WatchLaterPage = React.lazy(() => import('@pages/watch/later'));
 const LikedPage = React.lazy(() => import('@pages/liked/liked'));
 const ProfilePage = React.lazy(() => import('@pages/profile/profile'));
+const SettingsPage = React.lazy(() => import('@pages/settings/settings'));
 const VideoPage = React.lazy(() => import('@pages/video/video'));
 const SearchPage = React.lazy(() => import('@pages/search/search'));
 const ShortsPage = React.lazy(() => import('@pages/shorts/shorts'));
@@ -56,6 +57,7 @@ const AUTH_ROUTES: RouteDef[] = [
     { path: ROUTES.WATCH_LATER, Page: WatchLaterPage },
     { path: ROUTES.LIKED, Page: LikedPage },
     { path: ROUTES.PROFILE, Page: ProfilePage },
+    { path: ROUTES.SETTINGS, Page: SettingsPage },
 ];
 
 function PageSpinner() {
