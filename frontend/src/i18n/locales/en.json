@@ -326,6 +326,15 @@
         "filtered_desc": "Try adjusting your filters",
         "filtered_action": "Clear filters"
     },
+    "settings": {
+        "title": "Settings",
+        "account": "Account",
+        "appearance": "Appearance",
+        "help_about": "Help & about",
+        "keyboard_shortcuts": "Keyboard shortcuts",
+        "view_profile": "View profile",
+        "about_text": "MeTube — a video platform with AI-generated summaries."
+    },
     "history": {
         "group_today": "Today",
         "group_yesterday": "Yesterday",
@@ -489,6 +498,12 @@
         "ab_start": "Repeat section (A–B)",
         "ab_set_b": "Set end point (B)",
         "ab_active": "Repeating A–B section",
+        "autoplay": "Autoplay",
+        "ambient": "Ambient mode",
+        "caption_size": "Caption size",
+        "caption_size_sm": "Small",
+        "caption_size_md": "Medium",
+        "caption_size_lg": "Large",
         "quality": "Quality",
         "quality_auto": "Auto",
         "settings": "Settings",

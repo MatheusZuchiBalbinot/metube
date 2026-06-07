@@ -16,9 +16,13 @@ describe('APP_EVENTS', () => {
         expect(APP_EVENTS.SERVICE_UNAVAILABLE).toBe('app:service-unavailable');
     });
 
+    it('has an OPEN_SHORTCUTS event string', () => {
+        expect(APP_EVENTS.OPEN_SHORTCUTS).toBe('app:open-shortcuts');
+    });
+
     it('contains exactly the expected keys', () => {
         const keys = Object.keys(APP_EVENTS);
-        expect(keys).toEqual(['SESSION_EXPIRED', 'FORBIDDEN', 'SERVICE_UNAVAILABLE']);
+        expect(keys).toEqual(['SESSION_EXPIRED', 'FORBIDDEN', 'SERVICE_UNAVAILABLE', 'OPEN_SHORTCUTS']);
     });
 
     it('all event strings are unique', () => {

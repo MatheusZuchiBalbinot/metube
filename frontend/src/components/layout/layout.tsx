@@ -15,7 +15,7 @@ import { videoActions } from '@store/videoSlice';
 import { useSearch } from '@context/search';
 import './layout.css';
 import { useKeyboardShortcuts, useScrollRestoration, useMediaQuery } from '@hooks';
-import { ROUTES, cn, STORAGE_KEYS } from '@utils';
+import { ROUTES, cn, STORAGE_KEYS, APP_EVENTS } from '@utils';
 
 export default function AppLayout() {
     const { t } = useTranslation();
@@ -64,6 +64,15 @@ export default function AppLayout() {
 
     const handleOpenShortcuts = useCallback(() => {
         setShortcutsOpen(true);
+    }, []);
+
+    useEffect(() => {
+        function onOpenShortcuts() {
+            setShortcutsOpen(true);
+        }
+
+        window.addEventListener(APP_EVENTS.OPEN_SHORTCUTS, onOpenShortcuts);
+        return () => window.removeEventListener(APP_EVENTS.OPEN_SHORTCUTS, onOpenShortcuts);
     }, []);
 
     const handleOpenUpload = useCallback(() => {

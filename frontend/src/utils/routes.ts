@@ -12,6 +12,7 @@ export const ROUTES = {
     WATCH_LATER: '/watch-later',
     LIKED:       '/liked',
     PROFILE:     '/profile',
+    SETTINGS:    '/settings',
     USER:        '/user/:id',
     VIDEO:       '/watch',
     SEARCH:      '/search',
