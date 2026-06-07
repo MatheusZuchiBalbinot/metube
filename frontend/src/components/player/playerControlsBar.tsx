@@ -6,6 +6,7 @@ import CaptionsButton from './captionsButton';
 import PlayerSettings from './playerSettings';
 import PipButton from './pipButton';
 import TheaterButton from './theaterButton';
+import type { CaptionSize } from './playerTypes';
 import type { VideoCaption } from '@models';
 
 interface PlayerControlsBarProps {
@@ -45,6 +46,13 @@ interface PlayerControlsBarProps {
     onToggleLoop: () => void
     abStatus: number
     onAbRepeat: () => void
+    chapterTitle: string | null
+    isAutoplay: boolean
+    onToggleAutoplay: () => void
+    isAmbient: boolean
+    onToggleAmbient: () => void
+    captionSize: CaptionSize
+    onCaptionSize: (size: CaptionSize) => void
 }
 
 export default function PlayerControlsBar({
@@ -56,6 +64,7 @@ export default function PlayerControlsBar({
     onToggleSettings, onToggleCaptionsMenu, onSpeedChange, onQualityChange,
     onPip, onTheater, onFullscreen, onCaptionSelect,
     showTheaterButton, fullscreenIcon, isLoop, onToggleLoop, abStatus, onAbRepeat,
+    chapterTitle, isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient, captionSize, onCaptionSize,
 }: PlayerControlsBarProps) {
     const { t } = useTranslation();
     const [showRemaining, setShowRemaining] = useState(false);
@@ -125,6 +134,13 @@ export default function PlayerControlsBar({
                         ? `-${formatDuration(Math.max(duration - currentTime, 0))} / ${formatDuration(duration)}`
                         : `${formatDuration(currentTime)} / ${formatDuration(duration)}`}
                 </button>
+
+                {chapterTitle !== null && (
+                    <span className="vp__chapter-label" title={chapterTitle}>
+                        <span className="vp__chapter-sep" aria-hidden="true">•</span>
+                        {chapterTitle}
+                    </span>
+                )}
             </div>
 
             <div className="vp__bar-right">
@@ -150,6 +166,12 @@ export default function PlayerControlsBar({
                     onToggleLoop={onToggleLoop}
                     abStatus={abStatus}
                     onAbRepeat={onAbRepeat}
+                    isAutoplay={isAutoplay}
+                    onToggleAutoplay={onToggleAutoplay}
+                    isAmbient={isAmbient}
+                    onToggleAmbient={onToggleAmbient}
+                    captionSize={captionSize}
+                    onCaptionSize={onCaptionSize}
                 />
 
                 <PipButton

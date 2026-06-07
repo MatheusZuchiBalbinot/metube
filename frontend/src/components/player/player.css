@@ -443,6 +443,39 @@
     gap: 6px;
 }
 
+/* ─── Current chapter label ─────────────────────────────────────────────────── */
+
+.vp__chapter-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.vp__chapter-sep {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─── Caption size (overrides Shaka inline font sizing) ─────────────────────── */
+
+.vp--cc-sm .shaka-text-container {
+    font-size: 2.2vmin !important;
+}
+
+.vp--cc-md .shaka-text-container {
+    font-size: 3vmin !important;
+}
+
+.vp--cc-lg .shaka-text-container {
+    font-size: 4.2vmin !important;
+}
+
 /* ─── Inline volume control ─────────────────────────────────────────────────── */
 
 .vp__volume {

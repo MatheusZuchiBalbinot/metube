@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
-import { cn } from '@utils';
+import { cn, parseChapterTimestamp, STORAGE_KEYS } from '@utils';
 import { useTranslation } from 'react-i18next';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerControlsBar from './playerControlsBar';
 import type { VideoPlayerProps } from './player';
-import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
+import { KEYBOARD_SKIP_SECONDS, type CaptionSize } from './playerTypes';
 import { PopIconType } from '@enums/popIconType';
 import {
     usePlayerControls,
@@ -21,10 +21,30 @@ import {
     useVolumeWheel,
     useClickDoubleClick,
     useOutsideClick,
+    useVideo,
 } from '@hooks';
 
 const HOLD_SPEED_DELAY_MS = 350;
 const HOLD_SPEED_RATE = 2;
+
+function loadCaptionSize(): CaptionSize {
+    const raw = localStorage.getItem(STORAGE_KEYS.CAPTION_SIZE);
+    return raw === 'sm' || raw === 'lg' ? raw : 'md';
+}
+
+function activeChapterTitle(chapters: VideoPlayerProps['chapters'], currentTime: number): string | null {
+    if (chapters === undefined || chapters.length === 0) {
+        return null;
+    }
+
+    let title: string | null = null;
+    for (const chapter of chapters) {
+        if (parseChapterTimestamp(chapter.timestamp) <= currentTime) {
+            title = chapter.title;
+        }
+    }
+    return title;
+}
 
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({
@@ -55,6 +75,10 @@ export function DefaultVideoPlayer({
     const [isLoop, setIsLoop] = useState(false);
     const [abRepeat, setAbRepeat] = useState<{ a: number | null; b: number | null }>({ a: null, b: null });
     const abRepeatRef = useRef(abRepeat);
+    const [ambientEnabled, setAmbientEnabled] = useState(() => localStorage.getItem(STORAGE_KEYS.PLAYER_AMBIENT) !== 'false');
+    const [captionSize, setCaptionSize] = useState<CaptionSize>(loadCaptionSize);
+
+    const { autoplay, setAutoplay } = useVideo();
 
     // Press-and-hold anywhere on the video to temporarily play at 2×.
     const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -294,6 +318,24 @@ export function DefaultVideoPlayer({
         return 2;
     }
     const abStatus = getAbStatus();
+    const chapterTitle = activeChapterTitle(chapters, currentTime);
+
+    function handleToggleAmbient() {
+        setAmbientEnabled(prev => {
+            const next = !prev;
+            localStorage.setItem(STORAGE_KEYS.PLAYER_AMBIENT, String(next));
+            return next;
+        });
+    }
+
+    function handleToggleAutoplay() {
+        setAutoplay(!autoplay);
+    }
+
+    function handleCaptionSize(size: CaptionSize) {
+        setCaptionSize(size);
+        localStorage.setItem(STORAGE_KEYS.CAPTION_SIZE, size);
+    }
 
     // ─── Event handlers ───────────────────────────────────────────────────────
 
@@ -361,9 +403,11 @@ export function DefaultVideoPlayer({
         showControls && 'vp--controls-visible',
         (theaterMode ?? false) && 'vp--theater',
         isDragging && 'vp--seeking',
+        `vp--cc-${captionSize}`,
     );
 
     const isTheaterMode = theaterMode ?? false;
+    const ambientStyle = ambientEnabled && ambientColor !== undefined;
 
     return (
         <div
@@ -371,7 +415,7 @@ export function DefaultVideoPlayer({
             ref={containerRef}
             onMouseMove={revealControls}
             onMouseLeave={handleMouseLeave}
-            style={ambientColor ? ({ '--vp-ambient': ambientColor } as React.CSSProperties) : undefined}
+            style={ambientStyle ? ({ '--vp-ambient': ambientColor } as React.CSSProperties) : undefined}
             onClick={handleSurfaceClick}
             onDoubleClick={handleContainerDoubleClick}
             onPointerDown={handleSurfacePointerDown}
@@ -458,6 +502,13 @@ export function DefaultVideoPlayer({
                     onToggleLoop={handleToggleLoop}
                     abStatus={abStatus}
                     onAbRepeat={handleAbRepeat}
+                    chapterTitle={chapterTitle}
+                    isAutoplay={autoplay}
+                    onToggleAutoplay={handleToggleAutoplay}
+                    isAmbient={ambientEnabled}
+                    onToggleAmbient={handleToggleAmbient}
+                    captionSize={captionSize}
+                    onCaptionSize={handleCaptionSize}
                 />
             </div>
         </div>

@@ -1,9 +1,11 @@
-import { Settings, Check, Repeat, Repeat1 } from 'lucide-react';
+import { Settings, Check, Repeat, Repeat1, Play, Sparkles, Captions } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ShakaLevel } from '@hooks';
 import { cn } from '@utils';
+import type { CaptionSize } from './playerTypes';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
+const CAPTION_SIZES: CaptionSize[] = ['sm', 'md', 'lg'];
 
 interface PlayerSettingsProps {
     playbackRate: number
@@ -18,6 +20,12 @@ interface PlayerSettingsProps {
     onToggleLoop?: () => void
     abStatus?: number
     onAbRepeat?: () => void
+    isAutoplay?: boolean
+    onToggleAutoplay?: () => void
+    isAmbient?: boolean
+    onToggleAmbient?: () => void
+    captionSize?: CaptionSize
+    onCaptionSize?: (size: CaptionSize) => void
 }
 
 const AB_LABEL_KEYS = ['player.ab_start', 'player.ab_set_b', 'player.ab_active'] as const;
@@ -25,6 +33,7 @@ const AB_LABEL_KEYS = ['player.ab_start', 'player.ab_set_b', 'player.ab_active']
 export default function PlayerSettings({
     playbackRate, showSettings, settingsRef, onToggle, onSpeedChange,
     levels, currentQuality, onQualityChange, isLoop, onToggleLoop, abStatus, onAbRepeat,
+    isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient, captionSize, onCaptionSize,
 }: PlayerSettingsProps) {
     const { t } = useTranslation();
     const hasLevels = (levels?.length ?? 0) > 0;
@@ -114,6 +123,62 @@ export default function PlayerSettings({
                                 </span>
                                 {(abStatus ?? 0) === 2 && <Check size={12} />}
                             </button>
+                        </div>
+                    )}
+                    {onToggleAutoplay && (
+                        <div className="vp__settings-section">
+                            <button
+                                className={cn('vp__settings-option', isAutoplay && 'vp__settings-option--active')}
+                                onClick={onToggleAutoplay}
+                                role="switch"
+                                aria-checked={isAutoplay ?? false}
+                            >
+                                <span className="vp__settings-loop-label">
+                                    <Play size={13} />
+                                    {t('player.autoplay')}
+                                </span>
+                                {isAutoplay && <Check size={12} />}
+                            </button>
+                        </div>
+                    )}
+                    {onToggleAmbient && (
+                        <div className="vp__settings-section">
+                            <button
+                                className={cn('vp__settings-option', isAmbient && 'vp__settings-option--active')}
+                                onClick={onToggleAmbient}
+                                role="switch"
+                                aria-checked={isAmbient ?? false}
+                            >
+                                <span className="vp__settings-loop-label">
+                                    <Sparkles size={13} />
+                                    {t('player.ambient')}
+                                </span>
+                                {isAmbient && <Check size={12} />}
+                            </button>
+                        </div>
+                    )}
+                    {onCaptionSize && (
+                        <div className="vp__settings-section">
+                            <span className="vp__settings-section-label">
+                                <Captions size={12} /> {t('player.caption_size')}
+                            </span>
+                            <div className="vp__settings-speeds" role="listbox" aria-label={t('player.caption_size')}>
+                                {CAPTION_SIZES.map(size => {
+                                    const isActive = captionSize === size;
+                                    return (
+                                        <button
+                                            key={size}
+                                            className={cn('vp__settings-option', isActive && 'vp__settings-option--active')}
+                                            onClick={() => onCaptionSize(size)}
+                                            role="option"
+                                            aria-selected={isActive}
+                                        >
+                                            <span>{t(`player.caption_size_${size}`)}</span>
+                                            {isActive && <Check size={12} />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
