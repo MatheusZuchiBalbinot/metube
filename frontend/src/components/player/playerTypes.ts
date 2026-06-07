@@ -17,6 +17,8 @@ export type PopIcon = {
 
 export const KEYBOARD_SKIP_SECONDS = 5 as const;
 
+export type CaptionSize = 'sm' | 'md' | 'lg';
+
 export interface ShakaLevel {
     index: number;
     height: number;

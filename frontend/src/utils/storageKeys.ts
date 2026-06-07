@@ -23,4 +23,6 @@ export const STORAGE_KEYS = {
     PLAYER_MUTED: 'metube:player-muted',
     PLAYER_RATE: 'metube:player-rate',
     PLAYER_QUALITY: 'metube:player-quality',
+    PLAYER_AMBIENT: 'metube:player-ambient',
+    CAPTION_SIZE: 'metube:caption-size',
 } as const;
