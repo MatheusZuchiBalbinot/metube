@@ -1,62 +1,18 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, Link } from 'react-router-dom';
-import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { Avatar } from '@ui';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
-import { videoUrl, formatRelativeDate } from '@utils';
+import { formatRelativeDate, cn } from '@utils';
+import { getCategory, getActorName, getBadgeMeta, getActionLabelKey, getDestination, isAiSummary } from './meta';
 import './item.css';
-
-const VIDEO_NOTIFICATION_TYPES = new Set<NotificationType>([
-    NotificationType.VIDEO_LIKED,
-    NotificationType.VIDEO_FROM_SUBSCRIPTION,
-    NotificationType.VIDEO_PROCESSED,
-    NotificationType.VIDEO_TRANSCRIPTION_STARTED,
-    NotificationType.VIDEO_TRANSCRIBED,
-    NotificationType.VIDEO_AI_SUMMARY_READY,
-    NotificationType.COMMENT_REPLIED,
-    NotificationType.COMMENT_LIKED,
-]);
 
 interface NotificationItemProps {
     notification: Notification
     onRead: (id: string) => void
-}
-
-function getIcon(type: NotificationType): React.ReactNode {
-    switch (type) {
-        case NotificationType.COMMENT_REPLIED: return <MessageSquareReply size={14} />;
-        case NotificationType.COMMENT_LIKED: return <Heart size={14} />;
-        case NotificationType.VIDEO_LIKED: return <Heart size={14} />;
-        case NotificationType.NEW_SUBSCRIBER: return <UserPlus size={14} />;
-        case NotificationType.VIDEO_FROM_SUBSCRIPTION: return <Video size={14} />;
-        case NotificationType.VIDEO_PROCESSED: return <Clapperboard size={14} />;
-        case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return <Mic size={14} />;
-        case NotificationType.VIDEO_TRANSCRIBED: return <Captions size={14} />;
-        case NotificationType.VIDEO_AI_SUMMARY_READY: return <Sparkles size={14} />;
-    }
-}
-
-function getIconVariant(type: NotificationType): string {
-    switch (type) {
-        case NotificationType.VIDEO_LIKED:
-        case NotificationType.COMMENT_LIKED:
-            return 'like';
-        case NotificationType.VIDEO_AI_SUMMARY_READY:
-            return 'ai';
-        case NotificationType.VIDEO_PROCESSED:
-            return 'success';
-        default:
-            return 'default';
-    }
-}
-
-function getDestination(notification: Notification): string | null {
-    const vuid = notification.data.vuid as string | undefined;
-    if (vuid) {
-        return videoUrl(vuid);
-    }
-    return null;
+    onDismiss: (id: string) => void
 }
 
 function getText(
@@ -75,8 +31,12 @@ function getText(
             return t('notifications.types.new_subscriber', { name: data.subscriber_name });
         case NotificationType.VIDEO_FROM_SUBSCRIPTION:
             return t('notifications.types.video_from_subscription', { channel: data.channel_name });
-        case NotificationType.VIDEO_PROCESSED:
-            return t('notifications.types.video_processed');
+        case NotificationType.VIDEO_PROCESSED: {
+            const isFailed = data.failed === true;
+            return isFailed
+                ? t('notifications.types.video_processed_failed')
+                : t('notifications.types.video_processed');
+        }
         case NotificationType.VIDEO_TRANSCRIPTION_STARTED:
             return t('notifications.types.video_transcription_started');
         case NotificationType.VIDEO_TRANSCRIBED:
@@ -86,37 +46,77 @@ function getText(
     }
 }
 
-function NotificationItem({ notification, onRead }: NotificationItemProps) {
+function NotificationItem({ notification, onRead, onDismiss }: NotificationItemProps) {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
 
     const isUnread = notification.read_at === null;
     const text = getText(notification.type, notification.data, t);
     const subtitle = notification.data.video_title as string | undefined;
+    const thumbUrl = notification.data.thumbnail_url;
+    const thumbnail = typeof thumbUrl === 'string' ? thumbUrl : undefined;
 
-    const isVideoType = VIDEO_NOTIFICATION_TYPES.has(notification.type);
-    const thumbnail = isVideoType
-        ? notification.data.thumbnail_url as string | undefined
-        : undefined;
-
+    const actorName = getActorName(notification);
+    const { Icon, variant } = getBadgeMeta(notification.type);
     const dest = getDestination(notification);
+    const isAi = isAiSummary(notification.type);
+    const actionLabelKey = getActionLabelKey(notification.type);
 
-    function handleClick(): void {
+    const showActor = getCategory(notification.type) === 'social' && actorName !== null;
+    const showAction = dest !== null && actionLabelKey !== null;
+
+    function activate(): void {
         onRead(notification.id);
 
-        if (dest) {
+        if (dest !== null) {
             navigate(dest);
         }
     }
 
+    function handleKeyDown(e: React.KeyboardEvent): void {
+        const isActivateKey = e.key === 'Enter' || e.key === ' ';
+
+        if (!isActivateKey) {
+            return;
+        }
+
+        e.preventDefault();
+        activate();
+    }
+
+    function handleDismiss(e: React.MouseEvent): void {
+        e.stopPropagation();
+        onDismiss(notification.id);
+    }
+
+    function handleAction(e: React.MouseEvent): void {
+        e.stopPropagation();
+        activate();
+    }
+
     return (
-        <button
-            className={`notification-item${isUnread ? ' notification-item--unread' : ''}`}
-            onClick={handleClick}
+        <div
+            className={cn('notification-item', isUnread && 'notification-item--unread', isAi && 'notification-item--ai')}
+            role="button"
+            tabIndex={0}
+            onClick={activate}
+            onKeyDown={handleKeyDown}
         >
-            <span className={`notification-item__icon notification-item__icon--${getIconVariant(notification.type)}`}>
-                {getIcon(notification.type)}
+            <span className="notification-item__lead">
+                {showActor && actorName !== null
+                    ? <Avatar name={actorName} size="md" />
+                    : (
+                        <span className={`notification-item__icon notification-item__icon--${variant}`}>
+                            <Icon size={16} />
+                        </span>
+                    )}
+                {showActor && (
+                    <span className={`notification-item__badge notification-item__badge--${variant}`} aria-hidden="true">
+                        <Icon size={10} strokeWidth={2.5} />
+                    </span>
+                )}
             </span>
+
             <span className="notification-item__body">
                 <span className="notification-item__text">{text}</span>
                 {subtitle !== undefined && (
@@ -125,31 +125,26 @@ function NotificationItem({ notification, onRead }: NotificationItemProps) {
                 <span className="notification-item__time">
                     {formatRelativeDate(notification.created_at, i18n.language)}
                 </span>
+                {showAction && (
+                    <button type="button" className="notification-item__action" onClick={handleAction}>
+                        {t(actionLabelKey)}
+                    </button>
+                )}
             </span>
-            {thumbnail !== undefined && dest !== null && (
-                <Link
-                    to={dest}
-                    onClick={(e) => e.stopPropagation()}
-                    tabIndex={-1}
-                    aria-hidden="true"
-                >
-                    <img
-                        className="notification-item__thumb"
-                        src={thumbnail}
-                        alt=""
-                    />
-                </Link>
+
+            {thumbnail !== undefined && (
+                <img className="notification-item__thumb" src={thumbnail} alt="" aria-hidden="true" />
             )}
-            {thumbnail !== undefined && dest === null && (
-                <img
-                    className="notification-item__thumb"
-                    src={thumbnail}
-                    alt=""
-                    aria-hidden="true"
-                />
-            )}
-            {isUnread && <span className="notification-item__dot" aria-hidden="true" />}
-        </button>
+
+            <button
+                type="button"
+                className="notification-item__dismiss"
+                onClick={handleDismiss}
+                aria-label={t('notifications.actions.dismiss')}
+            >
+                <X size={14} />
+            </button>
+        </div>
     );
 }
 
