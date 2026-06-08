@@ -64,9 +64,11 @@ export default function HomePage() {
             .slice(0, MAX_CONTINUE_WATCHING);
     }, [videos, watchHistory, videoProgress]);
 
+    // Derive chips from the same list the grid filters (recommendations), so every
+    // chip yields at least one result instead of collapsing to an empty grid.
     const categoryTags = useMemo(() => {
         const freq = new Map<Tag, number>();
-        for (const video of publishedVideos) {
+        for (const video of recommendations) {
             for (const tag of video.tags) {
                 if (tag === ('shorts' as Tag)) {
                     continue;
@@ -78,7 +80,7 @@ export default function HomePage() {
             .sort((a, b) => b[1] - a[1])
             .slice(0, MAX_CATEGORY_CHIPS)
             .map(([tag]) => tag);
-    }, [publishedVideos]);
+    }, [recommendations]);
 
     const allTags = useMemo(() => {
         const tagSet = new Set<Tag>();
@@ -99,6 +101,10 @@ export default function HomePage() {
     }, [recommendations, filterState, category]);
 
     const heroVideo = sections.find(s => s.key === 'trending')?.videos[0] ?? recommendations[0] ?? null;
+
+    // Picking a category (or any filter) collapses the page to the filtered grid, so the
+    // narrowing is obvious instead of only affecting a grid far below the shelves.
+    const isDefaultView = category === null && !hasActiveFilters;
 
     const hasResults = visibleVideos.length > 0;
     const hasBaseVideos = recommendations.length > 0;
@@ -149,29 +155,33 @@ export default function HomePage() {
 
             <CategoryChips tags={categoryTags} selected={category} onSelect={setCategory} />
 
-            {heroVideo && category === null && !hasActiveFilters && (
+            {heroVideo && isDefaultView && (
                 <FeaturedHero video={heroVideo} />
             )}
 
-            <VideoShelf
-                title={t('home.continue_watching')}
-                videos={continueWatching}
-                icon={<HistoryIcon size={16} className="home-page__section-icon" />}
-            />
+            {isDefaultView && (
+                <>
+                    <VideoShelf
+                        title={t('home.continue_watching')}
+                        videos={continueWatching}
+                        icon={<HistoryIcon size={16} className="home-page__section-icon" />}
+                    />
 
-            {sections.map(section => (
-                <VideoShelf
-                    key={section.key}
-                    title={sectionTitle(section, t)}
-                    videos={section.videos}
-                    icon={sectionIcon(section.key)}
-                    action={section.key === 'shorts' ? (
-                        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.SHORTS)}>
-                            {t('home.see_all')}
-                        </Button>
-                    ) : undefined}
-                />
-            ))}
+                    {sections.map(section => (
+                        <VideoShelf
+                            key={section.key}
+                            title={sectionTitle(section, t)}
+                            videos={section.videos}
+                            icon={sectionIcon(section.key)}
+                            action={section.key === 'shorts' ? (
+                                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.SHORTS)}>
+                                    {t('home.see_all')}
+                                </Button>
+                            ) : undefined}
+                        />
+                    ))}
+                </>
+            )}
 
             <div className="home-page__toolbar">
                 <Button variant="ghost" size="sm" leftIcon={<Shuffle size={14} strokeWidth={2} />} onClick={handleSurpriseMe} className="home-page__surprise-btn">
