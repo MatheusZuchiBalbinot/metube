@@ -139,7 +139,7 @@ describe('VideoApi', () => {
             await video.recommendations(3);
             expect(apiClient.getValidated).toHaveBeenCalledWith(
                 '/recommendations',
-                parsers.parseVideoList,
+                parsers.parseVideoCollection,
                 { params: { page: 3 } },
             );
         });
@@ -149,7 +149,7 @@ describe('VideoApi', () => {
             await video.recommendations();
             expect(apiClient.getValidated).toHaveBeenCalledWith(
                 '/recommendations',
-                parsers.parseVideoList,
+                parsers.parseVideoCollection,
                 { params: { page: 1 } },
             );
         });

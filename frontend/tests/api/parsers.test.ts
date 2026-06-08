@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
     parseVideo,
     parseVideoList,
+    parseVideoCollection,
     parseUser,
     parseUserArray,
     parseLoginResponse,
@@ -294,6 +295,27 @@ describe('parseVideoList', () => {
 
     it('returns null when meta is missing', () => {
         expect(parseVideoList({ data: [] })).toBeNull();
+    });
+
+    it('parseVideoCollection parses a meta-less { data: [...] } collection (recommendations)', () => {
+        const result = parseVideoCollection({ data: [makeRawVideo()] });
+
+        expect(result).not.toBeNull();
+        expect(result!).toHaveLength(1);
+        expect(result![0]!.id).toBe('abc12345678');
+    });
+
+    it('parseVideoCollection accepts a bare array and filters invalid entries', () => {
+        const result = parseVideoCollection([makeRawVideo(), { invalid: true }]);
+
+        expect(result).toHaveLength(1);
+    });
+
+    it('parseVideoCollection returns [] for empty data and null when data is missing', () => {
+        expect(parseVideoCollection({ data: [] })).toEqual([]);
+        expect(parseVideoCollection({})).toBeNull();
+        expect(parseVideoCollection(null)).toBeNull();
+        expect(parseVideoCollection('string')).toBeNull();
     });
 
     it('returns null for a non-object', () => {

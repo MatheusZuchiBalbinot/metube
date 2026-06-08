@@ -453,3 +453,28 @@ describe('VideoController', function () {
             ->assertStatus(409);
     });
 });
+
+describe('VideoController related', function () {
+    test('returns videos related to the given video', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->published()->for($creator, 'channel')->create(['tags' => ['react']]);
+        Video::factory()->count(2)->published()->for($creator, 'channel')->create(['tags' => ['react']]);
+
+        $response = $this->actingAs($creator)->getJson("/api/videos/{$source->vuid}/related");
+
+        $response->assertOk();
+        $response->assertJsonCount(2, 'data');
+        $vuids = collect($response->json('data'))->pluck('vuid');
+        expect($vuids)->not->toContain($source->vuid);
+    });
+
+    test('returns an empty list when no other videos exist', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->published()->for($creator, 'channel')->create();
+
+        $response = $this->actingAs($creator)->getJson("/api/videos/{$source->vuid}/related");
+
+        $response->assertOk();
+        $response->assertJsonCount(0, 'data');
+    });
+});

@@ -4,6 +4,7 @@ import { buildProgress, type ProgressCallback } from '@utils';
 import {
     parseVideo,
     parseVideoList,
+    parseVideoCollection,
     parseVideoSummary,
     parseVideoTranscription,
     parseAiSuggestion,
@@ -152,10 +153,15 @@ class VideoApi {
     }
 
     async recommendations(page = 1): Promise<Video[]> {
-        const result = await apiClient.getValidated('/recommendations', parseVideoList, {
+        const result = await apiClient.getValidated('/recommendations', parseVideoCollection, {
             params: { page },
         });
-        return result.ok ? result.data.data : [];
+        return result.ok ? result.data : [];
+    }
+
+    async related(vuid: Vuid): Promise<Video[]> {
+        const result = await apiClient.getValidated(`${this.baseUrl}/${vuid}/related`, parseVideoCollection);
+        return result.ok ? result.data : [];
     }
 
     async getAiSuggestion(vuid: Vuid): Promise<ApiResult<AiSuggestion>> {
