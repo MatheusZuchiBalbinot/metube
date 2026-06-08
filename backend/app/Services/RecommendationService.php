@@ -73,6 +73,66 @@ final class RecommendationService
     }
 
     /**
+     * Get videos related to a given video, scored by similarity.
+     *
+     * Considers every other published video as a candidate and ranks it by tag overlap
+     * with the source video, a same-channel bonus, popularity and freshness. Because
+     * popularity and freshness always contribute, the result is never empty as long as
+     * other published videos exist — tag overlap is a boost, not a hard filter.
+     *
+     * @param Video $video Source video to find related content for
+     * @param int $limit Maximum number of related videos to return
+     *
+     * @return Collection<int, Video>
+     */
+    public function relatedTo(Video $video, int $limit = PaginationSize::RELATED): Collection
+    {
+        $targetTags = $video->tags ?? [];
+
+        $candidates = Video::published()
+            ->where('id', '!=', $video->id)
+            ->with('channel')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return $candidates;
+        }
+
+        $maxViews = max(1, (int) ($candidates->max('views') ?? 1));
+
+        return $candidates
+            ->map(fn (Video $candidate) => [
+                'video' => $candidate,
+                'score' => $this->relatedScore($candidate, $video, $targetTags, $maxViews),
+            ])
+            ->sortByDesc('score')
+            ->take($limit)
+            ->map(fn (array $item) => $item['video'])
+            ->values();
+    }
+
+    /**
+     * Score a candidate's relevance to a source video.
+     *
+     * Score = (tagOverlap × 0.50) + (sameChannel × 0.20) + (popularity × 0.20) + (freshness × 0.10)
+     *
+     * @param array<string> $targetTags Tags of the source video
+     */
+    private function relatedScore(Video $candidate, Video $source, array $targetTags, int $maxViews): float
+    {
+        $candidateTags = $candidate->tags ?? [];
+        $overlap = count(array_intersect($targetTags, $candidateTags));
+        $tagScore = $targetTags === [] ? 0.0 : $overlap / count($targetTags);
+
+        $sameChannelScore = $candidate->channel_id === $source->channel_id ? 1.0 : 0.0;
+        $popularScore = log1p($candidate->views) / log1p($maxViews);
+        $ageInDays = abs(now()->diffInDays($candidate->published_at));
+        $freshScore = exp(-$ageInDays / 30);
+
+        return ($tagScore * 0.50) + ($sameChannelScore * 0.20) + ($popularScore * 0.20) + ($freshScore * 0.10);
+    }
+
+    /**
      * Get user event scores aggregated by video over the last 30 days.
      *
      * @return Collection<int, float>

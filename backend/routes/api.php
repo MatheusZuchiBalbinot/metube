@@ -33,6 +33,7 @@ Route::get('/feed', [FeedController::class, 'index']);
 Route::prefix('videos')->group(function (): void {
     Route::get('/', [VideoController::class, 'index']);
     Route::get('/{video}', [VideoController::class, 'show'])->can('view', 'video');
+    Route::get('/{video}/related', [VideoController::class, 'related']);
     Route::get('/{video}/summary', [VideoController::class, 'summary']);
     Route::get('/{video}/transcription', [VideoController::class, 'transcription']);
     Route::prefix('{video}/comments')->group(function (): void {

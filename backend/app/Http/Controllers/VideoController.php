@@ -272,4 +272,14 @@ class VideoController extends Controller
 
         return $this->json(VideoResource::collection($items));
     }
+
+    /**
+     * Get videos related to a specific video (for the watch-page sidebar).
+     */
+    public function related(Video $video): JsonResponse
+    {
+        $items = $this->recommendationService->relatedTo($video);
+
+        return $this->json(VideoResource::collection($items));
+    }
 }

@@ -65,7 +65,7 @@ export default function VideoPage() {
 
     const storeVideo = videos.find((v: Video) => v.id === (id as VideoId));
     const { video, fetchFailed } = useVideoFetch(id, storeVideo);
-    const { relatedVideos, loadingRelated } = useRelatedVideos(video?.id, video?.tags ?? []);
+    const { relatedVideos, loadingRelated } = useRelatedVideos(video?.id);
     const { summary, transcription, setTranscription } = useVideoContent(id, video?.status);
 
     const hasVideo = video !== undefined;

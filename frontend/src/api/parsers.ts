@@ -127,6 +127,25 @@ export function parseVideoList(raw: unknown): VideoListApiResponse | null {
     };
 }
 
+/**
+ * Parse a non-paginated video collection such as `/recommendations`, which returns
+ * `{ data: [...] }` (a resource collection) with no pagination `meta`. Accepts a bare
+ * array too. Returns null only when the envelope is missing its `data` array entirely.
+ */
+export function parseVideoCollection(raw: unknown): Video[] | null {
+    if (Array.isArray(raw)) {
+        return raw.map(parseVideo).filter((video): video is Video => video !== null);
+    }
+
+    const rawData = toRaw(raw);
+
+    if (rawData === null || !Array.isArray(rawData['data'])) {
+        return null;
+    }
+
+    return rawData['data'].map(parseVideo).filter((video): video is Video => video !== null);
+}
+
 // ─── User ──────────────────────────────────────────────────────────────────────
 
 export function parseUser(raw: unknown): User | null {

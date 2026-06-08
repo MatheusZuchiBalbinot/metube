@@ -201,3 +201,58 @@ describe('RecommendationService', function () {
             ->and($ids[2])->toBe($saveVideo->id); // SAVE = 0.7 weight
     });
 });
+
+describe('RecommendationService relatedTo', function () {
+    test('excludes the source video and returns other published videos', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->for($creator, 'channel')->create(['status' => 'published']);
+        Video::factory()->count(3)->for($creator, 'channel')->create(['status' => 'published']);
+
+        $related = app(RecommendationService::class)->relatedTo($source);
+
+        expect($related)->toHaveLength(3)
+            ->and($related->pluck('id')->toArray())->not->toContain($source->id);
+    });
+
+    test('ranks videos sharing tags above unrelated ones', function () {
+        $creator = User::factory()->create();
+        $other = User::factory()->create();
+        $source = Video::factory()->for($creator, 'channel')->create(['status' => 'published', 'tags' => ['react']]);
+        $sameTag = Video::factory()->for($other, 'channel')->create(['status' => 'published', 'tags' => ['react'], 'views' => 1]);
+        $unrelated = Video::factory()->for($other, 'channel')->create(['status' => 'published', 'tags' => ['cooking'], 'views' => 1]);
+
+        $ids = app(RecommendationService::class)->relatedTo($source)->pluck('id')->toArray();
+
+        expect(array_search($sameTag->id, $ids, true))
+            ->toBeLessThan(array_search($unrelated->id, $ids, true));
+    });
+
+    test('excludes non-published videos', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->for($creator, 'channel')->create(['status' => 'published']);
+        Video::factory()->for($creator, 'channel')->create(['status' => 'draft']);
+
+        $related = app(RecommendationService::class)->relatedTo($source);
+
+        expect($related)->toHaveLength(0);
+    });
+
+    test('returns empty when there are no other videos', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->for($creator, 'channel')->create(['status' => 'published']);
+
+        $related = app(RecommendationService::class)->relatedTo($source);
+
+        expect($related)->toHaveLength(0);
+    });
+
+    test('respects the limit', function () {
+        $creator = User::factory()->create();
+        $source = Video::factory()->for($creator, 'channel')->create(['status' => 'published']);
+        Video::factory()->count(20)->for($creator, 'channel')->create(['status' => 'published']);
+
+        $related = app(RecommendationService::class)->relatedTo($source, 5);
+
+        expect($related)->toHaveLength(5);
+    });
+});
