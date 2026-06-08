@@ -30,6 +30,17 @@ export function useRealtime(): void {
     useLayoutEffect(() => {
         videosRef.current = videos;
     });
+    // Keep `t` in a ref so changing the translation function (e.g. language
+    // switch, re-renders) never tears down and rebuilds the Echo subscription.
+    const tRef = useRef(t);
+    useLayoutEffect(() => {
+        tRef.current = t;
+    });
+
+    // Subscribe per stable user identity, not per user-object reference —
+    // otherwise any auth re-fetch (fetchMe, profile edit) would churn the
+    // WebSocket and drop in-flight notifications.
+    const userUuid = user?.uuid ?? null;
 
     // Every realtime notification toast also plays the notification sound,
     // regardless of which broadcast handler produced it.
@@ -39,7 +50,7 @@ export function useRealtime(): void {
     }, [dispatch]);
 
     useEffect(() => {
-        if (user === null) {
+        if (userUuid === null) {
             return;
         }
 
@@ -57,7 +68,7 @@ export function useRealtime(): void {
                 return;
             }
 
-            const channel = echo.private(`users.${user.uuid}`);
+            const channel = echo.private(`users.${userUuid}`);
 
             channel.notification((payload: Record<string, unknown>) => {
                 const notification = normalizeBroadcastNotification(payload);
@@ -91,7 +102,7 @@ export function useRealtime(): void {
                     const thumbnail = notification.data.thumbnail_url as string | undefined;
                     const subtitle = notification.data.video_title as string | undefined;
                     notify({
-                        message: formatNotificationMessage(notification, t),
+                        message: formatNotificationMessage(notification, tRef.current),
                         type: ToastType.INFO,
                         thumbnail: thumbnail ?? undefined,
                         subtitle,
@@ -115,7 +126,7 @@ export function useRealtime(): void {
                 if (data.status === VideoStatus.PROCESSING) {
                     const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
                     notify({
-                        message: t('video.processing_toast'),
+                        message: tRef.current('video.processing_toast'),
                         type: ToastType.INFO,
                         thumbnail: video?.thumbnail,
                         subtitle: video?.title,
@@ -130,21 +141,21 @@ export function useRealtime(): void {
 
                 if (data.status === 'processing') {
                     notify({
-                        message: t('video.transcription_started_toast'),
+                        message: tRef.current('video.transcription_started_toast'),
                         type: ToastType.INFO,
                         thumbnail,
                         subtitle,
                     });
                 } else if (data.status === 'completed') {
                     notify({
-                        message: t('video.transcription_completed_toast'),
+                        message: tRef.current('video.transcription_completed_toast'),
                         type: ToastType.SUCCESS,
                         thumbnail,
                         subtitle,
                     });
                 } else if (data.status === 'failed') {
                     notify({
-                        message: t('video.transcription_failed_toast'),
+                        message: tRef.current('video.transcription_failed_toast'),
                         type: ToastType.ERROR,
                         thumbnail,
                         subtitle,
@@ -155,7 +166,7 @@ export function useRealtime(): void {
             channel.listen('.AiSuggestionReady', (payload: { vuid: string; title: string }) => {
                 const video = videosRef.current.find(v => v.videoUrl?.includes(payload.vuid));
                 notify({
-                    message: t('ai_suggestion.pending_toast', { title: payload.title }),
+                    message: tRef.current('ai_suggestion.pending_toast', { title: payload.title }),
                     type: ToastType.SUCCESS,
                     thumbnail: video?.thumbnail,
                     subtitle: video?.title,
@@ -165,21 +176,19 @@ export function useRealtime(): void {
 
         return () => {
             isCancelled = true;
-            void getEcho().then(echo => echo?.leave(`users.${user.uuid}`));
+            void getEcho().then(echo => echo?.leave(`users.${userUuid}`));
         };
-    }, [dispatch, user, t, notify]);
+    }, [dispatch, userUuid, notify]);
 
     useEffect(() => {
-        const isLoggedIn = user !== null;
-
-        if (!isLoggedIn) {
+        if (userUuid === null) {
             return;
         }
 
         return () => {
             destroyEcho();
         };
-    }, [user]);
+    }, [userUuid]);
 }
 
 const BROADCAST_HANDLED_TYPES = new Set<NotificationType>([

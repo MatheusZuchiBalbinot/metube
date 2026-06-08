@@ -50,6 +50,7 @@ export function makeVideo(overrides: Partial<Video> = {}): Video {
 export function makeUser(overrides: Partial<User> = {}): User {
     return {
         id: '1',
+        uuid: 'u-test',
         name: 'Test User',
         email: 'test@example.com',
         bio: 'Test bio',
