@@ -1,4 +1,4 @@
-import { Settings, Check, Repeat, Repeat1, Play, Sparkles, Captions } from 'lucide-react';
+import { Settings, Check, Captions, Repeat, Repeat1, ListVideo, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ShakaLevel } from '@hooks';
 import { cn } from '@utils';
@@ -16,6 +16,8 @@ interface PlayerSettingsProps {
     levels?: ShakaLevel[]
     currentQuality?: number
     onQualityChange?: (e: React.MouseEvent, index: number) => void
+    captionSize?: CaptionSize
+    onCaptionSize?: (size: CaptionSize) => void
     isLoop?: boolean
     onToggleLoop?: () => void
     abStatus?: number
@@ -24,20 +26,82 @@ interface PlayerSettingsProps {
     onToggleAutoplay?: () => void
     isAmbient?: boolean
     onToggleAmbient?: () => void
-    captionSize?: CaptionSize
-    onCaptionSize?: (size: CaptionSize) => void
 }
 
-const AB_LABEL_KEYS = ['player.ab_start', 'player.ab_set_b', 'player.ab_active'] as const;
+interface ToggleRowProps {
+    icon: React.ReactNode
+    label: string
+    active: boolean
+    onClick: () => void
+}
+
+function ToggleRow({ icon, label, active, onClick }: ToggleRowProps) {
+    return (
+        <button
+            className={cn('vp__settings-option', active && 'vp__settings-option--active')}
+            onClick={onClick}
+            role="switch"
+            aria-checked={active}
+        >
+            <span className="vp__settings-loop-label">
+                {icon}
+                {label}
+            </span>
+            {active && <Check size={12} />}
+        </button>
+    );
+}
+
+/**
+ * Secondary toggles mirrored inside the settings menu. Hidden by default and only
+ * revealed on narrow players (container query), where the inline buttons are dropped.
+ */
+function CompactToggles({
+    isLoop, onToggleLoop, abStatus, onAbRepeat,
+    isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient,
+}: Pick<PlayerSettingsProps,
+    'isLoop' | 'onToggleLoop' | 'abStatus' | 'onAbRepeat' | 'isAutoplay' | 'onToggleAutoplay' | 'isAmbient' | 'onToggleAmbient'
+>) {
+    const { t } = useTranslation();
+
+    const rows: ToggleRowProps[] = [];
+
+    if (onToggleAutoplay) {
+        rows.push({ icon: <ListVideo size={13} />, label: t('player.autoplay'), active: isAutoplay ?? false, onClick: onToggleAutoplay });
+    }
+
+    if (onToggleLoop) {
+        rows.push({ icon: <Repeat size={13} />, label: t('player.loop'), active: isLoop ?? false, onClick: onToggleLoop });
+    }
+
+    if (onAbRepeat) {
+        rows.push({ icon: <Repeat1 size={13} />, label: t('player.ab_title'), active: (abStatus ?? 0) > 0, onClick: onAbRepeat });
+    }
+
+    if (onToggleAmbient) {
+        rows.push({ icon: <Sparkles size={13} />, label: t('player.ambient'), active: isAmbient ?? false, onClick: onToggleAmbient });
+    }
+
+    if (rows.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="vp__settings-section vp__settings-compact">
+            {rows.map(row => (
+                <ToggleRow key={row.label} icon={row.icon} label={row.label} active={row.active} onClick={row.onClick} />
+            ))}
+        </div>
+    );
+}
 
 export default function PlayerSettings({
     playbackRate, showSettings, settingsRef, onToggle, onSpeedChange,
-    levels, currentQuality, onQualityChange, isLoop, onToggleLoop, abStatus, onAbRepeat,
-    isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient, captionSize, onCaptionSize,
+    levels, currentQuality, onQualityChange, captionSize, onCaptionSize,
+    isLoop, onToggleLoop, abStatus, onAbRepeat, isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient,
 }: PlayerSettingsProps) {
     const { t } = useTranslation();
     const hasLevels = (levels?.length ?? 0) > 0;
-    const abLabelKey = AB_LABEL_KEYS[abStatus ?? 0] ?? AB_LABEL_KEYS[0];
 
     return (
         <div className="vp__settings" ref={settingsRef}>
@@ -95,68 +159,6 @@ export default function PlayerSettings({
                             </div>
                         </div>
                     )}
-                    {onToggleLoop && (
-                        <div className="vp__settings-section">
-                            <button
-                                className={cn('vp__settings-option', isLoop && 'vp__settings-option--active')}
-                                onClick={onToggleLoop}
-                                role="switch"
-                                aria-checked={isLoop ?? false}
-                            >
-                                <span className="vp__settings-loop-label">
-                                    <Repeat size={13} />
-                                    {t('player.loop')}
-                                </span>
-                                {isLoop && <Check size={12} />}
-                            </button>
-                        </div>
-                    )}
-                    {onAbRepeat && (
-                        <div className="vp__settings-section">
-                            <button
-                                className={cn('vp__settings-option', (abStatus ?? 0) > 0 && 'vp__settings-option--active')}
-                                onClick={onAbRepeat}
-                            >
-                                <span className="vp__settings-loop-label">
-                                    <Repeat1 size={13} />
-                                    {t(abLabelKey)}
-                                </span>
-                                {(abStatus ?? 0) === 2 && <Check size={12} />}
-                            </button>
-                        </div>
-                    )}
-                    {onToggleAutoplay && (
-                        <div className="vp__settings-section">
-                            <button
-                                className={cn('vp__settings-option', isAutoplay && 'vp__settings-option--active')}
-                                onClick={onToggleAutoplay}
-                                role="switch"
-                                aria-checked={isAutoplay ?? false}
-                            >
-                                <span className="vp__settings-loop-label">
-                                    <Play size={13} />
-                                    {t('player.autoplay')}
-                                </span>
-                                {isAutoplay && <Check size={12} />}
-                            </button>
-                        </div>
-                    )}
-                    {onToggleAmbient && (
-                        <div className="vp__settings-section">
-                            <button
-                                className={cn('vp__settings-option', isAmbient && 'vp__settings-option--active')}
-                                onClick={onToggleAmbient}
-                                role="switch"
-                                aria-checked={isAmbient ?? false}
-                            >
-                                <span className="vp__settings-loop-label">
-                                    <Sparkles size={13} />
-                                    {t('player.ambient')}
-                                </span>
-                                {isAmbient && <Check size={12} />}
-                            </button>
-                        </div>
-                    )}
                     {onCaptionSize && (
                         <div className="vp__settings-section">
                             <span className="vp__settings-section-label">
@@ -181,6 +183,16 @@ export default function PlayerSettings({
                             </div>
                         </div>
                     )}
+                    <CompactToggles
+                        isLoop={isLoop}
+                        onToggleLoop={onToggleLoop}
+                        abStatus={abStatus}
+                        onAbRepeat={onAbRepeat}
+                        isAutoplay={isAutoplay}
+                        onToggleAutoplay={onToggleAutoplay}
+                        isAmbient={isAmbient}
+                        onToggleAmbient={onToggleAmbient}
+                    />
                 </div>
             )}
             <button

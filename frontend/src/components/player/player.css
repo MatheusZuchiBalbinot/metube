@@ -38,6 +38,10 @@
     user-select: none;
     box-shadow: 0 0 80px 20px color-mix(in srgb, var(--vp-ambient, transparent) 15%, transparent);
     transition: box-shadow 0.5s ease;
+    /* Query container so the control bar can adapt to the player's own width
+       (not the viewport) — narrow players tuck secondary toggles into settings. */
+    container-type: inline-size;
+    container-name: vp;
 }
 
 :root[data-mode='light'] .vp {
@@ -306,6 +310,49 @@
     opacity: 1;
 }
 
+/* ─── A–B repeat markers ────────────────────────────────────────────────────── */
+
+.vp__seek-ab-region {
+    position: absolute;
+    top: 0;
+    height: 3px;
+    background: rgba(250, 204, 21, 0.55);
+    pointer-events: none;
+    z-index: 2;
+    transition: height var(--duration-default) ease;
+}
+
+.vp__seek:hover .vp__seek-ab-region,
+.vp--seeking .vp__seek-ab-region {
+    height: 5px;
+}
+
+.vp__seek-ab-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 12px;
+    background: #facc15;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    z-index: 4;
+}
+
+.vp__seek-ab-flag {
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5625rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #1a1a1a;
+    background: #facc15;
+    padding: 2px 3px;
+    border-radius: 3px;
+}
+
 /* ─── Seek preview popup ────────────────────────────────────────────────────── */
 
 .vp__seek-preview {
@@ -384,6 +431,42 @@
     display: flex;
     align-items: center;
     gap: 2px;
+    min-width: 0;
+}
+
+.vp__bar-toggles {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Settings-menu mirror of the secondary toggles — only shown on narrow players */
+.vp__settings-compact {
+    display: none;
+}
+
+.vp__settings-loop-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ─── Responsive control bar (container queries on .vp) ──────────────────────── */
+
+@container vp (max-width: 640px) {
+    .vp__bar-toggles {
+        display: none;
+    }
+
+    .vp__settings-compact {
+        display: block;
+    }
+}
+
+@container vp (max-width: 540px) {
+    .vp__chapter-label {
+        display: none;
+    }
 }
 
 /* ─── Control button ────────────────────────────────────────────────────────── */
@@ -414,6 +497,11 @@
     transform: scale(0.94);
 }
 
+.vp__btn--active,
+.vp__btn--active:hover {
+    color: var(--accent);
+}
+
 /* ─── Time display ──────────────────────────────────────────────────────────── */
 
 .vp__time {
@@ -435,12 +523,6 @@
 
 .vp__time:hover {
     color: #fff;
-}
-
-.vp__settings-loop-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
 }
 
 /* ─── Current chapter label ─────────────────────────────────────────────────── */
@@ -606,6 +688,9 @@
     gap: 14px;
     z-index: 20;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .vp__settings-section {

@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Play, Pause, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume1, Volume2, VolumeX, Repeat, Repeat1, Sparkles, ListVideo } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatDuration } from '@utils';
+import { formatDuration, cn } from '@utils';
+import Tooltip from '@ui/tooltip/tooltip';
 import CaptionsButton from './captionsButton';
 import PlayerSettings from './playerSettings';
 import PipButton from './pipButton';
 import TheaterButton from './theaterButton';
 import type { CaptionSize } from './playerTypes';
 import type { VideoCaption } from '@models';
+
+const AB_HINT_KEYS = ['player.ab_hint_a', 'player.ab_hint_b', 'player.ab_hint_clear'] as const;
 
 interface PlayerControlsBarProps {
     isPlaying: boolean
@@ -144,6 +147,54 @@ export default function PlayerControlsBar({
             </div>
 
             <div className="vp__bar-right">
+                {/* Secondary toggles — shown inline on wide players; collapse into the
+                    settings menu on narrow ones (see .vp__bar-toggles container query). */}
+                <div className="vp__bar-toggles">
+                    <Tooltip title={t('player.autoplay')} content={t('player.autoplay_hint')} side="top">
+                        <button
+                            className={cn('vp__btn', isAutoplay && 'vp__btn--active')}
+                            onClick={onToggleAutoplay}
+                            aria-label={t('player.autoplay')}
+                            aria-pressed={isAutoplay}
+                        >
+                            <ListVideo size={16} />
+                        </button>
+                    </Tooltip>
+
+                    <Tooltip title={t('player.loop')} content={t('player.loop_hint')} side="top">
+                        <button
+                            className={cn('vp__btn', isLoop && 'vp__btn--active')}
+                            onClick={onToggleLoop}
+                            aria-label={t('player.loop')}
+                            aria-pressed={isLoop}
+                        >
+                            <Repeat size={16} />
+                        </button>
+                    </Tooltip>
+
+                    <Tooltip title={t('player.ab_title')} content={t(AB_HINT_KEYS[abStatus] ?? AB_HINT_KEYS[0])} side="top">
+                        <button
+                            className={cn('vp__btn', abStatus > 0 && 'vp__btn--active')}
+                            onClick={onAbRepeat}
+                            aria-label={t('player.ab_title')}
+                            aria-pressed={abStatus > 0}
+                        >
+                            <Repeat1 size={16} />
+                        </button>
+                    </Tooltip>
+
+                    <Tooltip title={t('player.ambient')} content={t('player.ambient_hint')} side="top">
+                        <button
+                            className={cn('vp__btn', isAmbient && 'vp__btn--active')}
+                            onClick={onToggleAmbient}
+                            aria-label={t('player.ambient')}
+                            aria-pressed={isAmbient}
+                        >
+                            <Sparkles size={16} />
+                        </button>
+                    </Tooltip>
+                </div>
+
                 <CaptionsButton
                     captions={captions}
                     activeTrack={activeTrack}
@@ -162,6 +213,8 @@ export default function PlayerControlsBar({
                     levels={levels}
                     currentQuality={currentQuality}
                     onQualityChange={onQualityChange}
+                    captionSize={captionSize}
+                    onCaptionSize={onCaptionSize}
                     isLoop={isLoop}
                     onToggleLoop={onToggleLoop}
                     abStatus={abStatus}
@@ -170,8 +223,6 @@ export default function PlayerControlsBar({
                     onToggleAutoplay={onToggleAutoplay}
                     isAmbient={isAmbient}
                     onToggleAmbient={onToggleAmbient}
-                    captionSize={captionSize}
-                    onCaptionSize={onCaptionSize}
                 />
 
                 <PipButton
