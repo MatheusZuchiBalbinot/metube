@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogOut, User as UserIcon, ListVideo, Clock, History, ThumbsUp, Settings, Keyboard, HelpCircle } from 'lucide-react';
 import { Avatar, Button, Tooltip } from '@ui';
+import PreferencesPanel from '@components/preferences/preferences';
 import { ROUTES, APP_EVENTS } from '@utils';
 import { useClickOutside } from '@hooks';
 import type { User } from '@models';
@@ -75,6 +76,10 @@ export default function HeaderUserMenu({
                             </Link>
                         ))}
                     </nav>
+
+                    <div className="app-header__dropdown-sep" />
+
+                    <PreferencesPanel inline />
 
                     <div className="app-header__dropdown-sep" />
 

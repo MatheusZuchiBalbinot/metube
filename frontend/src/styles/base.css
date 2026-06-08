@@ -339,6 +339,12 @@ button {
     }
 }
 
+/* Reserve the scrollbar gutter so opening modals (which lock body scroll)
+   doesn't shift the page content sideways. */
+html {
+    scrollbar-gutter: stable;
+}
+
 body {
     background-color: var(--surface);
     color: var(--text);

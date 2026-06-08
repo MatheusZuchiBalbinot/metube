@@ -17,6 +17,7 @@ export default function SettingsPage() {
         if (hash !== '#about') {
             return;
         }
+
         document.getElementById('about')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, [hash]);
 

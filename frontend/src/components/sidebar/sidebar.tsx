@@ -1,18 +1,15 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Clapperboard, History, ThumbsUp, User, ListVideo, Clock, Compass, Rss, Bell, ChevronDown } from 'lucide-react';
+import { Home, Clapperboard, History, ThumbsUp, User, ListVideo, Clock, Compass, Rss, ChevronDown } from 'lucide-react';
 import { ROUTES, cn, videoUrl, TagColors, isWithinDays, loadFromStorage, isObject, STORAGE_KEYS } from '@utils';
 import { Tooltip, Avatar } from '@ui';
 import './sidebar.css';
-import { useSubscriptions, useSubscription, useVideo, useAuth, usePlaylist, useClickOutside } from '@hooks';
+import { useSubscriptions, useSubscription, useVideo, useAuth, usePlaylist } from '@hooks';
 import { useAppSelector } from '@store';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
-import { selectNotificationsUnreadCount } from '@store/notificationsSelectors';
 import { selectRecentChannels } from '@store/recentChannelsSelectors';
 import { domain } from '@domain';
-import PreferencesPanel from '@components/preferences/preferences';
-import NotificationsPanel from '@components/notifications/panel';
 import type { Video, Tag, ChannelId } from '@models';
 
 /**
@@ -414,54 +411,6 @@ function TopicsSection() {
     );
 }
 
-function SidebarNotifications() {
-    const { t } = useTranslation();
-    const { user } = useAuth();
-    const unreadCount = useAppSelector(selectNotificationsUnreadCount);
-    const [open, setOpen] = useState(false);
-    const containerRef = useRef<HTMLLIElement>(null);
-
-    const handleClose = useCallback(() => setOpen(false), []);
-    useClickOutside(containerRef, handleClose, open);
-
-    if (user === null) {
-        return null;
-    }
-
-    const hasBadge = unreadCount > 0;
-    const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
-
-    function handleToggle() {
-        setOpen(prev => !prev);
-    }
-
-    return (
-        <li className="app-sidebar__notif" ref={containerRef}>
-            <Tooltip content={t('notifications.bell.label')} side="right">
-                <button
-                    type="button"
-                    className="app-sidebar__item"
-                    onClick={handleToggle}
-                    aria-label={t('notifications.bell.label')}
-                    aria-expanded={open}
-                    aria-haspopup="dialog"
-                >
-                    <span className="app-sidebar__icon-chip">
-                        <Bell size={18} strokeWidth={1.75} className="app-sidebar__icon" />
-                        {hasBadge && <span className="app-sidebar__notif-badge">{badgeLabel}</span>}
-                    </span>
-                    <span className="app-sidebar__label">{t('notifications.bell.label')}</span>
-                </button>
-            </Tooltip>
-            {open && (
-                <div className="app-sidebar__notif-panel">
-                    <NotificationsPanel onClose={handleClose} />
-                </div>
-            )}
-        </li>
-    );
-}
-
 function RecentChannelsSection() {
     const { t } = useTranslation();
     const recent = useAppSelector(selectRecentChannels);
@@ -580,7 +529,6 @@ export default function AppSidebar({ open, permanent, collapsed, hidden, onClose
 
                 <ul className="app-sidebar__list">
                     {MAIN_NAV.map(item => <SidebarItem key={item.to} item={item} />)}
-                    <SidebarNotifications />
                 </ul>
 
                 <ExploreSection />
@@ -600,10 +548,6 @@ export default function AppSidebar({ open, permanent, collapsed, hidden, onClose
                 <SubscriptionsSection />
 
                 <RecentChannelsSection />
-
-                <div className="app-sidebar__footer app-sidebar__section--rail-hidden">
-                    <PreferencesPanel inline />
-                </div>
             </div>
         </nav>
     );
