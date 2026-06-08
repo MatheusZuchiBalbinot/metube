@@ -460,6 +460,7 @@ export function DefaultVideoPlayer({
                     bufferedPct={bufferedPct}
                     currentTime={currentTime}
                     chapters={chapters}
+                    abRepeat={abRepeat}
                     forceShow={forceShow}
                     scheduleHideControls={scheduleHideControls}
                     onDraggingChange={setIsDragging}

@@ -13,6 +13,7 @@ interface PlayerSeekBarProps {
     bufferedPct: number
     currentTime: number
     chapters?: VideoChapter[]
+    abRepeat?: { a: number | null; b: number | null }
     forceShow: () => void
     scheduleHideControls: () => void
     onDraggingChange: (isDragging: boolean) => void
@@ -20,7 +21,7 @@ interface PlayerSeekBarProps {
 
 export default function PlayerSeekBar({
     videoRef, src, duration, bufferedPct, currentTime,
-    chapters, forceShow, scheduleHideControls, onDraggingChange,
+    chapters, abRepeat, forceShow, scheduleHideControls, onDraggingChange,
 }: PlayerSeekBarProps) {
     const seekInnerRef = useRef<HTMLDivElement>(null);
     const previewVideoRef = useRef<HTMLVideoElement>(null);
@@ -184,6 +185,37 @@ export default function PlayerSeekBar({
         });
     }
 
+    function renderAbMarkers() {
+        const a = abRepeat?.a ?? null;
+        const b = abRepeat?.b ?? null;
+
+        if (a === null || duration <= 0) {
+            return null;
+        }
+
+        const aPct = (a / duration) * 100;
+        const bPct = b !== null ? (b / duration) * 100 : null;
+
+        return (
+            <>
+                {bPct !== null && (
+                    <div
+                        className="vp__seek-ab-region"
+                        style={{ left: `${aPct}%`, width: `${bPct - aPct}%` }}
+                    />
+                )}
+                <div className="vp__seek-ab-marker vp__seek-ab-marker--a" style={{ left: `${aPct}%` }}>
+                    <span className="vp__seek-ab-flag">A</span>
+                </div>
+                {bPct !== null && (
+                    <div className="vp__seek-ab-marker vp__seek-ab-marker--b" style={{ left: `${bPct}%` }}>
+                        <span className="vp__seek-ab-flag">B</span>
+                    </div>
+                )}
+            </>
+        );
+    }
+
     function renderPreview() {
         const showHoverElements = hoverSeekPct !== null || isDragging;
         if (!showHoverElements || duration <= 0) {
@@ -284,6 +316,8 @@ export default function PlayerSeekBar({
                     </div>
 
                     {renderChapters()}
+
+                    {renderAbMarkers()}
 
                     <div className="vp__seek-thumb vp__seek-thumb--current" style={{ left: `${displayPct}%` }} />
 
