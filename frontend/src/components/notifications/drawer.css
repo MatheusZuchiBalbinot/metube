@@ -1,0 +1,247 @@
+.notifications-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    background: var(--overlay-md);
+    backdrop-filter: var(--glass-blur-xs);
+    -webkit-backdrop-filter: var(--glass-blur-xs);
+    animation: overlay-in var(--duration-default) ease both;
+}
+
+.notifications-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    max-width: 92vw;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--elevation-4);
+    outline: none;
+    animation: notifications-drawer-in 0.24s var(--ease-out) both;
+}
+
+@keyframes notifications-drawer-in {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────────────── */
+
+.notifications-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 12px;
+    flex-shrink: 0;
+}
+
+.notifications-drawer__heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notifications-drawer__title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+
+.notifications-drawer__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-full);
+    background: var(--accent);
+    color: #fff;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+}
+
+.notifications-drawer__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.notifications-drawer__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.notifications-drawer__icon-btn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+/* ─── Tabs ────────────────────────────────────────────────────────────────────── */
+
+.notifications-drawer__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.notifications-drawer__tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--duration-fast);
+}
+
+.notifications-drawer__tab::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform var(--duration-default) var(--ease-out);
+}
+
+.notifications-drawer__tab:hover {
+    color: var(--text);
+}
+
+.notifications-drawer__tab--active {
+    color: var(--accent);
+}
+
+.notifications-drawer__tab--active::after {
+    transform: scaleX(1);
+}
+
+.notifications-drawer__tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: var(--radius-full);
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+}
+
+.notifications-drawer__tab--active .notifications-drawer__tab-count {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+
+/* ─── List ────────────────────────────────────────────────────────────────────── */
+
+.notifications-drawer__list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.notifications-drawer__group {
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-drawer__group-label {
+    padding: 14px 16px 6px;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+}
+
+/* Staggered entrance for the cards within each group */
+.notifications-drawer__group .notification-item {
+    animation: notifications-item-in var(--duration-slow) var(--ease-out) both;
+}
+
+.notifications-drawer__group .notification-item:nth-child(2) {
+    animation-delay: 0.03s;
+}
+
+.notifications-drawer__group .notification-item:nth-child(3) {
+    animation-delay: 0.06s;
+}
+
+.notifications-drawer__group .notification-item:nth-child(4) {
+    animation-delay: 0.09s;
+}
+
+.notifications-drawer__group .notification-item:nth-child(n + 5) {
+    animation-delay: 0.12s;
+}
+
+@keyframes notifications-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Skeleton ────────────────────────────────────────────────────────────────── */
+
+.notifications-drawer__skeleton {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+.notifications-drawer__skeleton-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .notifications-drawer,
+    .notifications-drawer-overlay,
+    .notifications-drawer__group .notification-item {
+        animation: none;
+    }
+}

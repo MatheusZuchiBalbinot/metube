@@ -44,11 +44,21 @@
     line-height: 16px;
     text-align: center;
     pointer-events: none;
+    animation: bell-badge-pop var(--duration-slow) var(--ease-bounce);
 }
 
-.notifications-bell__panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: var(--z-dropdown);
+@keyframes bell-badge-pop {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .notifications-bell__badge {
+        animation: none;
+    }
 }

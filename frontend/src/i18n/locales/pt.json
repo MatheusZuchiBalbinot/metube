@@ -495,11 +495,15 @@
         "speed_hold": "{{rate}}× velocidade",
         "toggle_time": "Alternar tempo restante",
         "loop": "Repetir",
-        "ab_start": "Repetir trecho (A–B)",
-        "ab_set_b": "Definir ponto final (B)",
-        "ab_active": "Repetindo trecho A–B",
+        "loop_hint": "Reinicia o vídeo quando ele chega ao fim.",
+        "ab_title": "Repetir trecho (A–B)",
+        "ab_hint_a": "Clique para marcar o início (A).",
+        "ab_hint_b": "Clique para marcar o fim (B).",
+        "ab_hint_clear": "Repetindo entre A e B. Clique para limpar.",
         "autoplay": "Reprodução automática",
+        "autoplay_hint": "Toca o próximo vídeo recomendado automaticamente.",
         "ambient": "Modo ambiente",
+        "ambient_hint": "Adiciona um brilho suave com as cores do vídeo atrás do player.",
         "caption_size": "Tamanho da legenda",
         "caption_size_sm": "Pequena",
         "caption_size_md": "Média",
@@ -559,11 +563,33 @@
         "bell": {
             "label": "Notificações"
         },
+        "title": "Atividade",
         "empty": "Tudo em dia",
         "mark_all_read": "Marcar tudo como lido",
-        "unread": "Não lidas",
-        "earlier": "Anteriores",
-        "more": "Role para ver mais",
+        "tabs": {
+            "all": "Tudo",
+            "unread": "Não lidas",
+            "social": "Social",
+            "video": "Vídeos"
+        },
+        "groups": {
+            "new": "Novas",
+            "today": "Hoje",
+            "this_week": "Esta semana",
+            "earlier": "Anteriores"
+        },
+        "actions": {
+            "dismiss": "Dispensar",
+            "watch": "Assistir",
+            "read_summary": "Ler resumo",
+            "view_comment": "Ver comentário"
+        },
+        "empty_tab": {
+            "all": "Novas notificações aparecerão aqui.",
+            "unread": "Nenhuma notificação não lida.",
+            "social": "Nenhuma curtida, resposta ou novo inscrito ainda.",
+            "video": "Nenhuma novidade sobre seus vídeos ainda."
+        },
         "types": {
             "comment_replied": "{{name}} respondeu ao seu comentário",
             "comment_liked": "{{name}} curtiu seu comentário",

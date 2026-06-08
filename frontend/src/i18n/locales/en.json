@@ -495,11 +495,15 @@
         "speed_hold": "{{rate}}× speed",
         "toggle_time": "Toggle remaining time",
         "loop": "Loop",
-        "ab_start": "Repeat section (A–B)",
-        "ab_set_b": "Set end point (B)",
-        "ab_active": "Repeating A–B section",
+        "loop_hint": "Restarts this video when it reaches the end.",
+        "ab_title": "Repeat section (A–B)",
+        "ab_hint_a": "Click to set the start point (A).",
+        "ab_hint_b": "Click to set the end point (B).",
+        "ab_hint_clear": "Looping between A and B. Click to clear.",
         "autoplay": "Autoplay",
+        "autoplay_hint": "Plays the next recommended video automatically.",
         "ambient": "Ambient mode",
+        "ambient_hint": "Adds a soft glow from the video's colors behind the player.",
         "caption_size": "Caption size",
         "caption_size_sm": "Small",
         "caption_size_md": "Medium",
@@ -559,11 +563,33 @@
         "bell": {
             "label": "Notifications"
         },
+        "title": "Activity",
         "empty": "You're all caught up",
         "mark_all_read": "Mark all as read",
-        "unread": "Unread",
-        "earlier": "Earlier",
-        "more": "Scroll up for more",
+        "tabs": {
+            "all": "All",
+            "unread": "Unread",
+            "social": "Social",
+            "video": "Videos"
+        },
+        "groups": {
+            "new": "New",
+            "today": "Today",
+            "this_week": "This week",
+            "earlier": "Earlier"
+        },
+        "actions": {
+            "dismiss": "Dismiss",
+            "watch": "Watch",
+            "read_summary": "Read summary",
+            "view_comment": "View comment"
+        },
+        "empty_tab": {
+            "all": "New notifications will show up here.",
+            "unread": "No unread notifications.",
+            "social": "No likes, replies or new subscribers yet.",
+            "video": "No updates about your videos yet."
+        },
         "types": {
             "comment_replied": "{{name}} replied to your comment",
             "comment_liked": "{{name}} liked your comment",

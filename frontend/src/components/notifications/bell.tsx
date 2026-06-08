@@ -4,21 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@store';
 import { selectNotificationsUnreadCount } from '@store/notificationsSelectors';
 import { Tooltip } from '@ui';
-import NotificationsPanel from './panel';
+import NotificationsDrawer from './drawer';
 import './bell.css';
-import { useClickOutside } from '@hooks';
 
 export default function NotificationsBell() {
     const { t } = useTranslation();
     const unreadCount = useAppSelector(selectNotificationsUnreadCount);
     const [open, setOpen] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const btnRef = useRef<HTMLButtonElement>(null);
 
     const handleClose = useCallback((): void => {
         setOpen(false);
     }, []);
-
-    useClickOutside(containerRef, handleClose);
 
     function handleToggle(): void {
         setOpen(prev => !prev);
@@ -28,9 +25,10 @@ export default function NotificationsBell() {
     const hasBadge = unreadCount > 0;
 
     return (
-        <div className="notifications-bell" ref={containerRef}>
+        <div className="notifications-bell">
             <Tooltip content={t('notifications.bell.label')} side="bottom">
                 <button
+                    ref={btnRef}
                     className="notifications-bell__btn"
                     onClick={handleToggle}
                     aria-label={t('notifications.bell.label')}
@@ -46,11 +44,7 @@ export default function NotificationsBell() {
                 </button>
             </Tooltip>
 
-            {open && (
-                <div className="notifications-bell__panel">
-                    <NotificationsPanel onClose={handleClose} />
-                </div>
-            )}
+            {open && <NotificationsDrawer onClose={handleClose} triggerRef={btnRef} />}
         </div>
     );
 }
