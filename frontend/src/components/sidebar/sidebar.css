@@ -12,11 +12,14 @@
     z-index: var(--z-modal);
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
     display: flex;
     flex-direction: column;
     box-shadow: var(--elevation-3);
     transform: translateX(-100%);
-    transition: transform 0.24s var(--ease-out);
+    /* Keep the element laid out during the slide so the transform transition
+       always plays; visibility flips only after the slide-out completes. */
+    transition: transform 0.24s var(--ease-out), visibility 0s linear 0.24s;
     visibility: hidden;
 }
 
@@ -35,6 +38,7 @@
 .app-sidebar--open {
     transform: translateX(0);
     visibility: visible;
+    transition: transform 0.24s var(--ease-out), visibility 0s;
 }
 
 /* ─── Permanent (non-offcanvas) mode ──────────────────────────────────────── */
@@ -231,6 +235,7 @@
 .app-sidebar__user-meta {
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-width: 0;
     overflow: hidden;
 }
@@ -247,6 +252,9 @@
 .app-sidebar__user-link {
     font-size: var(--text-xs);
     color: var(--text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ─── Footer ──────────────────────────────────────────────────────────────── */
@@ -383,48 +391,6 @@
     white-space: nowrap;
 }
 
-/* ─── Button items (notifications) ────────────────────────────────────────── */
-
-button.app-sidebar__item {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-.app-sidebar__notif {
-    position: relative;
-    list-style: none;
-}
-
-.app-sidebar__notif-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    border-radius: var(--radius-full);
-    background: var(--accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: var(--font-bold);
-    line-height: 16px;
-    text-align: center;
-    border: 2px solid var(--surface);
-}
-
-.app-sidebar__notif-panel {
-    position: absolute;
-    left: calc(100% - 8px);
-    top: 0;
-    z-index: var(--z-modal);
-    box-shadow: var(--elevation-3);
-    border-radius: var(--radius-md);
-}
-
 /* ─── New-video dot ───────────────────────────────────────────────────────── */
 
 .app-sidebar__icon-chip {
@@ -544,13 +510,29 @@ button.app-sidebar__item {
     overflow: visible;
 }
 
+/* The inner is always absolutely positioned in rail mode so expanding on hover
+   is a smooth width transition (a static→absolute swap can't animate). The nav
+   itself stays 72px wide as the in-flow gutter; the inner overlays it. */
 .app-sidebar--rail .app-sidebar__inner {
-    display: flex;
-    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 72px;
     height: 100%;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-block: 10px;
+    background: var(--surface);
+    z-index: 1;
+    transition: width 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-sidebar--rail .app-sidebar__inner {
+        transition: none;
+    }
 }
 
 .app-sidebar--rail .app-sidebar__section {
@@ -582,17 +564,11 @@ button.app-sidebar__item {
     margin-left: 0;
 }
 
-/* Hover-to-expand — overlay the content (pointer devices only) so the page
+/* Hover-to-expand — widen the overlay (pointer devices only) so the page
    layout doesn't shift while peeking at the expanded sidebar. */
 @media (hover: hover) {
     .app-sidebar--rail:hover .app-sidebar__inner {
-        position: absolute;
-        top: 0;
-        left: 0;
         width: 220px;
-        height: 100%;
-        padding-block: 10px;
-        background: var(--surface);
         border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
         box-shadow: var(--elevation-3);
         z-index: var(--z-modal);

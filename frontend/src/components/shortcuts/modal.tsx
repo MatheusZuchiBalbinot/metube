@@ -89,28 +89,25 @@ export default function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps)
         <Modal isOpen={isOpen} onClose={onClose} title={t('shortcuts.title', 'Keyboard shortcuts')} size="md">
             <div className="shortcuts-modal">
                 <div className="shortcuts-modal__columns">
-                    {SHORTCUT_SECTIONS.map((section, i) => (
-                        <React.Fragment key={section.titleKey}>
-                            {i > 0 && <div className="shortcuts-modal__divider" aria-hidden="true" />}
-                            <section className="shortcuts-modal__section">
-                                <h3 className="shortcuts-modal__section-title">
-                                    {t(section.titleKey, section.titleDefault)}
-                                </h3>
-                                <ul className="shortcuts-modal__list" role="list">
-                                    {section.shortcuts.map(s => (
-                                        <li key={s.label} className="shortcuts-modal__item">
-                                            <span className="shortcuts-modal__label">{s.label}</span>
-                                            <KeyBadge keys={s.keys} chord={s.chord} />
-                                        </li>
-                                    ))}
-                                </ul>
-                                {section.noteKey && (
-                                    <p className="shortcuts-modal__note">
-                                        {t(section.noteKey, section.noteDefault ?? '')}
-                                    </p>
-                                )}
-                            </section>
-                        </React.Fragment>
+                    {SHORTCUT_SECTIONS.map(section => (
+                        <section className="shortcuts-modal__section" key={section.titleKey}>
+                            <h3 className="shortcuts-modal__section-title">
+                                {t(section.titleKey, section.titleDefault)}
+                            </h3>
+                            <ul className="shortcuts-modal__list" role="list">
+                                {section.shortcuts.map(s => (
+                                    <li key={s.label} className="shortcuts-modal__item">
+                                        <span className="shortcuts-modal__label">{s.label}</span>
+                                        <KeyBadge keys={s.keys} chord={s.chord} />
+                                    </li>
+                                ))}
+                            </ul>
+                            {section.noteKey && (
+                                <p className="shortcuts-modal__note">
+                                    {t(section.noteKey, section.noteDefault ?? '')}
+                                </p>
+                            )}
+                        </section>
                     ))}
                 </div>
 
