@@ -71,6 +71,16 @@ describe('VideoResource', function () {
         expect($array['video_url'])->toContain('test.mp4');
     });
 
+    test('video_url keeps an absolute URL untouched (externally-hosted media)', function () {
+        $external = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create(['video_url' => $external]);
+
+        $array = (new VideoResource($video))->toArray(new Request());
+
+        expect($array['video_url'])->toBe($external);
+    });
+
     test('hls_url is null when hls_url field is null', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['hls_url' => null]);

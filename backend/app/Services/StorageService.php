@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Contracts\StorageContract;
 use App\Exceptions\VideoStorageException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Local-disk implementation of {@see StorageContract}.
@@ -85,12 +86,20 @@ final class StorageService implements StorageContract
     /**
      * Resolve the public URL for a public-disk-relative path.
      *
-     * @param string $path Path relative to the public disk
+     * Absolute URLs are returned untouched so externally-hosted media (e.g. seeded
+     * sample videos and thumbnails) resolves correctly instead of being concatenated
+     * onto the public disk base URL.
+     *
+     * @param string $path Path relative to the public disk, or an absolute URL
      *
      * @return string Full URL
      */
     public function publicUrl(string $path): string
     {
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
         return Storage::disk('public')->url($path);
     }
 
