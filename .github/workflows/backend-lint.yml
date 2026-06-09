@@ -20,6 +20,10 @@ jobs:
   lint:
     name: Lint & Static Analysis
     runs-on: ubuntu-latest
+    env:
+      # ext-opentelemetry is not available on the runner; disabling the auto-instrumentation
+      # keeps the OpenTelemetry _register.php from raising a fatal warning during boot.
+      OTEL_PHP_DISABLED_INSTRUMENTATIONS: all
 
     steps:
       - uses: actions/checkout@v4
