@@ -8,10 +8,10 @@ use App\Enums\VideoStatus;
 use App\Models\Video;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class VideoStatusUpdated implements ShouldBroadcast
+class VideoStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets;
 
