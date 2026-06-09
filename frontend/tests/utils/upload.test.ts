@@ -43,10 +43,13 @@ describe('buildProgress', () => {
     });
 
     it('returns speed = 0 when elapsed time is 0', () => {
-        // startTime equals now → elapsedSec ≈ 0
+        // Freeze time so the internal Date.now() can't tick past startTime.
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2000, 0, 1, 0, 0, 0, 0));
         const startTime = Date.now();
         const result = buildProgress(makeEvent(500, 1000), startTime);
         expect(result.speed).toBe(0);
+        vi.useRealTimers();
     });
 
     it('computes remaining seconds based on speed', () => {
