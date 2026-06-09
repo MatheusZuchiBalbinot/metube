@@ -157,7 +157,7 @@ export default function VideoPage() {
                         hasVideoFile={playbackSrc !== ''}
                         src={playbackSrc}
                         autoPlay={autoplay}
-                        captions={video.captions}
+                        captions={video.captions ?? []}
                         chapters={summary?.chapters}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={handleVideoEnded}
@@ -199,7 +199,7 @@ export default function VideoPage() {
                         descExpanded={descExpanded}
                         onDescExpandToggle={() => setDescExpanded(v => !v)}
                         language={i18n.language}
-                        onTagClick={openTagView}
+                        onTagClick={(tag) => openTagView(tag, video?.id ?? null)}
                         onScrollToChat={authUser !== null ? handleScrollToChat : undefined}
                         onSeek={(seconds) => {
                             if (videoRef.current) {

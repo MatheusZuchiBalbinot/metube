@@ -6,7 +6,7 @@ import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 import { video as videoApi, toVuid } from '@api';
-import type { Vuid, AiSuggestion, VideoSummary } from '@api';
+import type { AiSuggestion, VideoSummary } from '@api';
 import { Button, Input, Modal } from '@ui';
 import { VideoStatus } from '@models';
 import type { Video } from '@models';
@@ -123,7 +123,7 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
         }
 
         try {
-            await videoApi.acceptAiSuggestion(video.id as Vuid);
+            await videoApi.acceptAiSuggestion(toVuid(video.id));
         } catch {
             // non-critical — the video was already updated
         }
@@ -137,7 +137,7 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
 
     async function handleDismiss() {
         try {
-            await videoApi.dismissAiSuggestion(video.id as Vuid);
+            await videoApi.dismissAiSuggestion(toVuid(video.id));
         } catch {
             // best-effort
         }

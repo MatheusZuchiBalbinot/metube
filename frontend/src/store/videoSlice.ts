@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Vuid } from '@api';
 import { STORAGE_KEYS, loadFromStorage, isArray, isObject, isNumberInRange } from '@utils';
-import type { Video, VideoId, VideoStatus, Tag } from '@models';
+import type { Video, VideoId, VideoStatus, Tag, ViewCount } from '@models';
 
 export interface TagView {
     tag: Tag
@@ -113,7 +113,7 @@ const videoSlice = createSlice({
             const idx = state.videos.findIndex(v => v.id === action.payload);
             const isFound = idx !== -1;
             if (isFound) {
-                state.videos[idx].views += 1;
+                state.videos[idx].views = (state.videos[idx].views + 1) as ViewCount;
             }
         },
 
