@@ -47,6 +47,7 @@ export default function SearchPage() {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync editable input from the URL query param
         setLocalQuery(query);
     }, [query]);
 

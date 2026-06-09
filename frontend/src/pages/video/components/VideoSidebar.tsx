@@ -51,7 +51,6 @@ export default function VideoSidebar({
         if (showSummaryTab && !autoSwitchedRef.current) {
             autoSwitchedRef.current = true;
             // One-shot auto-switch guarded by a ref — fires at most once per video, cannot cascade.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSidebarTab(SidebarTab.SUMMARY);
         } else if (!showSummaryTab) {
             autoSwitchedRef.current = false;

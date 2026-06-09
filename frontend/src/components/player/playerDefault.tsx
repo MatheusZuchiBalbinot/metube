@@ -243,6 +243,7 @@ export function DefaultVideoPlayer({
     useEffect(() => {
         resetPopIcon();
         resetSkipIndicator();
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of UI state when the source changes
         setShowSettings(false);
         setShowCaptionsMenu(false);
         setIsDragging(false);

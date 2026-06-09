@@ -27,7 +27,6 @@ export default function NavProgress() {
             clearTimeout(idleTimer.current);
         }
 
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setState(BarState.LOADING);
 
         // Complete the bar shortly after the sync cross-fade finishes (≈150ms)

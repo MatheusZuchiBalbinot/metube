@@ -32,7 +32,6 @@ export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseP
         const isInitial = !hasFetchedRef.current;
 
         if (isInitial) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setVideosState(RemoteData.loading());
         }
 

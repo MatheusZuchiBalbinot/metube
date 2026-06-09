@@ -64,6 +64,7 @@ function useInViewWithElement(options?: Parameters<typeof useInView>[0]) {
     const result = useInView(options);
     const elRef = useRef<HTMLElement | null>(null);
 
+    // eslint-disable-next-line react-hooks/immutability -- test helper mutates refs to attach a real DOM element
     useLayoutEffect(() => {
         if (elRef.current === null) {
             const el = document.createElement('div');

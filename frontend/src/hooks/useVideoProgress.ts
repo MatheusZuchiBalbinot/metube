@@ -44,8 +44,10 @@ export function useVideoProgress({
     const hasCompletedRef = useRef(false);
 
     const onCompletedRef = useRef(onCompleted);
+    // eslint-disable-next-line react-hooks/refs
     onCompletedRef.current = onCompleted;
     const onBackendSyncRef = useRef(onBackendSync);
+    // eslint-disable-next-line react-hooks/refs
     onBackendSyncRef.current = onBackendSync;
 
     const [currentTime, setCurrentTime] = useState(0);
