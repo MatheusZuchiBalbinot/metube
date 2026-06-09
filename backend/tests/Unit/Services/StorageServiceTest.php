@@ -65,6 +65,12 @@ describe('StorageService', function () {
 
             expect($url)->toContain('thumbnails/abc.webp');
         });
+
+        test('returns absolute URLs untouched', function () {
+            $external = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
+
+            expect((new StorageService())->publicUrl($external))->toBe($external);
+        });
     });
 
     describe('putPublic', function () {

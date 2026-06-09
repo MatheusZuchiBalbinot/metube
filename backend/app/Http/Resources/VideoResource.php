@@ -7,6 +7,7 @@ namespace App\Http\Resources;
 use App\Contracts\StorageContract;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class VideoResource extends JsonResource
 {
@@ -54,6 +55,12 @@ class VideoResource extends JsonResource
      */
     private function storageUrl(string $diskPath): string
     {
+        // Externally-hosted media is already a full URL — keep it verbatim (with host)
+        // instead of stripping it down to a root-relative path.
+        if (Str::startsWith($diskPath, ['http://', 'https://'])) {
+            return $diskPath;
+        }
+
         $absolute = app(StorageContract::class)->publicUrl($diskPath);
 
         return (string) parse_url($absolute, PHP_URL_PATH);

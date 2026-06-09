@@ -68,7 +68,10 @@ interface StorageContract
     /**
      * Resolve the public URL for a public-disk-relative path.
      *
-     * @param string $path Path relative to the public disk
+     * Values that are already absolute URLs (http/https) are returned untouched so
+     * externally-hosted media resolves correctly.
+     *
+     * @param string $path Path relative to the public disk, or an absolute URL
      *
      * @return string Full URL (e.g. http://localhost/storage/videos/x.mp4)
      */
