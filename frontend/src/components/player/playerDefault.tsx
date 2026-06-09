@@ -190,13 +190,13 @@ export function DefaultVideoPlayer({
         suppressClickRef.current = true;
     }
 
-    function handleSurfaceClick(e: React.MouseEvent) {
+    function handleSurfaceClick() {
         if (suppressClickRef.current) {
             suppressClickRef.current = false;
             return;
         }
 
-        handleContainerClick(e);
+        handleContainerClick();
     }
 
     const shouldCaptureKeyboard = captureKeyboard ?? true;
@@ -267,9 +267,11 @@ export function DefaultVideoPlayer({
         }
 
         function onTimeUpdate() {
+            const video = videoRef.current;
             const { a, b } = abRepeatRef.current;
-            if (a !== null && b !== null && el.currentTime >= b) {
-                el.currentTime = a;
+
+            if (video !== null && a !== null && b !== null && video.currentTime >= b) {
+                video.currentTime = a;
             }
         }
 

@@ -7,8 +7,8 @@ import CaptionsButton from './captionsButton';
 import PlayerSettings from './playerSettings';
 import PipButton from './pipButton';
 import TheaterButton from './theaterButton';
-import type { CaptionSize } from './playerTypes';
-import type { VideoCaption } from '@models';
+import type { CaptionSize, ShakaLevel } from './playerTypes';
+import type { VideoCaption, Seconds } from '@models';
 
 const AB_HINT_KEYS = ['player.ab_hint_a', 'player.ab_hint_b', 'player.ab_hint_clear'] as const;
 
@@ -29,7 +29,7 @@ interface PlayerControlsBarProps {
     activeTrack: string | null
     showCaptionsMenu: boolean
     captionsMenuRef: React.RefObject<HTMLDivElement | null>
-    levels: { height: number; bitrate: number }[]
+    levels: ShakaLevel[]
     currentQuality: number
     onBarClick: (e: React.MouseEvent) => void
     onTogglePlay: (e: React.MouseEvent) => void
@@ -134,8 +134,8 @@ export default function PlayerControlsBar({
                     title={t('player.toggle_time')}
                 >
                     {showRemaining
-                        ? `-${formatDuration(Math.max(duration - currentTime, 0))} / ${formatDuration(duration)}`
-                        : `${formatDuration(currentTime)} / ${formatDuration(duration)}`}
+                        ? `-${formatDuration(Math.max(duration - currentTime, 0) as Seconds)} / ${formatDuration(duration as Seconds)}`
+                        : `${formatDuration(currentTime as Seconds)} / ${formatDuration(duration as Seconds)}`}
                 </button>
 
                 {chapterTitle !== null && (

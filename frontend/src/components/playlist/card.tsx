@@ -14,7 +14,7 @@ import './card.css';
 import { ToastType } from '@enums/toastType';
 import { usePlaylist } from '@hooks';
 import { videoUrl, formatDuration, formatDurationCompact, cn } from '@utils';
-import type { Video, Playlist } from '@models';
+import type { Video, Playlist, PlaylistId, VideoId, Seconds } from '@models';
 
 interface PlaylistCardProps {
     playlist: Playlist
@@ -24,7 +24,7 @@ interface PlaylistCardProps {
 
 interface PlaylistVideoRowProps {
     video: Video
-    playlistId: string
+    playlistId: PlaylistId
     position: number
 }
 
@@ -169,7 +169,7 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
     }
 
     function handleReorder(newVideoIds: string[]) {
-        reorderVideosInPlaylist(playlist.id, newVideoIds);
+        reorderVideosInPlaylist(playlist.id, newVideoIds as VideoId[]);
     }
 
     return (
@@ -228,7 +228,7 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
                                         {hasTotalDuration && (
                                             <>
                                                 <span className="playlist-card__stats-dot" aria-hidden="true">·</span>
-                                                <span>{formatDurationCompact(totalDurationSec)}</span>
+                                                <span>{formatDurationCompact(totalDurationSec as Seconds)}</span>
                                             </>
                                         )}
                                     </>

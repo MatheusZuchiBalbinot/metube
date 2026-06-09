@@ -62,7 +62,7 @@ export default function HistoryList({ flatItems, videoMap, onRemove }: Props) {
                                 <h2 className="history-page__group-label">{item.label}</h2>
                             ) : (
                                 <div className="history-page__item">
-                                    <VideoRow video={videoMap.get(item.id)!} />
+                                    <VideoRow video={videoMap.get(item.id as VideoId)!} />
                                     <Tooltip content={t('history.remove')} side="left">
                                         <Button
                                             variant="ghost"
