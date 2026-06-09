@@ -1,9 +1,8 @@
+import type { Size } from '../types';
 import './spinner.css';
 
-type SpinnerSize = 'sm' | 'md' | 'lg';
-
 interface SpinnerProps {
-    size?: SpinnerSize
+    size?: Size
     fullPage?: boolean
     className?: string
 }

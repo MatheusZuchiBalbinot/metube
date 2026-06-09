@@ -15,7 +15,7 @@ export { default as Skeleton } from './skeleton/skeleton';
 export { default as NavProgress } from './navProgress/navProgress';
 export { default as EmptyState } from './empty/empty';
 
+export type { Size } from './types';
 export type { ButtonVariant, ButtonSize } from './button/button';
 export type { DropdownOption } from './dropdown/dropdown';
 export type { BadgeVariant } from './badge/badge';
-export type { AvatarSize } from './avatar/avatar';

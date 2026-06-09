@@ -3,9 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import Button from '../button/button';
+import type { Size } from '../types';
 import './modal.css';
-
-type ModalSize = 'sm' | 'md' | 'lg';
 
 const FOCUSABLE_SELECTORS = 'button, input, select, textarea, a[href]';
 
@@ -15,7 +14,7 @@ interface ModalProps {
     title?: string
     children: React.ReactNode
     footer?: React.ReactNode
-    size?: ModalSize
+    size?: Size
     triggerRef?: React.RefObject<HTMLElement>
 }
 
