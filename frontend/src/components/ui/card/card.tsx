@@ -1,6 +1,7 @@
+import type { Size } from '../types';
 import './card.css';
 
-type CardPadding = 'none' | 'sm' | 'md' | 'lg';
+type CardPadding = 'none' | Size;
 
 interface CardProps {
     children: React.ReactNode

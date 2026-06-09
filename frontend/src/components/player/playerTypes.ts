@@ -1,5 +1,6 @@
 import type { SkipDirection } from '@enums/skipDirection';
 import type { PopIconType } from '@enums/popIconType';
+import type { Size } from '@ui/types';
 
 export type { SkipDirection } from '@enums/skipDirection';
 export type { PopIconType } from '@enums/popIconType';
@@ -17,7 +18,7 @@ export type PopIcon = {
 
 export const KEYBOARD_SKIP_SECONDS = 5 as const;
 
-export type CaptionSize = 'sm' | 'md' | 'lg';
+export type CaptionSize = Size;
 
 export interface ShakaLevel {
     index: number;

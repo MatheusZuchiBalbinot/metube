@@ -1,10 +1,9 @@
+import type { Size } from '../types';
 import './avatar.css';
-
-export type AvatarSize = 'sm' | 'md' | 'lg';
 
 interface AvatarProps {
     name: string
-    size?: AvatarSize
+    size?: Size
     src?: string
     ring?: boolean
     glow?: boolean

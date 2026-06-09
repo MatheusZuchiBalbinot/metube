@@ -2,10 +2,11 @@ import { Settings, Check, Captions, Repeat, Repeat1, ListVideo, Sparkles } from 
 import { useTranslation } from 'react-i18next';
 import type { ShakaLevel } from '@hooks';
 import { cn } from '@utils';
+import { SIZES } from '@ui/types';
 import type { CaptionSize } from './playerTypes';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
-const CAPTION_SIZES: CaptionSize[] = ['sm', 'md', 'lg'];
+const CAPTION_SIZES: readonly CaptionSize[] = SIZES;
 
 interface PlayerSettingsProps {
     playbackRate: number
