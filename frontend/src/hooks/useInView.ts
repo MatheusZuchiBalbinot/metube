@@ -20,7 +20,6 @@ export function useInView({ threshold = 0.1, rootMargin = '0px', once = true }: 
         const rect = el.getBoundingClientRect();
         const isAlreadyVisible = rect.top < window.innerHeight && rect.bottom > 0;
         if (isAlreadyVisible) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setInView(true);
         }
     }, []);

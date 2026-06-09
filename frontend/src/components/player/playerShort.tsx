@@ -85,6 +85,7 @@ export default function ShortPlayer({
     useEffect(() => {
         resetPopIcon();
         resetSkipIndicator();
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of own state when the source changes
         setShortDragPct(null);
     }, [src, resetPopIcon, resetSkipIndicator]);
 

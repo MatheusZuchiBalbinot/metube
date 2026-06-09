@@ -16,12 +16,10 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
         if (id === undefined || storeVideo !== undefined) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setFetchedVideo(null);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFetchFailed(false);
             return;
         }
 
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFetchFailed(false);
 
         videoApi.get(toVuid(id)).then(result => {

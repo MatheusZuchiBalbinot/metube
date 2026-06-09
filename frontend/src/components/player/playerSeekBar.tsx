@@ -41,6 +41,7 @@ export default function PlayerSeekBar({
 
     // Reset own state when video source changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of own state when the source changes
         changeDragging(false);
         setDragPct(null);
         setHoverSeekPct(null);

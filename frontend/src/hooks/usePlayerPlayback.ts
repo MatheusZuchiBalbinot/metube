@@ -61,6 +61,7 @@ export function usePlayerPlayback(
         if (!hasValue) {
             return;
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync local state from the controlled prop
         setIsMuted(controlledMuted);
         const el = videoRef.current;
         if (el) {

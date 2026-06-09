@@ -39,6 +39,7 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
 
     // Reset per-video state when navigating to a different video
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of per-video state when the id changes
         setStopAfterCurrent(false);
         return () => cancelAutoplay();
 

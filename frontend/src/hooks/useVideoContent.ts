@@ -28,7 +28,6 @@ export function useVideoContent(id: string | undefined, videoStatus: VideoStatus
         if (!hasContent) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSummary(null);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTranscription(null);
             return;
         }
