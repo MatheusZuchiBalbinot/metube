@@ -6,6 +6,8 @@ import {
     selectDislikedSet,
     selectRecommendations,
     selectWatchedTagFrequency,
+    selectVideoEntities,
+    makeSelectVideoById,
 } from '@store/videoSelectors';
 import { makeVideoState, makeVideo, vid, tag } from '../helpers/factories';
 import { VideoStatus } from '@models/video';
@@ -109,5 +111,36 @@ describe('selectWatchedTagFrequency', () => {
         const freq = selectWatchedTagFrequency(state);
         expect(freq.get(tag('a'))).toBe(1);
         expect(freq.size).toBe(1);
+    });
+});
+
+describe('selectVideoEntities', () => {
+    it('maps every video by id', () => {
+        const v1 = makeVideo({ id: vid('v1') });
+        const v2 = makeVideo({ id: vid('v2') });
+        const entities = selectVideoEntities(withVideo({ videos: [v1, v2] }));
+
+        expect(entities.get(vid('v1'))).toBe(v1);
+        expect(entities.get(vid('v2'))).toBe(v2);
+        expect(entities.size).toBe(2);
+    });
+
+    it('returns a stable reference while videos are unchanged', () => {
+        const state = withVideo({ videos: [makeVideo({ id: vid('v1') })] });
+        expect(selectVideoEntities(state)).toBe(selectVideoEntities(state));
+    });
+});
+
+describe('makeSelectVideoById', () => {
+    it('resolves a video by id', () => {
+        const v1 = makeVideo({ id: vid('v1'), title: 'Found' });
+        const selectV1 = makeSelectVideoById(vid('v1'));
+
+        expect(selectV1(withVideo({ videos: [v1] }))?.title).toBe('Found');
+    });
+
+    it('returns undefined for an unknown id', () => {
+        const selectMissing = makeSelectVideoById(vid('nope'));
+        expect(selectMissing(withVideo({ videos: [makeVideo({ id: vid('v1') })] }))).toBeUndefined();
     });
 });
