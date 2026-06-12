@@ -3,6 +3,7 @@ import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import {
+    selectAllVideos,
     selectHistoryTags,
     selectPublishedVideos,
     selectLikedSet,
@@ -20,7 +21,7 @@ export function useVideo() {
     const dispatch = useAppDispatch();
 
     // Granular selectors — each re-renders only when its specific value changes
-    const videos = useAppSelector(s => s.video.videos);
+    const videos = useAppSelector(selectAllVideos);
     const watchHistory = useAppSelector(s => s.video.watchHistory);
     const pinnedVideoId = useAppSelector(s => s.video.pinnedVideoId);
     const videoProgress = useAppSelector(s => s.video.videoProgress, shallowEqual);

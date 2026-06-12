@@ -120,9 +120,9 @@ describe('selectVideoEntities', () => {
         const v2 = makeVideo({ id: vid('v2') });
         const entities = selectVideoEntities(withVideo({ videos: [v1, v2] }));
 
-        expect(entities.get(vid('v1'))).toBe(v1);
-        expect(entities.get(vid('v2'))).toBe(v2);
-        expect(entities.size).toBe(2);
+        expect(entities[vid('v1')]).toBe(v1);
+        expect(entities[vid('v2')]).toBe(v2);
+        expect(Object.keys(entities)).toHaveLength(2);
     });
 
     it('returns a stable reference while videos are unchanged', () => {

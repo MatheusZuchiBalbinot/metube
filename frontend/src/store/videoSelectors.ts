@@ -1,27 +1,25 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { domain } from '@domain';
 import type { Tag, Video, VideoId } from '@models';
-import type { VideoState } from './videoSlice';
+import { videoAdapter, type VideoState } from './videoSlice';
 
 interface WithVideo { video: VideoState }
 
-const selectVideos = (s: WithVideo) => s.video.videos;
+const adapterSelectors = videoAdapter.getSelectors((s: WithVideo) => s.video);
+
+/** All videos in display order (`ids`). Memoized by the entity adapter. */
+export const selectAllVideos = adapterSelectors.selectAll;
 
 /**
- * Memoized `id → Video` map for O(1) lookups.
+ * The normalized `id → Video` dictionary for O(1) lookups.
  *
  * Components that need a single video by id should prefer this (or
- * `makeSelectVideoById`) over scanning `state.video.videos` with `.find`, which
- * is O(n) on every render.
+ * `makeSelectVideoById`) over scanning the full list with `.find`.
  */
-export const selectVideoEntities = createSelector(
-    [selectVideos],
-    (videos): Map<VideoId, Video> => new Map(videos.map(v => [v.id, v])),
-);
+export const selectVideoEntities = adapterSelectors.selectEntities;
 
 /**
- * Builds a memoized selector that resolves a single video by id in O(1) via the
- * shared entity map.
+ * Builds a memoized selector that resolves a single video by id in O(1).
  *
  * @param id - The video id to resolve.
  * @returns A selector returning the matching video, or `undefined`.
@@ -29,12 +27,12 @@ export const selectVideoEntities = createSelector(
 export function makeSelectVideoById(id: VideoId) {
     return createSelector(
         [selectVideoEntities],
-        (entities): Video | undefined => entities.get(id),
+        (entities): Video | undefined => entities[id],
     );
 }
 
 export const selectHistoryTags = createSelector(
-    [(s: WithVideo) => s.video.watchHistory, (s: WithVideo) => s.video.videos],
+    [(s: WithVideo) => s.video.watchHistory, selectAllVideos],
     (watchHistory, videos) => {
         const watchedIds = new Set(watchHistory);
         const tagSet = new Set<Tag>();
@@ -53,7 +51,7 @@ export const selectHistoryTags = createSelector(
 );
 
 export const selectPublishedVideos = createSelector(
-    [(s: WithVideo) => s.video.videos],
+    [selectAllVideos],
     (videos) => {
         return videos.filter(v => domain.video.isVisible(v));
     },
@@ -77,7 +75,7 @@ export const selectWatchedTagFrequency = createSelector(
     (watchHistory, videoMap): Map<Tag, number> => {
         const freq = new Map<Tag, number>();
         for (const id of watchHistory) {
-            const video = videoMap.get(id);
+            const video = videoMap[id];
             if (!video) {
                 continue;
             }

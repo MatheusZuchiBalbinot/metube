@@ -6,6 +6,7 @@ import { ROUTES, videoUrl } from '@utils';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
 import { selectRecentSearches } from '@store/searchSelectors';
+import { selectAllVideos } from '@store/videoSelectors';
 import { Button, Tooltip } from '@ui';
 import NotificationsBell from '@components/notifications/bell';
 import './header.css';
@@ -27,7 +28,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
     const dispatch = useAppDispatch();
     const recentSearches = useAppSelector(selectRecentSearches);
-    const videos = useAppSelector(s => s.video.videos);
+    const videos = useAppSelector(selectAllVideos);
     const { openUploadModal } = useVideo();
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
