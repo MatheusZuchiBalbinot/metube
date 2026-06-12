@@ -92,7 +92,7 @@ describe('useBootstrap', () => {
         renderHook(() => useBootstrap(), { wrapper: makeWrapper(store) });
 
         await waitFor(() => {
-            expect(store.getState().video.videos.length).toBe(2);
+            expect(store.getState().video.ids.length).toBe(2);
         });
     });
 

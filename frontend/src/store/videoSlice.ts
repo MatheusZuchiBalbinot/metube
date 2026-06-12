@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createEntityAdapter, type EntityState, type PayloadAction } from '@reduxjs/toolkit';
 import type { Vuid } from '@api';
 import { STORAGE_KEYS, loadFromStorage, isArray, isObject, isNumberInRange } from '@utils';
 import type { Video, VideoId, VideoStatus, Tag, ViewCount } from '@models';
@@ -14,8 +14,16 @@ export interface MiniPlayerState {
     seekSession: number
 }
 
-export interface VideoState {
-    videos: Video[]
+/**
+ * Videos are normalized via `createEntityAdapter` (`ids` + `entities`) so lookups
+ * and mutations are O(1) instead of scanning an array. Display order is preserved
+ * in `ids`: newest videos are prepended (see `prependVideoId`).
+ */
+export const videoAdapter = createEntityAdapter<Video, VideoId>({
+    selectId: video => video.id,
+});
+
+export interface VideoState extends EntityState<Video, VideoId> {
     watchHistory: VideoId[]
     likedVideos: VideoId[]
     dislikedVideos: VideoId[]
@@ -36,8 +44,7 @@ export interface VideoState {
     recommendationsLoading: boolean
 }
 
-const initialState: VideoState = {
-    videos: [],
+const initialState: VideoState = videoAdapter.getInitialState({
     watchHistory: loadFromStorage<VideoId[]>(STORAGE_KEYS.WATCH_HISTORY, [], isArray),
     likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
@@ -56,14 +63,19 @@ const initialState: VideoState = {
     lastVideoStatusUpdate: null,
     serverRecommendations: [],
     recommendationsLoading: false,
-};
+});
+
+/** Moves an id to the front of the order, preserving "newest first" semantics. */
+function prependVideoId(state: VideoState, id: VideoId) {
+    state.ids = [id, ...(state.ids as VideoId[]).filter(existing => existing !== id)];
+}
 
 const videoSlice = createSlice({
     name: 'video',
     initialState,
     reducers: {
         setVideos(state, action: PayloadAction<Video[]>) {
-            state.videos = action.payload;
+            videoAdapter.setAll(state, action.payload);
         },
 
         setLikedVideos(state, action: PayloadAction<VideoId[]>) {
@@ -71,55 +83,52 @@ const videoSlice = createSlice({
         },
 
         addVideo(state, action: PayloadAction<Video>) {
-            state.videos.unshift(action.payload);
+            videoAdapter.addOne(state, action.payload);
+            prependVideoId(state, action.payload.id);
         },
 
         updateVideoStatus(state, action: PayloadAction<{ vuid: Vuid; status: VideoStatus }>) {
             state.lastVideoStatusUpdate = action.payload;
-            const idx = state.videos.findIndex(v => (v.id as string) === (action.payload.vuid as string));
-            const isFound = idx !== -1;
+            const video = state.entities[action.payload.vuid as unknown as VideoId];
+            const isFound = video !== undefined;
             if (isFound) {
-                state.videos[idx].status = action.payload.status;
+                video.status = action.payload.status;
             }
         },
 
         updateVideo(state, action: PayloadAction<Video>) {
-            const idx = state.videos.findIndex(v => v.id === action.payload.id);
-            const isFound = idx !== -1;
+            const isFound = state.entities[action.payload.id] !== undefined;
             if (isFound) {
-                state.videos[idx] = action.payload;
+                videoAdapter.setOne(state, action.payload);
             }
         },
 
         upsertVideo(state, action: PayloadAction<Video>) {
-            const idx = state.videos.findIndex(v => v.id === action.payload.id);
-            const isFound = idx !== -1;
-            if (isFound) {
-                state.videos[idx] = action.payload;
-            } else {
-                state.videos.unshift(action.payload);
+            const isNew = state.entities[action.payload.id] === undefined;
+            videoAdapter.upsertOne(state, action.payload);
+            if (isNew) {
+                prependVideoId(state, action.payload.id);
             }
         },
 
         editVideo(state, action: PayloadAction<{ id: VideoId; partial: Partial<Video> }>) {
-            const idx = state.videos.findIndex(v => v.id === action.payload.id);
-            const isFound = idx !== -1;
+            const isFound = state.entities[action.payload.id] !== undefined;
             if (isFound) {
-                Object.assign(state.videos[idx], action.payload.partial);
+                videoAdapter.updateOne(state, { id: action.payload.id, changes: action.payload.partial });
             }
         },
 
         incrementViews(state, action: PayloadAction<VideoId>) {
-            const idx = state.videos.findIndex(v => v.id === action.payload);
-            const isFound = idx !== -1;
+            const video = state.entities[action.payload];
+            const isFound = video !== undefined;
             if (isFound) {
-                state.videos[idx].views = (state.videos[idx].views + 1) as ViewCount;
+                video.views = (video.views + 1) as ViewCount;
             }
         },
 
         deleteVideo(state, action: PayloadAction<VideoId>) {
             const id = action.payload;
-            state.videos = state.videos.filter(v => v.id !== id);
+            videoAdapter.removeOne(state, id);
             state.watchHistory = state.watchHistory.filter(vid => vid !== id);
             state.likedVideos = state.likedVideos.filter(vid => vid !== id);
             state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
@@ -286,4 +295,3 @@ const videoSlice = createSlice({
 
 export const videoActions = videoSlice.actions;
 export default videoSlice;
-

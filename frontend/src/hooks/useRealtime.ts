@@ -6,6 +6,7 @@ import { selectAuthUser } from '@store/authSelectors';
 import { notificationsActions } from '@store/notificationsSlice';
 import { toastActions } from '@store/toastSlice';
 import { videoActions } from '@store/videoSlice';
+import { selectAllVideos } from '@store/videoSelectors';
 import { notifications as notificationsApi, video as videoApi } from '@api';
 import type { AppNotification as Notification, Vuid } from '@api';
 import { NotificationType } from '@enums/notificationType';
@@ -25,7 +26,7 @@ export function useRealtime(): void {
     useLayoutEffect(() => {
         locationRef.current = location;
     });
-    const videos = useAppSelector(state => state.video.videos);
+    const videos = useAppSelector(selectAllVideos);
     const videosRef = useRef<Video[]>(videos);
     useLayoutEffect(() => {
         videosRef.current = videos;

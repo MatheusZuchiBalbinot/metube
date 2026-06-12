@@ -6,6 +6,7 @@ import {
     selectLikedSet,
     selectDislikedSet,
 } from '@store/videoSelectors';
+import { videoAdapter } from '@store/videoSlice';
 import { VideoStatus, type Video, type VideoId } from '@models/video';
 
 // ─── Brand cast helpers ───────────────────────────────────────────────────────
@@ -31,9 +32,11 @@ function makeVideo(overrides: Partial<Video> = {}): Video {
 }
 
 function makeState(overrides: object = {}) {
+    const { videos = [] as Video[], ...rest } = overrides as { videos?: Video[] } & Record<string, unknown>;
+
     return {
         video: {
-            videos: [] as Video[],
+            ...videoAdapter.setAll(videoAdapter.getInitialState(), videos),
             watchHistory: [] as VideoId[],
             likedVideos: [] as VideoId[],
             dislikedVideos: [] as VideoId[],
@@ -49,7 +52,7 @@ function makeState(overrides: object = {}) {
             shortsVolume: 0.8,
             loading: false,
             error: null,
-            ...overrides,
+            ...rest,
         },
     };
 }

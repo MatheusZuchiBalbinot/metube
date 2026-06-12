@@ -10,7 +10,7 @@ interface UseProfileVideosResult {
 
 export function useProfileVideos(channelId: string, isOwnProfile: boolean): UseProfileVideosResult {
     const lastVideoStatusUpdate = useAppSelector(state => state.video.lastVideoStatusUpdate);
-    const reduxVideosCount = useAppSelector(state => state.video.videos.length);
+    const reduxVideosCount = useAppSelector(state => state.video.ids.length);
     const hasFetchedRef = useRef(false);
 
     const [videosState, setVideosState] = useState<RemoteData<Video[]>>(RemoteData.loading());

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useAppSelector } from '@store';
+import { selectAllVideos } from '@store/videoSelectors';
 import type { Vuid } from '@api';
 import { UploadMode } from '@enums/uploadMode';
 import { useVideo } from '@hooks';
@@ -29,7 +30,7 @@ export interface UseUploadModalReturn extends UseSingleUploadReturn, UseBatchUpl
  */
 export function useUploadModal(): UseUploadModalReturn {
     const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
-    const allVideos = useAppSelector(s => s.video.videos);
+    const allVideos = useAppSelector(selectAllVideos);
 
     const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);
     const [pollingVuids, setPollingVuids] = useState<Vuid[]>([]);

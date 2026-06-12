@@ -9,6 +9,7 @@ import type { Tag } from '@models/tag';
 import { VideoStatus } from '@models/video';
 import type { User } from '@hooks/useAuth';
 import type { RootState } from '@store';
+import { videoAdapter } from '@store/videoSlice';
 import type { Comment, Cuid } from '@models/comment';
 
 // ─── Brand cast helpers ────────────────────────────────────────────────────
@@ -76,9 +77,12 @@ export function makeComment(overrides: Partial<Comment> = {}): Comment {
 
 // ─── Redux State factories ─────────────────────────────────────────────────
 
-export function makeVideoState(overrides: object = {}) {
+export function makeVideoState(overrides: Record<string, unknown> = {}) {
+    const { videos: videosOverride, ...rest } = overrides as { videos?: Video[] } & Record<string, unknown>;
+    const videos = videosOverride ?? [makeVideo({ id: vid('v1') }), makeVideo({ id: vid('v2') })];
+
     return {
-        videos: [makeVideo({ id: vid('v1') }), makeVideo({ id: vid('v2') })],
+        ...videoAdapter.setAll(videoAdapter.getInitialState(), videos),
         watchHistory: [] as VideoId[],
         likedVideos: [] as VideoId[],
         dislikedVideos: [] as VideoId[],
@@ -96,7 +100,7 @@ export function makeVideoState(overrides: object = {}) {
         shortsVolume: 0.8,
         loading: false,
         error: null,
-        ...overrides,
+        ...rest,
     };
 }
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import videoSlice, { videoActions } from '@store/videoSlice';
+import videoSlice, { videoActions, videoAdapter } from '@store/videoSlice';
 import type { Video, VideoId, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Tag } from '@models/tag';
@@ -32,9 +32,12 @@ function makeVideo(overrides: Partial<Video> = {}): Video {
     };
 }
 
-function makeState(overrides: object = {}) {
+function makeState(overrides: Record<string, unknown> = {}) {
+    const { videos: videosOverride, ...rest } = overrides as { videos?: Video[] } & Record<string, unknown>;
+    const videos = videosOverride ?? [makeVideo({ id: vid('v1') }), makeVideo({ id: vid('v2') })];
+
     return {
-        videos: [makeVideo({ id: vid('v1') }), makeVideo({ id: vid('v2') })],
+        ...videoAdapter.setAll(videoAdapter.getInitialState(), videos),
         watchHistory: [] as VideoId[],
         likedVideos: [] as VideoId[],
         dislikedVideos: [] as VideoId[],
@@ -51,8 +54,13 @@ function makeState(overrides: object = {}) {
         shortsVolume: 0.8,
         loading: false,
         error: null,
-        ...overrides,
+        ...rest,
     };
+}
+
+/** Ordered list of videos from the normalized state, for assertions. */
+function list(state: { ids: VideoId[]; entities: Record<VideoId, Video> }): Video[] {
+    return state.ids.map(id => state.entities[id]);
 }
 
 // ─── updateVideoStatus ────────────────────────────────────────────────────────
@@ -62,7 +70,7 @@ describe('videoSlice — updateVideoStatus', () => {
         const vuid = (s: string) => s as unknown as Vuid;
         const state = makeState({ videos: [makeVideo({ id: vid('v1'), status: 'published' })] });
         const next = reducer(state, videoActions.updateVideoStatus({ vuid: vuid('v1'), status: 'processing' as VideoStatus }));
-        expect(next.videos[0].status).toBe('processing');
+        expect(list(next)[0].status).toBe('processing');
     });
 
     it('sets lastVideoStatusUpdate regardless of whether video is found', () => {
@@ -79,13 +87,13 @@ describe('videoSlice — updateVideo', () => {
     it('replaces the matching video entirely', () => {
         const state = makeState({ videos: [makeVideo({ id: vid('v1'), title: 'Old' })] });
         const next = reducer(state, videoActions.updateVideo(makeVideo({ id: vid('v1'), title: 'New' })));
-        expect(next.videos[0].title).toBe('New');
+        expect(list(next)[0].title).toBe('New');
     });
 
     it('does nothing when video id is not found', () => {
         const state = makeState();
         const next = reducer(state, videoActions.updateVideo(makeVideo({ id: vid('vXX'), title: 'Ghost' })));
-        expect(next.videos).toHaveLength(state.videos.length);
+        expect(list(next)).toHaveLength(list(state).length);
     });
 });
 
@@ -123,8 +131,8 @@ describe('videoSlice — deleteVideo', () => {
     it('removes the video from the list', () => {
         const state = makeState();
         const next = reducer(state, videoActions.deleteVideo(vid('v1')));
-        expect(next.videos.find(v => v.id === 'v1')).toBeUndefined();
-        expect(next.videos.find(v => v.id === 'v2')).toBeDefined();
+        expect(list(next).find(v => v.id === 'v1')).toBeUndefined();
+        expect(list(next).find(v => v.id === 'v2')).toBeDefined();
     });
 
     it('cleans up from watchHistory, liked, disliked', () => {
@@ -268,14 +276,14 @@ describe('videoSlice — addVideo', () => {
     it('prepends a new video to the list', () => {
         const state = makeState();
         const next = reducer(state, videoActions.addVideo(makeVideo({ id: vid('v-new'), title: 'New' })));
-        expect(next.videos).toHaveLength(state.videos.length + 1);
-        expect(next.videos[0].title).toBe('New');
+        expect(list(next)).toHaveLength(list(state).length + 1);
+        expect(list(next)[0].title).toBe('New');
     });
 
     it('places the new video at index 0', () => {
         const state = makeState();
         const next = reducer(state, videoActions.addVideo(makeVideo({ id: vid('v-new'), title: 'New' })));
-        expect(next.videos[0].id).toBe(vid('v-new'));
+        expect(list(next)[0].id).toBe(vid('v-new'));
     });
 });
 
@@ -285,19 +293,19 @@ describe('videoSlice — editVideo', () => {
     it('updates fields on the matching video', () => {
         const state = makeState();
         const next = reducer(state, videoActions.editVideo({ id: vid('v1'), partial: { title: 'Updated' } }));
-        expect(next.videos.find(v => v.id === 'v1')?.title).toBe('Updated');
+        expect(list(next).find(v => v.id === 'v1')?.title).toBe('Updated');
     });
 
     it('does not affect other videos', () => {
         const state = makeState();
         const next = reducer(state, videoActions.editVideo({ id: vid('v1'), partial: { title: 'Updated' } }));
-        expect(next.videos.find(v => v.id === 'v2')?.title).toBe('Test');
+        expect(list(next).find(v => v.id === 'v2')?.title).toBe('Test');
     });
 
     it('does nothing when video id is not found', () => {
         const state = makeState();
         const next = reducer(state, videoActions.editVideo({ id: vid('nonexistent'), partial: { title: 'X' } }));
-        expect(next.videos).toHaveLength(state.videos.length);
+        expect(list(next)).toHaveLength(list(state).length);
     });
 });
 
@@ -465,14 +473,14 @@ describe('videoSlice — incrementViews', () => {
     it('increments views by 1 for the matching video', () => {
         const state = makeState({ videos: [makeVideo({ id: vid('v1'), views: 10 })] });
         const next = reducer(state, videoActions.incrementViews(vid('v1')));
-        expect(next.videos[0].views).toBe(11);
+        expect(list(next)[0].views).toBe(11);
     });
 
     it('does nothing when video id is not found', () => {
         const state = makeState();
         const next = reducer(state, videoActions.incrementViews(vid('nonexistent')));
-        expect(next.videos[0].views).toBe(0);
-        expect(next.videos[1].views).toBe(0);
+        expect(list(next)[0].views).toBe(0);
+        expect(list(next)[1].views).toBe(0);
     });
 });
 
