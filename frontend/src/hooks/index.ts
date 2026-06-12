@@ -7,6 +7,7 @@ export { useVideoFetch } from './useVideoFetch';
 export { useBurstAnimation } from './useBurstAnimation';
 export { useClickDoubleClick } from './useClickDoubleClick';
 export { useClickOutside } from './useClickOutside';
+export { useCollapsibleList } from './useCollapsibleList';
 export { useDebounce } from './useDebounce';
 export { useFilterState } from './useFilterState';
 export { useFullscreen } from './useFullscreen';
