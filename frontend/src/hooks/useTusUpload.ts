@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import * as tus from 'tus-js-client';
+import type * as tus from 'tus-js-client';
+import { createTusUpload } from '@lib/tus';
 import { UploadStatus } from '@enums/uploadStatus';
 import type { UploadProgress } from '@utils';
 
@@ -18,9 +19,6 @@ interface UseTusUploadReturn {
     reset: () => void
 }
 
-const CHUNK_SIZE = 5 * 1024 * 1024;
-const RETRY_DELAYS = [0, 1_000, 3_000, 5_000, 10_000];
-
 function buildTusProgress(bytesUploaded: number, bytesTotal: number, startTime: number): UploadProgress {
     const percent = bytesTotal > 0 ? Math.round((bytesUploaded / bytesTotal) * 100) : 0;
     const elapsedSec = (Date.now() - startTime) / 1_000;
@@ -38,14 +36,7 @@ export function useTusUpload(): UseTusUploadReturn {
         return new Promise((resolve) => {
             const startTime = Date.now();
 
-            const upload = new tus.Upload(file, {
-                endpoint: '/api/uploads/tus',
-                retryDelays: RETRY_DELAYS,
-                chunkSize: CHUNK_SIZE,
-                metadata: {
-                    filename: file.name,
-                    filetype: file.type,
-                },
+            const upload = createTusUpload(file, {
                 onError: () => {
                     setStatus(UploadStatus.ERROR);
                     resolve(null);
@@ -53,15 +44,13 @@ export function useTusUpload(): UseTusUploadReturn {
                 onProgress: (bytesUploaded, bytesTotal) => {
                     setProgress(buildTusProgress(bytesUploaded, bytesTotal, startTime));
                 },
-                onSuccess: () => {
-                    const url = upload.url;
-                    const isUrlMissing = url === null || url === undefined;
-                    if (isUrlMissing) {
+                onSuccess: (uploadKey) => {
+                    const isKeyMissing = uploadKey === null;
+                    if (isKeyMissing) {
                         setStatus(UploadStatus.ERROR);
                         resolve(null);
                         return;
                     }
-                    const uploadKey = url.split('/').pop() ?? '';
                     setStatus(UploadStatus.DONE);
                     resolve({ uploadKey });
                 },
