@@ -70,7 +70,7 @@ class CrossTabSyncer {
     };
 
     private readonly _onPinnedVideo: SyncHandler = (value) => {
-        this.dispatch(playbackActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
+        this.dispatch(playbackActions.xTabSetPinnedVideoId(parseJSON<VideoId>(value)));
     };
 
     private readonly _onPlaylists: SyncHandler = (value) => {

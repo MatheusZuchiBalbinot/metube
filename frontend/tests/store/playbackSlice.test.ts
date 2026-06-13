@@ -114,7 +114,7 @@ describe('playbackSlice — initialState from localStorage', () => {
     });
 
     it('reads pinnedVideoId from localStorage when set', async () => {
-        localStorage.setItem('metube:pinned-video', 'vid-pinned');
+        localStorage.setItem('metube:pinned-video', '"vid-pinned"');
         const { default: slice } = await import('@store/playbackSlice');
         expect(slice.getInitialState().pinnedVideoId).toBe('vid-pinned');
     });
