@@ -9,6 +9,7 @@ use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\HlsTranscodeService;
 use App\Services\VideoStorageService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -29,7 +30,7 @@ use Throwable;
  * provided, a frame is extracted automatically at 20% of the video duration.
  * Batch uploads are not transcribed, matching the existing pipeline.
  */
-class TranscodeVideoToHls implements ShouldQueue
+class TranscodeVideoToHls implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
@@ -39,10 +40,23 @@ class TranscodeVideoToHls implements ShouldQueue
     /** @var int Attempts before marking as failed */
     public int $tries = 3;
 
+    /** @var int Seconds the uniqueness lock is held while the job is queued/running */
+    public int $uniqueFor = 3600;
+
     /**
      * @param Video $video Published video whose source file is ready at video_url
      */
     public function __construct(private readonly Video $video) {}
+
+    /**
+     * Ensure at most one transcode job per video is queued/running at a time.
+     *
+     * @return string Unique lock key derived from the video id
+     */
+    public function uniqueId(): string
+    {
+        return (string) $this->video->id;
+    }
 
     /**
      * Build the HLS package, auto-generate thumbnail if missing, extract audio

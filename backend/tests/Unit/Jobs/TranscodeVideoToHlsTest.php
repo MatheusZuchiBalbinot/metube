@@ -57,6 +57,12 @@ describe('TranscodeVideoToHls', function () {
         Storage::fake('public');
     });
 
+    test('uniqueId returns the video id so concurrent runs are deduplicated', function () {
+        $video = makeSourceVideo();
+
+        expect((new TranscodeVideoToHls($video))->uniqueId())->toBe((string) $video->id);
+    });
+
     describe('handle — single upload without thumbnail', function () {
         test('builds HLS, extracts audio, auto-generates thumbnail and dispatches transcription', function () {
             $video = makeSourceVideo(isBatch: false, thumbnailUrl: null);

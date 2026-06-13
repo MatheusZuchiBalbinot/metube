@@ -38,6 +38,13 @@ describe('GenerateAiMetadata', function () {
         ]);
     });
 
+    test('uniqueId returns the video id so concurrent runs are deduplicated', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+
+        expect((new GenerateAiMetadata($video))->uniqueId())->toBe((string) $video->id);
+    });
+
     test('generates summary from transcription', function () use (&$mockResponse) {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create(['is_batch' => false]);
