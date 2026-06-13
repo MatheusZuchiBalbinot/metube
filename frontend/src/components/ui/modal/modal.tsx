@@ -114,15 +114,22 @@ export default function Modal({
         return null;
     }
 
+    function handleOverlayClick(e: React.MouseEvent) {
+        const isBackdropClick = e.target === e.currentTarget;
+
+        if (isBackdropClick) {
+            onClose();
+        }
+    }
+
     return createPortal(
-        <div className="modal-overlay" role="presentation" onClick={onClose}>
+        <div className="modal-overlay" role="presentation" onClick={handleOverlayClick}>
             <div
                 ref={boxRef}
                 className={`modal-box modal-box--${size}`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={title ? 'modal-title' : undefined}
-                onClick={(e) => e.stopPropagation()}
             >
                 {title && (
                     <div className="modal-header">

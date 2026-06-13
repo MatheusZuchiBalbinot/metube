@@ -207,7 +207,7 @@ export default function MiniPlayer() {
                 onMouseDown={handleDragStart}
                 onKeyDown={handleDragKeyDown}
                 tabIndex={0}
-                role="slider"
+                role="button"
                 aria-label={t('mini_player.drag')}
             >
                 <div className="mini-player__info">

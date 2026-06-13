@@ -47,7 +47,15 @@ describe('ToastContainer', () => {
             toast: { toasts: [makeToast({ type: ToastType.INFO, message: 'Note' })] },
         });
         renderWithProviders(<ToastContainer />, { preloadedState: state });
-        expect(screen.getByRole('alert')).toHaveClass('toast--info');
+        expect(screen.getByText('Note').closest('.toast')).toHaveClass('toast--info');
+    });
+
+    it('only marks error toasts with role=alert (success/info are announced politely)', () => {
+        const state = makeRootState({
+            toast: { toasts: [makeToast({ type: ToastType.INFO, message: 'Note' })] },
+        });
+        renderWithProviders(<ToastContainer />, { preloadedState: state });
+        expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('renders action button when action is provided', () => {

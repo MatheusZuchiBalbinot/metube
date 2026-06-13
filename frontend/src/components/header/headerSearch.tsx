@@ -87,7 +87,17 @@ export default function HeaderSearch({
                             className="app-header__recent-item"
                             role="option"
                             aria-selected={false}
+                            tabIndex={0}
                             onClick={() => onRecentItemClick(term)}
+                            onKeyDown={e => {
+                                const isSelf = e.target === e.currentTarget;
+                                const isActivate = e.key === 'Enter' || e.key === ' ';
+
+                                if (isSelf && isActivate) {
+                                    e.preventDefault();
+                                    onRecentItemClick(term);
+                                }
+                            }}
                         >
                             <Clock size={13} className="app-header__recent-icon" />
                             <span className="app-header__recent-text">{term}</span>
@@ -116,7 +126,16 @@ export default function HeaderSearch({
                             className="app-header__recent-item"
                             role="option"
                             aria-selected={false}
+                            tabIndex={0}
                             onClick={() => onSuggestionClick(s)}
+                            onKeyDown={e => {
+                                const isActivate = e.key === 'Enter' || e.key === ' ';
+
+                                if (isActivate) {
+                                    e.preventDefault();
+                                    onSuggestionClick(s);
+                                }
+                            }}
                         >
                             {getSuggestionIcon(s.kind)}
                             <span className="app-header__recent-text">{s.label}</span>

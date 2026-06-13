@@ -38,6 +38,17 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
         navigate(videoUrl(video.id));
     }
 
+    function handleRowKeyDown(e: React.KeyboardEvent) {
+        const isActivate = e.key === 'Enter' || e.key === ' ';
+
+        if (!isActivate) {
+            return;
+        }
+
+        e.preventDefault();
+        handleRowClick();
+    }
+
     function handleRemove(e: React.MouseEvent) {
         e.stopPropagation();
         removeVideoFromPlaylist(playlistId, video.id);
@@ -45,7 +56,14 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
     }
 
     return (
-        <div className="playlist-video-row" onClick={handleRowClick}>
+        <div
+            className="playlist-video-row"
+            role="button"
+            tabIndex={0}
+            aria-label={video.title}
+            onClick={handleRowClick}
+            onKeyDown={handleRowKeyDown}
+        >
             <span className="playlist-video-row__drag-handle" aria-hidden="true">
                 <GripVertical size={14} />
             </span>
@@ -105,8 +123,15 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
     const isWatchLaterPlaylist = domain.playlist.isWatchLater(playlist);
     const displayName = isWatchLaterPlaylist ? t('playlist.watch_later_row') : playlist.name;
 
+    const videosRegionId = `playlist-videos-${playlist.id}`;
+
     function handleToggleExpand() {
         setExpanded(prev => !prev);
+    }
+
+    function handleChevronClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        handleToggleExpand();
     }
 
     function handleRenameStart(e: React.MouseEvent) {
@@ -174,6 +199,8 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
 
     return (
         <div className={cn('playlist-card', isEmpty && 'playlist-card--empty')}>
+            {/* Header click is a mouse convenience; the keyboard control is the focusable chevron button (aria-expanded). */}
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
             <div className="playlist-card__header" onClick={handleToggleExpand}>
                 <div className={cn('playlist-card__cover', hasMultipleVideos && 'playlist-card__cover--stacked')} aria-hidden="true">
                     {latestVideo ? (
@@ -197,6 +224,8 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
                 </div>
 
                 {renaming ? (
+                    // Wrapper only stops the click from bubbling to the header toggle; input + buttons inside are real controls.
+                    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
                     <div className="playlist-card__rename-form" onClick={handleRenameFormClick}>
                         <Input
                             autoFocus
@@ -269,9 +298,10 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
                             <button
                                 type="button"
                                 className="playlist-card__chevron"
-                                aria-label={expanded ? 'Collapse' : 'Expand'}
-                                tabIndex={-1}
-                                aria-hidden="true"
+                                aria-label={expanded ? t('common.collapse') : t('common.expand')}
+                                aria-expanded={expanded}
+                                aria-controls={videosRegionId}
+                                onClick={handleChevronClick}
                             >
                                 {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                             </button>
@@ -281,7 +311,7 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
             </div>
 
             {expanded && (
-                <div className="playlist-card__videos">
+                <div className="playlist-card__videos" id={videosRegionId}>
                     {videos.length === 0 ? (
                         <p className="playlist-card__empty">{t('playlist.empty_playlist')}</p>
                     ) : (

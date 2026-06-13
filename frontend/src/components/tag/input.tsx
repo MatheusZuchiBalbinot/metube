@@ -204,6 +204,8 @@ export default function TagInput({
     }
 
     return (
+        // Focus proxy: clicking the chip area focuses the input; the input itself is the keyboard-accessible control.
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
         <div className="tag-input" onClick={handleWrapClick}>
             <div className="tag-input__field-wrap">
                 {value.map(tag => (
@@ -230,17 +232,20 @@ export default function TagInput({
                     ref={inputRef}
                     type="text"
                     className="tag-input__field"
+                    role="combobox"
                     aria-label={t('tag.add_placeholder')}
                     placeholder={value.length === 0 ? resolvedPlaceholder : ''}
                     onKeyDown={handleKeyDown}
                     onChange={handleInputChange}
                     onBlur={handleInputBlur}
                     aria-autocomplete="list"
+                    aria-controls="tag-input-listbox"
                     aria-expanded={shouldShowDropdown}
                 />
                 {shouldShowDropdown && (
                     <ul
                         ref={listRef}
+                        id="tag-input-listbox"
                         className="tag-input__suggestions"
                         role="listbox"
                         aria-label={t('tag.suggestions')}

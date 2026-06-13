@@ -93,6 +93,8 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
         <article
             ref={rowRef}
             className={rowClass}
+            role="button"
+            aria-label={video.title}
             tabIndex={0}
             onClick={handleRowClick}
             onKeyDown={handleRowKeyDown}

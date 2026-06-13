@@ -83,6 +83,9 @@ export default function DragAndDrop({
 
     return (
         <div className="dnd-wrap">
+            {/* Drop zone is a mouse/drag convenience; the keyboard-accessible control is the overlaid
+                focusable <input type="file"> below (opacity:0, inset:0). */}
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
             <div
                 className={zoneClass}
                 onDragOver={(e) => {

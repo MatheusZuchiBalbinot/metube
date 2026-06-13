@@ -8,6 +8,8 @@
         "save": "Save",
         "back": "Back",
         "close": "Close",
+        "expand": "Expand",
+        "collapse": "Collapse",
         "remove": "Remove",
         "undo": "Undo",
         "try_again": "Try again",
@@ -487,6 +489,7 @@
     "player": {
         "play": "Play",
         "pause": "Pause",
+        "seek_bar": "Seek bar",
         "skip": "Skip 10 seconds",
         "mute": "Mute",
         "unmute": "Unmute",
