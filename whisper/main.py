@@ -12,7 +12,19 @@ LANGUAGE = os.environ.get("WHISPER_LANGUAGE", "pt") or None
 
 app = FastAPI()
 
-model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+_model: WhisperModel | None = None
+
+
+def get_model() -> WhisperModel:
+    """Lazily instantiate the Whisper model so importing this module (e.g. in
+    tests) does not trigger a model download."""
+    global _model
+
+    if _model is None:
+        _model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+
+    return _model
+
 
 class TranscribeRequest(BaseModel):
     file_path: str
@@ -44,7 +56,12 @@ def _segments_to_vtt(segments: list) -> str:
 
 @app.post("/transcribe", response_model=TranscribeResponse)
 def transcribe(body: TranscribeRequest) -> TranscribeResponse:
-    full_path = Path(STORAGE_ROOT) / body.file_path.lstrip("/")
+    root = Path(STORAGE_ROOT).resolve()
+    full_path = (root / body.file_path.lstrip("/")).resolve()
+
+    is_inside_root = full_path.is_relative_to(root)
+    if not is_inside_root:
+        raise HTTPException(status_code=400, detail="Invalid file path")
 
     if not full_path.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {full_path}")
@@ -54,7 +71,7 @@ def transcribe(body: TranscribeRequest) -> TranscribeResponse:
     # For translation, skip language hint so Whisper auto-detects the source language.
     language = None if is_translate else LANGUAGE
 
-    segments_gen, info = model.transcribe(
+    segments_gen, info = get_model().transcribe(
         str(full_path),
         beam_size=5,
         language=language,
