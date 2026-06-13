@@ -14,7 +14,7 @@ import SavePopover from './savePopover';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './card.css';
-import { useMediaQuery, useTrackImpression } from '@hooks';
+import { useMediaQuery, useTrackImpression, useClickOutside } from '@hooks';
 import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatDuration, formatRelativeDate, cn } from '@utils';
 import type { Video, Tag, VideoId } from '@models';
 
@@ -78,18 +78,7 @@ const VideoCard = memo(function VideoCard({
     const isTouchDevice = useMediaQuery('(hover: none)');
     const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
-    useEffect(() => {
-        if (!menuOpen) {
-            return;
-        }
-        const handler = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                setMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [menuOpen]);
+    useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
 
     function trackClick() {
         if (!hasValidVuid) {
@@ -266,7 +255,7 @@ const VideoCard = memo(function VideoCard({
                         onClick={e => {
                             e.stopPropagation(); setMenuOpen(v => !v);
                         }}
-                        aria-label="Actions"
+                        aria-label={t('video.actions')}
                         aria-expanded={menuOpen}
                     >
                         <MoreHorizontal size={13} />

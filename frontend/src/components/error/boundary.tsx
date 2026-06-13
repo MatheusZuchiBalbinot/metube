@@ -1,5 +1,6 @@
 import { Component, Fragment, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 import { AlertTriangle, RefreshCw, RotateCcw } from 'lucide-react';
 import { logger } from '@utils';
 import { BoundaryLevel } from '@enums/boundaryLevel';
@@ -154,6 +155,6 @@ export default class ErrorBoundary extends Component<Props, State> {
             );
         }
 
-        return <span className="error-boundary error-boundary--widget" aria-label="Error" />;
+        return <span className="error-boundary error-boundary--widget" aria-label={t('common.error_widget_label')} />;
     }
 }
