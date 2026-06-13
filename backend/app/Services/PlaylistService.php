@@ -138,16 +138,30 @@ final class PlaylistService
     /**
      * Reorder videos in a playlist using drag-and-drop.
      *
+     * The submitted vuids must match the playlist's current video set exactly:
+     * every video already in the playlist must be present, with no extra or
+     * duplicated vuids. A partial or mismatched list is rejected before the
+     * UPDATE so positions never become stale or duplicated.
+     *
+     * @param Playlist $playlist Playlist whose videos are being reordered
      * @param ReorderPlaylistVideosDTO $data Reorder data containing ordered video UUIDs
      *
-     * @throws ModelNotFoundException
+     * @throws ModelNotFoundException When a vuid does not exist or does not match the playlist's exact video set
      *
      * @return Playlist Reordered playlist
      */
     public function reorderPlaylistVideos(Playlist $playlist, ReorderPlaylistVideosDTO $data): Playlist
     {
         return DB::transaction(function () use ($playlist, $data) {
+            /** @var list<string> $playlistVuids */
+            $playlistVuids = $playlist->videos()->pluck('vuid')->all();
+
             if ($data->vuids === []) {
+                if ($playlistVuids !== []) {
+                    throw (new ModelNotFoundException())
+                        ->setModel(Video::class, $playlistVuids);
+                }
+
                 return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
             }
 
@@ -159,6 +173,16 @@ final class PlaylistService
             if ($missing !== []) {
                 throw (new ModelNotFoundException())
                     ->setModel(Video::class, array_values($missing));
+            }
+
+            $hasDuplicates = count($data->vuids) !== count(array_unique($data->vuids));
+            $extraVuids = array_diff($data->vuids, $playlistVuids);
+            $absentVuids = array_diff($playlistVuids, $data->vuids);
+            $isExactPlaylistSet = !$hasDuplicates && $extraVuids === [] && $absentVuids === [];
+
+            if (!$isExactPlaylistSet) {
+                throw (new ModelNotFoundException())
+                    ->setModel(Video::class, array_merge($extraVuids, $absentVuids));
             }
 
             // One UPDATE using CASE WHEN, instead of N separate updates.

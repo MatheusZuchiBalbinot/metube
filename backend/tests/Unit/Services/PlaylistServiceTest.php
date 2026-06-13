@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\DTOs\CreatePlaylistDTO;
+use App\DTOs\ReorderPlaylistVideosDTO;
 use App\DTOs\UpdatePlaylistDTO;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\PlaylistService;
 use Faker\Factory;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -75,5 +77,88 @@ describe('PlaylistService', function () {
 
         expect($playlist->videos()->where('video_id', $videoToRemove->id)->exists())->toBeFalse();
         expect($playlist->videos)->toHaveCount($videoCount - 1);
+    });
+
+    test('reorder videos updates positions when vuids match playlist exactly', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $videoB = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0], $videoB->id => ['position' => 1]]);
+
+        $service->reorderPlaylistVideos($playlist, new ReorderPlaylistVideosDTO([$videoB->vuid, $videoA->vuid]));
+
+        $reordered = $playlist->videos()->orderByPivot('position')->get();
+        expect($reordered->first()->id)->toBe($videoB->id)
+            ->and($reordered->last()->id)->toBe($videoA->id);
+    });
+
+    test('reorder videos rejects a partial list missing playlist videos', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $videoB = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0], $videoB->id => ['position' => 1]]);
+
+        $reorder = fn () => $service->reorderPlaylistVideos($playlist, new ReorderPlaylistVideosDTO([$videoA->vuid]));
+
+        expect($reorder)->toThrow(ModelNotFoundException::class);
+    });
+
+    test('reorder videos rejects extra vuids not in the playlist', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $extra = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0]]);
+
+        $reorder = fn () => $service->reorderPlaylistVideos(
+            $playlist,
+            new ReorderPlaylistVideosDTO([$videoA->vuid, $extra->vuid]),
+        );
+
+        expect($reorder)->toThrow(ModelNotFoundException::class);
+    });
+
+    test('reorder videos rejects duplicated vuids', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $videoB = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0], $videoB->id => ['position' => 1]]);
+
+        $reorder = fn () => $service->reorderPlaylistVideos(
+            $playlist,
+            new ReorderPlaylistVideosDTO([$videoA->vuid, $videoA->vuid]),
+        );
+
+        expect($reorder)->toThrow(ModelNotFoundException::class);
+    });
+
+    test('reorder videos rejects a non-existent vuid', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0]]);
+
+        $reorder = fn () => $service->reorderPlaylistVideos(
+            $playlist,
+            new ReorderPlaylistVideosDTO([$videoA->vuid, 'nonexistent']),
+        );
+
+        expect($reorder)->toThrow(ModelNotFoundException::class);
+    });
+
+    test('reorder videos rejects an empty list when the playlist has videos', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+        $videoA = Video::factory()->create();
+        $playlist->videos()->attach([$videoA->id => ['position' => 0]]);
+
+        $reorder = fn () => $service->reorderPlaylistVideos($playlist, new ReorderPlaylistVideosDTO([]));
+
+        expect($reorder)->toThrow(ModelNotFoundException::class);
+    });
+
+    test('reorder videos is a no-op for an empty playlist with empty vuids', function () use (&$service) {
+        $playlist = Playlist::factory()->create();
+
+        $result = $service->reorderPlaylistVideos($playlist, new ReorderPlaylistVideosDTO([]));
+
+        expect($result->videos)->toHaveCount(0);
     });
 });

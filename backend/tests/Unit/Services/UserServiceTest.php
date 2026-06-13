@@ -170,6 +170,47 @@ describe('UserService', function () {
             ->and($result[$video->vuid])->toBe(42);
     });
 
+    test('getUserProgress caps results at the 500 most recently updated rows', function () use (&$service) {
+        $user = User::factory()->create();
+
+        for ($i = 0; $i < 502; $i++) {
+            $video = Video::factory()->for($user, 'channel')->create();
+            VideoProgress::factory()->create([
+                'user_id' => $user->id,
+                'video_id' => $video->id,
+                'percent' => 10,
+                'updated_at' => now()->subMinutes(502 - $i),
+            ]);
+        }
+
+        $result = $service->getUserProgress($user);
+
+        expect($result)->toHaveCount(500);
+    });
+
+    test('getUserProgress returns the most recently updated rows first', function () use (&$service) {
+        $user = User::factory()->create();
+        $newer = Video::factory()->for($user, 'channel')->create();
+        $older = Video::factory()->for($user, 'channel')->create();
+
+        VideoProgress::factory()->create([
+            'user_id' => $user->id,
+            'video_id' => $older->id,
+            'percent' => 20,
+            'updated_at' => now()->subDay(),
+        ]);
+        VideoProgress::factory()->create([
+            'user_id' => $user->id,
+            'video_id' => $newer->id,
+            'percent' => 80,
+            'updated_at' => now(),
+        ]);
+
+        $result = $service->getUserProgress($user);
+
+        expect(array_key_first($result))->toBe($newer->vuid);
+    });
+
     test('getHistoryEvents returns aggregated watch activity', function () use (&$service) {
         config(['cache.metube.user.history_events.active' => false]);
 

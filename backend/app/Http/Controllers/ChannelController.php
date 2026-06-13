@@ -9,6 +9,7 @@ use App\Http\Resources\VideoResource;
 use App\Services\ChannelService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
@@ -43,17 +44,19 @@ class ChannelController extends Controller
      * (including processing, failed, scheduled, draft) so they can manage them
      * from their own profile. Otherwise only published videos are exposed.
      *
+     * @param Request $request Incoming request (provides the page query parameter)
      * @param string $uuid User UUID (v4)
      *
      * @throws ModelNotFoundException
      *
      * @return JsonResponse array{data: Video[], meta: {total: int}}
      */
-    public function videos(string $uuid): JsonResponse
+    public function videos(Request $request, string $uuid): JsonResponse
     {
         $channel = $this->channelService->getByUuid($uuid);
         $isOwner = auth()->id() === $channel->id;
-        $videos = $this->channelService->listVideos($channel, $isOwner);
+        $page = (int) $request->query('page', '1');
+        $videos = $this->channelService->listVideos($channel, $isOwner, $page);
 
         return $this->json(VideoResource::collection($videos));
     }
