@@ -1,0 +1,27 @@
+{
+    "plugins": ["stylelint-declaration-strict-value"],
+    "rules": {
+        "scale-unlimited/declaration-strict-value": [
+            ["/color/", "fill", "stroke", "font-size"],
+            {
+                "ignoreValues": [
+                    "transparent",
+                    "currentColor",
+                    "inherit",
+                    "initial",
+                    "unset",
+                    "none",
+                    "0",
+                    "/^rgba?\\(/",
+                    "/^hsla?\\(/",
+                    "/^color-mix\\(/",
+                    "/gradient/",
+                    "/^url\\(/"
+                ],
+                "severity": "warning",
+                "message": "Use a design token (var(--...)) instead of a hardcoded value for \"${property}\""
+            }
+        ]
+    },
+    "ignoreFiles": ["src/styles/base.css", "src/styles/tailwind.css", "dist/**", "docs/**"]
+}
