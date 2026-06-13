@@ -30,6 +30,8 @@ export default function AppLayout() {
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
     const isPermanentSidebar = !isVideoPage;
+    // Theater mode is persisted, so only hide the sidebar for it on the watch page.
+    const isSidebarHiddenForTheater = theaterMode && isVideoPage;
     const isMediumScreen = useMediaQuery('(max-width: 1280px)');
     const isRail = collapsed || isMediumScreen;
     useScrollRestoration();
@@ -94,7 +96,7 @@ export default function AppLayout() {
                     open={sidebarOpen}
                     permanent={isPermanentSidebar}
                     collapsed={isPermanentSidebar && isRail}
-                    hidden={theaterMode}
+                    hidden={isSidebarHiddenForTheater}
                     onClose={handleCloseSidebar}
                 />
                 {sidebarOpen && !isPermanentSidebar && (

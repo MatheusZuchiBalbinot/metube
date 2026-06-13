@@ -177,6 +177,25 @@ describe('useVideo', () => {
         });
     });
 
+    describe('toggleTheaterMode', () => {
+        it('flips theaterMode on and back off', () => {
+            const store = makeStore();
+            const { result } = renderHook(() => useVideo(), { wrapper: wrapper(store) });
+
+            expect(result.current.theaterMode).toBe(false);
+
+            act(() => {
+                result.current.toggleTheaterMode();
+            });
+            expect(result.current.theaterMode).toBe(true);
+
+            act(() => {
+                result.current.toggleTheaterMode();
+            });
+            expect(result.current.theaterMode).toBe(false);
+        });
+    });
+
     describe('updateProgress', () => {
         it('stores percent for videoId', () => {
             const v = makeVideo({ id: vid('v-prog') });

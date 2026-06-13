@@ -34,6 +34,7 @@ export function useVideo() {
     const pendingVideoSeek = useAppSelector(s => s.videoUi.pendingVideoSeek, shallowEqual);
     const shortsMuted = useAppSelector(s => s.playback.shortsMuted);
     const shortsVolume = useAppSelector(s => s.playback.shortsVolume);
+    const theaterMode = useAppSelector(s => s.playback.theaterMode);
 
     const historyTags = useAppSelector(selectHistoryTags);
     const publishedVideos = useAppSelector(selectPublishedVideos);
@@ -139,6 +140,10 @@ export function useVideo() {
         (volume: number) => dispatch(playbackActions.setShortsVolume(volume)),
         [dispatch],
     );
+    const toggleTheaterMode = useCallback(
+        () => dispatch(playbackActions.setTheaterMode(!theaterMode)),
+        [dispatch, theaterMode],
+    );
 
     return {
         videos,
@@ -158,6 +163,7 @@ export function useVideo() {
         recommendationsLoading,
         shortsMuted,
         shortsVolume,
+        theaterMode,
 
         addVideo,
         editVideo,
@@ -181,5 +187,6 @@ export function useVideo() {
         unpinVideo,
         setShortsMuted,
         setShortsVolume,
+        toggleTheaterMode,
     };
 }
