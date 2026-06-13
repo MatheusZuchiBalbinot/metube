@@ -34,6 +34,9 @@ export default function UploadBatchZone({
 
     return (
         <div className="upload-modal__batch">
+            {/* Drop zone is a mouse/drag convenience; the keyboard-accessible control is the overlaid
+                focusable <input type="file"> below (.dnd-input: opacity:0, inset:0). */}
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
             <div
                 className={cn('upload-modal__batch-drop', batchDragging && 'upload-modal__batch-drop--dragging')}
                 onDragOver={onDragOver}

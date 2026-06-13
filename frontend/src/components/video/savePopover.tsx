@@ -138,6 +138,8 @@ export default function SavePopover({ videoId, children }: SavePopoverProps) {
 
     return (
         <>
+            {/* Trigger wraps a real <button> (the children); keyboard activation bubbles here to open the popover. */}
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
             <div className="save-popover__trigger" onClick={handleTriggerClick}>
                 {children}
             </div>

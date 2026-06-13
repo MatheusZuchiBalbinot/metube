@@ -126,15 +126,22 @@ export default function NotificationsDrawer({ onClose, triggerRef }: Notificatio
     const isInitialLoading = loading && items.length === 0;
     const isEmpty = !loading && filtered.length === 0;
 
+    function handleOverlayClick(e: React.MouseEvent) {
+        const isBackdropClick = e.target === e.currentTarget;
+
+        if (isBackdropClick) {
+            onClose();
+        }
+    }
+
     return createPortal(
-        <div className="notifications-drawer-overlay" role="presentation" onClick={onClose}>
+        <div className="notifications-drawer-overlay" role="presentation" onClick={handleOverlayClick}>
             <div
                 ref={panelRef}
                 className="notifications-drawer"
                 role="dialog"
                 aria-label={t('notifications.title')}
                 tabIndex={-1}
-                onClick={e => e.stopPropagation()}
             >
                 <header className="notifications-drawer__header">
                     <div className="notifications-drawer__heading">

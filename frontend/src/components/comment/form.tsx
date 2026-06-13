@@ -72,6 +72,8 @@ export default function CommentForm({
     const formClass = cn('comment-form', expanded && 'comment-form--expanded');
 
     return (
+        // onBlur collapses the form when focus leaves it — a focus event that is inherently keyboard-accessible.
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <form
             className={formClass}
             onSubmit={(e) => {

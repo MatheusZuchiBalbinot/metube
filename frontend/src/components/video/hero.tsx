@@ -56,6 +56,8 @@ export default function VideoHero({ video }: VideoHeroProps) {
     return (
         <article
             className="video-hero"
+            role="button"
+            aria-label={video.title}
             tabIndex={0}
             onClick={handleClick}
             onKeyDown={handleArticleKeyDown}

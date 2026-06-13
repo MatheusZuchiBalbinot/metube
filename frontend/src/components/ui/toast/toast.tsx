@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
 import { selectToasts } from '@store/toastSelectors';
+import { ToastType } from '@enums/toastType';
 import { cn } from '@utils';
 import './toast.css';
 
@@ -35,10 +36,12 @@ function ToastItem({ toast }: ToastItemProps) {
     }
 
     const hasMedia = toast.thumbnail !== undefined;
+    // Errors interrupt assertively; success/info are announced politely by the container live region.
+    const liveRole = toast.type === ToastType.ERROR ? 'alert' : undefined;
 
     if (hasMedia) {
         return (
-            <div className={cn('toast', 'toast--media', `toast--${toast.type}`)} role="alert">
+            <div className={cn('toast', 'toast--media', `toast--${toast.type}`)} role={liveRole}>
                 <img
                     className="toast__thumb"
                     src={toast.thumbnail}
@@ -70,7 +73,7 @@ function ToastItem({ toast }: ToastItemProps) {
     }
 
     return (
-        <div className={cn('toast', `toast--${toast.type}`)} role="alert">
+        <div className={cn('toast', `toast--${toast.type}`)} role={liveRole}>
             <span className="toast__dot" aria-hidden="true" />
             <span className="toast__message">{toast.message}</span>
             {toast.action !== undefined && (

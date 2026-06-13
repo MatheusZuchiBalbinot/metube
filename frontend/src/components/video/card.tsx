@@ -171,6 +171,8 @@ const VideoCard = memo(function VideoCard({
         <article
             ref={cardRef}
             className={buildVideoCardClass(showActions, isNotInteractive)}
+            role="button"
+            aria-label={video.title}
             tabIndex={isNotInteractive ? -1 : 0}
             onClick={handleCardClick}
             onKeyDown={handleCardKeyDown}
@@ -179,6 +181,8 @@ const VideoCard = memo(function VideoCard({
             style={{ '--vc-color': palette.color, '--vc-bg': palette.bg } as React.CSSProperties}
         >
             <div className={cn('video-card__thumb', !thumbLoaded && !isPriority && 'video-card__thumb--loading')}>
+                {/* onLoad drives the lazy-load fade-in; it is a resource-load event, not a user interaction. */}
+                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
                 <img
                     className="video-card__thumb-img"
                     src={video.thumbnail}
@@ -226,6 +230,8 @@ const VideoCard = memo(function VideoCard({
                         {formatDuration(video.duration)}
                     </div>
                 )}
+                {/* Wrapper only stops the click from bubbling to the card; the Save control inside is a real button. */}
+                {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
                 <div
                     className={cn('video-card__save-trigger', isTouchDevice && 'video-card__save-trigger--touch')}
                     onClick={handleSaveTriggerClick}
@@ -248,6 +254,8 @@ const VideoCard = memo(function VideoCard({
             </div>
 
             {showActions && (
+                // Wrapper only stops the click from bubbling to the card; the menu items inside are real buttons.
+                // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
                 <div
                     className={cn('video-card__menu-wrap', menuOpen && 'video-card__menu-wrap--open')}
                     ref={menuRef}

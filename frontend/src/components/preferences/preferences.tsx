@@ -124,7 +124,8 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
         <div className="prefs-wrap">
             {open && (
                 <>
-                    <div className="prefs-backdrop" onClick={handleClose} />
+                    {/* Backdrop: click-to-dismiss is a mouse convenience; keyboard users dismiss via the close button. */}
+                    <div className="prefs-backdrop" role="presentation" onClick={handleClose} />
                     <div className="prefs-panel">
                         <div className="prefs-header">
                             <span className="prefs-title">{t('preferences.title')}</span>

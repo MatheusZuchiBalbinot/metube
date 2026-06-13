@@ -94,7 +94,7 @@ export default function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps)
                             <h3 className="shortcuts-modal__section-title">
                                 {t(section.titleKey, section.titleDefault)}
                             </h3>
-                            <ul className="shortcuts-modal__list" role="list">
+                            <ul className="shortcuts-modal__list">
                                 {section.shortcuts.map(s => (
                                     <li key={s.label} className="shortcuts-modal__item">
                                         <span className="shortcuts-modal__label">{s.label}</span>

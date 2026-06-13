@@ -28,6 +28,9 @@ export default function TagBadge({ tag, prefix, className, title, onClick }: Tag
     }
 
     return (
+        // Already keyboard-operable when clickable (role=button + tabIndex + onKeyDown below); the
+        // linter can't tell the conditional role is always paired with onClick, hence the disable.
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <span
             className={cls}
             style={{ background: palette.bg, color: palette.color }}

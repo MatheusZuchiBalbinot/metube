@@ -16,7 +16,14 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                     role="button"
                     tabIndex={0}
                     onClick={() => onNavigate(videos[0].id)}
-                    onKeyDown={e => e.key === 'Enter' && onNavigate(videos[0].id)}
+                    onKeyDown={e => {
+                        const isActivate = e.key === 'Enter' || e.key === ' ';
+
+                        if (isActivate) {
+                            e.preventDefault();
+                            onNavigate(videos[0].id);
+                        }
+                    }}
                 >
                     <div className="profile-page__diamond-overlay">
                         <div className="profile-page__diamond-info">
@@ -37,7 +44,14 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                             role="button"
                             tabIndex={0}
                             onClick={() => onNavigate(video.id)}
-                            onKeyDown={e => e.key === 'Enter' && onNavigate(video.id)}
+                            onKeyDown={e => {
+                                const isActivate = e.key === 'Enter' || e.key === ' ';
+
+                                if (isActivate) {
+                                    e.preventDefault();
+                                    onNavigate(video.id);
+                                }
+                            }}
                         >
                             <div className="profile-page__diamond-overlay">
                                 <div className="profile-page__diamond-info">
@@ -59,7 +73,14 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                             role="button"
                             tabIndex={0}
                             onClick={() => onNavigate(video.id)}
-                            onKeyDown={e => e.key === 'Enter' && onNavigate(video.id)}
+                            onKeyDown={e => {
+                                const isActivate = e.key === 'Enter' || e.key === ' ';
+
+                                if (isActivate) {
+                                    e.preventDefault();
+                                    onNavigate(video.id);
+                                }
+                            }}
                         >
                             <div className="profile-page__diamond-overlay">
                                 <div className="profile-page__diamond-info">

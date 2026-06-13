@@ -306,6 +306,13 @@ export default function PlayerSeekBar({
 
             <div
                 className="vp__seek"
+                role="slider"
+                tabIndex={0}
+                aria-label={t('player.seek_bar')}
+                aria-valuemin={0}
+                aria-valuemax={Math.round(duration)}
+                aria-valuenow={Math.round(currentTime)}
+                aria-valuetext={`${formatDuration(currentTime as Seconds)} / ${formatDuration(duration as Seconds)}`}
                 onClick={handleSeekClick}
                 onMouseDown={handleSeekMouseDown}
                 onMouseMove={handleSeekMouseMove}

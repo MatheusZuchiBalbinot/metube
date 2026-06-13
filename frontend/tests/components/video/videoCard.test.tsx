@@ -51,8 +51,8 @@ describe('VideoCard', () => {
         const user = userEvent.setup();
         renderWithProviders(<VideoCard video={video} />);
 
-        const articles = screen.getAllByRole('article');
-        await user.click(articles[0]);
+        const cards = screen.getAllByRole('button', { name: video.title });
+        await user.click(cards[0]);
 
         expect(mockNavigate).toHaveBeenCalled();
     });
