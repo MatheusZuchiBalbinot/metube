@@ -12,6 +12,7 @@ use App\Exceptions\WhisperException;
 use App\Models\Video;
 use App\Services\TranscriptionService;
 use App\Services\VideoStorageService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -20,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class TranscribeVideo implements ShouldQueue
+class TranscribeVideo implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
@@ -29,6 +30,9 @@ class TranscribeVideo implements ShouldQueue
 
     /** @var int Attempts before marking as failed */
     public int $tries = 3;
+
+    /** @var int Seconds the uniqueness lock is held while the job is queued/running */
+    public int $uniqueFor = 3600;
 
     /**
      * Estimated realtime factor for Whisper medium on CPU (seconds of audio per second of wall time).
@@ -42,6 +46,20 @@ class TranscribeVideo implements ShouldQueue
     public function __construct(private readonly Video $video)
     {
         $this->onQueue('transcription');
+    }
+
+    /**
+     * Ensure at most one transcription job per video is queued/running at a time.
+     *
+     * Guards against the double-transcription race: TranscodeVideoToHls is the single
+     * dispatcher of this job, but the lock is an extra backstop in case anything else
+     * (e.g. a manual retry) tries to enqueue a concurrent run for the same video.
+     *
+     * @return string Unique lock key derived from the video id
+     */
+    public function uniqueId(): string
+    {
+        return (string) $this->video->id;
     }
 
     /**

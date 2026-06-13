@@ -11,6 +11,7 @@ use App\Exceptions\AiException;
 use App\Models\Video;
 use App\Notifications\VideoAiSummaryReadyNotification;
 use App\Services\AiMetadataService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,7 +26,7 @@ use Throwable;
  * auto-applies suggested tags/title/description. For single uploads, creates
  * pending suggestions for creator review.
  */
-class GenerateAiMetadata implements ShouldQueue
+class GenerateAiMetadata implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,6 +35,19 @@ class GenerateAiMetadata implements ShouldQueue
 
     /** @var int Attempts before marking as failed */
     public int $tries = 5;
+
+    /** @var int Seconds the uniqueness lock is held while the job is queued/running */
+    public int $uniqueFor = 3600;
+
+    /**
+     * Ensure at most one AI metadata job per video is queued/running at a time.
+     *
+     * @return string Unique lock key derived from the video id
+     */
+    public function uniqueId(): string
+    {
+        return (string) $this->video->id;
+    }
 
     /**
      * Exponential backoff: 60s, 5min, 15min, 30min between retries.
