@@ -1,6 +1,6 @@
 import { createSlice, createEntityAdapter, type EntityState, type PayloadAction } from '@reduxjs/toolkit';
 import type { Vuid } from '@api';
-import { STORAGE_KEYS, loadFromStorage, isArray, isObject, isNumberInRange } from '@utils';
+import { STORAGE_KEYS, loadFromStorage, isArray, isObject } from '@utils';
 import type { Video, VideoId, VideoStatus, ViewCount } from '@models';
 
 /**
@@ -17,11 +17,6 @@ export interface VideoState extends EntityState<Video, VideoId> {
     likedVideos: VideoId[]
     dislikedVideos: VideoId[]
     videoProgress: Record<VideoId, number>
-    autoplay: boolean
-    pinnedVideoId: VideoId | null
-    theaterMode: boolean
-    shortsMuted: boolean
-    shortsVolume: number
     loading: boolean
     error: string | null
     lastVideoStatusUpdate: { vuid: Vuid; status: VideoStatus } | null
@@ -34,11 +29,6 @@ const initialState: VideoState = videoAdapter.getInitialState({
     likedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.LIKED_VIDEOS, [], isArray),
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
     videoProgress: loadFromStorage<Record<VideoId, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
-    autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
-    pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
-    theaterMode: loadFromStorage<boolean>(STORAGE_KEYS.THEATER_MODE, false, v => typeof v === 'boolean'),
-    shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
-    shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
     loading: false,
     error: null,
     lastVideoStatusUpdate: null,
@@ -113,10 +103,7 @@ const videoSlice = createSlice({
             state.watchHistory = state.watchHistory.filter(vid => vid !== id);
             state.likedVideos = state.likedVideos.filter(vid => vid !== id);
             state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
-            const isPinned = state.pinnedVideoId === id;
-            if (isPinned) {
-                state.pinnedVideoId = null;
-            }
+            // playbackSlice clears pinnedVideoId via its own video/deleteVideo case.
         },
 
         likeVideo(state, action: PayloadAction<VideoId>) {
@@ -184,31 +171,6 @@ const videoSlice = createSlice({
             }
         },
 
-        setAutoplay(state, action: PayloadAction<boolean>) {
-            state.autoplay = action.payload;
-        },
-
-        pinVideo(state, action: PayloadAction<VideoId>) {
-            const isAlreadyPinned = state.pinnedVideoId === action.payload;
-            state.pinnedVideoId = isAlreadyPinned ? null : action.payload;
-        },
-
-        unpinVideo(state) {
-            state.pinnedVideoId = null;
-        },
-
-        setTheaterMode(state, action: PayloadAction<boolean>) {
-            state.theaterMode = action.payload;
-        },
-
-        setShortsMuted(state, action: PayloadAction<boolean>) {
-            state.shortsMuted = action.payload;
-        },
-
-        setShortsVolume(state, action: PayloadAction<number>) {
-            state.shortsVolume = action.payload;
-        },
-
         // ─── Cross-tab sync reducers ───────────────────────────────────────────
         // Dispatched only by crossTabSync — must NOT trigger the persist listener
         // (names start with 'video/xTab' which the predicate explicitly excludes).
@@ -220,9 +182,6 @@ const videoSlice = createSlice({
         },
         xTabSetDislikedVideos(state, action: PayloadAction<VideoId[]>) {
             state.dislikedVideos = action.payload;
-        },
-        xTabSetPinnedVideoId(state, action: PayloadAction<VideoId | null>) {
-            state.pinnedVideoId = action.payload;
         },
 
         setServerRecommendations(state, action: PayloadAction<Video[]>) {

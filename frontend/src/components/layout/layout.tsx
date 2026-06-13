@@ -25,7 +25,7 @@ export default function AppLayout() {
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
     const activeTagView = useAppSelector(s => s.videoUi.activeTagView);
-    const theaterMode = useAppSelector(s => s.video.theaterMode);
+    const theaterMode = useAppSelector(s => s.playback.theaterMode);
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initCrossTabSync } from '@store/crossTabSync';
 import { themeActions } from '@store/themeSlice';
 import { videoActions } from '@store/videoSlice';
+import { playbackActions } from '@store/playbackSlice';
 import { playlistActions } from '@store/playlistSlice';
 import { subscriptionActions } from '@store/subscriptionSlice';
 import { STORAGE_KEYS } from '@utils/storageKeys';
@@ -147,7 +148,7 @@ describe('crossTabSync', () => {
             fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, 'v-pinned');
 
             expect(dispatch).toHaveBeenCalledWith(
-                videoActions.xTabSetPinnedVideoId('v-pinned'),
+                playbackActions.xTabSetPinnedVideoId('v-pinned'),
             );
         });
 
@@ -155,7 +156,7 @@ describe('crossTabSync', () => {
             fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, '');
 
             expect(dispatch).toHaveBeenCalledWith(
-                videoActions.xTabSetPinnedVideoId(null),
+                playbackActions.xTabSetPinnedVideoId(null),
             );
         });
     });

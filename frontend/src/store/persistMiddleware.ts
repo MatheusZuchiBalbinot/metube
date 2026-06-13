@@ -24,11 +24,21 @@ class StorePersistence {
         localStorage.setItem(STORAGE_KEYS.LIKED_VIDEOS, JSON.stringify(video.likedVideos));
         localStorage.setItem(STORAGE_KEYS.DISLIKED_VIDEOS, JSON.stringify(video.dislikedVideos));
         localStorage.setItem(STORAGE_KEYS.VIDEO_PROGRESS, JSON.stringify(video.videoProgress));
-        localStorage.setItem(STORAGE_KEYS.AUTOPLAY, JSON.stringify(video.autoplay));
-        localStorage.setItem(STORAGE_KEYS.PINNED_VIDEO, video.pinnedVideoId ?? '');
-        localStorage.setItem(STORAGE_KEYS.SHORTS_MUTED, JSON.stringify(video.shortsMuted));
-        localStorage.setItem(STORAGE_KEYS.SHORTS_VOLUME, String(video.shortsVolume));
-        localStorage.setItem(STORAGE_KEYS.THEATER_MODE, JSON.stringify(video.theaterMode));
+    };
+
+    // ─── Playback ─────────────────────────────────────────────────────────────
+    // Also reacts to video/deleteVideo because playbackSlice clears pinnedVideoId
+    // when its video is removed.
+    private readonly _persistPlayback = async (_: unknown, api: EffectAPI): Promise<void> => {
+        api.cancelActiveListeners();
+        await api.delay(400);
+
+        const { playback } = api.getState();
+        localStorage.setItem(STORAGE_KEYS.AUTOPLAY, JSON.stringify(playback.autoplay));
+        localStorage.setItem(STORAGE_KEYS.PINNED_VIDEO, playback.pinnedVideoId ?? '');
+        localStorage.setItem(STORAGE_KEYS.SHORTS_MUTED, JSON.stringify(playback.shortsMuted));
+        localStorage.setItem(STORAGE_KEYS.SHORTS_VOLUME, String(playback.shortsVolume));
+        localStorage.setItem(STORAGE_KEYS.THEATER_MODE, JSON.stringify(playback.theaterMode));
     };
 
     // ─── Theme ────────────────────────────────────────────────────────────────
@@ -87,6 +97,12 @@ class StorePersistence {
             predicate: (action) =>
                 action.type.startsWith('video/') && !action.type.includes('xTab'),
             effect: this._persistVideo,
+        });
+        this._mw.startListening({
+            predicate: (action) =>
+                (action.type.startsWith('playback/') || action.type === 'video/deleteVideo') &&
+                !action.type.includes('xTab'),
+            effect: this._persistPlayback,
         });
         this._mw.startListening({
             predicate: (action) => action.type.startsWith('theme/'),

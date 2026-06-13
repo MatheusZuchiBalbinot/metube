@@ -3,6 +3,7 @@ import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { videoUiActions } from '@store/videoUiSlice';
+import { playbackActions } from '@store/playbackSlice';
 import {
     selectAllVideos,
     selectHistoryTags,
@@ -24,15 +25,15 @@ export function useVideo() {
     // Granular selectors — each re-renders only when its specific value changes
     const videos = useAppSelector(selectAllVideos);
     const watchHistory = useAppSelector(s => s.video.watchHistory);
-    const pinnedVideoId = useAppSelector(s => s.video.pinnedVideoId);
+    const pinnedVideoId = useAppSelector(s => s.playback.pinnedVideoId);
     const videoProgress = useAppSelector(s => s.video.videoProgress, shallowEqual);
-    const autoplay = useAppSelector(s => s.video.autoplay);
+    const autoplay = useAppSelector(s => s.playback.autoplay);
     const uploadModalOpen = useAppSelector(s => s.videoUi.uploadModalOpen);
     const activeTagView = useAppSelector(s => s.videoUi.activeTagView, shallowEqual);
     const miniPlayer = useAppSelector(s => s.videoUi.miniPlayer, shallowEqual);
     const pendingVideoSeek = useAppSelector(s => s.videoUi.pendingVideoSeek, shallowEqual);
-    const shortsMuted = useAppSelector(s => s.video.shortsMuted);
-    const shortsVolume = useAppSelector(s => s.video.shortsVolume);
+    const shortsMuted = useAppSelector(s => s.playback.shortsMuted);
+    const shortsVolume = useAppSelector(s => s.playback.shortsVolume);
 
     const historyTags = useAppSelector(selectHistoryTags);
     const publishedVideos = useAppSelector(selectPublishedVideos);
@@ -84,7 +85,7 @@ export function useVideo() {
         [dispatch],
     );
     const setAutoplay = useCallback(
-        (value: boolean) => dispatch(videoActions.setAutoplay(value)),
+        (value: boolean) => dispatch(playbackActions.setAutoplay(value)),
         [dispatch],
     );
     const openUploadModal = useCallback(
@@ -123,19 +124,19 @@ export function useVideo() {
         return pendingVideoSeek.time;
     }, [dispatch, pendingVideoSeek]);
     const pinVideo = useCallback(
-        (id: VideoId) => dispatch(videoActions.pinVideo(id)),
+        (id: VideoId) => dispatch(playbackActions.pinVideo(id)),
         [dispatch],
     );
     const unpinVideo = useCallback(
-        () => dispatch(videoActions.unpinVideo()),
+        () => dispatch(playbackActions.unpinVideo()),
         [dispatch],
     );
     const setShortsMuted = useCallback(
-        (muted: boolean) => dispatch(videoActions.setShortsMuted(muted)),
+        (muted: boolean) => dispatch(playbackActions.setShortsMuted(muted)),
         [dispatch],
     );
     const setShortsVolume = useCallback(
-        (volume: number) => dispatch(videoActions.setShortsVolume(volume)),
+        (volume: number) => dispatch(playbackActions.setShortsVolume(volume)),
         [dispatch],
     );
 

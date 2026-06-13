@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
-import { videoActions } from '@store/videoSlice';
 import { videoUiActions } from '@store/videoUiSlice';
+import { playbackActions } from '@store/playbackSlice';
 import { selectWatchLaterIds } from '@store/playlistSelectors';
 import { analytics, toVuid, AnalyticsSource } from '@api';
 import Button from '@ui/button/button';
@@ -54,7 +54,7 @@ const VideoCard = memo(function VideoCard({
     const { t, i18n } = useTranslation();
     const dispatch = useAppDispatch();
     const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
-    const isPinned = useAppSelector(s => s.video.pinnedVideoId === video.id);
+    const isPinned = useAppSelector(s => s.playback.pinnedVideoId === video.id);
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
     const isSaved = watchLaterIds.has(video.id);
 
@@ -269,7 +269,7 @@ const VideoCard = memo(function VideoCard({
                                 className="video-card__menu-item"
                                 role="menuitem"
                                 onClick={() => {
-                                    dispatch(videoActions.pinVideo(video.id)); setMenuOpen(false);
+                                    dispatch(playbackActions.pinVideo(video.id)); setMenuOpen(false);
                                 }}
                             >
                                 {isPinned ? <PinOff size={12} /> : <Pin size={12} />}

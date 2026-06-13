@@ -1,6 +1,7 @@
 import commentSlice from './commentSlice';
 import videoSlice from './videoSlice';
 import videoUiSlice from './videoUiSlice';
+import playbackSlice from './playbackSlice';
 import themeSlice from './themeSlice';
 import authSlice from './authSlice';
 import toastSlice from './toastSlice';
@@ -14,6 +15,7 @@ export const rootReducer = {
     comment: commentSlice.reducer,
     video: videoSlice.reducer,
     videoUi: videoUiSlice.reducer,
+    playback: playbackSlice.reducer,
     theme: themeSlice.reducer,
     auth: authSlice.reducer,
     toast: toastSlice.reducer,

@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { useVideo } from '@hooks/useVideo';
 import videoSlice from '@store/videoSlice';
 import videoUiSlice from '@store/videoUiSlice';
+import playbackSlice from '@store/playbackSlice';
 import authSlice from '@store/authSlice';
 import themeSlice from '@store/themeSlice';
 import toastSlice from '@store/toastSlice';
@@ -32,6 +33,7 @@ function makeStore(preloaded = {}) {
         reducer: {
             video: videoSlice.reducer,
             videoUi: videoUiSlice.reducer,
+            playback: playbackSlice.reducer,
             auth: authSlice.reducer,
             theme: themeSlice.reducer,
             toast: toastSlice.reducer,
