@@ -20,7 +20,7 @@ import {
     useFullscreen,
     useVolumeWheel,
     useClickDoubleClick,
-    useOutsideClick,
+    useClickOutside,
     useVideo,
 } from '@hooks';
 
@@ -113,8 +113,8 @@ export function DefaultVideoPlayer({
     const { activeTrack, setActiveTrack } = usePlayerCaptions(captions);
 
     useVolumeWheel(containerRef, videoRef, applyVolume, revealControls);
-    useOutsideClick(settingsRef, handleCloseSettings);
-    useOutsideClick(captionsMenuRef, handleCloseCaptionsMenu);
+    useClickOutside(settingsRef, handleCloseSettings);
+    useClickOutside(captionsMenuRef, handleCloseCaptionsMenu);
 
     function handleCloseSettings() {
         setShowSettings(false);
