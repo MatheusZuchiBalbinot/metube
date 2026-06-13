@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { videoUiActions } from '@store/videoUiSlice';
 import {
     selectAllVideos,
     selectHistoryTags,
@@ -12,7 +13,7 @@ import {
     selectRecommendationsLoading,
 } from '@store/videoSelectors';
 import { video as videoApi, toVuid } from '@api';
-import type { TagView, MiniPlayerState } from '@store/videoSlice';
+import type { TagView, MiniPlayerState } from '@store/videoUiSlice';
 import type { Video, VideoId, Tag } from '@models';
 
 export type { TagView, MiniPlayerState };
@@ -26,10 +27,10 @@ export function useVideo() {
     const pinnedVideoId = useAppSelector(s => s.video.pinnedVideoId);
     const videoProgress = useAppSelector(s => s.video.videoProgress, shallowEqual);
     const autoplay = useAppSelector(s => s.video.autoplay);
-    const uploadModalOpen = useAppSelector(s => s.video.uploadModalOpen);
-    const activeTagView = useAppSelector(s => s.video.activeTagView, shallowEqual);
-    const miniPlayer = useAppSelector(s => s.video.miniPlayer, shallowEqual);
-    const pendingVideoSeek = useAppSelector(s => s.video.pendingVideoSeek, shallowEqual);
+    const uploadModalOpen = useAppSelector(s => s.videoUi.uploadModalOpen);
+    const activeTagView = useAppSelector(s => s.videoUi.activeTagView, shallowEqual);
+    const miniPlayer = useAppSelector(s => s.videoUi.miniPlayer, shallowEqual);
+    const pendingVideoSeek = useAppSelector(s => s.videoUi.pendingVideoSeek, shallowEqual);
     const shortsMuted = useAppSelector(s => s.video.shortsMuted);
     const shortsVolume = useAppSelector(s => s.video.shortsVolume);
 
@@ -87,38 +88,38 @@ export function useVideo() {
         [dispatch],
     );
     const openUploadModal = useCallback(
-        () => dispatch(videoActions.openUploadModal()),
+        () => dispatch(videoUiActions.openUploadModal()),
         [dispatch],
     );
     const closeUploadModal = useCallback(
-        () => dispatch(videoActions.closeUploadModal()),
+        () => dispatch(videoUiActions.closeUploadModal()),
         [dispatch],
     );
     const openTagView = useCallback(
-        (tag: Tag, fromVideoId: VideoId | null) => dispatch(videoActions.openTagView({ tag, fromVideoId })),
+        (tag: Tag, fromVideoId: VideoId | null) => dispatch(videoUiActions.openTagView({ tag, fromVideoId })),
         [dispatch],
     );
     const closeTagView = useCallback(
-        () => dispatch(videoActions.closeTagView()),
+        () => dispatch(videoUiActions.closeTagView()),
         [dispatch],
     );
     const openMiniPlayer = useCallback(
-        (s: Omit<MiniPlayerState, 'seekSession'>) => dispatch(videoActions.openMiniPlayer(s)),
+        (s: Omit<MiniPlayerState, 'seekSession'>) => dispatch(videoUiActions.openMiniPlayer(s)),
         [dispatch],
     );
     const closeMiniPlayer = useCallback(
-        () => dispatch(videoActions.closeMiniPlayer()),
+        () => dispatch(videoUiActions.closeMiniPlayer()),
         [dispatch],
     );
     const setPendingVideoSeek = useCallback(
-        (videoId: VideoId, time: number) => dispatch(videoActions.setPendingVideoSeek({ videoId, time })),
+        (videoId: VideoId, time: number) => dispatch(videoUiActions.setPendingVideoSeek({ videoId, time })),
         [dispatch],
     );
     const consumePendingVideoSeek = useCallback((videoId: VideoId): number | null => {
         if (pendingVideoSeek?.videoId !== videoId) {
             return null;
         }
-        dispatch(videoActions.clearPendingVideoSeek());
+        dispatch(videoUiActions.clearPendingVideoSeek());
         return pendingVideoSeek.time;
     }, [dispatch, pendingVideoSeek]);
     const pinVideo = useCallback(

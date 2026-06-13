@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { videoUiActions } from '@store/videoUiSlice';
 import { domain } from '@domain';
 import type { Video, VideoId } from '@models';
 
@@ -197,8 +198,8 @@ export function useVideoProgress({
             return;
         }
 
-        dispatch(videoActions.setPendingVideoSeek({ videoId, time: currentT }));
-        dispatch(videoActions.openMiniPlayer({ videoId, currentTime: currentT }));
+        dispatch(videoUiActions.setPendingVideoSeek({ videoId, time: currentT }));
+        dispatch(videoUiActions.openMiniPlayer({ videoId, currentTime: currentT }));
         updateProgressDispatch(videoId);
     }
 

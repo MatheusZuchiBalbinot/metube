@@ -3,14 +3,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import videoSlice, { videoActions, videoAdapter } from '@store/videoSlice';
 import type { Video, VideoId, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
-import type { Tag } from '@models/tag';
 import type { Vuid } from '@api';
 
 // ─── Brand cast helpers ───────────────────────────────────────────────────────
 
 const vid = (s: string) => s as unknown as VideoId;
 const chId = (s: string) => s as unknown as ChannelId;
-const t = (s: string) => s as unknown as Tag;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,10 +41,6 @@ function makeState(overrides: Record<string, unknown> = {}) {
         dislikedVideos: [] as VideoId[],
         videoProgress: {} as Record<string, number>,
         autoplay: true,
-        uploadModalOpen: false,
-        activeTagView: null,
-        miniPlayer: null,
-        pendingVideoSeek: null,
         watchEvents: [],
         pinnedVideoId: null as VideoId | null,
         theaterMode: false,
@@ -348,80 +342,6 @@ describe('videoSlice — setAutoplay', () => {
         const state = makeState({ autoplay: false });
         const next = reducer(state, videoActions.setAutoplay(true));
         expect(next.autoplay).toBe(true);
-    });
-});
-
-// ─── uploadModal ──────────────────────────────────────────────────────────────
-
-describe('videoSlice — uploadModal', () => {
-    it('opens the upload modal', () => {
-        const state = makeState({ uploadModalOpen: false });
-        const next = reducer(state, videoActions.openUploadModal());
-        expect(next.uploadModalOpen).toBe(true);
-    });
-
-    it('closes the upload modal', () => {
-        const state = makeState({ uploadModalOpen: true });
-        const next = reducer(state, videoActions.closeUploadModal());
-        expect(next.uploadModalOpen).toBe(false);
-    });
-});
-
-// ─── tagView ──────────────────────────────────────────────────────────────────
-
-describe('videoSlice — tagView', () => {
-    it('opens tag view with the given payload', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.openTagView({ tag: t('react'), fromVideoId: vid('v1') }));
-        expect(next.activeTagView?.tag).toBe(t('react'));
-        expect(next.activeTagView?.fromVideoId).toBe(vid('v1'));
-    });
-
-    it('closes tag view', () => {
-        const state = makeState({ activeTagView: { tag: t('react'), fromVideoId: vid('v1') } });
-        const next = reducer(state, videoActions.closeTagView());
-        expect(next.activeTagView).toBeNull();
-    });
-});
-
-// ─── miniPlayer ───────────────────────────────────────────────────────────────
-
-describe('videoSlice — miniPlayer', () => {
-    it('sets mini player state', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.openMiniPlayer({ videoId: vid('v1'), currentTime: 30 }));
-        expect(next.miniPlayer?.videoId).toBe(vid('v1'));
-        expect(next.miniPlayer?.currentTime).toBe(30);
-    });
-
-    it('increments seekSession on each open', () => {
-        const state = makeState();
-        const first = reducer(state, videoActions.openMiniPlayer({ videoId: vid('v1'), currentTime: 0 }));
-        const second = reducer(first, videoActions.openMiniPlayer({ videoId: vid('v1'), currentTime: 10 }));
-        expect(second.miniPlayer?.seekSession).toBeGreaterThan(first.miniPlayer?.seekSession ?? -1);
-    });
-
-    it('closes mini player', () => {
-        const state = makeState({ miniPlayer: { videoId: vid('v1'), currentTime: 0, seekSession: 1 } });
-        const next = reducer(state, videoActions.closeMiniPlayer());
-        expect(next.miniPlayer).toBeNull();
-    });
-});
-
-// ─── pendingVideoSeek ─────────────────────────────────────────────────────────
-
-describe('videoSlice — pendingVideoSeek', () => {
-    it('stores the pending seek payload', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.setPendingVideoSeek({ videoId: vid('v1'), time: 42 }));
-        expect(next.pendingVideoSeek?.videoId).toBe(vid('v1'));
-        expect(next.pendingVideoSeek?.time).toBe(42);
-    });
-
-    it('clears the pending seek', () => {
-        const state = makeState({ pendingVideoSeek: { videoId: vid('v1'), time: 42 } });
-        const next = reducer(state, videoActions.clearPendingVideoSeek());
-        expect(next.pendingVideoSeek).toBeNull();
     });
 });
 

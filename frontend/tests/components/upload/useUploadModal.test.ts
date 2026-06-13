@@ -6,9 +6,10 @@ import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import videoSlice from '@store/videoSlice';
+import videoUiSlice from '@store/videoUiSlice';
 import toastSlice from '@store/toastSlice';
 import { UploadMode } from '@enums/uploadMode';
-import { makeVideoState, makeVideo, vid, tag } from '../../helpers/factories';
+import { makeVideoState, makeVideoUiState, makeVideo, vid, tag } from '../../helpers/factories';
 
 vi.mock('@hooks/useTusUpload', () => ({
     useTusUpload: () => ({
@@ -32,10 +33,14 @@ vi.mock('@api/videos', () => ({
 
 import { useUploadModal } from '@components/upload/useUploadModal';
 
-function makeStore(videoOverrides = {}) {
+function makeStore({ video = {}, videoUi = {} }: { video?: object; videoUi?: object } = {}) {
     return configureStore({
-        reducer: { video: videoSlice.reducer, toast: toastSlice.reducer },
-        preloadedState: { video: makeVideoState(videoOverrides), toast: { toasts: [] } },
+        reducer: { video: videoSlice.reducer, videoUi: videoUiSlice.reducer, toast: toastSlice.reducer },
+        preloadedState: {
+            video: makeVideoState(video),
+            videoUi: makeVideoUiState(videoUi),
+            toast: { toasts: [] },
+        },
     });
 }
 
@@ -52,10 +57,12 @@ beforeEach(() => {
 describe('useUploadModal', () => {
     it('derives existing tags from the store, deduplicated and sorted', () => {
         const store = makeStore({
-            videos: [
-                makeVideo({ id: vid('v1'), tags: [tag('react'), tag('test')] }),
-                makeVideo({ id: vid('v2'), tags: [tag('react'), tag('app')] }),
-            ],
+            video: {
+                videos: [
+                    makeVideo({ id: vid('v1'), tags: [tag('react'), tag('test')] }),
+                    makeVideo({ id: vid('v2'), tags: [tag('react'), tag('app')] }),
+                ],
+            },
         });
 
         const { result } = renderHook(() => useUploadModal(), { wrapper: makeWrapper(store) });
@@ -80,7 +87,7 @@ describe('useUploadModal', () => {
     });
 
     it('reflects the store open flag and closes the modal', () => {
-        const store = makeStore({ uploadModalOpen: true });
+        const store = makeStore({ videoUi: { uploadModalOpen: true } });
         const { result } = renderHook(() => useUploadModal(), { wrapper: makeWrapper(store) });
 
         expect(result.current.uploadModalOpen).toBe(true);
@@ -89,7 +96,7 @@ describe('useUploadModal', () => {
             result.current.handleClose();
         });
 
-        expect(store.getState().video.uploadModalOpen).toBe(false);
+        expect(store.getState().videoUi.uploadModalOpen).toBe(false);
     });
 
     it('exposes a combined, not busy state by default', () => {

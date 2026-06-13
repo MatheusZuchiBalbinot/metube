@@ -89,10 +89,6 @@ export function makeVideoState(overrides: Record<string, unknown> = {}) {
         savedVideos: [] as VideoId[],
         videoProgress: {} as Record<string, number>,
         autoplay: true,
-        uploadModalOpen: false,
-        activeTagView: null,
-        miniPlayer: null,
-        pendingVideoSeek: null,
         watchEvents: [],
         pinnedVideoId: null as VideoId | null,
         theaterMode: false,
@@ -101,6 +97,16 @@ export function makeVideoState(overrides: Record<string, unknown> = {}) {
         loading: false,
         error: null,
         ...rest,
+    };
+}
+
+export function makeVideoUiState(overrides: object = {}) {
+    return {
+        uploadModalOpen: false,
+        activeTagView: null,
+        miniPlayer: null,
+        pendingVideoSeek: null,
+        ...overrides,
     };
 }
 
@@ -125,6 +131,7 @@ export function makeThemeState(overrides: object = {}) {
 export function makeRootState(overrides: Partial<RootState> = {}): RootState {
     return {
         video: makeVideoState(),
+        videoUi: makeVideoUiState(),
         auth: makeAuthState(),
         theme: makeThemeState(),
         toast: { toasts: [] },
