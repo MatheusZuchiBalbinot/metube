@@ -18,12 +18,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: var(--space-1_5);
     line-height: 1;
     font-weight: var(--font-semibold);
     font-family: inherit;
     cursor: pointer;
-    transition: all var(--duration-default);
+    transition-property: background, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--duration-default);
     user-select: none;
     border: none;
     text-decoration: none;
@@ -40,7 +41,7 @@
 }
 
 .btn__label {
-    gap: 4px;
+    gap: var(--space-1);
     line-height: 0;
     align-items: center;
     display: inline-flex;
@@ -118,7 +119,7 @@
 
 .btn--danger {
     background: rgba(239, 68, 68, 0.10);
-    color: #f87171;
+    color: var(--color-error-fg);
     border: 1px solid rgba(239, 68, 68, 0.20);
 }
 
@@ -131,14 +132,14 @@
 
 .btn--sm {
     height: 32px;
-    padding: 0 12px;
+    padding: 0 var(--space-3);
     font-size: var(--text-sm);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .btn--md {
     height: 38px;
-    padding: 0 16px;
+    padding: 0 var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius);
 }
@@ -154,7 +155,7 @@
     width: var(--icon-md);
     height: var(--icon-md);
     padding: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     font-size: var(--text-base);
 }
 

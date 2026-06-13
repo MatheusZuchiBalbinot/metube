@@ -58,7 +58,7 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     padding: 18px;
     box-shadow: 0 24px 64px var(--shadow-lg), 0 0 0 1px var(--border);
     animation: panelIn 0.18s var(--ease-out);
@@ -78,8 +78,8 @@
 }
 
 .prefs-title {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
     color: var(--text);
     letter-spacing: -0.01em;
 }
@@ -87,7 +87,7 @@
 .prefs-close {
     width: 22px;
     height: 22px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     border: none;
     background: transparent;
     color: var(--text-3);
@@ -108,7 +108,7 @@
 }
 
 .prefs-section {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .prefs-section:last-child {
@@ -116,8 +116,8 @@
 }
 
 .prefs-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-semibold);
     text-transform: uppercase;
     letter-spacing: 0.07em;
     color: var(--text-3);
@@ -126,9 +126,9 @@
 
 .prefs-toggle {
     display: flex;
-    gap: 4px;
+    gap: var(--space-1);
     background: var(--surface-2);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     padding: 3px;
 }
 
@@ -138,13 +138,13 @@
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 7px 10px;
-    border-radius: var(--radius-md);
+    padding: 7px var(--space-2_5);
+    border-radius: var(--radius-sm);
     border: none;
     background: transparent;
     color: var(--text-2);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     font-family: inherit;
     cursor: pointer;
     white-space: nowrap;
@@ -167,7 +167,7 @@
 
 .prefs-colors {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
     align-items: center;
     padding: 2px 0;
 }
@@ -203,7 +203,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .prefs-autoplay-row .prefs-label {

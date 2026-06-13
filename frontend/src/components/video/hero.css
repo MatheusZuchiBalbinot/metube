@@ -2,8 +2,8 @@
 
 .video-hero {
     display: flex;
-    gap: 24px;
-    padding: 20px;
+    gap: var(--space-6);
+    padding: var(--space-5);
     border-left: 4px solid var(--vh-color, var(--accent));
     background: linear-gradient(120deg,
             color-mix(in srgb, var(--vh-bg, var(--surface-2)) 35%, transparent),
@@ -25,7 +25,7 @@
     width: 380px;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--surface-3);
 }
 
@@ -93,13 +93,13 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2_5);
     justify-content: center;
 }
 
 .video-hero__title {
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
     color: var(--text);
     line-height: 1.4;
     display: -webkit-box;
@@ -116,7 +116,7 @@
 /* ─── Description ────────────────────────────────────────────────────────────── */
 
 .video-hero__description {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-3);
     line-height: 1.55;
     display: -webkit-box;
@@ -131,18 +131,18 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
 }
 
 .video-hero__meta-channel {
     color: var(--text-2);
-    font-weight: 500;
+    font-weight: var(--font-medium);
 }
 
 .video-hero__meta-sub {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     color: var(--text-3);
 }
 
@@ -160,9 +160,9 @@
 }
 
 .video-hero__tag {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    padding: 2px 8px;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-semibold);
+    padding: 2px var(--space-2);
     border-radius: var(--radius-full);
     letter-spacing: 0.02em;
     cursor: pointer;
@@ -174,7 +174,7 @@
 }
 
 .video-hero__tags-more {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-3);
 }
 

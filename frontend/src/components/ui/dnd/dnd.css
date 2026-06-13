@@ -3,7 +3,7 @@
 .dnd-wrap {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .dnd-zone {
@@ -12,7 +12,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--space-3);
     text-align: center;
     cursor: pointer;
     padding: 40px;
@@ -53,7 +53,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     transition: background var(--duration-default), color var(--duration-default);
 }
 
@@ -68,8 +68,8 @@
 }
 
 .dnd-filename {
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: var(--text-sm-plus);
+    font-weight: var(--font-semibold);
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
@@ -78,18 +78,18 @@
 }
 
 .dnd-filesize {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-3);
 }
 
 .dnd-clear {
     position: relative;
     z-index: 10;
-    margin-top: 4px;
+    margin-top: var(--space-1);
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8125rem;
+    gap: var(--space-1_5);
+    font-size: var(--text-sm);
     font-family: inherit;
     color: var(--text-2);
     background: transparent;
@@ -103,22 +103,22 @@
 }
 
 .dnd-label {
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: var(--text-sm-plus);
+    font-weight: var(--font-semibold);
     color: var(--text);
 }
 
 .dnd-sublabel {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-2);
 }
 
 .dnd-error {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: #f87171;
+    gap: var(--space-1_5);
+    font-size: var(--text-sm);
+    color: var(--color-error-fg);
 }
 
 :root[data-mode='light'] .dnd-error { color: #dc2626; }

@@ -6,7 +6,7 @@
     font: inherit;
     color: var(--accent);
     cursor: pointer;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ts-link:hover {

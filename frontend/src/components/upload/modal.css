@@ -13,13 +13,13 @@
 
 .upload-modal__tab {
     flex: 1;
-    padding: 6px 12px;
+    padding: var(--space-1_5) var(--space-3);
     border: none;
     border-radius: calc(var(--radius) - 2px);
     background: transparent;
     color: var(--text-2);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     cursor: pointer;
     transition: background var(--duration-default), color var(--duration-default);
 }
@@ -32,7 +32,7 @@
 .upload-modal__tab--active {
     background: var(--surface);
     color: var(--text);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--elevation-1);
 }
 
 /* ─── Batch mode container ────────────────────────────────────────────────── */
@@ -40,7 +40,7 @@
 .upload-modal__batch {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-3_5);
 }
 
 /* ─── Batch drop zone ─────────────────────────────────────────────────────── */
@@ -51,8 +51,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 28px 20px;
+    gap: var(--space-1);
+    padding: 28px var(--space-5);
     border: 2px dashed var(--border);
     border-radius: var(--radius);
     background: var(--surface-2);
@@ -67,13 +67,13 @@
 }
 
 .upload-modal__batch-drop-label {
-    font-size: 0.9375rem;
-    font-weight: 500;
+    font-size: var(--text-sm-plus);
+    font-weight: var(--font-medium);
     color: var(--text);
 }
 
 .upload-modal__batch-drop-sub {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-3);
 }
 
@@ -82,7 +82,7 @@
 .upload-modal__batch-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1_5);
     max-height: 300px;
     overflow-y: auto;
 }
@@ -90,8 +90,8 @@
 .upload-modal__batch-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: var(--space-2_5);
+    padding: var(--space-2_5) var(--space-3);
     border-radius: var(--radius);
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -99,12 +99,12 @@
 }
 
 .upload-modal__batch-item--done {
-    border-color: var(--success, #22c55e);
+    border-color: var(--color-success);
     opacity: 0.85;
 }
 
 .upload-modal__batch-item--error {
-    border-color: var(--danger, #ef4444);
+    border-color: var(--color-error);
 }
 
 .upload-modal__batch-item-body {
@@ -121,8 +121,8 @@
     border: none;
     outline: none;
     color: var(--text);
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
     padding: 0;
     font-family: inherit;
 }
@@ -137,7 +137,7 @@
 }
 
 .upload-modal__batch-filename {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-3);
     white-space: nowrap;
     overflow: hidden;
@@ -147,15 +147,15 @@
 .upload-modal__batch-progress {
     height: 3px;
     background: var(--surface-3);
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
     overflow: hidden;
-    margin-top: 4px;
+    margin-top: var(--space-1);
 }
 
 .upload-modal__batch-progress-fill {
     height: 100%;
     background: var(--accent);
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
     transition: width 0.2s ease;
 }
 
@@ -173,29 +173,29 @@
     border: none;
     color: var(--text-3);
     cursor: pointer;
-    padding: 4px;
+    padding: var(--space-1);
     border-radius: var(--radius-sm, 4px);
     transition: color var(--duration-default), background var(--duration-default);
 }
 
 .upload-modal__batch-remove:hover {
-    color: var(--danger, #ef4444);
+    color: var(--color-error);
     background: var(--surface-3);
 }
 
 .upload-modal__batch-pct {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-3);
     min-width: 32px;
     text-align: right;
 }
 
 .upload-modal__batch-done {
-    color: var(--success, #22c55e);
+    color: var(--color-success);
 }
 
 .upload-modal__batch-error {
-    color: var(--danger, #ef4444);
+    color: var(--color-error);
 }
 
 /* ─── Batch title Input override ─────────────────────────────────────────── */
@@ -227,8 +227,8 @@
 }
 
 .upload-modal__label {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     color: var(--text-2);
     letter-spacing: 0.01em;
 }
@@ -237,7 +237,7 @@
 
 .upload-modal__row {
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .upload-modal__row > .upload-modal__field {
@@ -253,10 +253,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm-plus);
     font-family: inherit;
-    line-height: 1.5;
-    padding: 12px 14px;
+    line-height: var(--leading-normal);
+    padding: var(--space-3) var(--space-3_5);
     outline: none;
     resize: vertical;
     min-height: 80px;
@@ -282,11 +282,11 @@
 
 .upload-modal__preview-strip {
     display: flex;
-    gap: 12px;
+    gap: var(--space-3);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 6px;
+    padding-bottom: var(--space-1_5);
 }
 
 .upload-modal__preview-strip::-webkit-scrollbar {
@@ -295,12 +295,12 @@
 
 .upload-modal__preview-strip::-webkit-scrollbar-track {
     background: var(--surface-2);
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
 }
 
 .upload-modal__preview-strip::-webkit-scrollbar-thumb {
     background: var(--border-2);
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
 }
 
 .upload-modal__preview-item {
@@ -308,13 +308,13 @@
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .upload-modal__preview-caption {
-    font-size: 0.6875rem;
+    font-size: var(--text-2xs);
     color: var(--text-3);
-    font-weight: 600;
+    font-weight: var(--font-semibold);
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
@@ -334,12 +334,12 @@
 .upload-modal__status-preview {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     margin-top: 2px;
 }
 
 .upload-modal__status-label {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-3);
 }
 
@@ -348,12 +348,12 @@
 .upload-modal__progress {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .upload-modal__progress-bar {
     height: 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background: var(--surface-3);
     overflow: hidden;
 }
@@ -361,14 +361,14 @@
 .upload-modal__progress-fill {
     height: 100%;
     background: var(--accent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     transition: width 0.2s ease;
 }
 
 .upload-modal__progress-info {
     display: flex;
-    gap: 12px;
-    font-size: 0.75rem;
+    gap: var(--space-3);
+    font-size: var(--text-xs);
     color: var(--text-3);
 }
 
@@ -377,5 +377,5 @@
 .upload-modal__footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: var(--space-2_5);
 }

@@ -3,16 +3,16 @@
 .dp-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: var(--text);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-family: inherit;
-    font-weight: 400;
-    padding: 7px 10px;
+    font-weight: var(--font-normal);
+    padding: 7px var(--space-2_5);
     cursor: pointer;
     text-align: left;
     transition: border-color var(--duration-default), box-shadow var(--duration-default);
@@ -45,7 +45,7 @@
 .dp-trigger__clear {
     flex-shrink: 0;
     color: var(--text-3);
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
     transition: color var(--duration-fast);
 }
 
@@ -72,7 +72,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: 0 8px 30px var(--shadow-lg), 0 2px 8px var(--shadow);
-    padding: 12px;
+    padding: var(--space-3);
     z-index: 200;
     transform: translateZ(0);
     animation: dp-in var(--duration-default) var(--ease-out);
@@ -114,7 +114,7 @@
 .dp-cal__month {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
 }
 
@@ -125,13 +125,13 @@
     align-items: center;
     justify-content: center;
     /* Side padding makes room for the absolutely-positioned nav buttons (28px + 4px gap) */
-    padding: 0 32px;
+    padding: 0 var(--space-8);
     height: 32px;
 }
 
 .dp-cal__caption-label {
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
     color: var(--text);
     pointer-events: none;
     user-select: none;
@@ -142,7 +142,7 @@
 .dp-cal__dropdowns {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 /*
@@ -156,8 +156,8 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    border-radius: var(--radius-sm);
-    padding: 2px 4px;
+    border-radius: var(--radius-md);
+    padding: 2px var(--space-1);
     cursor: pointer;
     transition: background var(--duration-fast);
 }
@@ -220,7 +220,7 @@
     appearance: none;
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: var(--text);
     cursor: pointer;
     padding: 0;
@@ -250,10 +250,10 @@
 
 .dp-cal__weekday {
     text-align: center;
-    font-size: 0.6875rem;
-    font-weight: 500;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-medium);
     color: var(--text-3);
-    padding: 4px 0;
+    padding: var(--space-1) 0;
 }
 
 /* ─── Grid / weeks ────────────────────────────────────────────────────────── */
@@ -283,11 +283,11 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: none;
     background: transparent;
     color: var(--text);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-family: inherit;
     cursor: pointer;
     transition: background var(--duration-fast), color var(--duration-fast);
@@ -302,7 +302,7 @@
 .dp-cal__day--selected .dp-cal__day-btn {
     background: var(--accent);
     color: var(--accent-fg);
-    font-weight: 600;
+    font-weight: var(--font-semibold);
 }
 
 .dp-cal__day--selected .dp-cal__day-btn:hover {
@@ -314,7 +314,7 @@
 .dp-cal__day--today:not(.dp-cal__day--selected) .dp-cal__day-btn {
     background: var(--surface-2);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: var(--font-semibold);
 }
 
 /* ─── Outside month ───────────────────────────────────────────────────────── */

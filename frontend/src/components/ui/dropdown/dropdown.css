@@ -7,8 +7,8 @@
 }
 
 .dropdown-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     color: var(--text-2);
     letter-spacing: 0.01em;
 }
@@ -22,16 +22,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--space-2);
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm-plus);
     font-family: inherit;
-    padding: 11px 14px;
+    padding: 11px var(--space-3_5);
     cursor: pointer;
     text-align: left;
-    transition: all var(--duration-default);
+    transition-property: background, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--duration-default);
 }
 
 .dropdown-trigger:hover {
@@ -62,7 +63,7 @@
 .dropdown-value-inner {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .dropdown-value-icon {
@@ -107,9 +108,9 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    font-size: 0.875rem;
+    gap: var(--space-2_5);
+    padding: var(--space-2_5) var(--space-3_5);
+    font-size: var(--text-base);
     font-family: inherit;
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
