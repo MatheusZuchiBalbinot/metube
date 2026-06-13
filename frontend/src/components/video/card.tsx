@@ -5,6 +5,7 @@ import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } 
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { videoUiActions } from '@store/videoUiSlice';
 import { selectWatchLaterIds } from '@store/playlistSelectors';
 import { analytics, toVuid, AnalyticsSource } from '@api';
 import Button from '@ui/button/button';
@@ -163,7 +164,7 @@ const VideoCard = memo(function VideoCard({
 
     function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
-        dispatch(videoActions.openTagView({ tag, fromVideoId: video.id }));
+        dispatch(videoUiActions.openTagView({ tag, fromVideoId: video.id }));
     }
 
     return (

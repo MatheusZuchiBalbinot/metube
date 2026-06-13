@@ -1,18 +1,7 @@
 import { createSlice, createEntityAdapter, type EntityState, type PayloadAction } from '@reduxjs/toolkit';
 import type { Vuid } from '@api';
 import { STORAGE_KEYS, loadFromStorage, isArray, isObject, isNumberInRange } from '@utils';
-import type { Video, VideoId, VideoStatus, Tag, ViewCount } from '@models';
-
-export interface TagView {
-    tag: Tag
-    fromVideoId: VideoId | null
-}
-
-export interface MiniPlayerState {
-    videoId: VideoId
-    currentTime: number
-    seekSession: number
-}
+import type { Video, VideoId, VideoStatus, ViewCount } from '@models';
 
 /**
  * Videos are normalized via `createEntityAdapter` (`ids` + `entities`) so lookups
@@ -29,10 +18,6 @@ export interface VideoState extends EntityState<Video, VideoId> {
     dislikedVideos: VideoId[]
     videoProgress: Record<VideoId, number>
     autoplay: boolean
-    uploadModalOpen: boolean
-    activeTagView: TagView | null
-    miniPlayer: MiniPlayerState | null
-    pendingVideoSeek: { videoId: VideoId; time: number } | null
     pinnedVideoId: VideoId | null
     theaterMode: boolean
     shortsMuted: boolean
@@ -50,10 +35,6 @@ const initialState: VideoState = videoAdapter.getInitialState({
     dislikedVideos: loadFromStorage<VideoId[]>(STORAGE_KEYS.DISLIKED_VIDEOS, [], isArray),
     videoProgress: loadFromStorage<Record<VideoId, number>>(STORAGE_KEYS.VIDEO_PROGRESS, {}, isObject),
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
-    uploadModalOpen: false,
-    activeTagView: null,
-    miniPlayer: null,
-    pendingVideoSeek: null,
     pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
     theaterMode: loadFromStorage<boolean>(STORAGE_KEYS.THEATER_MODE, false, v => typeof v === 'boolean'),
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
@@ -205,39 +186,6 @@ const videoSlice = createSlice({
 
         setAutoplay(state, action: PayloadAction<boolean>) {
             state.autoplay = action.payload;
-        },
-
-        openUploadModal(state) {
-            state.uploadModalOpen = true;
-        },
-
-        closeUploadModal(state) {
-            state.uploadModalOpen = false;
-        },
-
-        openTagView(state, action: PayloadAction<TagView>) {
-            state.activeTagView = action.payload;
-        },
-
-        closeTagView(state) {
-            state.activeTagView = null;
-        },
-
-        openMiniPlayer(state, action: PayloadAction<Omit<MiniPlayerState, 'seekSession'>>) {
-            const prevSession = state.miniPlayer?.seekSession ?? 0;
-            state.miniPlayer = { ...action.payload, seekSession: prevSession + 1 };
-        },
-
-        closeMiniPlayer(state) {
-            state.miniPlayer = null;
-        },
-
-        setPendingVideoSeek(state, action: PayloadAction<{ videoId: VideoId; time: number }>) {
-            state.pendingVideoSeek = action.payload;
-        },
-
-        clearPendingVideoSeek(state) {
-            state.pendingVideoSeek = null;
         },
 
         pinVideo(state, action: PayloadAction<VideoId>) {

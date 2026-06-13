@@ -11,7 +11,7 @@ import NavProgress from '@components/ui/navProgress/navProgress';
 import ScrollTopButton from '@components/ui/scrollTop/scrollTop';
 import PageSkeleton from '@components/layout/pageSkeleton';
 import { useAppDispatch, useAppSelector } from '@store';
-import { videoActions } from '@store/videoSlice';
+import { videoUiActions } from '@store/videoUiSlice';
 import { useSearch } from '@context/search';
 import './layout.css';
 import { useKeyboardShortcuts, useScrollRestoration, useMediaQuery } from '@hooks';
@@ -24,7 +24,7 @@ export default function AppLayout() {
 
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const dispatch = useAppDispatch();
-    const activeTagView = useAppSelector(s => s.video.activeTagView);
+    const activeTagView = useAppSelector(s => s.videoUi.activeTagView);
     const theaterMode = useAppSelector(s => s.video.theaterMode);
     const { pathname } = useLocation();
     const isFullHeightPage = pathname === ROUTES.SHORTS;
@@ -54,7 +54,7 @@ export default function AppLayout() {
     useEffect(() => {
         const isTagViewOpen = activeTagView !== null;
         if (isTagViewOpen) {
-            dispatch(videoActions.closeTagView());
+            dispatch(videoUiActions.closeTagView());
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,7 +76,7 @@ export default function AppLayout() {
     }, []);
 
     const handleOpenUpload = useCallback(() => {
-        dispatch(videoActions.openUploadModal());
+        dispatch(videoUiActions.openUploadModal());
     }, [dispatch]);
 
     useKeyboardShortcuts({
