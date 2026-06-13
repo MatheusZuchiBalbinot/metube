@@ -1,7 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS, loadFromStorage, isNumberInRange } from '@utils';
 import type { VideoId } from '@models';
-import { videoActions } from './videoSlice';
+import { videoObservableActions } from './videoSlice';
+
+/** A stored pinned video is either a video id string or null. */
+function isPinnedVideo(value: unknown): boolean {
+    return value === null || typeof value === 'string';
+}
 
 /**
  * Persisted playback preferences and the pinned mini-player. Lives apart from
@@ -21,7 +26,7 @@ export interface PlaybackState {
 
 const initialState: PlaybackState = {
     autoplay: loadFromStorage<boolean>(STORAGE_KEYS.AUTOPLAY, true, v => typeof v === 'boolean'),
-    pinnedVideoId: (localStorage.getItem(STORAGE_KEYS.PINNED_VIDEO) || null) as VideoId | null,
+    pinnedVideoId: loadFromStorage<VideoId | null>(STORAGE_KEYS.PINNED_VIDEO, null, isPinnedVideo),
     theaterMode: loadFromStorage<boolean>(STORAGE_KEYS.THEATER_MODE, false, v => typeof v === 'boolean'),
     shortsMuted: loadFromStorage<boolean>(STORAGE_KEYS.SHORTS_MUTED, true, v => typeof v === 'boolean'),
     shortsVolume: loadFromStorage<number>(STORAGE_KEYS.SHORTS_VOLUME, 0.8, isNumberInRange(0, 1)),
@@ -63,7 +68,7 @@ const playbackSlice = createSlice({
     },
     extraReducers: (builder) => {
         // Mirror videoSlice's cascade: a deleted video can no longer stay pinned.
-        builder.addCase(videoActions.deleteVideo, (state, action) => {
+        builder.addCase(videoObservableActions.deleteVideo, (state, action) => {
             const isPinned = state.pinnedVideoId === action.payload;
             if (isPinned) {
                 state.pinnedVideoId = null;
