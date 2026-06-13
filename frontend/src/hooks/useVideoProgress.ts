@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { videoUiActions } from '@store/videoUiSlice';
@@ -9,6 +9,7 @@ const PROGRESS_THROTTLE_MS = 3000;
 const BACKEND_SYNC_INTERVAL_MS = 5000;
 const SIMULATE_DURATION_S = 60;
 const SIMULATE_TICK_MS = 2000;
+const COMPLETION_DISPLAY_MS = 1800;
 
 interface UseVideoProgressOptions {
     id: VideoId | undefined
@@ -43,13 +44,14 @@ export function useVideoProgress({
     const currentTimeRef = useRef<number>(0);
     const durationRef = useRef<number>(0);
     const hasCompletedRef = useRef(false);
+    const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const onCompletedRef = useRef(onCompleted);
-    // eslint-disable-next-line react-hooks/refs
-    onCompletedRef.current = onCompleted;
     const onBackendSyncRef = useRef(onBackendSync);
-    // eslint-disable-next-line react-hooks/refs
-    onBackendSyncRef.current = onBackendSync;
+    useLayoutEffect(() => {
+        onCompletedRef.current = onCompleted;
+        onBackendSyncRef.current = onBackendSync;
+    });
 
     const [currentTime, setCurrentTime] = useState(0);
     const [showCompletion, setShowCompletion] = useState(false);
@@ -78,8 +80,16 @@ export function useVideoProgress({
         }
         hasCompletedRef.current = true;
         setShowCompletion(true);
-        setTimeout(() => setShowCompletion(false), 1800);
+        completionTimerRef.current = setTimeout(() => setShowCompletion(false), COMPLETION_DISPLAY_MS);
     }
+
+    // Clear the completion banner timer on unmount so it never calls setState
+    // after the component is gone.
+    useEffect(() => () => {
+        if (completionTimerRef.current) {
+            clearTimeout(completionTimerRef.current);
+        }
+    }, []);
 
     // Simulate progress for videos without a real file
     useEffect(() => {
