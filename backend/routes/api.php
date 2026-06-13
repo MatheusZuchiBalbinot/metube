@@ -33,11 +33,11 @@ Route::get('/feed', [FeedController::class, 'index']);
 Route::prefix('videos')->group(function (): void {
     Route::get('/', [VideoController::class, 'index']);
     Route::get('/{video}', [VideoController::class, 'show'])->can('view', 'video');
-    Route::get('/{video}/related', [VideoController::class, 'related']);
-    Route::get('/{video}/summary', [VideoController::class, 'summary']);
-    Route::get('/{video}/transcription', [VideoController::class, 'transcription']);
+    Route::get('/{video}/related', [VideoController::class, 'related'])->can('view', 'video');
+    Route::get('/{video}/summary', [VideoController::class, 'summary'])->can('view', 'video');
+    Route::get('/{video}/transcription', [VideoController::class, 'transcription'])->can('view', 'video');
     Route::prefix('{video}/comments')->group(function (): void {
-        Route::get('/', [CommentController::class, 'index']);
+        Route::get('/', [CommentController::class, 'index'])->can('view', 'video');
     });
 });
 
@@ -98,11 +98,15 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::patch('/{video}', [VideoController::class, 'update'])->can('update', 'video');
         Route::delete('/{video}', [VideoController::class, 'destroy'])->can('delete', 'video');
 
-        Route::post('/{video}/views', [VideoController::class, 'recordView']);
-        Route::post('/{video}/like', [VideoController::class, 'toggleLike']);
-        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike']);
-        Route::post('/{video}/save', [VideoController::class, 'toggleSave']);
-        Route::put('/{video}/progress', [VideoController::class, 'updateProgress']);
+        // Interaction routes guard with 'view': a user may only react to / track
+        // progress on a video they are allowed to see. For non-owners this means the
+        // video must be published; owners may interact with any status (e.g. their own
+        // drafts). This blocks reactions/progress against hidden drafts of other users.
+        Route::post('/{video}/views', [VideoController::class, 'recordView'])->can('view', 'video');
+        Route::post('/{video}/like', [VideoController::class, 'toggleLike'])->can('view', 'video');
+        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike'])->can('view', 'video');
+        Route::post('/{video}/save', [VideoController::class, 'toggleSave'])->can('view', 'video');
+        Route::put('/{video}/progress', [VideoController::class, 'updateProgress'])->can('view', 'video');
         Route::post('/{video}/publish', [VideoController::class, 'publish'])->can('publish', 'video');
         Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
             ->can('retryTranscription', 'video');
@@ -113,10 +117,12 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{video}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion'])
             ->can('manageSuggestion', 'video');
 
-        Route::post('/{video}/chat', VideoChatController::class)->middleware('throttle:20,1');
+        Route::post('/{video}/chat', VideoChatController::class)
+            ->middleware('throttle:video-chat')
+            ->can('view', 'video');
 
         Route::prefix('{video}/comments')->group(function (): void {
-            Route::post('/', [CommentController::class, 'store']);
+            Route::post('/', [CommentController::class, 'store'])->can('view', 'video');
         });
     });
 

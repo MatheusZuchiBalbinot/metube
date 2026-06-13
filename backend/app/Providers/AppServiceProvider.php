@@ -108,6 +108,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('email-verification', function (Request $request) {
             return Limit::perMinute(6)->by($request->ip());
         });
+
+        RateLimiter::for('video-chat', function (Request $request) {
+            $key = $request->user()?->id ?? $request->ip();
+
+            return Limit::perMinute(20)->by((string) $key);
+        });
     }
 
     private function registerPolicies(): void

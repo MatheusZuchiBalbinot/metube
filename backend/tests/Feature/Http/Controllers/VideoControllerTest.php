@@ -478,3 +478,163 @@ describe('VideoController related', function () {
         $response->assertJsonCount(0, 'data');
     });
 });
+
+describe('VideoController subresource authorization', function () {
+    test('guest is forbidden from viewing summary of a draft video', function () {
+        $video = Video::factory()->draft()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/summary")->assertForbidden();
+    });
+
+    test('guest is forbidden from viewing transcription of a draft video', function () {
+        $video = Video::factory()->draft()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/transcription")->assertForbidden();
+    });
+
+    test('guest is forbidden from viewing related videos of a draft video', function () {
+        $video = Video::factory()->draft()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/related")->assertForbidden();
+    });
+
+    test('guest is forbidden from listing comments of a draft video', function () {
+        $video = Video::factory()->draft()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/comments")->assertForbidden();
+    });
+
+    test('non-owner is forbidden from viewing summary of a draft video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->getJson("/api/videos/{$video->vuid}/summary")
+            ->assertForbidden();
+    });
+
+    test('non-owner is forbidden from viewing transcription of a draft video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->getJson("/api/videos/{$video->vuid}/transcription")
+            ->assertForbidden();
+    });
+
+    test('non-owner is forbidden from viewing related of a draft video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->getJson("/api/videos/{$video->vuid}/related")
+            ->assertForbidden();
+    });
+
+    test('non-owner is forbidden from listing comments of a draft video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->getJson("/api/videos/{$video->vuid}/comments")
+            ->assertForbidden();
+    });
+
+    test('non-owner is forbidden from chatting about a draft video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)
+            ->postJson("/api/videos/{$video->vuid}/chat", ['question' => 'What is this about?'])
+            ->assertForbidden();
+    });
+
+    test('guest is unauthorized (not forbidden) from chatting about a draft video', function () {
+        $video = Video::factory()->draft()->create();
+
+        // Chat lives behind auth:sanctum, so an unauthenticated guest gets 401
+        // before the view policy ever runs.
+        $this->postJson("/api/videos/{$video->vuid}/chat", ['question' => 'Hi'])
+            ->assertUnauthorized();
+    });
+
+    test('owner can view summary of their own draft video', function () {
+        $owner = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($owner)
+            ->getJson("/api/videos/{$video->vuid}/summary")
+            ->assertOk();
+    });
+
+    test('owner can view related of their own draft video', function () {
+        $owner = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($owner)
+            ->getJson("/api/videos/{$video->vuid}/related")
+            ->assertOk();
+    });
+
+    test('owner can list comments of their own draft video', function () {
+        $owner = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($owner)
+            ->getJson("/api/videos/{$video->vuid}/comments")
+            ->assertOk();
+    });
+
+    test('owner passes authorization for chat on their own draft video', function () {
+        $owner = User::factory()->create();
+        $video = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        // Authorization succeeds (not 403); the request reaches the controller and
+        // returns 422 because the draft has no ready transcription for the chat.
+        $this->actingAs($owner)
+            ->postJson("/api/videos/{$video->vuid}/chat", ['question' => 'What is this about?'])
+            ->assertStatus(422);
+    });
+
+    test('summary of a published video stays accessible to guests', function () {
+        $video = Video::factory()->published()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/summary")->assertOk();
+    });
+
+    test('comments of a published video stay accessible to guests', function () {
+        $video = Video::factory()->published()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/comments")->assertOk();
+    });
+
+    test('related of a published video stays accessible to guests', function () {
+        $video = Video::factory()->published()->create();
+
+        $this->getJson("/api/videos/{$video->vuid}/related")->assertOk();
+    });
+});
+
+describe('video-chat rate limiter', function () {
+    test('blocks the 21st chat request within a minute with 429', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->published()->for($user, 'channel')->create();
+
+        // No ready transcription -> the controller returns 422, but the throttle
+        // still counts each hit. The 21st request must be rejected with 429.
+        foreach (range(1, 20) as $i) {
+            $this->actingAs($user)
+                ->postJson("/api/videos/{$video->vuid}/chat", ['question' => "q{$i}"])
+                ->assertStatus(422);
+        }
+
+        $this->actingAs($user)
+            ->postJson("/api/videos/{$video->vuid}/chat", ['question' => 'one too many'])
+            ->assertStatus(429);
+    });
+});
