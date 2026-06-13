@@ -140,7 +140,7 @@ describe('persistMiddleware', () => {
             expect(call![1]).toBe('0.5');
         });
 
-        it('persists pinnedVideo as a raw string after playback/pinVideo', async () => {
+        it('persists pinnedVideo as JSON after playback/pinVideo', async () => {
             const store = makeStore();
 
             store.dispatch(playbackActions.pinVideo(vid('v-pin')));
@@ -148,7 +148,7 @@ describe('persistMiddleware', () => {
 
             const call = lastCallFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO);
             expect(call).toBeDefined();
-            expect(call![1]).toBe('v-pin');
+            expect(call![1]).toBe('"v-pin"');
         });
 
         it('persists cleared pinnedVideo after video/deleteVideo cascade', async () => {
@@ -162,7 +162,7 @@ describe('persistMiddleware', () => {
 
             const call = lastCallFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO);
             expect(call).toBeDefined();
-            expect(call![1]).toBe('');
+            expect(call![1]).toBe('null');
         });
 
         it('does NOT persist for xTab actions (playback/xTabSetPinnedVideoId)', async () => {

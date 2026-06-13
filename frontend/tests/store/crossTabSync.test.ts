@@ -144,16 +144,16 @@ describe('crossTabSync', () => {
     });
 
     describe('pinned video', () => {
-        it('dispatches xTabSetPinnedVideoId with the string value when non-empty', () => {
-            fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, 'v-pinned');
+        it('dispatches xTabSetPinnedVideoId with the parsed id from JSON', () => {
+            fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, '"v-pinned"');
 
             expect(dispatch).toHaveBeenCalledWith(
                 playbackActions.xTabSetPinnedVideoId('v-pinned'),
             );
         });
 
-        it('dispatches xTabSetPinnedVideoId with null when value is empty string', () => {
-            fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, '');
+        it('dispatches xTabSetPinnedVideoId with null when value is JSON null', () => {
+            fireStorageEvent(STORAGE_KEYS.PINNED_VIDEO, 'null');
 
             expect(dispatch).toHaveBeenCalledWith(
                 playbackActions.xTabSetPinnedVideoId(null),
