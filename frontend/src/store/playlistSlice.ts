@@ -1,6 +1,6 @@
 import { createSlice, createSelector, type PayloadAction } from '@reduxjs/toolkit';
 import { domain } from '@domain';
-import { videoActions } from './videoSlice';
+import { videoObservableActions } from './videoSlice';
 import type { RootState } from './types';
 import { STORAGE_KEYS, loadFromStorage, isArray } from '@utils';
 import type { Playlist, PlaylistId, VideoId } from '@models';
@@ -85,7 +85,7 @@ const playlistSlice = createSlice({
         },
     },
     extraReducers: builder => {
-        builder.addCase(videoActions.deleteVideo, (state, action) => {
+        builder.addCase(videoObservableActions.deleteVideo, (state, action) => {
             const deletedId = action.payload;
             for (const playlist of state.playlists) {
                 playlist.videoIds = playlist.videoIds.filter(id => id !== deletedId);

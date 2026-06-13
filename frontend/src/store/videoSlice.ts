@@ -2,6 +2,16 @@ import { createSlice, createEntityAdapter, type EntityState, type PayloadAction 
 import type { Vuid } from '@api';
 import { STORAGE_KEYS, loadFromStorage, isArray, isObject } from '@utils';
 import type { Video, VideoId, VideoStatus, ViewCount } from '@models';
+import { moveToFront, toggleReaction } from './videoHelpers';
+
+/**
+ * The Redux entity id of a video IS its API `vuid` (`VideoId` and `Vuid` brand
+ * the same underlying value — see `CLAUDE.frontend.md`). This is the single,
+ * named bridge between the two brands.
+ */
+function toVideoId(vuid: Vuid): VideoId {
+    return vuid as unknown as VideoId;
+}
 
 /**
  * Videos are normalized via `createEntityAdapter` (`ids` + `entities`) so lookups
@@ -36,9 +46,9 @@ const initialState: VideoState = videoAdapter.getInitialState({
     recommendationsLoading: false,
 });
 
-/** Moves an id to the front of the order, preserving "newest first" semantics. */
+/** Moves an id to the front of the entity order, preserving "newest first" semantics. */
 function prependVideoId(state: VideoState, id: VideoId) {
-    state.ids = [id, ...(state.ids as VideoId[]).filter(existing => existing !== id)];
+    state.ids = moveToFront(state.ids as VideoId[], id);
 }
 
 const videoSlice = createSlice({
@@ -60,10 +70,10 @@ const videoSlice = createSlice({
 
         updateVideoStatus(state, action: PayloadAction<{ vuid: Vuid; status: VideoStatus }>) {
             state.lastVideoStatusUpdate = action.payload;
-            const video = state.entities[action.payload.vuid as unknown as VideoId];
-            const isFound = video !== undefined;
+            const id = toVideoId(action.payload.vuid);
+            const isFound = state.entities[id] !== undefined;
             if (isFound) {
-                video.status = action.payload.status;
+                videoAdapter.updateOne(state, { id, changes: { status: action.payload.status } });
             }
         },
 
@@ -93,7 +103,10 @@ const videoSlice = createSlice({
             const video = state.entities[action.payload];
             const isFound = video !== undefined;
             if (isFound) {
-                video.views = (video.views + 1) as ViewCount;
+                videoAdapter.updateOne(state, {
+                    id: action.payload,
+                    changes: { views: (video.views + 1) as ViewCount },
+                });
             }
         },
 
@@ -107,35 +120,20 @@ const videoSlice = createSlice({
         },
 
         likeVideo(state, action: PayloadAction<VideoId>) {
-            const id = action.payload;
-            const idx = state.likedVideos.indexOf(id);
-            const isAlreadyLiked = idx !== -1;
-            if (isAlreadyLiked) {
-                state.likedVideos.splice(idx, 1);
-            } else {
-                state.likedVideos.push(id);
-                state.dislikedVideos = state.dislikedVideos.filter(vid => vid !== id);
-            }
+            const next = toggleReaction(state.likedVideos, state.dislikedVideos, action.payload);
+            state.likedVideos = next.primary;
+            state.dislikedVideos = next.opposite;
         },
 
         dislikeVideo(state, action: PayloadAction<VideoId>) {
-            const id = action.payload;
-            const idx = state.dislikedVideos.indexOf(id);
-            const isAlreadyDisliked = idx !== -1;
-            if (isAlreadyDisliked) {
-                state.dislikedVideos.splice(idx, 1);
-            } else {
-                state.dislikedVideos.push(id);
-                state.likedVideos = state.likedVideos.filter(vid => vid !== id);
-            }
+            const next = toggleReaction(state.dislikedVideos, state.likedVideos, action.payload);
+            state.dislikedVideos = next.primary;
+            state.likedVideos = next.opposite;
         },
 
         watchVideo(state, action: PayloadAction<VideoId>) {
             const videoId = action.payload;
-            const isAlreadyFirst = state.watchHistory[0] === videoId;
-            if (!isAlreadyFirst) {
-                state.watchHistory = [videoId, ...state.watchHistory.filter(id => id !== videoId)];
-            }
+            state.watchHistory = moveToFront(state.watchHistory, videoId);
             const hasProgress = (state.videoProgress[videoId] ?? 0) > 0;
             if (!hasProgress) {
                 state.videoProgress[videoId] = 10;
@@ -165,10 +163,7 @@ const videoSlice = createSlice({
         videoFinished(state, action: PayloadAction<VideoId>) {
             const videoId = action.payload;
             state.videoProgress[videoId] = 100;
-            const isAlreadyInHistory = state.watchHistory.includes(videoId);
-            if (!isAlreadyInHistory) {
-                state.watchHistory = [videoId, ...state.watchHistory];
-            }
+            state.watchHistory = moveToFront(state.watchHistory, videoId);
         },
 
         // ─── Cross-tab sync reducers ───────────────────────────────────────────
@@ -201,4 +196,18 @@ const videoSlice = createSlice({
 });
 
 export const videoActions = videoSlice.actions;
+
+/**
+ * The subset of video actions that other slices observe via `extraReducers`
+ * (playbackSlice clears the pinned video, playlistSlice cascade-deletes
+ * videoIds) and that `persistMiddleware` watches. This is the video slice's
+ * "public API" for cross-slice reactions — keep it in sync when adding new
+ * cross-slice dependencies. Because the `.type` is derived from the real action
+ * creator, renaming an action breaks compilation at every dependent site
+ * instead of failing silently.
+ */
+export const videoObservableActions = {
+    deleteVideo: videoActions.deleteVideo,
+} as const;
+
 export default videoSlice;
