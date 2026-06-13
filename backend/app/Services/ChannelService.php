@@ -50,10 +50,12 @@ final class ChannelService
      * Otherwise returns only published videos in newest-published order (cached per page).
      *
      * @param User $channel Channel to list videos for
+     * @param bool $includeAllStatuses Whether to include non-published videos (owner view)
+     * @param int $page Page number used as the per-page cache key for published videos
      *
      * @return LengthAwarePaginator<Video>
      */
-    public function listVideos(User $channel, bool $includeAllStatuses = false): LengthAwarePaginator
+    public function listVideos(User $channel, bool $includeAllStatuses = false, int $page = 1): LengthAwarePaginator
     {
         $query = $channel->videos()->with('channel');
 
@@ -61,12 +63,13 @@ final class ChannelService
             return $query->latest()->paginate(PaginationSize::CHANNEL_VIDEOS);
         }
 
-        $page = (int) request()->query('page', '1');
-
         return $this->cache->rememberChannelVideos(
             $channel->uuid,
             $page,
-            fn () => $query->published()->newestPublished()->paginate(PaginationSize::VIDEO_LIST),
+            fn () => $query->published()->newestPublished()->paginate(
+                perPage: PaginationSize::VIDEO_LIST,
+                page: $page,
+            ),
         );
     }
 

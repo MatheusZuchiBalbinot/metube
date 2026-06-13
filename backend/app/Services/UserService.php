@@ -86,7 +86,20 @@ final class UserService
     }
 
     /**
-     * Get watch progress for all videos the user has started.
+     * Maximum number of progress rows returned by getUserProgress.
+     *
+     * Caps the result to the most recently updated entries so users with an
+     * unbounded watch history never load every row into memory at once.
+     */
+    private const MAX_PROGRESS_ROWS = 500;
+
+    /**
+     * Get watch progress for the videos the user most recently started.
+     *
+     * Capped at the MAX_PROGRESS_ROWS most recently updated entries to avoid
+     * loading an unbounded number of rows into memory.
+     *
+     * @param User $user Authenticated user
      *
      * @return array<string, int> Map of vuid => percent
      */
@@ -94,6 +107,8 @@ final class UserService
     {
         return $user->progress()
             ->with('video:id,vuid')
+            ->latest('updated_at')
+            ->limit(self::MAX_PROGRESS_ROWS)
             ->get()
             ->mapWithKeys(function ($p) {
                 return [

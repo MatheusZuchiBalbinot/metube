@@ -65,6 +65,20 @@ describe('ChannelController', function () {
         $response->assertOk();
     });
 
+    test('videos honours the page query parameter', function () {
+        config(['cache.metube.channel.videos.active' => false]);
+
+        $channel = User::factory()->create();
+        $user = User::factory()->create();
+        Video::factory(3)->for($channel, 'channel')->create(['status' => VideoStatus::PUBLISHED]);
+
+        $response = $this->actingAs($user)->getJson("/api/channels/{$channel->uuid}/videos?page=2");
+
+        $response->assertOk();
+        $response->assertJsonPath('meta.current_page', 2);
+        $response->assertJsonCount(0, 'data');
+    });
+
     test('show returns 404 for non-existent channel', function () {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->getJson('/api/channels/00000000-0000-0000-0000-000000000000');
