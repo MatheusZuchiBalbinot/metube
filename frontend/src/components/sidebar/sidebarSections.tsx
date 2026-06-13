@@ -6,7 +6,7 @@ import { ROUTES, videoUrl, TagColors, isWithinDays } from '@utils';
 import { Tooltip, Avatar } from '@ui';
 import { useSubscriptions, useSubscription, useVideo, usePlaylist, useCollapsibleList } from '@hooks';
 import { useAppSelector } from '@store';
-import { selectWatchedTagFrequency } from '@store/videoSelectors';
+import { selectVideoEntities, selectWatchedTagFrequency } from '@store/videoSelectors';
 import { selectRecentChannels } from '@store/recentChannelsSelectors';
 import { domain } from '@domain';
 import type { Video, Tag, ChannelId } from '@models';
@@ -39,7 +39,8 @@ function ProgressRing({ progress }: { progress: number }) {
 
 export function ContinueWatchingSection() {
     const { t } = useTranslation();
-    const { videos, watchHistory, videoProgress } = useVideo();
+    const { watchHistory, videoProgress } = useVideo();
+    const videoEntities = useAppSelector(selectVideoEntities);
 
     const items = useMemo(() => {
         const result: { video: Video; progress: number }[] = [];
@@ -50,7 +51,7 @@ export function ContinueWatchingSection() {
                 continue;
             }
 
-            const video = videos.find(v => v.id === id);
+            const video = videoEntities[id];
             if (!video) {
                 continue;
             }
@@ -61,7 +62,7 @@ export function ContinueWatchingSection() {
             }
         }
         return result;
-    }, [videos, watchHistory, videoProgress]);
+    }, [videoEntities, watchHistory, videoProgress]);
 
     const hasItems = items.length > 0;
     if (!hasItems) {
