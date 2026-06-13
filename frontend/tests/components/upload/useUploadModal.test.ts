@@ -7,9 +7,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import videoSlice from '@store/videoSlice';
 import videoUiSlice from '@store/videoUiSlice';
+import playbackSlice from '@store/playbackSlice';
 import toastSlice from '@store/toastSlice';
 import { UploadMode } from '@enums/uploadMode';
-import { makeVideoState, makeVideoUiState, makeVideo, vid, tag } from '../../helpers/factories';
+import { makeVideoState, makeVideoUiState, makePlaybackState, makeVideo, vid, tag } from '../../helpers/factories';
 
 vi.mock('@hooks/useTusUpload', () => ({
     useTusUpload: () => ({
@@ -35,10 +36,16 @@ import { useUploadModal } from '@components/upload/useUploadModal';
 
 function makeStore({ video = {}, videoUi = {} }: { video?: object; videoUi?: object } = {}) {
     return configureStore({
-        reducer: { video: videoSlice.reducer, videoUi: videoUiSlice.reducer, toast: toastSlice.reducer },
+        reducer: {
+            video: videoSlice.reducer,
+            videoUi: videoUiSlice.reducer,
+            playback: playbackSlice.reducer,
+            toast: toastSlice.reducer,
+        },
         preloadedState: {
             video: makeVideoState(video),
             videoUi: makeVideoUiState(videoUi),
+            playback: makePlaybackState(),
             toast: { toasts: [] },
         },
     });

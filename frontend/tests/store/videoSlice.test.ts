@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import videoSlice, { videoActions, videoAdapter } from '@store/videoSlice';
 import type { Video, VideoId, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
@@ -40,12 +40,7 @@ function makeState(overrides: Record<string, unknown> = {}) {
         likedVideos: [] as VideoId[],
         dislikedVideos: [] as VideoId[],
         videoProgress: {} as Record<string, number>,
-        autoplay: true,
         watchEvents: [],
-        pinnedVideoId: null as VideoId | null,
-        theaterMode: false,
-        shortsMuted: true,
-        shortsVolume: 0.8,
         loading: false,
         error: null,
         ...rest,
@@ -105,18 +100,6 @@ describe('videoSlice — xTab reducers', () => {
         const next = reducer(state, videoActions.xTabSetDislikedVideos([vid('vD')]));
         expect(next.dislikedVideos).toEqual([vid('vD')]);
     });
-
-    it('xTabSetPinnedVideoId sets pinnedVideoId', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.xTabSetPinnedVideoId(vid('vP')));
-        expect(next.pinnedVideoId).toBe(vid('vP'));
-    });
-
-    it('xTabSetPinnedVideoId accepts null', () => {
-        const state = makeState({ pinnedVideoId: vid('v1') });
-        const next = reducer(state, videoActions.xTabSetPinnedVideoId(null));
-        expect(next.pinnedVideoId).toBeNull();
-    });
 });
 
 // ─── deleteVideo ──────────────────────────────────────────────────────────────
@@ -139,18 +122,6 @@ describe('videoSlice — deleteVideo', () => {
         expect(next.watchHistory).toEqual([vid('v2')]);
         expect(next.likedVideos).toEqual([]);
         expect(next.dislikedVideos).toEqual([]);
-    });
-
-    it('clears pinnedVideoId when deleting pinned video', () => {
-        const state = makeState({ pinnedVideoId: vid('v1') });
-        const next = reducer(state, videoActions.deleteVideo(vid('v1')));
-        expect(next.pinnedVideoId).toBeNull();
-    });
-
-    it('does not clear pinnedVideoId for a different video', () => {
-        const state = makeState({ pinnedVideoId: vid('v2') });
-        const next = reducer(state, videoActions.deleteVideo(vid('v1')));
-        expect(next.pinnedVideoId).toBe(vid('v2'));
     });
 });
 
@@ -223,28 +194,6 @@ describe('videoSlice — watchVideo', () => {
         const state = makeState();
         const next = reducer(state, videoActions.watchVideo(vid('v1')));
         expect(next.videoProgress['v1']).toBe(10);
-    });
-});
-
-// ─── pinVideo ─────────────────────────────────────────────────────────────────
-
-describe('videoSlice — pinVideo', () => {
-    it('sets pinnedVideoId', () => {
-        const state = makeState();
-        const next = reducer(state, videoActions.pinVideo(vid('v1')));
-        expect(next.pinnedVideoId).toBe(vid('v1'));
-    });
-
-    it('unpins when the same video is pinned again', () => {
-        const state = makeState({ pinnedVideoId: vid('v1') });
-        const next = reducer(state, videoActions.pinVideo(vid('v1')));
-        expect(next.pinnedVideoId).toBeNull();
-    });
-
-    it('replaces pinned video', () => {
-        const state = makeState({ pinnedVideoId: vid('v1') });
-        const next = reducer(state, videoActions.pinVideo(vid('v2')));
-        expect(next.pinnedVideoId).toBe(vid('v2'));
     });
 });
 
@@ -329,64 +278,6 @@ describe('videoSlice — clearHistory', () => {
     });
 });
 
-// ─── setAutoplay ──────────────────────────────────────────────────────────────
-
-describe('videoSlice — setAutoplay', () => {
-    it('sets autoplay to false', () => {
-        const state = makeState({ autoplay: true });
-        const next = reducer(state, videoActions.setAutoplay(false));
-        expect(next.autoplay).toBe(false);
-    });
-
-    it('sets autoplay to true', () => {
-        const state = makeState({ autoplay: false });
-        const next = reducer(state, videoActions.setAutoplay(true));
-        expect(next.autoplay).toBe(true);
-    });
-});
-
-// ─── unpinVideo ───────────────────────────────────────────────────────────────
-
-describe('videoSlice — unpinVideo', () => {
-    it('sets pinnedVideoId to null', () => {
-        const state = makeState({ pinnedVideoId: vid('v1') });
-        const next = reducer(state, videoActions.unpinVideo());
-        expect(next.pinnedVideoId).toBeNull();
-    });
-});
-
-// ─── setTheaterMode ───────────────────────────────────────────────────────────
-
-describe('videoSlice — setTheaterMode', () => {
-    it('enables theater mode', () => {
-        const state = makeState({ theaterMode: false });
-        const next = reducer(state, videoActions.setTheaterMode(true));
-        expect(next.theaterMode).toBe(true);
-    });
-
-    it('disables theater mode', () => {
-        const state = makeState({ theaterMode: true });
-        const next = reducer(state, videoActions.setTheaterMode(false));
-        expect(next.theaterMode).toBe(false);
-    });
-});
-
-// ─── setShortsMuted / setShortsVolume ─────────────────────────────────────────
-
-describe('videoSlice — shorts audio', () => {
-    it('sets shorts muted state', () => {
-        const state = makeState({ shortsMuted: false });
-        const next = reducer(state, videoActions.setShortsMuted(true));
-        expect(next.shortsMuted).toBe(true);
-    });
-
-    it('sets shorts volume', () => {
-        const state = makeState({ shortsVolume: 0.5 });
-        const next = reducer(state, videoActions.setShortsVolume(0.2));
-        expect(next.shortsVolume).toBe(0.2);
-    });
-});
-
 // ─── incrementViews ───────────────────────────────────────────────────────────
 
 describe('videoSlice — incrementViews', () => {
@@ -467,39 +358,3 @@ describe('videoSlice — setRecommendationsLoading', () => {
     });
 });
 
-// ─── initialState from localStorage ──────────────────────────────────────────
-
-describe('videoSlice — initialState from localStorage', () => {
-    beforeEach(() => {
-        localStorage.clear();
-        vi.resetModules();
-    });
-
-    afterEach(() => {
-        vi.resetModules();
-    });
-
-    it('reads pinnedVideoId from localStorage when set', async () => {
-        localStorage.setItem('metube:pinned-video', 'vid-pinned');
-        const { default: slice } = await import('@store/videoSlice');
-        expect(slice.getInitialState().pinnedVideoId).toBe('vid-pinned');
-    });
-
-    it('boolean validator passes for a valid stored boolean', async () => {
-        localStorage.setItem('metube:autoplay', 'false');
-        const { default: slice } = await import('@store/videoSlice');
-        expect(slice.getInitialState().autoplay).toBe(false);
-    });
-
-    it('boolean validator rejects a non-boolean and resets to seed', async () => {
-        localStorage.setItem('metube:autoplay', '"not-a-bool"');
-        const { default: slice } = await import('@store/videoSlice');
-        expect(slice.getInitialState().autoplay).toBe(true);
-    });
-
-    it('shortsMuted boolean validator passes for stored false', async () => {
-        localStorage.setItem('metube:shorts-muted', 'false');
-        const { default: slice } = await import('@store/videoSlice');
-        expect(slice.getInitialState().shortsMuted).toBe(false);
-    });
-});

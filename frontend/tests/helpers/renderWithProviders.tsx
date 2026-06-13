@@ -10,6 +10,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { configureStore, type PreloadedState } from '@reduxjs/toolkit';
 import videoSlice from '@store/videoSlice';
 import videoUiSlice from '@store/videoUiSlice';
+import playbackSlice from '@store/playbackSlice';
 import authSlice from '@store/authSlice';
 import themeSlice from '@store/themeSlice';
 import toastSlice from '@store/toastSlice';
@@ -39,6 +40,7 @@ export function renderWithProviders(
         reducer: {
             video: videoSlice.reducer,
             videoUi: videoUiSlice.reducer,
+            playback: playbackSlice.reducer,
             auth: authSlice.reducer,
             theme: themeSlice.reducer,
             toast: toastSlice.reducer,

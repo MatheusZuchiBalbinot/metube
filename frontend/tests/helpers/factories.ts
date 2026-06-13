@@ -88,12 +88,7 @@ export function makeVideoState(overrides: Record<string, unknown> = {}) {
         dislikedVideos: [] as VideoId[],
         savedVideos: [] as VideoId[],
         videoProgress: {} as Record<string, number>,
-        autoplay: true,
         watchEvents: [],
-        pinnedVideoId: null as VideoId | null,
-        theaterMode: false,
-        shortsMuted: true,
-        shortsVolume: 0.8,
         loading: false,
         error: null,
         ...rest,
@@ -106,6 +101,17 @@ export function makeVideoUiState(overrides: object = {}) {
         activeTagView: null,
         miniPlayer: null,
         pendingVideoSeek: null,
+        ...overrides,
+    };
+}
+
+export function makePlaybackState(overrides: object = {}) {
+    return {
+        autoplay: true,
+        pinnedVideoId: null as VideoId | null,
+        theaterMode: false,
+        shortsMuted: true,
+        shortsVolume: 0.8,
         ...overrides,
     };
 }
@@ -132,6 +138,7 @@ export function makeRootState(overrides: Partial<RootState> = {}): RootState {
     return {
         video: makeVideoState(),
         videoUi: makeVideoUiState(),
+        playback: makePlaybackState(),
         auth: makeAuthState(),
         theme: makeThemeState(),
         toast: { toasts: [] },

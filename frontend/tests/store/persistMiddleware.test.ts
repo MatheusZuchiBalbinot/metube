@@ -4,6 +4,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { persistMiddleware } from '@store/persistMiddleware';
 import { rootReducer } from '@store/reducers';
 import { videoActions } from '@store/videoSlice';
+import { playbackActions } from '@store/playbackSlice';
 import { themeActions } from '@store/themeSlice';
 import { subscriptionActions } from '@store/subscriptionSlice';
 import { playlistActions } from '@store/playlistSlice';
@@ -92,50 +93,6 @@ describe('persistMiddleware', () => {
             expect(written).toContain('v3');
         });
 
-        it('persists autoplay after video/setAutoplay', async () => {
-            const store = makeStore();
-
-            store.dispatch(videoActions.setAutoplay(false));
-            await vi.runAllTimersAsync();
-
-            const call = lastCallFor(setItemSpy, STORAGE_KEYS.AUTOPLAY);
-            expect(call).toBeDefined();
-            expect(JSON.parse(call![1])).toBe(false);
-        });
-
-        it('persists shortsMuted after video/setShortsMuted', async () => {
-            const store = makeStore();
-
-            store.dispatch(videoActions.setShortsMuted(false));
-            await vi.runAllTimersAsync();
-
-            const call = lastCallFor(setItemSpy, STORAGE_KEYS.SHORTS_MUTED);
-            expect(call).toBeDefined();
-            expect(JSON.parse(call![1])).toBe(false);
-        });
-
-        it('persists shortsVolume as a raw numeric string after video/setShortsVolume', async () => {
-            const store = makeStore();
-
-            store.dispatch(videoActions.setShortsVolume(0.5));
-            await vi.runAllTimersAsync();
-
-            const call = lastCallFor(setItemSpy, STORAGE_KEYS.SHORTS_VOLUME);
-            expect(call).toBeDefined();
-            expect(call![1]).toBe('0.5');
-        });
-
-        it('persists pinnedVideo as a raw string after video/pinVideo', async () => {
-            const store = makeStore();
-
-            store.dispatch(videoActions.pinVideo(vid('v-pin')));
-            await vi.runAllTimersAsync();
-
-            const call = lastCallFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO);
-            expect(call).toBeDefined();
-            expect(call![1]).toBe('v-pin');
-        });
-
         it('does NOT persist for xTab actions (video/xTabSetWatchHistory)', async () => {
             const store = makeStore();
             setItemSpy.mockClear();
@@ -144,6 +101,78 @@ describe('persistMiddleware', () => {
             await vi.runAllTimersAsync();
 
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.WATCH_HISTORY)).toHaveLength(0);
+        });
+    });
+
+    // ─── Playback persistence ──────────────────────────────────────────────────
+
+    describe('playback slice', () => {
+        it('persists autoplay after playback/setAutoplay', async () => {
+            const store = makeStore();
+
+            store.dispatch(playbackActions.setAutoplay(false));
+            await vi.runAllTimersAsync();
+
+            const call = lastCallFor(setItemSpy, STORAGE_KEYS.AUTOPLAY);
+            expect(call).toBeDefined();
+            expect(JSON.parse(call![1])).toBe(false);
+        });
+
+        it('persists shortsMuted after playback/setShortsMuted', async () => {
+            const store = makeStore();
+
+            store.dispatch(playbackActions.setShortsMuted(false));
+            await vi.runAllTimersAsync();
+
+            const call = lastCallFor(setItemSpy, STORAGE_KEYS.SHORTS_MUTED);
+            expect(call).toBeDefined();
+            expect(JSON.parse(call![1])).toBe(false);
+        });
+
+        it('persists shortsVolume as a raw numeric string after playback/setShortsVolume', async () => {
+            const store = makeStore();
+
+            store.dispatch(playbackActions.setShortsVolume(0.5));
+            await vi.runAllTimersAsync();
+
+            const call = lastCallFor(setItemSpy, STORAGE_KEYS.SHORTS_VOLUME);
+            expect(call).toBeDefined();
+            expect(call![1]).toBe('0.5');
+        });
+
+        it('persists pinnedVideo as a raw string after playback/pinVideo', async () => {
+            const store = makeStore();
+
+            store.dispatch(playbackActions.pinVideo(vid('v-pin')));
+            await vi.runAllTimersAsync();
+
+            const call = lastCallFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO);
+            expect(call).toBeDefined();
+            expect(call![1]).toBe('v-pin');
+        });
+
+        it('persists cleared pinnedVideo after video/deleteVideo cascade', async () => {
+            const store = makeStore();
+            store.dispatch(playbackActions.pinVideo(vid('v-pin')));
+            await vi.runAllTimersAsync();
+            setItemSpy.mockClear();
+
+            store.dispatch(videoActions.deleteVideo(vid('v-pin')));
+            await vi.runAllTimersAsync();
+
+            const call = lastCallFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO);
+            expect(call).toBeDefined();
+            expect(call![1]).toBe('');
+        });
+
+        it('does NOT persist for xTab actions (playback/xTabSetPinnedVideoId)', async () => {
+            const store = makeStore();
+            setItemSpy.mockClear();
+
+            store.dispatch(playbackActions.xTabSetPinnedVideoId(vid('v-xtab')));
+            await vi.runAllTimersAsync();
+
+            expect(allCallsFor(setItemSpy, STORAGE_KEYS.PINNED_VIDEO)).toHaveLength(0);
         });
     });
 
@@ -267,11 +296,11 @@ describe('persistMiddleware', () => {
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.WATCH_HISTORY)).toHaveLength(0);
         });
 
-        it('does not write THEME_MODE when only a video action fires', async () => {
+        it('does not write THEME_MODE when only a playback action fires', async () => {
             const store = makeStore();
             setItemSpy.mockClear();
 
-            store.dispatch(videoActions.setAutoplay(true));
+            store.dispatch(playbackActions.setAutoplay(true));
             await vi.runAllTimersAsync();
 
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.THEME_MODE)).toHaveLength(0);
@@ -290,7 +319,7 @@ describe('persistMiddleware', () => {
             });
 
             expect(() => {
-                store.dispatch(videoActions.setAutoplay(false));
+                store.dispatch(playbackActions.setAutoplay(false));
             }).not.toThrow();
         });
     });

@@ -12,6 +12,7 @@
 import type { AppDispatch } from './types';
 import { themeActions } from './themeSlice';
 import { videoActions } from './videoSlice';
+import { playbackActions } from './playbackSlice';
 import { playlistActions } from './playlistSlice';
 import { subscriptionActions } from './subscriptionSlice';
 import { STORAGE_KEYS, type ThemeColor, type ThemeMode } from '@utils';
@@ -69,7 +70,7 @@ class CrossTabSyncer {
     };
 
     private readonly _onPinnedVideo: SyncHandler = (value) => {
-        this.dispatch(videoActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
+        this.dispatch(playbackActions.xTabSetPinnedVideoId((value || null) as VideoId | null));
     };
 
     private readonly _onPlaylists: SyncHandler = (value) => {
