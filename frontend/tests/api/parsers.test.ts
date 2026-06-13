@@ -180,6 +180,18 @@ describe('parseVideo', () => {
         expect(result!.videoUrl).toBeUndefined();
     });
 
+    it('keeps a valid status', () => {
+        const result = parseVideo(makeRawVideo({ status: 'draft' }));
+
+        expect(result!.status).toBe('draft');
+    });
+
+    it('falls back to processing on an unknown status', () => {
+        const result = parseVideo(makeRawVideo({ status: 'bogus-status' }));
+
+        expect(result!.status).toBe('processing');
+    });
+
     it('maps hls_url to hlsUrl', () => {
         const result = parseVideo(makeRawVideo({ hls_url: 'https://cdn.example.com/hls/abc/master.m3u8' }));
 
@@ -954,6 +966,12 @@ describe('parseVideoTranscription', () => {
         expect(result!.content).toBeNull();
     });
 
+    it('falls back to pending on an unknown status', () => {
+        const result = parseVideoTranscription({ status: 'weird', language: null, content: null });
+
+        expect(result!.status).toBe('pending');
+    });
+
     it('preserves all status values', () => {
         const statuses = ['pending', 'processing', 'completed', 'failed'] as const;
 
@@ -1093,6 +1111,19 @@ describe('parseAiSuggestion', () => {
         const result = parseAiSuggestion(raw);
 
         expect(result).toBeNull();
+    });
+
+    it('falls back to pending on an unknown status', () => {
+        const raw = {
+            status: 'nonsense',
+            suggested_title: 'Title',
+            suggested_description: 'Desc',
+            suggested_tags: [],
+        };
+
+        const result = parseAiSuggestion(raw);
+
+        expect(result?.status).toBe('pending');
     });
 
     it('handles empty tags array', () => {

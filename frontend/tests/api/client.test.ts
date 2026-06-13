@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { apiClient } from '@api/client';
+import { APP_EVENTS } from '@utils';
 
 const axiosInstance = apiClient.getAxiosInstance();
 
@@ -220,5 +222,52 @@ describe('ApiClient.putValidated', () => {
         vi.spyOn(axiosInstance, 'put').mockRejectedValue(new Error('fail'));
         const result = await apiClient.putValidated('/fail', v => v, {});
         expect(result.ok).toBe(false);
+    });
+});
+
+describe('ApiClient interceptor — 401 handling', () => {
+    const originalAdapter = axiosInstance.defaults.adapter;
+
+    // Swap the adapter so the real response interceptor runs (spying on the
+    // method would bypass the interceptor entirely).
+    function rejectWith401() {
+        axiosInstance.defaults.adapter = (config: InternalAxiosRequestConfig) => {
+            const response = {
+                status: 401,
+                statusText: 'Unauthorized',
+                data: {},
+                headers: {},
+                config,
+            } as AxiosResponse;
+            return Promise.reject(new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', config, undefined, response));
+        };
+    }
+
+    afterEach(() => {
+        axiosInstance.defaults.adapter = originalAdapter;
+    });
+
+    it('does not fire SESSION_EXPIRED on a failed login (POST /sessions)', async () => {
+        rejectWith401();
+        const listener = vi.fn();
+        window.addEventListener(APP_EVENTS.SESSION_EXPIRED, listener);
+
+        const result = await apiClient.post('/sessions', { email: 'a@b.c', password: 'wrong' });
+
+        expect(result.ok).toBe(false);
+        expect(listener).not.toHaveBeenCalled();
+        window.removeEventListener(APP_EVENTS.SESSION_EXPIRED, listener);
+    });
+
+    it('fires SESSION_EXPIRED on a 401 for the current session (GET /sessions/current)', async () => {
+        rejectWith401();
+        const listener = vi.fn();
+        window.addEventListener(APP_EVENTS.SESSION_EXPIRED, listener);
+
+        const result = await apiClient.get('/sessions/current');
+
+        expect(result.ok).toBe(false);
+        expect(listener).toHaveBeenCalledTimes(1);
+        window.removeEventListener(APP_EVENTS.SESSION_EXPIRED, listener);
     });
 });

@@ -1,4 +1,5 @@
-import type { Video, VideoId, VideoCaption, VideoStatus, Seconds, ViewCount, User, UserId, ChannelId, Comment, Cuid, CommentVersion, Playlist, PlaylistId, Tag, PaginatedResponse } from '@models';
+import type { Video, VideoId, VideoCaption, Seconds, ViewCount, User, UserId, ChannelId, Comment, Cuid, CommentVersion, Playlist, PlaylistId, Tag, PaginatedResponse } from '@models';
+import { VideoStatus } from '@models';
 
 // ─── Shared types ──────────────────────────────────────────────────────────────
 
@@ -56,6 +57,24 @@ function bool(value: unknown): boolean {
     return typeof value === 'boolean' ? value : false;
 }
 
+const VIDEO_STATUSES: readonly string[] = Object.values(VideoStatus);
+
+function isVideoStatus(value: string): value is VideoStatus {
+    return VIDEO_STATUSES.includes(value);
+}
+
+const TRANSCRIPTION_STATUSES: readonly string[] = ['pending', 'processing', 'completed', 'failed'];
+
+function isTranscriptionStatus(value: string): value is VideoTranscription['status'] {
+    return TRANSCRIPTION_STATUSES.includes(value);
+}
+
+const SUGGESTION_STATUSES: readonly string[] = ['pending', 'accepted', 'dismissed'];
+
+function isSuggestionStatus(value: string): value is AiSuggestion['status'] {
+    return SUGGESTION_STATUSES.includes(value);
+}
+
 /** Single-cast helper for branded types constructed at the API boundary. */
 function brand<T>(value: string | number): T {
     return value as unknown as T;
@@ -78,11 +97,14 @@ export function parseVideo(raw: unknown): Video | null {
 
     const createdAt = str(rawData['created_at']) || str(rawData['published_at']) || new Date().toISOString();
 
+    const rawStatus = str(rawData['status']);
+    const status: VideoStatus = isVideoStatus(rawStatus) ? rawStatus : VideoStatus.PROCESSING;
+
     return {
         id: brand<VideoId>(vuid),
         title: str(rawData['title']),
         description: str(rawData['description']),
-        status: str(rawData['status']) as VideoStatus,
+        status,
         views: num(rawData['views']) as unknown as ViewCount,
         duration: typeof rawData['duration'] === 'number' ? rawData['duration'] as unknown as Seconds : undefined,
         videoUrl: str(rawData['video_url']) || undefined,
@@ -378,8 +400,10 @@ export function parseVideoTranscription(raw: unknown): VideoTranscription | null
         return null;
     }
 
+    const rawStatus = str(rawData['status']);
+
     return {
-        status: str(rawData['status']) as VideoTranscription['status'],
+        status: isTranscriptionStatus(rawStatus) ? rawStatus : 'pending',
         language: typeof rawData['language'] === 'string' ? rawData['language'] : null,
         content: typeof rawData['content'] === 'string' ? rawData['content'] : null,
     };
@@ -401,7 +425,7 @@ export function parseAiSuggestion(raw: unknown): AiSuggestion | null {
     }
 
     return {
-        status: status as AiSuggestion['status'],
+        status: isSuggestionStatus(status) ? status : 'pending',
         suggestedTitle: str(rawData['suggested_title']),
         suggestedDescription: str(rawData['suggested_description']),
         suggestedTags: Array.isArray(rawData['suggested_tags']) ? (rawData['suggested_tags'] as unknown as Tag[]) : [],

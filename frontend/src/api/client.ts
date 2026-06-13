@@ -25,9 +25,15 @@ class ApiClient {
             (response) => response,
             (error: AxiosError) => {
                 const url = error.config?.url ?? '';
+                const method = (error.config?.method ?? '').toLowerCase();
                 const status = error.response?.status;
 
-                if (status === 401 && !url.includes('/auth/login')) {
+                // A 401 on the login request (POST /sessions) is a wrong-credentials
+                // error, not an expired session — don't fire the global event for it.
+                // GET/DELETE /sessions/current (me/logout) still count as expired.
+                const isLoginAttempt = method === 'post' && url.endsWith('/sessions');
+
+                if (status === 401 && !isLoginAttempt) {
                     window.dispatchEvent(new CustomEvent(APP_EVENTS.SESSION_EXPIRED, {
                         detail: { message: i18n.t('auth.session_expired') },
                     }));
