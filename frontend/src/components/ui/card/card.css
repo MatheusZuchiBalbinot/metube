@@ -3,7 +3,7 @@
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     transition: border-color var(--duration-default), transform var(--duration-default), box-shadow var(--duration-default);
 }
 
@@ -17,13 +17,13 @@
 .card--pad-none {}
 
 .card--pad-sm {
-    padding: 16px;
+    padding: var(--space-4);
 }
 
 .card--pad-md {
-    padding: 24px;
+    padding: var(--space-6);
 }
 
 .card--pad-lg {
-    padding: 32px;
+    padding: var(--space-8);
 }

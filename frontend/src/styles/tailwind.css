@@ -31,7 +31,7 @@
         --border-shadcn:        var(--border);
         --input-shadcn:         var(--border);
         --ring:                 var(--accent);
-        --radius:               var(--radius-sm);
+        --radius:               var(--radius-md);
     }
 }
 

@@ -9,7 +9,7 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: none;
     background: transparent;
     cursor: pointer;
@@ -35,12 +35,12 @@
     right: 4px;
     min-width: 16px;
     height: 16px;
-    padding: 0 4px;
+    padding: 0 var(--space-1);
     border-radius: var(--radius-full);
     background: var(--color-error);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
+    color: var(--accent-fg);
+    font-size: var(--text-2xs);
+    font-weight: var(--font-bold);
     line-height: 16px;
     text-align: center;
     pointer-events: none;

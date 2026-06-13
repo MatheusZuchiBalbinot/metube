@@ -18,33 +18,33 @@
 
 /* Common layout chunks */
 .ps__section {
-    padding: 24px 24px 0;
+    padding: var(--space-6) var(--space-6) 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-3_5);
 }
 
 .ps__section--sm {
-    padding-top: 16px;
+    padding-top: var(--space-4);
 }
 
 .ps__section-head {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .ps__section-icon {
     width: 18px;
     height: 18px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     flex-shrink: 0;
 }
 
 .ps__section-title {
     height: 18px;
     width: 140px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps__section-title--sm {
@@ -52,17 +52,17 @@
 }
 
 .ps__filters {
-    padding: 0 24px;
+    padding: 0 var(--space-6);
 }
 
 .ps__main {
-    padding: 24px;
+    padding: var(--space-6);
 }
 
 .ps__header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .ps__header--sm {
@@ -72,7 +72,7 @@
 .ps__title {
     height: 22px;
     width: 200px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps__title--sm {
@@ -83,30 +83,30 @@
 .ps__count {
     height: 14px;
     width: 80px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps__action-btn {
     height: 32px;
     width: 90px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     margin-left: auto;
 }
 
 .ps__back-header {
-    padding: 24px 24px 0;
+    padding: var(--space-6) var(--space-6) 0;
 }
 
 .ps__back-btn {
     height: 32px;
     width: 80px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps__list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 /* ─── Filter bar skeleton ─────────────────────────────────────────────────── */
@@ -115,8 +115,8 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 14px 0 12px;
+    gap: var(--space-1_5);
+    padding: var(--space-3_5) 0 var(--space-3);
     border-bottom: 1px solid var(--border);
 }
 
@@ -136,7 +136,7 @@
 
 .ps-grid {
     display: grid;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .ps-grid--home {
@@ -145,7 +145,7 @@
 
 .ps-grid--four {
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 @media (max-width: 1200px) {
@@ -178,7 +178,7 @@
 
 .ps-carousel {
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
     overflow: hidden;
 }
 
@@ -206,13 +206,13 @@
 /* ─── History ─────────────────────────────────────────────────────────────── */
 
 .ps--history {
-    padding: 24px;
-    gap: 24px;
+    padding: var(--space-6);
+    gap: var(--space-6);
 }
 
 .ps-history-controls {
     display: flex;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -221,12 +221,12 @@
     flex: 1;
     min-width: 180px;
     max-width: 320px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-history-controls__periods {
     display: flex;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 .ps-history-controls__period {
@@ -237,13 +237,13 @@
 .ps-history-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .ps-history-group__label {
     height: 12px;
     width: 80px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-history-group__list {
@@ -255,15 +255,15 @@
 /* ─── Collection (Liked / Watch Later) ────────────────────────────────────── */
 
 .ps--collection {
-    padding: 24px;
-    gap: 24px;
+    padding: var(--space-6);
+    gap: var(--space-6);
 }
 
 /* ─── Search ──────────────────────────────────────────────────────────────── */
 
 .ps--search {
-    padding: 24px;
-    gap: 24px;
+    padding: var(--space-6);
+    gap: var(--space-6);
 }
 
 .ps-search-hero {
@@ -300,7 +300,7 @@
     display: flex;
     align-items: flex-start;
     gap: 18px;
-    padding: 0 24px 24px;
+    padding: 0 var(--space-6) var(--space-6);
     border-bottom: 1px solid var(--border);
 }
 
@@ -318,8 +318,8 @@
 .ps-profile__info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding-top: 12px;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
     flex: 1;
     min-width: 0;
 }
@@ -327,50 +327,50 @@
 .ps-profile__name-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .ps-profile__name {
     height: 26px;
     width: 180px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-profile__edit-btn {
     height: 28px;
     width: 80px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-profile__bio {
     height: 14px;
     width: 260px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-profile__stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 4px;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
 }
 
 .ps-profile__stat {
     height: 14px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-profile__tabs {
     display: flex;
     gap: 0;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
     border-bottom: 1px solid var(--border);
 }
 
 .ps-profile__tab {
     height: 14px;
-    border-radius: var(--radius-sm);
-    margin: 14px 18px;
+    border-radius: var(--radius-md);
+    margin: var(--space-3_5) 18px;
 }
 
 /* ─── Video ───────────────────────────────────────────────────────────────── */
@@ -378,22 +378,22 @@
 .ps--video {
     display: grid;
     grid-template-columns: 1fr 320px;
-    gap: 24px;
-    padding: 24px;
+    gap: var(--space-6);
+    padding: var(--space-6);
     align-items: start;
 }
 
 .ps-video__main {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
     min-width: 0;
 }
 
 .ps-video__player {
     width: 100%;
     aspect-ratio: 16 / 9;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--surface-2);
     background-image: linear-gradient(90deg,
             var(--surface-2) 0%,
@@ -406,15 +406,15 @@
 .ps-video__meta {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-bottom: 16px;
+    gap: var(--space-2_5);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--border);
 }
 
 .ps-video__title {
     height: 22px;
     width: 90%;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-video__title--short {
@@ -425,20 +425,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
 .ps-video__stats {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .ps-video__stat {
     height: 14px;
     width: 64px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-video__stat--dot {
@@ -449,19 +449,19 @@
 
 .ps-video__actions {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .ps-video__action-btn {
     width: 64px;
     height: 36px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-video__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .ps-video__tag {
@@ -472,12 +472,12 @@
 .ps-video__desc {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .ps-video__desc-line {
     height: 14px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-video__sidebar {
@@ -488,30 +488,30 @@
 .ps-video__sidebar-inner {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-3_5);
     background: color-mix(in srgb, var(--surface-2) 80%, transparent);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 16px;
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
 }
 
 .ps-video__sidebar-tabs {
     display: flex;
-    gap: 6px;
-    padding-bottom: 12px;
+    gap: var(--space-1_5);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--border);
 }
 
 .ps-video__sidebar-tab {
     height: 30px;
     flex: 1;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-video__sidebar-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-3_5);
 }
 
 @media (max-width: 960px) {
@@ -540,7 +540,7 @@
             var(--surface-2) 100%);
     background-size: 200% 100%;
     animation: ps-shimmer 1.6s ease-in-out infinite;
-    border-radius: 0 0 var(--radius-md) var(--radius-lg);
+    border-radius: 0 0 var(--radius-sm) var(--radius-lg);
     z-index: 0;
     position: relative;
 }
@@ -548,8 +548,8 @@
 .ps-channel__header {
     display: flex;
     align-items: flex-start;
-    gap: 20px;
-    padding: 16px 24px 24px;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-6) var(--space-6);
     border-bottom: 1px solid var(--border);
     margin-top: -28px;
     position: relative;
@@ -566,7 +566,7 @@
 .ps-channel__info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
     flex: 1;
     min-width: 0;
     padding-top: 28px;
@@ -575,14 +575,14 @@
 .ps-channel__name-row {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--space-3_5);
     flex-wrap: wrap;
 }
 
 .ps-channel__name {
     height: 26px;
     width: 200px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-channel__subscribe-btn {
@@ -594,18 +594,18 @@
 .ps-channel__stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .ps-channel__stat {
     height: 14px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .ps-channel__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .ps-channel__tag {

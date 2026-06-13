@@ -9,8 +9,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--font-bold);
     color: var(--text);
     margin: 0;
 }
@@ -20,7 +20,7 @@
     display: block;
     width: 3px;
     height: 1.1em;
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
     background: linear-gradient(to bottom, var(--color-success-fg), var(--color-success));
     flex-shrink: 0;
 }
@@ -54,7 +54,7 @@
 }
 
 .comment-section__empty {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--text-3);
     text-align: center;
     padding: var(--space-8) 0;

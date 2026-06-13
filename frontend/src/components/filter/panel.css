@@ -10,19 +10,20 @@
 .filter-panel__trigger {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-1_5);
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     color: var(--text-2);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     font-family: inherit;
-    padding: 6px 12px;
+    padding: var(--space-1_5) var(--space-3);
     cursor: pointer;
     white-space: nowrap;
     line-height: 1.2;
-    transition: all var(--duration-fast);
+    transition-property: background, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--duration-fast);
 }
 
 .filter-panel__trigger:hover,
@@ -52,8 +53,8 @@
     border-radius: var(--radius-full);
     background: var(--accent);
     color: var(--accent-fg);
-    font-size: 0.6875rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-bold);
     font-variant-numeric: tabular-nums;
     line-height: 1;
 }
@@ -75,7 +76,7 @@
     min-width: 15px;
     height: 15px;
     padding: 0 3px;
-    font-size: 0.5625rem;
+    font-size: var(--text-2xs);
 }
 
 .filter-panel__trigger--icon-only:hover,
@@ -108,12 +109,12 @@
     overflow-y: auto;
     background: var(--surface-2);
     border: 1px solid var(--border-2);
-    border-radius: var(--radius-md);
-    padding: 16px;
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
     box-shadow: var(--elevation-3);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
     z-index: var(--z-modal);
     animation: panelIn var(--duration-default) var(--ease-out);
 }
@@ -121,12 +122,12 @@
 .filter-panel__dropdown-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .filter-panel__dropdown-label {
-    font-size: 0.6875rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-bold);
     color: var(--text-3);
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -137,7 +138,7 @@
 .filter-panel__dropdown-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1_5);
     max-height: 150px;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -147,13 +148,14 @@
     background: var(--surface-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
     color: var(--text-2);
-    padding: 3px 10px;
+    padding: 3px var(--space-2_5);
     cursor: pointer;
     font-family: inherit;
-    transition: all var(--duration-fast);
+    transition-property: background, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--duration-fast);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -188,11 +190,11 @@
     background: none;
     border: none;
     border-radius: 0;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-family: inherit;
-    font-weight: 500;
+    font-weight: var(--font-medium);
     color: var(--text-2);
-    padding: 6px 10px;
+    padding: var(--space-1_5) var(--space-2_5);
     cursor: pointer;
     transition: background var(--duration-fast), color var(--duration-fast);
     white-space: nowrap;
@@ -210,7 +212,7 @@
 .filter-panel__sort-btn--active {
     background: var(--accent-subtle);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: var(--font-semibold);
 }
 
 /* ─── Year select ─────────────────────────────────────────────────────────── */
@@ -219,11 +221,11 @@
     width: 100%;
     background: var(--surface-3);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: var(--text);
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     font-family: inherit;
-    padding: 8px 32px 8px 10px;
+    padding: var(--space-2) var(--space-8) var(--space-2) var(--space-2_5);
     outline: none;
     cursor: pointer;
     transition: border-color var(--duration-default);
@@ -247,20 +249,21 @@
 .filter-panel__quick-range-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1_5);
 }
 
 .filter-panel__quick-range-chip {
     background: var(--surface-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
     color: var(--text-2);
-    padding: 4px 10px;
+    padding: var(--space-1) var(--space-2_5);
     cursor: pointer;
     font-family: inherit;
-    transition: all var(--duration-fast);
+    transition-property: background, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--duration-fast);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -281,7 +284,7 @@
 .filter-panel__date-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .filter-panel__date-field {
@@ -292,16 +295,16 @@
 }
 
 .filter-panel__date-label {
-    font-size: 0.6875rem;
+    font-size: var(--text-2xs);
     color: var(--text-3);
-    font-weight: 500;
+    font-weight: var(--font-medium);
 }
 
 /* ─── Dropdown footer ─────────────────────────────────────────────────────── */
 
 .filter-panel__dropdown-footer {
     border-top: 1px solid var(--border);
-    padding-top: 12px;
+    padding-top: var(--space-3);
     display: flex;
     justify-content: flex-end;
 }

@@ -7,7 +7,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: var(--space-6);
     background: var(--overlay-md);
     backdrop-filter: var(--glass-blur-xs);
     -webkit-backdrop-filter: var(--glass-blur-xs);
@@ -37,7 +37,7 @@
 
 @media (max-width: 480px) {
     .modal-overlay {
-        padding: 12px;
+        padding: var(--space-3);
     }
 
     .modal-box {
@@ -51,15 +51,15 @@
     }
 
     .modal-header {
-        padding: 16px 18px 0;
+        padding: var(--space-4) 18px 0;
     }
 
     .modal-body {
-        padding: 16px 18px;
+        padding: var(--space-4) 18px;
     }
 
     .modal-footer {
-        padding: 0 18px 16px;
+        padding: 0 18px var(--space-4);
     }
 }
 
@@ -67,7 +67,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px 0;
+    padding: var(--space-5) var(--space-6) 0;
 }
 
 .modal-header h2 {
@@ -80,7 +80,7 @@
 .modal-close {
     width: 36px;
     height: 36px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: none;
     background: transparent;
     color: var(--text-3);
@@ -97,7 +97,7 @@
 }
 
 .modal-body {
-    padding: 20px 24px;
+    padding: var(--space-5) var(--space-6);
     overflow-y: auto;
     flex: 1;
     min-height: 0;
@@ -107,6 +107,6 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    padding: 0 24px 20px;
+    gap: var(--space-2_5);
+    padding: 0 var(--space-6) var(--space-5);
 }

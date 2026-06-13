@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     padding: var(--page-padding-y) var(--page-padding-x);
-    gap: 24px;
+    gap: var(--space-6);
     max-width: var(--page-max-width);
     margin-inline: auto;
     width: 100%;
@@ -15,18 +15,18 @@
 .liked-page__header {
     display: flex;
     align-items: baseline;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .liked-page__title {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
     color: var(--text);
     margin: 0;
 }
 
 .liked-page__count {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--text-3);
     margin: 0;
 }
@@ -42,7 +42,7 @@
 .liked-page__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 /* ─── Item ────────────────────────────────────────────────────────────────── */
@@ -71,7 +71,7 @@
 }
 
 .liked-page__unlike-btn:hover {
-    color: #f87171 !important;
+    color: var(--color-error-fg) !important;
 }
 
 @media (max-width: 1024px) {

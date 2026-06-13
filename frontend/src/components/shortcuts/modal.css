@@ -3,7 +3,7 @@
 .shortcuts-modal {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 /* Responsive grid of shortcut sections (2 columns, wraps for any number). */
@@ -17,17 +17,17 @@
 .shortcuts-modal__section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
 }
 
 .shortcuts-modal__section-title {
-    font-size: 0.6875rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-bold);
     text-transform: uppercase;
     letter-spacing: 0.09em;
     color: var(--text-3);
-    margin: 0 0 4px;
+    margin: 0 0 var(--space-1);
 }
 
 .shortcuts-modal__list {
@@ -41,9 +41,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 5px 8px;
-    border-radius: var(--radius-sm);
+    gap: var(--space-3);
+    padding: 5px var(--space-2);
+    border-radius: var(--radius-md);
     transition: background var(--duration-fast);
 }
 
@@ -52,7 +52,7 @@
 }
 
 .shortcuts-modal__label {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-2);
     flex: 1;
     min-width: 0;
@@ -61,7 +61,7 @@
 .shortcuts-modal__keys {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     flex-shrink: 0;
 }
 
@@ -72,13 +72,13 @@
     justify-content: center;
     min-width: 26px;
     height: 22px;
-    padding: 0 6px;
+    padding: 0 var(--space-1_5);
     background: var(--surface-3);
     border: 1px solid var(--border-2);
     border-bottom-width: 2px;
     border-radius: var(--radius-xs);
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-semibold);
     font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
     color: var(--text);
     letter-spacing: 0;
@@ -87,32 +87,32 @@
 
 /* "then" separator between chord keys */
 .shortcuts-modal__then {
-    font-size: 0.6875rem;
-    font-weight: 500;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-medium);
     color: var(--text-3);
     font-style: italic;
 }
 
 /* "or" separator between alternative keys */
 .shortcuts-modal__or {
-    font-size: 0.6875rem;
-    font-weight: 500;
+    font-size: var(--text-2xs);
+    font-weight: var(--font-medium);
     color: var(--text-3);
 }
 
 /* Note below video section */
 .shortcuts-modal__note {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-3);
-    padding: 0 8px;
-    margin-top: 4px;
+    padding: 0 var(--space-2);
+    margin-top: var(--space-1);
 }
 
 /* Tip line at the bottom */
 .shortcuts-modal__tip {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-3);
-    padding-top: 16px;
+    padding-top: var(--space-4);
     border-top: 1px solid var(--border);
     line-height: 1.4;
 }

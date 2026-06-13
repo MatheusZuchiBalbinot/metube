@@ -8,7 +8,7 @@
     height: calc(100dvh - 58px);
     background: var(--surface);
     border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-    padding: 10px 0;
+    padding: var(--space-2_5) 0;
     z-index: var(--z-modal);
     overflow-y: auto;
     overflow-x: hidden;
@@ -59,8 +59,8 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 0 8px;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
 }
 
 /* ─── Nav item ────────────────────────────────────────────────────────────── */
@@ -69,9 +69,9 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 10px 7px 8px;
-    border-radius: var(--radius-sm);
+    gap: var(--space-2_5);
+    padding: 7px var(--space-2_5) 7px var(--space-2);
+    border-radius: var(--radius-md);
     color: var(--text-2);
     font-size: var(--text-base);
     font-weight: var(--font-medium);
@@ -102,7 +102,7 @@
     position: absolute;
     inset: 0;
     background: var(--accent-subtle);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     z-index: 0;
     pointer-events: none;
     animation: sidebar-active-fade 0.15s var(--ease-out) both;
@@ -139,7 +139,7 @@
 .app-sidebar__icon-chip {
     width: 32px;
     height: 32px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -163,14 +163,14 @@
 /* ─── Section ─────────────────────────────────────────────────────────────── */
 
 .app-sidebar__section {
-    margin-top: 12px;
-    padding-top: 8px;
+    margin-top: var(--space-3);
+    padding-top: var(--space-2);
     border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
 .app-sidebar__section-label {
     display: block;
-    padding: 6px 18px 4px;
+    padding: var(--space-1_5) 18px var(--space-1);
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
     letter-spacing: 0.06em;
@@ -199,7 +199,7 @@
 
 .app-sidebar__section-chevron {
     flex-shrink: 0;
-    margin-right: 14px;
+    margin-right: var(--space-3_5);
     color: var(--text-3);
     transition: transform var(--duration-default);
 }
@@ -219,10 +219,10 @@
 .app-sidebar__user {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 0 8px 6px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
+    gap: var(--space-2_5);
+    margin: 0 var(--space-2) var(--space-1_5);
+    padding: var(--space-1_5) var(--space-2);
+    border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text);
     transition: background var(--duration-default);
@@ -261,7 +261,7 @@
 
 .app-sidebar__footer {
     margin-top: auto;
-    padding: 10px 14px 4px;
+    padding: var(--space-2_5) var(--space-3_5) var(--space-1);
     border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
@@ -270,13 +270,13 @@
 .app-sidebar__show-more {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2_5);
     width: calc(100% - 16px);
-    margin: 4px 8px 0;
-    padding: 7px 10px 7px 8px;
+    margin: var(--space-1) var(--space-2) 0;
+    padding: 7px var(--space-2_5) 7px var(--space-2);
     border: none;
     background: transparent;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: var(--text-2);
     font-size: var(--text-base);
     font-weight: var(--font-medium);
@@ -291,7 +291,7 @@
 
 .app-sidebar__show-more-icon {
     flex-shrink: 0;
-    margin-left: 6px;
+    margin-left: var(--space-1_5);
     transition: transform var(--duration-default);
 }
 
@@ -306,16 +306,16 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 0 8px;
+    padding: 0 var(--space-2);
     margin: 0;
 }
 
 .app-sidebar__continue-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
+    gap: var(--space-2_5);
+    padding: var(--space-1_5) var(--space-2);
+    border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-2);
     transition: background var(--duration-default), color var(--duration-default);
@@ -331,7 +331,7 @@
     flex-shrink: 0;
     width: 56px;
     height: 32px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--surface-3);
 }
@@ -414,9 +414,9 @@
 .app-sidebar__playlist {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 10px 7px 8px;
-    border-radius: var(--radius-sm);
+    gap: var(--space-2_5);
+    padding: 7px var(--space-2_5) 7px var(--space-2);
+    border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-2);
     transition: background var(--duration-default), color var(--duration-default);
@@ -434,7 +434,7 @@
     flex-shrink: 0;
     width: 32px;
     height: 32px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
 .app-sidebar__playlist-name {
@@ -458,14 +458,14 @@
 .app-sidebar__topics {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 4px 14px 0;
+    gap: var(--space-1_5);
+    padding: var(--space-1) var(--space-3_5) 0;
 }
 
 .app-sidebar__topic {
     border: none;
     cursor: pointer;
-    padding: 4px 10px;
+    padding: var(--space-1) var(--space-2_5);
     border-radius: var(--radius-full);
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
@@ -483,7 +483,7 @@
 /* ─── Empty state ─────────────────────────────────────────────────────────── */
 
 .app-sidebar__empty {
-    padding: 2px 18px 6px;
+    padding: 2px 18px var(--space-1_5);
     margin: 0;
     font-size: var(--text-sm);
     color: var(--text-3);
@@ -523,7 +523,7 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-block: 10px;
+    padding-block: var(--space-2_5);
     background: var(--surface);
     z-index: 1;
     transition: width 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
@@ -536,7 +536,7 @@
 }
 
 .app-sidebar--rail .app-sidebar__section {
-    margin-top: 8px;
+    margin-top: var(--space-2);
 }
 
 /* Collapsed appearance — applies unless the rail is expanded by hover. */

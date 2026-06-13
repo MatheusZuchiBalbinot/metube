@@ -4,7 +4,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: var(--font-bold);
     user-select: none;
     flex-shrink: 0;
     overflow: hidden;
@@ -14,14 +14,14 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
 }
 
 .avatar--md {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    font-size: 1rem;
+    font-size: var(--text-md);
 }
 
 .avatar--lg {
@@ -29,7 +29,7 @@
     height: 56px;
     border-radius: 16px;
     font-size: 1.375rem;
-    font-weight: 800;
+    font-weight: var(--font-extrabold);
 }
 
 .avatar img {

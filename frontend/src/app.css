@@ -13,18 +13,18 @@
 }
 
 .route-error p {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     color: var(--text-2);
 }
 
 .route-error button {
     padding: 0.5rem 1.25rem;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: var(--text-base);
 }
 
 .route-error button:hover {

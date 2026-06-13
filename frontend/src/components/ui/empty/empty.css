@@ -16,8 +16,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 80px 24px;
+    gap: var(--space-3);
+    padding: 80px var(--space-6);
     text-align: center;
     animation: empty-state-in 0.3s var(--ease-out) both;
 }
@@ -32,7 +32,7 @@
     color: var(--accent);
     width: 88px;
     height: 88px;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
     border-radius: 50%;
     background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 72%);
 }
@@ -73,22 +73,22 @@
 /* ─── Text ─────────────────────────────────────────────────────────────────── */
 
 .empty-state__title {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--font-bold);
     color: var(--text);
     margin: 0;
 }
 
 .empty-state__description {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--text-3);
     margin: 0;
     max-width: 320px;
-    line-height: 1.5;
+    line-height: var(--leading-normal);
 }
 
 /* ─── Action ───────────────────────────────────────────────────────────────── */
 
 .empty-state__action {
-    margin-top: 4px;
+    margin-top: var(--space-1);
 }
