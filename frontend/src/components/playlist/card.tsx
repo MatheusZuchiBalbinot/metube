@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
@@ -13,8 +13,9 @@ import Input from '@ui/input/input';
 import './card.css';
 import { ToastType } from '@enums/toastType';
 import { usePlaylist } from '@hooks';
+import { usePlaylistCard } from './usePlaylistCard';
 import { videoUrl, formatDuration, formatDurationCompact, cn } from '@utils';
-import type { Video, Playlist, PlaylistId, VideoId, Seconds } from '@models';
+import type { Video, Playlist, PlaylistId, Seconds } from '@models';
 
 interface PlaylistCardProps {
     playlist: Playlist
@@ -98,16 +99,15 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
     );
 }
 
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- inherent branching of a rich presentational card; interactive logic lives in usePlaylistCard
 export default function PlaylistCard({ playlist, videos, defaultExpanded = false }: PlaylistCardProps) {
     const { t } = useTranslation();
-    const { renamePlaylist, deletePlaylist, reorderVideosInPlaylist } = usePlaylist();
-    const dispatch = useAppDispatch();
-
-    const [expanded, setExpanded] = useState(defaultExpanded);
-    const [renaming, setRenaming] = useState(false);
-    const [renameName, setRenameName] = useState(playlist.name);
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const {
+        expanded, renaming, renameName, deleteConfirmOpen,
+        handleToggleExpand, handleChevronClick, handleRenameStart, handleRenameFormClick,
+        handleRenameNameChange, handleRenameConfirm, handleRenameCancel, handleRenameKeyDown,
+        handleDeleteRequest, handleDeleteConfirm, handleDeleteCancel, handleReorder,
+    } = usePlaylistCard(playlist, defaultExpanded);
 
     const videoCount = playlist.videoIds.length;
     const isEmpty = videoCount === 0;
@@ -124,78 +124,6 @@ export default function PlaylistCard({ playlist, videos, defaultExpanded = false
     const displayName = isWatchLaterPlaylist ? t('playlist.watch_later_row') : playlist.name;
 
     const videosRegionId = `playlist-videos-${playlist.id}`;
-
-    function handleToggleExpand() {
-        setExpanded(prev => !prev);
-    }
-
-    function handleChevronClick(e: React.MouseEvent) {
-        e.stopPropagation();
-        handleToggleExpand();
-    }
-
-    function handleRenameStart(e: React.MouseEvent) {
-        e.stopPropagation();
-        setRenameName(playlist.name);
-        setRenaming(true);
-    }
-
-    function handleDeleteCancel() {
-        setDeleteConfirmOpen(false);
-    }
-
-    function handleRenameFormClick(e: React.MouseEvent) {
-        e.stopPropagation();
-    }
-
-    function handleRenameNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setRenameName(e.target.value);
-    }
-
-    function handleRenameConfirm(e: React.SyntheticEvent) {
-        e.stopPropagation();
-        const trimmed = renameName.trim();
-        const isTitleEmpty = trimmed === '';
-
-        if (isTitleEmpty) {
-            return;
-        }
-        renamePlaylist(playlist.id, trimmed);
-        setRenaming(false);
-    }
-
-    function handleRenameCancel(e: React.SyntheticEvent) {
-        e.stopPropagation();
-        setRenameName(playlist.name);
-        setRenaming(false);
-    }
-
-    function handleRenameKeyDown(e: React.KeyboardEvent) {
-        const isEnter = e.key === 'Enter';
-        const isEscape = e.key === 'Escape';
-        if (isEnter) {
-            handleRenameConfirm(e);
-        }
-
-        if (isEscape) {
-            handleRenameCancel(e);
-        }
-    }
-
-    function handleDeleteConfirm() {
-        deletePlaylist(playlist.id);
-        dispatch(toastActions.addToast({ message: t('toast.playlist_deleted'), type: ToastType.INFO }));
-        setDeleteConfirmOpen(false);
-    }
-
-    function handleDeleteRequest(e: React.MouseEvent) {
-        e.stopPropagation();
-        setDeleteConfirmOpen(true);
-    }
-
-    function handleReorder(newVideoIds: string[]) {
-        reorderVideosInPlaylist(playlist.id, newVideoIds as VideoId[]);
-    }
 
     return (
         <div className={cn('playlist-card', isEmpty && 'playlist-card--empty')}>

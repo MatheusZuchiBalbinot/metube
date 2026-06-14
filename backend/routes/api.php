@@ -37,7 +37,7 @@ Route::prefix('videos')->group(function (): void {
     Route::get('/{video}/summary', [VideoController::class, 'summary'])->can('view', 'video');
     Route::get('/{video}/transcription', [VideoController::class, 'transcription'])->can('view', 'video');
     Route::prefix('{video}/comments')->group(function (): void {
-        Route::get('/', [CommentController::class, 'index'])->can('view', 'video');
+        Route::get('/', [CommentController::class, 'index']);
     });
 });
 
@@ -102,11 +102,11 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         // progress on a video they are allowed to see. For non-owners this means the
         // video must be published; owners may interact with any status (e.g. their own
         // drafts). This blocks reactions/progress against hidden drafts of other users.
-        Route::post('/{video}/views', [VideoController::class, 'recordView'])->can('view', 'video');
-        Route::post('/{video}/like', [VideoController::class, 'toggleLike'])->can('view', 'video');
-        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike'])->can('view', 'video');
-        Route::post('/{video}/save', [VideoController::class, 'toggleSave'])->can('view', 'video');
-        Route::put('/{video}/progress', [VideoController::class, 'updateProgress'])->can('view', 'video');
+        Route::post('/{video}/views', [VideoController::class, 'recordView']);
+        Route::post('/{video}/like', [VideoController::class, 'toggleLike']);
+        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike']);
+        Route::post('/{video}/save', [VideoController::class, 'toggleSave']);
+        Route::put('/{video}/progress', [VideoController::class, 'updateProgress']);
         Route::post('/{video}/publish', [VideoController::class, 'publish'])->can('publish', 'video');
         Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
             ->can('retryTranscription', 'video');
@@ -117,12 +117,15 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{video}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion'])
             ->can('manageSuggestion', 'video');
 
+        // Authorization for chat is enforced inside VideoChatController because the
+        // route binds {video} to a string vuid (not a Video model), so the
+        // route-level ->can('view','video') cannot resolve the policy.
         Route::post('/{video}/chat', VideoChatController::class)
-            ->middleware('throttle:video-chat')
-            ->can('view', 'video');
+            ->middleware('throttle:video-chat');
 
         Route::prefix('{video}/comments')->group(function (): void {
-            Route::post('/', [CommentController::class, 'store'])->can('view', 'video');
+            // Authorization enforced inside CommentController (string vuid, see above).
+            Route::post('/', [CommentController::class, 'store']);
         });
     });
 

@@ -198,7 +198,8 @@ describe('CommentController', function () {
     });
 
     test('listing comments is accessible to guests', function () {
-        $video = Video::factory()->create();
+        // Comments follow video visibility: guests may list them on published videos.
+        $video = Video::factory()->published()->create();
         $this->getJson("/api/videos/{$video->vuid}/comments")->assertOk();
     });
 

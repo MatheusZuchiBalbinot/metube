@@ -110,9 +110,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('video-chat', function (Request $request) {
-            $key = $request->user()?->id ?? $request->ip();
-
-            return Limit::perMinute(20)->by((string) $key);
+            // The chat route is behind auth:sanctum, so the user is always present.
+            return Limit::perMinute(20)->by((string) $request->user()->id);
         });
     }
 
