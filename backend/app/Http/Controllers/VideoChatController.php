@@ -38,6 +38,7 @@ class VideoChatController extends Controller
     public function __invoke(VideoChatRequest $request, string $vuid): JsonResponse
     {
         $video = $this->videoService->getVideoByUuid($vuid);
+        $this->authorize('view', $video);
         $video->loadMissing(['transcription', 'summary']);
 
         $transcription = $video->transcription;

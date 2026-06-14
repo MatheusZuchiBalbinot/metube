@@ -19,7 +19,11 @@ function loadConfigWithDefaults(string $relativePath, array $clearEnvKeys): arra
     $previous = [];
 
     foreach ($clearEnvKeys as $key) {
-        $previous[$key] = $_SERVER[$key] ?? null;
+        // getenv() reflects the actual process env (including phpunit's forced
+        // vars), so we capture and restore it unconditionally — never leaking a
+        // cleared var into the shared test process.
+        $captured = getenv($key);
+        $previous[$key] = $captured === false ? null : $captured;
         unset($_SERVER[$key], $_ENV[$key]);
         putenv($key);
     }
@@ -33,6 +37,8 @@ function loadConfigWithDefaults(string $relativePath, array $clearEnvKeys): arra
             $value = $previous[$key];
 
             if ($value === null) {
+                putenv($key);
+
                 continue;
             }
 

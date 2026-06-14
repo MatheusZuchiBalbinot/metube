@@ -11,6 +11,7 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\CommentVersionResource;
 use App\Http\Resources\ToggleLikeResource;
 use App\Models\Comment;
+use App\Models\Video;
 use App\Services\CommentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class CommentController extends Controller
      */
     public function index(string $vuid, Request $request): JsonResponse
     {
+        $this->authorize('view', Video::byVuid($vuid)->firstOrFail());
+
         $page = (int) $request->query('page', '1');
         $user = $request->user();
         $comments = $this->commentService->list($vuid, $user, $page);
@@ -43,6 +46,8 @@ class CommentController extends Controller
      */
     public function store(string $vuid, StoreCommentRequest $request): JsonResponse
     {
+        $this->authorize('view', Video::byVuid($vuid)->firstOrFail());
+
         $user = $request->user();
         $comment = $this->commentService->store($vuid, $request->getDTO(), $user);
 
