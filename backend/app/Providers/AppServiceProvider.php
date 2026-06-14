@@ -8,6 +8,7 @@ use App\AI\Clients\GroqClient;
 use App\AI\Contracts\AiClient;
 use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
+use App\Contracts\ViewCounterStore;
 use App\Events\ChannelSubscribed;
 use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
@@ -52,6 +53,8 @@ use App\Observers\VideoObserver;
 use App\Policies\CommentPolicy;
 use App\Policies\PlaylistPolicy;
 use App\Policies\VideoPolicy;
+use App\Services\DatabaseViewCounterStore;
+use App\Services\RedisViewCounterStore;
 use App\Services\StorageService;
 use App\Services\Tus\TusUploadResolver;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -74,6 +77,16 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(StorageContract::class, StorageService::class);
         $this->app->bind(TusResolverContract::class, TusUploadResolver::class);
+
+        // View counting buffers increments in Redis to keep hot videos off the
+        // row-lock path. The test/local environment has no Redis and asserts
+        // against videos.views synchronously, so it gets the unbuffered store.
+        // The branch lives here in the provider — never inside the service.
+        $viewCounterStore = $this->app->runningUnitTests()
+            ? DatabaseViewCounterStore::class
+            : RedisViewCounterStore::class;
+
+        $this->app->bind(ViewCounterStore::class, $viewCounterStore);
     }
 
     /**
