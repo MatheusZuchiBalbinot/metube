@@ -6,6 +6,7 @@ use App\Enums\VideoEventType;
 use App\Models\User;
 use App\Models\UserAnalytic;
 use App\Models\Video;
+use App\Models\WatchHistory;
 use App\Services\RecommendationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -148,6 +149,80 @@ describe('RecommendationService', function () {
         expect($recommendations)->toHaveLength(5);
     });
 
+    test('keeps watched videos out of the personalised pool', function () {
+        $creator = User::factory()->create();
+        $liked = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['javascript'],
+            'views' => 50,
+            'published_at' => now()->subDay(),
+        ]);
+        $watched = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['javascript'],
+            'views' => 50,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $user = User::factory()->create();
+        UserAnalytic::create([
+            'user_id' => $user->id,
+            'video_id' => $liked->id,
+            'channel_id' => $creator->id,
+            'event_type' => VideoEventType::LIKE,
+            'occurred_at' => now()->subDays(5),
+        ]);
+        WatchHistory::create([
+            'user_id' => $user->id,
+            'video_id' => $watched->id,
+            'watched_at' => now()->subDay(),
+        ]);
+
+        $ids = app(RecommendationService::class)->forUser($user, 1)->pluck('id')->toArray();
+
+        expect($ids)->not->toContain($watched->id);
+    });
+
+    test('keeps affinity ranking coherent with a large candidate set', function () {
+        $creator = User::factory()->create();
+
+        // A wide catalogue the user has no affinity for.
+        Video::factory()->count(40)->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['cooking'],
+            'views' => 5,
+            'published_at' => now()->subDays(2),
+        ]);
+
+        $likedVideo = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['rust'],
+            'views' => 5,
+            'published_at' => now()->subDay(),
+        ]);
+        $sameTag = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['rust'],
+            'views' => 5,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $user = User::factory()->create();
+        UserAnalytic::create([
+            'user_id' => $user->id,
+            'video_id' => $likedVideo->id,
+            'channel_id' => $creator->id,
+            'event_type' => VideoEventType::LIKE,
+            'occurred_at' => now()->subDays(3),
+        ]);
+
+        $ids = app(RecommendationService::class)->forUser($user, 1)->pluck('id')->toArray();
+
+        // The tag-matching candidate must rank on the first page despite the
+        // large unrelated catalogue, proving SQL pre-filtering keeps affinity.
+        expect($ids)->toContain($sameTag->id);
+    });
+
     test('weighs different event types correctly', function () {
         $creator = User::factory()->create();
         $finishVideo = Video::factory()->for($creator, 'channel')->create([
@@ -254,5 +329,25 @@ describe('RecommendationService relatedTo', function () {
         $related = app(RecommendationService::class)->relatedTo($source, 5);
 
         expect($related)->toHaveLength(5);
+    });
+
+    test('stays non-empty via popular top-up when nothing shares tag or channel', function () {
+        $creatorA = User::factory()->create();
+        $creatorB = User::factory()->create();
+
+        $source = Video::factory()->for($creatorA, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['react'],
+        ]);
+        // Different channel and disjoint tags: only the popular top-up can surface it.
+        Video::factory()->count(3)->for($creatorB, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['gardening'],
+            'views' => 100,
+        ]);
+
+        $related = app(RecommendationService::class)->relatedTo($source);
+
+        expect($related)->toHaveLength(3);
     });
 });

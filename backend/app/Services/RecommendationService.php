@@ -11,10 +11,34 @@ use App\Models\UserAnalytic;
 use App\Models\UserSubscription;
 use App\Models\Video;
 use App\Models\WatchHistory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 final class RecommendationService
 {
+    /**
+     * Hard cap on candidate videos loaded into PHP for scoring.
+     *
+     * Without this, scoring loaded the entire published catalogue into memory
+     * (O(catalogue) per request, a memory spike per Octane worker). We now
+     * pre-filter in SQL and cap the pool, trading a slightly narrower candidate
+     * set for bounded, predictable memory and CPU.
+     */
+    private const CANDIDATE_LIMIT = 500;
+
+    /**
+     * Cap on how many recently watched video ids feed the `whereNotIn` exclusion.
+     *
+     * The exclusion only needs to cover the candidate window, so an unbounded
+     * watch history is unnecessary and would bloat the bound parameter list.
+     */
+    private const WATCHED_EXCLUSION_LIMIT = 500;
+
+    /**
+     * Cap on candidates considered when finding videos related to one video.
+     */
+    private const RELATED_CANDIDATE_LIMIT = 300;
+
     public function __construct(private readonly CacheService $cache) {}
 
     /**
@@ -41,7 +65,11 @@ final class RecommendationService
                 $channelAffinity = $this->deriveChannelAffinity($userEventScores);
                 $subscribedChannelIds = $this->getSubscribedChannelIds($user->id);
                 $watchedVideoIds = $this->getWatchedVideoIds($user->id);
-                $candidates = $this->getCandidateVideos($watchedVideoIds);
+                $candidates = $this->getCandidateVideos(
+                    $watchedVideoIds,
+                    array_keys($tagAffinity),
+                    $this->affinityChannelIds($channelAffinity, $subscribedChannelIds),
+                );
 
                 if ($candidates->isEmpty()) {
                     return $candidates;
@@ -75,10 +103,11 @@ final class RecommendationService
     /**
      * Get videos related to a given video, scored by similarity.
      *
-     * Considers every other published video as a candidate and ranks it by tag overlap
-     * with the source video, a same-channel bonus, popularity and freshness. Because
-     * popularity and freshness always contribute, the result is never empty as long as
-     * other published videos exist — tag overlap is a boost, not a hard filter.
+     * Ranks a bounded candidate pool (same channel, tag overlap and a popular
+     * sample — see getRelatedCandidates) by tag overlap with the source video,
+     * a same-channel bonus, popularity and freshness. Because the pool always
+     * tops up with popular videos, the result is never empty as long as other
+     * published videos exist — tag overlap is a boost, not a hard filter.
      *
      * @param Video $video Source video to find related content for
      * @param int $limit Maximum number of related videos to return
@@ -89,10 +118,7 @@ final class RecommendationService
     {
         $targetTags = $video->tags ?? [];
 
-        $candidates = Video::published()
-            ->where('id', '!=', $video->id)
-            ->with('channel')
-            ->get();
+        $candidates = $this->getRelatedCandidates($video, $targetTags);
 
         if ($candidates->isEmpty()) {
             return $candidates;
@@ -247,28 +273,192 @@ final class RecommendationService
     }
 
     /**
-     * Get IDs of videos the user has already watched.
+     * Get IDs of the user's most recently watched videos.
+     *
+     * Capped at WATCHED_EXCLUSION_LIMIT: the exclusion only has to cover the
+     * candidate window, so loading the entire history would needlessly bloat
+     * the `whereNotIn` bound parameter list.
      *
      * @return array<int>
      */
     private function getWatchedVideoIds(int $userId): array
     {
-        return WatchHistory::where('user_id', $userId)->pluck('video_id')->toArray();
+        return WatchHistory::where('user_id', $userId)
+            ->orderByDesc('watched_at')
+            ->limit(self::WATCHED_EXCLUSION_LIMIT)
+            ->pluck('video_id')
+            ->all();
     }
 
     /**
-     * Get candidate videos (published, excluding watched).
+     * Merge behavioural channel affinity with explicit subscriptions into one id set.
      *
-     * @param array<int> $excludeIds
+     * @param array<int, float> $channelAffinity
+     * @param array<int> $subscribedChannelIds
+     *
+     * @return array<int>
+     */
+    private function affinityChannelIds(array $channelAffinity, array $subscribedChannelIds): array
+    {
+        return array_values(array_unique(array_merge(
+            array_keys($channelAffinity),
+            $subscribedChannelIds,
+        )));
+    }
+
+    /**
+     * Get a bounded pool of candidate videos for scoring.
+     *
+     * Builds a hybrid pool instead of the full catalogue: videos that match the
+     * user's tag affinity OR come from an affinity/subscribed channel, plus a
+     * popular-video sample so discovery survives even with thin affinity. The
+     * whole pool is capped at CANDIDATE_LIMIT and ordered by views so the most
+     * relevant rows are kept when the cap bites. Already-watched videos are
+     * excluded in SQL.
+     *
+     * @param array<int> $excludeIds Recently watched video ids to exclude
+     * @param array<string> $affinityTags Tags the user has positive affinity for
+     * @param array<int> $affinityChannelIds Channels the user follows or interacts with
      *
      * @return Collection<int, Video>
      */
-    private function getCandidateVideos(array $excludeIds): Collection
+    private function getCandidateVideos(array $excludeIds, array $affinityTags, array $affinityChannelIds): Collection
+    {
+        $hasAffinity = $affinityTags !== [] || $affinityChannelIds !== [];
+
+        if (!$hasAffinity) {
+            return $this->basePool($excludeIds)->get();
+        }
+
+        $affinityPool = $this->basePool($excludeIds)
+            ->where(function (Builder $query) use ($affinityTags, $affinityChannelIds): void {
+                $this->whereMatchesTags($query, $affinityTags);
+
+                if ($affinityChannelIds !== []) {
+                    $query->orWhereIn('channel_id', $affinityChannelIds);
+                }
+            })
+            ->get();
+
+        // Top up with a popular sample so unfamiliar-but-relevant content can
+        // still surface; de-dupe by folding the affinity ids into the exclusion
+        // set passed to basePool (keeps the query Builder<Video>-typed).
+        $affinityIds = $affinityPool->pluck('id')->all();
+        $popularPool = $this->basePool(array_merge($excludeIds, $affinityIds))->get();
+
+        return $affinityPool
+            ->merge($popularPool)
+            ->take(self::CANDIDATE_LIMIT)
+            ->values();
+    }
+
+    /**
+     * Base published-candidate query: excludes watched ids, eager-loads the
+     * channel, orders by popularity and caps the row count.
+     *
+     * @param array<int, mixed> $excludeIds
+     *
+     * @return Builder<Video>
+     */
+    private function basePool(array $excludeIds): Builder
     {
         return Video::published()
             ->whereNotIn('id', $excludeIds)
             ->with('channel')
+            ->orderByDesc('views')
+            ->limit(self::CANDIDATE_LIMIT);
+    }
+
+    /**
+     * Get a bounded candidate pool for related-video scoring.
+     *
+     * Pre-filters in SQL to same-channel videos, tag-overlap videos and a
+     * popular sample (so the result is never empty while published videos
+     * exist), capped at RELATED_CANDIDATE_LIMIT. The source video is excluded.
+     *
+     * @param array<string> $targetTags Tags of the source video
+     *
+     * @return Collection<int, Video>
+     */
+    private function getRelatedCandidates(Video $video, array $targetTags): Collection
+    {
+        $relevant = $this->relatedBaseQuery($video)
+            ->where(function (Builder $query) use ($video, $targetTags): void {
+                $query->where('channel_id', $video->channel_id);
+                $this->whereMatchesTags($query, $targetTags, orWhere: true);
+            })
             ->get();
+
+        // Guarantee a non-empty result whenever other published videos exist:
+        // top up with popular videos outside the relevant set. The relevant ids
+        // go into the base query's exclusion so it stays Builder<Video>-typed.
+        $relevantIds = $relevant->pluck('id')->all();
+        $popular = $this->relatedBaseQuery($video, $relevantIds)->get();
+
+        return $relevant
+            ->merge($popular)
+            ->take(self::RELATED_CANDIDATE_LIMIT)
+            ->values();
+    }
+
+    /**
+     * Base related-candidate query: published, excludes the source (and any
+     * extra ids), eager-loads the channel, orders by popularity and caps rows.
+     *
+     * @param Video $video Source video to exclude
+     * @param array<int, mixed> $excludeIds Additional video ids to exclude
+     *
+     * @return Builder<Video>
+     */
+    private function relatedBaseQuery(Video $video, array $excludeIds = []): Builder
+    {
+        return Video::published()
+            ->where('id', '!=', $video->id)
+            ->whereNotIn('id', $excludeIds)
+            ->orderByDesc('views')
+            ->with('channel')
+            ->limit(self::RELATED_CANDIDATE_LIMIT);
+    }
+
+    /**
+     * Constrain a query to videos carrying any of the given tags.
+     *
+     * Mirrors Video::scopeFilter tag handling: a GIN-indexed `?|` on PostgreSQL,
+     * an OR chain of whereJsonContains on SQLite (tests). No-op for empty tags.
+     *
+     * @param Builder<Video> $query
+     * @param array<string> $tags
+     * @param bool $orWhere When true, attach the tag clause with OR (used to
+     *                      combine with a sibling same-channel condition)
+     */
+    private function whereMatchesTags(Builder $query, array $tags, bool $orWhere = false): void
+    {
+        if ($tags === []) {
+            return;
+        }
+
+        $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
+
+        $clause = function (Builder $inner) use ($tags, $isPgsql): void {
+            if ($isPgsql) {
+                $placeholders = implode(',', array_fill(0, count($tags), '?'));
+                $inner->whereRaw("tags ??| array[{$placeholders}]", array_values($tags));
+
+                return;
+            }
+
+            foreach ($tags as $tag) {
+                $inner->orWhereJsonContains('tags', $tag);
+            }
+        };
+
+        if ($orWhere) {
+            $query->orWhere($clause);
+
+            return;
+        }
+
+        $query->where($clause);
     }
 
     /**
