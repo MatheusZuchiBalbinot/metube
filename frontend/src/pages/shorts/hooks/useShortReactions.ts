@@ -1,4 +1,4 @@
-import { useVideo, useBurstAnimation } from '@hooks';
+import { useVideoData, useVideoActions, useBurstAnimation } from '@hooks';
 import type { VideoId } from '@models';
 
 export interface ShortReactions {
@@ -11,7 +11,8 @@ export interface ShortReactions {
 }
 
 export function useShortReactions(videoId: VideoId): ShortReactions {
-    const { likedVideos, dislikedVideos, likeVideo, dislikeVideo } = useVideo();
+    const { likedVideos, dislikedVideos } = useVideoData();
+    const { likeVideo, dislikeVideo } = useVideoActions();
     const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
     const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
 

@@ -10,7 +10,7 @@ import { selectAllVideos } from '@store/videoSelectors';
 import { Button, Tooltip } from '@ui';
 import NotificationsBell from '@components/notifications/bell';
 import './header.css';
-import { useAuth, useVideo } from '@hooks';
+import { useAuth, useVideoUi } from '@hooks';
 import { SuggestionKind } from '@enums/suggestionKind';
 import HeaderSearch from './headerSearch';
 import HeaderUserMenu from './headerUserMenu';
@@ -29,7 +29,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const dispatch = useAppDispatch();
     const recentSearches = useAppSelector(selectRecentSearches);
     const videos = useAppSelector(selectAllVideos);
-    const { openUploadModal } = useVideo();
+    const { openUploadModal } = useVideoUi();
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');

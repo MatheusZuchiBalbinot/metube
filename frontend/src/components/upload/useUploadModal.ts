@@ -3,7 +3,7 @@ import { useAppSelector } from '@store';
 import { selectAllVideos } from '@store/videoSelectors';
 import type { Vuid } from '@api';
 import { UploadMode } from '@enums/uploadMode';
-import { useVideo } from '@hooks';
+import { useVideoUi, useVideoActions } from '@hooks';
 import type { Tag } from '@models';
 import { useSingleUpload, type FormState, type UseSingleUploadReturn } from './useSingleUpload';
 import { useBatchUpload, type BatchItem, type UseBatchUploadReturn } from './useBatchUpload';
@@ -29,7 +29,8 @@ export interface UseUploadModalReturn extends UseSingleUploadReturn, UseBatchUpl
  * @returns The combined state and handlers consumed by `UploadModal`.
  */
 export function useUploadModal(): UseUploadModalReturn {
-    const { uploadModalOpen, closeUploadModal, addVideo } = useVideo();
+    const { uploadModalOpen, closeUploadModal } = useVideoUi();
+    const { addVideo } = useVideoActions();
     const allVideos = useAppSelector(selectAllVideos);
 
     const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);

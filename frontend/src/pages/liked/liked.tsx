@@ -11,14 +11,14 @@ import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import './liked.css';
 import { ToastType } from '@enums/toastType';
-import { useMediaQuery, useVideo } from '@hooks';
+import { useMediaQuery, useVideoActions } from '@hooks';
 import type { Video, VideoId, Tag } from '@models';
 
 // eslint-disable-next-line complexity
 export default function LikedPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { likeVideo } = useVideo();
+    const { likeVideo } = useVideoActions();
 
     const [likedVideoList, setLikedVideoList] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);

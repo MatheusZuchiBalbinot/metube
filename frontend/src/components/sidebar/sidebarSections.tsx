@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ListVideo } from 'lucide-react';
 import { ROUTES, videoUrl, TagColors, isWithinDays } from '@utils';
 import { Tooltip, Avatar } from '@ui';
-import { useSubscriptions, useSubscription, useVideo, usePlaylist, useCollapsibleList } from '@hooks';
+import { useSubscriptions, useSubscription, useVideoData, useVideoUi, usePlaylist, useCollapsibleList } from '@hooks';
 import { useAppSelector } from '@store';
 import { selectVideoEntities, selectWatchedTagFrequency } from '@store/videoSelectors';
 import { selectRecentChannels } from '@store/recentChannelsSelectors';
@@ -39,7 +39,7 @@ function ProgressRing({ progress }: { progress: number }) {
 
 export function ContinueWatchingSection() {
     const { t } = useTranslation();
-    const { watchHistory, videoProgress } = useVideo();
+    const { watchHistory, videoProgress } = useVideoData();
     const videoEntities = useAppSelector(selectVideoEntities);
 
     const items = useMemo(() => {
@@ -99,7 +99,7 @@ const NEW_VIDEO_WINDOW_DAYS = 14;
  * surface a "new video" dot on subscribed channels.
  */
 function useChannelsWithNewVideos(): Set<string> {
-    const { publishedVideos, watchHistory } = useVideo();
+    const { publishedVideos, watchHistory } = useVideoData();
 
     return useMemo(() => {
         const watched = new Set(watchHistory);
@@ -217,7 +217,7 @@ const MAX_TOPICS = 6;
 
 export function TopicsSection() {
     const { t } = useTranslation();
-    const { openTagView } = useVideo();
+    const { openTagView } = useVideoUi();
     const tagFrequency = useAppSelector(selectWatchedTagFrequency);
 
     const topTags = useMemo(

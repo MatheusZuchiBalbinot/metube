@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
 import Badge from '@ui/badge/badge';
 import './hero.css';
-import { useVideo } from '@hooks';
+import { useVideoUi } from '@hooks';
 import { videoUrl, Format, TagColors, formatRelativeDate } from '@utils';
 import type { Video, Tag } from '@models';
 
@@ -14,7 +14,7 @@ interface VideoHeroProps {
 export default function VideoHero({ video }: VideoHeroProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-    const { openTagView } = useVideo();
+    const { openTagView } = useVideoUi();
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
     const visibleTags = video.tags.slice(0, 5);

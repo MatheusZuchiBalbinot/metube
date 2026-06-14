@@ -22,7 +22,7 @@ import {
     useClickDoubleClick,
     useClickOutside,
     usePlayerAbRepeat,
-    useVideo,
+    usePlaybackPrefs,
 } from '@hooks';
 
 const HOLD_SPEED_DELAY_MS = 350;
@@ -78,7 +78,7 @@ export function DefaultVideoPlayer({
     const [ambientEnabled, setAmbientEnabled] = useState(() => localStorage.getItem(STORAGE_KEYS.PLAYER_AMBIENT) !== 'false');
     const [captionSize, setCaptionSize] = useState<CaptionSize>(loadCaptionSize);
 
-    const { autoplay, setAutoplay } = useVideo();
+    const { autoplay, setAutoplay } = usePlaybackPrefs();
 
     // Press-and-hold anywhere on the video to temporarily play at 2×.
     const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

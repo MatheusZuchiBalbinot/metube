@@ -1,11 +1,10 @@
 import { Avatar } from '@ui';
 import TagBadge from '@components/tag/badge';
-import type { Tag } from '@models';
+import type { Tag, Video } from '@models';
 import { Format } from '@utils';
-import type { useVideo } from '@hooks';
 
 interface ShortsOverlayProps {
-    video: ReturnType<typeof useVideo>['videos'][number];
+    video: Video;
     visibleTags: Tag[];
     onTagClick: (e: React.MouseEvent | React.KeyboardEvent, tag: Tag) => void;
     onChannelClick: (e: React.MouseEvent) => void;
