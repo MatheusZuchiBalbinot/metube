@@ -11,14 +11,14 @@ import { toastActions } from '@store/toastSlice';
 import { VideoFilter, cn } from '@utils';
 import './later.css';
 import { ToastType } from '@enums/toastType';
-import { useMediaQuery, useVideo, usePlaylist } from '@hooks';
+import { useMediaQuery, useVideoData, usePlaylist } from '@hooks';
 import type { Video, VideoId, Tag } from '@models';
 
 // eslint-disable-next-line complexity
 export default function WatchLaterPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { videos } = useVideo();
+    const { videos } = useVideoData();
     const { playlists, removeVideoFromPlaylist } = usePlaylist();
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
 

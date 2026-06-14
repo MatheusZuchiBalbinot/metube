@@ -10,7 +10,7 @@ import EmptyState from '@ui/empty/empty';
 import { analytics, AnalyticsSource } from '@api';
 import type { Tag } from '@models';
 import './search.css';
-import { useVideo } from '@hooks';
+import { useVideoData } from '@hooks';
 import { VideoFilter, getSessionId } from '@utils';
 
 // Estimated height of a VideoRow (px). The virtualizer uses this as a first
@@ -40,7 +40,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 export default function SearchPage() {
     const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { publishedVideos } = useVideo();
+    const { publishedVideos } = useVideoData();
     const query = searchParams.get('q') ?? '';
     const [localQuery, setLocalQuery] = useState(query);
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());

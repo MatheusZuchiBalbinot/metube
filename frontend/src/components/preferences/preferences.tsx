@@ -5,7 +5,7 @@ import { STORAGE_KEYS, cn } from '@utils';
 import { Button, Tooltip } from '@ui';
 import { THEME_COLORS, THEME_MODES, LANGUAGES } from '@data/themeConfig';
 import './preferences.css';
-import { useTheme, useVideo } from '@hooks';
+import { useTheme, usePlaybackPrefs } from '@hooks';
 
 interface PreferencesPanelProps {
     inline?: boolean;
@@ -14,7 +14,7 @@ interface PreferencesPanelProps {
 export default function PreferencesPanel({ inline = false }: PreferencesPanelProps) {
     const { t, i18n } = useTranslation();
     const { mode, color, setMode, setColor } = useTheme();
-    const { autoplay, setAutoplay } = useVideo();
+    const { autoplay, setAutoplay } = usePlaybackPrefs();
     const [open, setOpen] = useState(false);
 
     const currentLang = i18n.language.split('-')[0];

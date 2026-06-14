@@ -9,7 +9,7 @@ import Button from '@ui/button/button';
 import EmptyState from '@ui/empty/empty';
 import Spinner from '@ui/spinner/spinner';
 import './home.css';
-import { useVideo, useFilterState, useAuth } from '@hooks';
+import { useVideoData, useFilterState, useAuth } from '@hooks';
 import { VideoFilter, ROUTES, videoUrl, greetingPeriod } from '@utils';
 import type { Tag, Video } from '@models';
 import type { FeedSection } from '@api';
@@ -48,7 +48,7 @@ export default function HomePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { recommendations, recommendationsLoading, publishedVideos, videos, watchHistory, videoProgress } = useVideo();
+    const { recommendations, recommendationsLoading, publishedVideos, videos, watchHistory, videoProgress } = useVideoData();
     const { filterState, setFilterState, hasActiveFilters, clearFilters } = useFilterState();
     const [category, setCategory] = useState<Tag | null>(null);
 

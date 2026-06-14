@@ -2,12 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Avatar } from '@ui';
 import TagBadge from '@components/tag/badge';
-import type { Tag } from '@models';
+import type { Tag, Video } from '@models';
 import { Format, cn, formatRelativeDate } from '@utils';
-import type { useVideo } from '@hooks';
 
 interface ShortsDescriptionProps {
-    video: ReturnType<typeof useVideo>['videos'][number];
+    video: Video;
     visibleTags: Tag[];
     isOpen: boolean;
     onClose: (e: React.MouseEvent) => void;

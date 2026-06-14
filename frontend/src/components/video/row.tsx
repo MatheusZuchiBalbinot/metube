@@ -6,7 +6,7 @@ import { analytics, toVuid, AnalyticsSource } from '@api';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
 import './row.css';
-import { useVideo, useTrackImpression } from '@hooks';
+import { useVideoData, useVideoUi, useTrackImpression } from '@hooks';
 import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatRelativeDate } from '@utils';
 import type { Video, Tag } from '@models';
 
@@ -21,7 +21,8 @@ interface VideoRowProps {
 const VideoRow = memo(function VideoRow({ video, highlighted = false, source = AnalyticsSource.SEARCH, position }: VideoRowProps) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-    const { openTagView, videoProgress } = useVideo();
+    const { openTagView } = useVideoUi();
+    const { videoProgress } = useVideoData();
     const rowRef = useRef<HTMLElement>(null);
     const vuid = toVuid(video.id);
     const hasValidVuid = vuid !== undefined && vuid !== '';

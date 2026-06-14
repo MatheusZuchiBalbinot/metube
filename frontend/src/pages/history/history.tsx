@@ -11,7 +11,7 @@ import './history.css';
 import { ToastType } from '@enums/toastType';
 import { HistoryItemKind } from '@enums/historyItemKind';
 import { HistoryPeriod, type Video, type VideoId, type HistoryPeriod as HistoryPeriodType } from '@models';
-import { useDebounce, useVideo } from '@hooks';
+import { useDebounce, useVideoData, useVideoActions } from '@hooks';
 import HistoryControls from './components/HistoryControls';
 import HistoryList, { type FlatItem } from './components/HistoryList';
 
@@ -77,7 +77,8 @@ function isWithinPeriod(dateStr: string, period: HistoryPeriodType): boolean {
 export default function HistoryPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const { watchHistory, videos, removeFromHistory, clearHistory } = useVideo();
+    const { watchHistory, videos } = useVideoData();
+    const { removeFromHistory, clearHistory } = useVideoActions();
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 250);

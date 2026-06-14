@@ -6,9 +6,9 @@ import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';
 import { Tooltip } from '@ui';
-import type { Tag } from '@models';
+import type { Tag, Video } from '@models';
 import { cn, ROUTES } from '@utils';
-import { useVideo } from '@hooks';
+import { useVideoUi } from '@hooks';
 import { useShortReactions } from '../hooks/useShortReactions';
 import { useShortPanels } from '../hooks/useShortPanels';
 import VolumeIcon from './VolumeIcon';
@@ -18,7 +18,7 @@ import ShortsDescription from './ShortsDescription';
 const MAX_TAGS = 3;
 
 interface ShortsItemProps {
-    video: ReturnType<typeof useVideo>['videos'][number];
+    video: Video;
     index: number;
     total: number;
     isActive: boolean;
@@ -42,7 +42,7 @@ const ShortsItem = memo(function ShortsItem({
 }: ShortsItemProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { openTagView } = useVideo();
+    const { openTagView } = useVideoUi();
     const { isLiked, isDisliked, likeAnimating, dislikeAnimating, handleLike, handleDislike } = useShortReactions(video.id);
     const { showVolumeSlider, showDescription, handlePanelToggle, closeAll } = useShortPanels();
 

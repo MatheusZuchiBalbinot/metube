@@ -7,7 +7,7 @@ import FilterPanel, { type FilterState } from '@components/filter/panel';
 import EmptyState from '@ui/empty/empty';
 import { VideoFilter } from '@utils';
 import { AnalyticsSource } from '@api';
-import { useVideo } from '@hooks';
+import { useVideoData } from '@hooks';
 import { useRecommendedFeed } from './hooks/useRecommendedFeed';
 import './recommended.css';
 import type { Tag } from '@models';
@@ -15,7 +15,7 @@ import type { Tag } from '@models';
 export default function RecommendedPage() {
     const { t } = useTranslation();
     useRecommendedFeed();
-    const { recommendations, recommendationsLoading } = useVideo();
+    const { recommendations, recommendationsLoading } = useVideoData();
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 
     const allTags = useMemo(() => {

@@ -6,13 +6,13 @@ import FilterPanel, { type FilterState } from '@components/filter/panel';
 import EmptyState from '@ui/empty/empty';
 import { VideoFilter } from '@utils';
 import { AnalyticsSource } from '@api';
-import { useVideo, useSubscription } from '@hooks';
+import { useVideoData, useSubscription } from '@hooks';
 import './subscriptions.css';
 import type { Tag } from '@models';
 
 export default function SubscriptionsFeedPage() {
     const { t } = useTranslation();
-    const { publishedVideos } = useVideo();
+    const { publishedVideos } = useVideoData();
     const { subscribedSet } = useSubscription();
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
 

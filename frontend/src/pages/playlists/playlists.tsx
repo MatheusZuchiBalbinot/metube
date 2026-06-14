@@ -8,13 +8,13 @@ import Button from '@ui/button/button';
 import Modal from '@ui/modal/modal';
 import Input from '@ui/input/input';
 import './playlists.css';
-import { usePlaylist, useVideo } from '@hooks';
+import { usePlaylist, useVideoData } from '@hooks';
 import type { Playlist, Video, VideoId } from '@models';
 
 export default function PlaylistsPage() {
     const { t } = useTranslation();
     const { playlists, createPlaylist } = usePlaylist();
-    const { videos } = useVideo();
+    const { videos } = useVideoData();
     const [searchParams] = useSearchParams();
     const openPlaylistId = searchParams.get('open');
 

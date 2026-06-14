@@ -7,11 +7,12 @@ import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
 import type { Video } from '@models';
 import './view.css';
-import { useVideo } from '@hooks';
+import { useVideoData, useVideoUi } from '@hooks';
 
 export default function TagView() {
     const { t } = useTranslation();
-    const { videos, activeTagView, closeTagView } = useVideo();
+    const { videos } = useVideoData();
+    const { activeTagView, closeTagView } = useVideoUi();
 
     const tag = activeTagView?.tag ?? '';
     const fromVideoId = activeTagView?.fromVideoId ?? null;

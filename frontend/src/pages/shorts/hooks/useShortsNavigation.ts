@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { video as videoApi, toVuid } from '@api';
-import { useVideo } from '@hooks';
+import { useVideoActions } from '@hooks';
 import { hasViewed, markViewed } from '@utils';
 import type { Video } from '@models';
 
@@ -18,7 +18,7 @@ export function useShortsNavigation(
     itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>,
 ): ShortsNavigation {
     const dispatch = useAppDispatch();
-    const { watchVideo } = useVideo();
+    const { watchVideo } = useVideoActions();
     const [renderedIndex, setRenderedIndex] = useState(0);
     const activeIndexRef = useRef(0);
 

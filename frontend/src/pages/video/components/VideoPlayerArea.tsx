@@ -4,7 +4,7 @@ import VideoPlayer from '@components/player/player';
 import ReadingMode from '@components/video/readingMode';
 import VideoFallback from './VideoFallback';
 import { cn } from '@utils';
-import { useVideo } from '@hooks';
+import { usePlaybackPrefs } from '@hooks';
 import { usePinnedPlayer } from '../hooks/usePinnedPlayer';
 import type { VideoSummary, VideoTranscription } from '@api';
 import type { VideoCaption } from '@models';
@@ -39,7 +39,7 @@ export default function VideoPlayerArea({
 }: VideoPlayerAreaProps) {
     const isReadingMode = readingMode && transcription !== null;
     const { t } = useTranslation();
-    const { theaterMode, toggleTheaterMode } = useVideo();
+    const { theaterMode, toggleTheaterMode } = usePlaybackPrefs();
     const { sentinelRef, wrapRef, pinned, reservedHeight, unpin } = usePinnedPlayer(hasVideoFile && !isReadingMode);
 
     return (
