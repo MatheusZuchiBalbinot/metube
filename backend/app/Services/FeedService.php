@@ -21,7 +21,28 @@ use Illuminate\Support\Collection;
  */
 final class FeedService
 {
-    private const TRENDING_WINDOW_DAYS = 730;
+    /**
+     * Trending look-back window. Reduced from an effectively all-time 730 days
+     * so "trending" reflects recent momentum rather than lifetime view counts.
+     */
+    private const TRENDING_WINDOW_DAYS = 90;
+
+    /**
+     * Half-life (in days) for the trending time-decay applied to raw views, so
+     * an older-but-popular video does not permanently outrank fresher ones.
+     */
+    private const TRENDING_HALF_LIFE_DAYS = 14;
+
+    /**
+     * Candidate pool size pulled before applying decay ranking to trending.
+     */
+    private const TRENDING_CANDIDATE_POOL = 100;
+
+    /**
+     * Cap on recent watch-history rows scanned to derive the dominant tag, so
+     * the "because you watched" shelf never loads an unbounded history.
+     */
+    private const WATCHED_HISTORY_LIMIT = 200;
 
     private const MIN_TAG_SHELF_VIDEOS = 4;
 
@@ -108,7 +129,12 @@ final class FeedService
     }
 
     /**
-     * Most-viewed recently published videos, excluding shorts.
+     * Trending shelf: recent videos ranked by time-decayed views, excluding shorts.
+     *
+     * Pulls a bounded popular pool from the trending window, then re-ranks it in
+     * PHP by views weighted with an exponential recency decay (half-life
+     * TRENDING_HALF_LIFE_DAYS). This rewards recent momentum over lifetime view
+     * counts while keeping the SQL side a single capped, index-friendly query.
      *
      * @return Collection<int, Video>
      */
@@ -118,11 +144,31 @@ final class FeedService
             ->where('published_at', '>=', now()->subDays(self::TRENDING_WINDOW_DAYS))
             ->orderByDesc('views')
             ->with('channel')
-            ->limit(PaginationSize::FEED_SHELF * 2)
+            ->limit(self::TRENDING_CANDIDATE_POOL)
             ->get()
             ->reject(fn (Video $video) => in_array(self::SHORTS_TAG, $video->tags ?? [], true))
+            ->sortByDesc(fn (Video $video) => $this->trendingScore($video))
             ->take(PaginationSize::FEED_SHELF)
             ->values();
+    }
+
+    /**
+     * Time-decayed trending score for a video: views weighted by an exponential
+     * decay on age since publication (half-life TRENDING_HALF_LIFE_DAYS).
+     *
+     * @param Video $video Video to score
+     *
+     * @return float Decayed score; higher means more trending
+     */
+    private function trendingScore(Video $video): float
+    {
+        $ageInDays = $video->published_at !== null
+            ? abs(now()->diffInDays($video->published_at))
+            : 0.0;
+
+        $decay = exp(-M_LN2 * $ageInDays / self::TRENDING_HALF_LIFE_DAYS);
+
+        return log1p($video->views) * $decay;
     }
 
     /**
@@ -165,6 +211,8 @@ final class FeedService
     {
         $watchedIds = WatchHistory::query()
             ->where('user_id', $user->id)
+            ->orderByDesc('watched_at')
+            ->limit(self::WATCHED_HISTORY_LIMIT)
             ->pluck('video_id')
             ->all();
 

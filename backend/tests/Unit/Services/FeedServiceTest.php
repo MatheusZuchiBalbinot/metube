@@ -82,4 +82,44 @@ describe('FeedService', function () {
 
         expect($recent->videos->count())->toBeLessThanOrEqual(12);
     });
+
+    test('trending excludes videos published outside the recent window', function () {
+        $creator = User::factory()->create();
+        $stale = Video::factory()->for($creator, 'channel')->published()->create([
+            'views' => 10_000,
+            'published_at' => now()->subDays(200),
+        ]);
+        $fresh = Video::factory()->for($creator, 'channel')->published()->create([
+            'views' => 50,
+            'published_at' => now()->subDays(2),
+        ]);
+
+        $sections = app(FeedService::class)->forUser(null);
+        $trending = collect($sections)->firstWhere('key', FeedSectionKey::TRENDING);
+        $ids = $trending->videos->pluck('id')->toArray();
+
+        expect($ids)->toContain($fresh->id)
+            ->and($ids)->not->toContain($stale->id);
+    });
+
+    test('trending applies time decay so a fresher video can outrank an older popular one', function () {
+        $creator = User::factory()->create();
+        $olderPopular = Video::factory()->for($creator, 'channel')->published()->create([
+            'views' => 1_000,
+            'published_at' => now()->subDays(60),
+        ]);
+        $fresh = Video::factory()->for($creator, 'channel')->published()->create([
+            'views' => 800,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $sections = app(FeedService::class)->forUser(null);
+        $trending = collect($sections)->firstWhere('key', FeedSectionKey::TRENDING);
+        $ids = $trending->videos->pluck('id')->toArray();
+
+        // With a 14-day half-life, the 60-day-old video's views decay far below
+        // the 1-day-old one, so the fresher video ranks higher.
+        expect(array_search($fresh->id, $ids, true))
+            ->toBeLessThan(array_search($olderPopular->id, $ids, true));
+    });
 });
