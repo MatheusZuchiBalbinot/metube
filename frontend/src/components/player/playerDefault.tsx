@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
-import { cn, parseChapterTimestamp, STORAGE_KEYS } from '@utils';
+import { cn, parseChapterTimestamp } from '@utils';
 import { useTranslation } from 'react-i18next';
 import PlayerOverlays from './playerOverlays';
 import PlayerSeekBar from './playerSeekBar';
 import PlayerControlsBar from './playerControlsBar';
 import type { VideoPlayerProps } from './player';
-import { KEYBOARD_SKIP_SECONDS, type CaptionSize } from './playerTypes';
+import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import { PopIconType } from '@enums/popIconType';
 import {
     usePlayerControls,
@@ -24,13 +24,9 @@ import {
     usePlayerAbRepeat,
     usePlayerHoldSpeed,
     HOLD_SPEED_RATE,
+    usePlayerLocalPrefs,
     usePlaybackPrefs,
 } from '@hooks';
-
-function loadCaptionSize(): CaptionSize {
-    const raw = localStorage.getItem(STORAGE_KEYS.CAPTION_SIZE);
-    return raw === 'sm' || raw === 'lg' ? raw : 'md';
-}
 
 function activeChapterTitle(chapters: VideoPlayerProps['chapters'], currentTime: number): string | null {
     if (chapters === undefined || chapters.length === 0) {
@@ -73,8 +69,7 @@ export function DefaultVideoPlayer({
     const [isDragging, setIsDragging] = useState(false);
     const [isLoop, setIsLoop] = useState(false);
     const { abRepeat, abStatus, handleAbRepeat } = usePlayerAbRepeat(videoRef, src);
-    const [ambientEnabled, setAmbientEnabled] = useState(() => localStorage.getItem(STORAGE_KEYS.PLAYER_AMBIENT) !== 'false');
-    const [captionSize, setCaptionSize] = useState<CaptionSize>(loadCaptionSize);
+    const { ambientEnabled, toggleAmbient, captionSize, setCaptionSize } = usePlayerLocalPrefs();
 
     const { autoplay, setAutoplay } = usePlaybackPrefs();
 
@@ -224,21 +219,8 @@ export function DefaultVideoPlayer({
 
     const chapterTitle = activeChapterTitle(chapters, currentTime);
 
-    function handleToggleAmbient() {
-        setAmbientEnabled(prev => {
-            const next = !prev;
-            localStorage.setItem(STORAGE_KEYS.PLAYER_AMBIENT, String(next));
-            return next;
-        });
-    }
-
     function handleToggleAutoplay() {
         setAutoplay(!autoplay);
-    }
-
-    function handleCaptionSize(size: CaptionSize) {
-        setCaptionSize(size);
-        localStorage.setItem(STORAGE_KEYS.CAPTION_SIZE, size);
     }
 
     // ─── Event handlers ───────────────────────────────────────────────────────
@@ -411,9 +393,9 @@ export function DefaultVideoPlayer({
                     isAutoplay={autoplay}
                     onToggleAutoplay={handleToggleAutoplay}
                     isAmbient={ambientEnabled}
-                    onToggleAmbient={handleToggleAmbient}
+                    onToggleAmbient={toggleAmbient}
                     captionSize={captionSize}
-                    onCaptionSize={handleCaptionSize}
+                    onCaptionSize={setCaptionSize}
                 />
             </div>
         </div>
