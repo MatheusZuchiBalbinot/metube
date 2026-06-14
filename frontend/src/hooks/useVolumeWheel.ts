@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 export function useVolumeWheel(
     containerRef: React.RefObject<HTMLElement | null>,
@@ -7,8 +7,9 @@ export function useVolumeWheel(
     revealControls: () => void,
 ) {
     const cbRef = useRef({ applyVolume, revealControls });
-    // eslint-disable-next-line react-hooks/refs
-    cbRef.current = { applyVolume, revealControls };
+    useLayoutEffect(() => {
+        cbRef.current = { applyVolume, revealControls };
+    });
 
     useEffect(() => {
         const container = containerRef.current;

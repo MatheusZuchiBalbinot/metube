@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { STORAGE_KEYS, loadFromStorage, isNumberInRange } from '@utils';
 
 interface PlayerCallbacks {
@@ -48,12 +48,11 @@ export function usePlayerPlayback(
 
     // Keep callbacks in ref so handlers don't need to be recreated on prop change
     const cbRef = useRef(callbacks);
-    // eslint-disable-next-line react-hooks/refs
-    cbRef.current = callbacks;
-
     const muteChangeRef = useRef(onMuteChange);
-    // eslint-disable-next-line react-hooks/refs
-    muteChangeRef.current = onMuteChange;
+    useLayoutEffect(() => {
+        cbRef.current = callbacks;
+        muteChangeRef.current = onMuteChange;
+    });
 
     // ─── Sync controlled muted from parent ────────────────────────────────────
     useEffect(() => {
