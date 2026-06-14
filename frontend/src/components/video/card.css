@@ -22,6 +22,16 @@
     transform: none;
 }
 
+/* Skip rendering off-screen cards in the non-virtualized feed grids (home, recommended,
+   search, liked). Action cards are excluded: their dropdown menu overflows the card box
+   and the paint containment that content-visibility implies would clip it. contain-intrinsic-size
+   uses `auto` so each card remembers its real measured height after first paint — the 320px
+   value is only the placeholder for a never-yet-rendered card, which keeps scroll jank minimal. */
+.video-card:not(.video-card--with-actions) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
+}
+
 /* ─── Thumbnail ───────────────────────────────────────────────────────────── */
 
 .video-card__thumb {
