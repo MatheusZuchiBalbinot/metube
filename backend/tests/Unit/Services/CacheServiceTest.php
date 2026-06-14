@@ -346,4 +346,105 @@ describe('CacheService', function () {
 
         expect($callCount)->toBe(2);
     });
+
+    test('rememberFeed stale-while-revalidate caches across a tagged store', function () use (&$service) {
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
+
+        $callCount = 0;
+        $paginator = new LengthAwarePaginator([], 0, 20);
+
+        $first = $service->rememberFeed(1, function () use (&$callCount, $paginator) {
+            $callCount++;
+
+            return $paginator;
+        });
+
+        $second = $service->rememberFeed(1, function () use (&$callCount, $paginator) {
+            $callCount++;
+
+            return $paginator;
+        });
+
+        // flexible() composes with tags(): the second call is served fresh
+        // from cache, proving flexible+tags works on the array store.
+        expect($callCount)->toBe(1)
+            ->and($first)->toBe($paginator)
+            ->and($second)->toBe($paginator);
+    });
+
+    test('rememberFeed serves the stale value and refreshes once past the fresh window', function () use (&$service) {
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
+
+        $callCount = 0;
+        $first = new LengthAwarePaginator(['a'], 1, 20);
+        $second = new LengthAwarePaginator(['b'], 1, 20);
+
+        Carbon\Carbon::setTestNow(now());
+
+        $service->rememberFeed(1, function () use (&$callCount, $first) {
+            $callCount++;
+
+            return $first;
+        });
+
+        // Advance beyond the fresh window (60s) but within the stale window (120s).
+        Carbon\Carbon::setTestNow(now()->addSeconds(90));
+
+        $stale = $service->rememberFeed(1, function () use (&$callCount, $second) {
+            $callCount++;
+
+            return $second;
+        });
+
+        Carbon\Carbon::setTestNow();
+
+        // The stale value is returned immediately; the refresh is deferred,
+        // so the callback ran exactly once during the request itself.
+        expect($stale)->toBe($first)
+            ->and($callCount)->toBe(1);
+    });
+
+    test('rememberUserFeed caches sections through flexible+tags', function () use (&$service) {
+        config(['cache.metube.feed.active' => true, 'cache.metube.feed.ttl' => 60]);
+
+        $user = User::factory()->create();
+        $callCount = 0;
+        $sections = [];
+
+        $service->rememberUserFeed($user->id, function () use (&$callCount, $sections) {
+            $callCount++;
+
+            return $sections;
+        });
+
+        $service->rememberUserFeed($user->id, function () use (&$callCount, $sections) {
+            $callCount++;
+
+            return $sections;
+        });
+
+        expect($callCount)->toBe(1);
+    });
+
+    test('rememberRecommendations caches a page through flexible+tags', function () use (&$service) {
+        config(['cache.metube.recommendations.active' => true, 'cache.metube.recommendations.ttl' => 120]);
+
+        $user = User::factory()->create();
+        $callCount = 0;
+        $videos = collect();
+
+        $service->rememberRecommendations($user->id, 1, function () use (&$callCount, $videos) {
+            $callCount++;
+
+            return $videos;
+        });
+
+        $service->rememberRecommendations($user->id, 1, function () use (&$callCount, $videos) {
+            $callCount++;
+
+            return $videos;
+        });
+
+        expect($callCount)->toBe(1);
+    });
 });

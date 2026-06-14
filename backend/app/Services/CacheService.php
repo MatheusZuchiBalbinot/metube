@@ -24,6 +24,15 @@ use Illuminate\Support\Facades\Cache;
  * Larastan infers the return type of each Cache::remember call from the
  * typed Closure PHPDoc, so no explicit assertions or casts are needed here.
  *
+ * Heavy read groups (feed, user feed, recommendations) use Cache::flexible()
+ * for stale-while-revalidate: within the fresh window the cached value is
+ * returned as-is; past it (but within the stale window) the stale value is
+ * served immediately while a single deferred request rebuilds the entry,
+ * preventing a cache stampede when a popular key expires. flexible() is
+ * inherited by TaggedCache from Repository, so it composes with tags() and
+ * works on every store that provides locks (Redis in production, array in
+ * tests).
+ *
  * Key namespaces and tags:
  *   feed             → paginated public video feed
  *   channel:{uuid}   → channel info + paginated channel videos
@@ -32,6 +41,23 @@ use Illuminate\Support\Facades\Cache;
  */
 class CacheService
 {
+    /**
+     * Build the [fresh, stale] window for a stale-while-revalidate group.
+     *
+     * The fresh window is the configured TTL; the stale window doubles it,
+     * giving an equally long grace period for background refresh.
+     *
+     * @param string $ttlConfigKey Config key holding the integer TTL in seconds
+     *
+     * @return array{0: int, 1: int} The [fresh, stale] seconds pair
+     */
+    private function staleWindow(string $ttlConfigKey): array
+    {
+        $ttl = (int) config($ttlConfigKey);
+
+        return [$ttl, $ttl * 2];
+    }
+
     /**
      * Return the cached paginated public feed, or resolve and store it.
      *
@@ -46,7 +72,7 @@ class CacheService
         }
 
         return Cache::tags(['feed'])
-            ->remember("feed:page:{$page}", config('cache.metube.feed.ttl'), $callback);
+            ->flexible("feed:page:{$page}", $this->staleWindow('cache.metube.feed.ttl'), $callback);
     }
 
     /**
@@ -244,9 +270,9 @@ class CacheService
         }
 
         return Cache::tags(["user:{$userId}"])
-            ->remember(
+            ->flexible(
                 "user:recommendations:{$userId}:page:{$page}",
-                config('cache.metube.recommendations.ttl'),
+                $this->staleWindow('cache.metube.recommendations.ttl'),
                 $callback,
             );
     }
@@ -269,6 +295,6 @@ class CacheService
         $tags = $userId !== null ? ['feed', "user:{$userId}"] : ['feed'];
         $key = $userId !== null ? "feed:user:{$userId}" : 'feed:guest';
 
-        return Cache::tags($tags)->remember($key, config('cache.metube.feed.ttl'), $callback);
+        return Cache::tags($tags)->flexible($key, $this->staleWindow('cache.metube.feed.ttl'), $callback);
     }
 }
