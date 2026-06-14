@@ -23,37 +23,46 @@ class ApiClient {
 
         this.axiosInstance.interceptors.response.use(
             (response) => response,
-            (error: AxiosError) => {
-                const url = error.config?.url ?? '';
-                const method = (error.config?.method ?? '').toLowerCase();
-                const status = error.response?.status;
-
-                // A 401 on the login request (POST /sessions) is a wrong-credentials
-                // error, not an expired session — don't fire the global event for it.
-                // GET/DELETE /sessions/current (me/logout) still count as expired.
-                const isLoginAttempt = method === 'post' && url.endsWith('/sessions');
-
-                if (status === 401 && !isLoginAttempt) {
-                    window.dispatchEvent(new CustomEvent(APP_EVENTS.SESSION_EXPIRED, {
-                        detail: { message: i18n.t('auth.session_expired') },
-                    }));
-                }
-
-                if (status === 403) {
-                    window.dispatchEvent(new CustomEvent(APP_EVENTS.FORBIDDEN, {
-                        detail: { message: i18n.t('errors.forbidden') },
-                    }));
-                }
-
-                if (status === 503) {
-                    window.dispatchEvent(new CustomEvent(APP_EVENTS.SERVICE_UNAVAILABLE, {
-                        detail: { message: i18n.t('errors.service_unavailable') },
-                    }));
-                }
-
-                return Promise.reject(error);
-            },
+            (error: AxiosError) => this.handleResponseError(error),
         );
+    }
+
+    /** Dispatches a global app event carrying a translated message for the given key. */
+    private emitAppEvent(name: string, messageKey: string): void {
+        window.dispatchEvent(new CustomEvent(name, { detail: { message: i18n.t(messageKey) } }));
+    }
+
+    /** Extracts the url, lowercased method and status from a failed request. */
+    private describeError(error: AxiosError): { url: string; method: string; status: number | undefined } {
+        return {
+            url: error.config?.url ?? '',
+            method: (error.config?.method ?? '').toLowerCase(),
+            status: error.response?.status,
+        };
+    }
+
+    /** Maps interesting HTTP statuses to global app events, then re-rejects so callers still see the error. */
+    private handleResponseError(error: AxiosError): Promise<never> {
+        const { url, method, status } = this.describeError(error);
+
+        // A 401 on the login request (POST /sessions) is a wrong-credentials
+        // error, not an expired session — don't fire the global event for it.
+        // GET/DELETE /sessions/current (me/logout) still count as expired.
+        const isLoginAttempt = method === 'post' && url.endsWith('/sessions');
+
+        if (status === 401 && !isLoginAttempt) {
+            this.emitAppEvent(APP_EVENTS.SESSION_EXPIRED, 'auth.session_expired');
+        }
+
+        if (status === 403) {
+            this.emitAppEvent(APP_EVENTS.FORBIDDEN, 'errors.forbidden');
+        }
+
+        if (status === 503) {
+            this.emitAppEvent(APP_EVENTS.SERVICE_UNAVAILABLE, 'errors.service_unavailable');
+        }
+
+        return Promise.reject(error);
     }
 
     private startGet(url: string): AbortSignal {
@@ -139,52 +148,33 @@ class ApiClient {
         }
     }
 
-    async post<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
+    /** Runs a body-bearing request, validates the response shape, and maps it to an ApiResult. */
+    private async runMutation<T>(method: string, url: string, send: () => Promise<{ data: T }>): Promise<ApiResult<T>> {
         try {
-            const { data } = await this.axiosInstance.post<T>(url, payload, config);
+            const { data } = await send();
 
             if (!this.isValidResponse<T>(data)) {
-                this.logError(url, 'POST', 'Invalid response: empty or null data');
+                this.logError(url, method, 'Invalid response: empty or null data');
                 return { ok: false, error: 'Invalid response' };
             }
 
             return { ok: true, data };
         } catch (error) {
-            this.logError(url, 'POST', error);
+            this.logError(url, method, error);
             return { ok: false, error: this.extractErrorMessage(error) };
         }
+    }
+
+    async post<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
+        return this.runMutation<T>('POST', url, () => this.axiosInstance.post<T>(url, payload, config));
     }
 
     async patch<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        try {
-            const { data } = await this.axiosInstance.patch<T>(url, payload, config);
-
-            if (!this.isValidResponse<T>(data)) {
-                this.logError(url, 'PATCH', 'Invalid response: empty or null data');
-                return { ok: false, error: 'Invalid response' };
-            }
-
-            return { ok: true, data };
-        } catch (error) {
-            this.logError(url, 'PATCH', error);
-            return { ok: false, error: this.extractErrorMessage(error) };
-        }
+        return this.runMutation<T>('PATCH', url, () => this.axiosInstance.patch<T>(url, payload, config));
     }
 
     async put<T>(url: string, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        try {
-            const { data } = await this.axiosInstance.put<T>(url, payload, config);
-
-            if (!this.isValidResponse<T>(data)) {
-                this.logError(url, 'PUT', 'Invalid response: empty or null data');
-                return { ok: false, error: 'Invalid response' };
-            }
-
-            return { ok: true, data };
-        } catch (error) {
-            this.logError(url, 'PUT', error);
-            return { ok: false, error: this.extractErrorMessage(error) };
-        }
+        return this.runMutation<T>('PUT', url, () => this.axiosInstance.put<T>(url, payload, config));
     }
 
     async delete(url: string, config?: AxiosRequestConfig): Promise<ApiResult<void>> {
@@ -197,9 +187,8 @@ class ApiClient {
         }
     }
 
-    async getValidated<T>(url: string, parse: (raw: unknown) => T | null, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        const raw = await this.get<unknown>(url, config);
-
+    /** Parses a successful raw result, mapping a parse miss to a 'Parse failed' ApiResult. */
+    private finalizeValidated<T>(raw: ApiResult<unknown>, parse: (raw: unknown) => T | null, url: string, method: string): ApiResult<T> {
         if (!raw.ok) {
             return raw;
         }
@@ -207,62 +196,27 @@ class ApiClient {
         const result = parse(raw.data);
 
         if (result === null) {
-            this.logError(url, 'GET', 'Parse failed: unexpected response shape');
+            this.logError(url, method, 'Parse failed: unexpected response shape');
             return { ok: false, error: 'Parse failed' };
         }
 
         return { ok: true, data: result };
+    }
+
+    async getValidated<T>(url: string, parse: (raw: unknown) => T | null, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
+        return this.finalizeValidated(await this.get<unknown>(url, config), parse, url, 'GET');
     }
 
     async postValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        const raw = await this.post<unknown>(url, payload, config);
-
-        if (!raw.ok) {
-            return raw;
-        }
-
-        const result = parse(raw.data);
-
-        if (result === null) {
-            this.logError(url, 'POST', 'Parse failed: unexpected response shape');
-            return { ok: false, error: 'Parse failed' };
-        }
-
-        return { ok: true, data: result };
+        return this.finalizeValidated(await this.post<unknown>(url, payload, config), parse, url, 'POST');
     }
 
     async patchValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        const raw = await this.patch<unknown>(url, payload, config);
-
-        if (!raw.ok) {
-            return raw;
-        }
-
-        const result = parse(raw.data);
-
-        if (result === null) {
-            this.logError(url, 'PATCH', 'Parse failed: unexpected response shape');
-            return { ok: false, error: 'Parse failed' };
-        }
-
-        return { ok: true, data: result };
+        return this.finalizeValidated(await this.patch<unknown>(url, payload, config), parse, url, 'PATCH');
     }
 
     async putValidated<T>(url: string, parse: (raw: unknown) => T | null, payload?: unknown, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        const raw = await this.put<unknown>(url, payload, config);
-
-        if (!raw.ok) {
-            return raw;
-        }
-
-        const result = parse(raw.data);
-
-        if (result === null) {
-            this.logError(url, 'PUT', 'Parse failed: unexpected response shape');
-            return { ok: false, error: 'Parse failed' };
-        }
-
-        return { ok: true, data: result };
+        return this.finalizeValidated(await this.put<unknown>(url, payload, config), parse, url, 'PUT');
     }
 
     getAxiosInstance(): AxiosInstance {
