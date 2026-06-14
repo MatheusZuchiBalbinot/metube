@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { KEYBOARD_SKIP_SECONDS } from '@components/player/playerTypes';
 import { isTypingInInput } from '@utils';
 import { SkipDirection } from '@enums/skipDirection';
@@ -35,11 +35,12 @@ export function usePlayerKeyboard({
         onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle,
         onTheaterToggle, onPipToggle, onCaptionsToggle,
     });
-    // eslint-disable-next-line react-hooks/refs
-    cbRef.current = {
-        onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle,
-        onTheaterToggle, onPipToggle, onCaptionsToggle,
-    };
+    useLayoutEffect(() => {
+        cbRef.current = {
+            onTogglePlay, onSkip, onVolumeChange, onMuteToggle, onFullscreenToggle,
+            onTheaterToggle, onPipToggle, onCaptionsToggle,
+        };
+    });
 
     useEffect(() => {
         if (!captureKeyboard) {

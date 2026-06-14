@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 
 const DEFAULT_DELAY_MS = 200;
 
@@ -9,8 +9,9 @@ export function useClickDoubleClick(
 ) {
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cbRef = useRef({ onSingleClick, onDoubleClick });
-    // eslint-disable-next-line react-hooks/refs
-    cbRef.current = { onSingleClick, onDoubleClick };
+    useLayoutEffect(() => {
+        cbRef.current = { onSingleClick, onDoubleClick };
+    });
 
     useEffect(() => {
         return () => {
