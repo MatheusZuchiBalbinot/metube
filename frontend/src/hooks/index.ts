@@ -17,6 +17,7 @@ export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useMediaQuery } from './useMediaQuery';
 export { useObjectUrl } from './useObjectUrl';
 export { usePlayerAbRepeat } from './usePlayerAbRepeat';
+export { usePlayerHoldSpeed, HOLD_SPEED_RATE } from './usePlayerHoldSpeed';
 export { usePlayerControls } from './usePlayerControls';
 export { usePlayerKeyboard } from './usePlayerKeyboard';
 export { usePlayerPlayback } from './usePlayerPlayback';
