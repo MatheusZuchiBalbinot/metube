@@ -39,8 +39,10 @@ export default function ProfilePage() {
         pinnedVideoId, editVideo, deleteVideo, openUploadModal,
     } = useVideo();
 
-    const isOwnProfile = !idParam || user!.uuid === idParam;
-    const channelId = isOwnProfile ? String(user!.id) : idParam!;
+    // ProfilePage is also a guest route (/channel/:id, /user/:id), so `user` can be
+    // null here — a logged-out visitor is never viewing their own profile.
+    const isOwnProfile = user !== null && (!idParam || user.uuid === idParam);
+    const channelId = isOwnProfile && user !== null ? String(user.id) : (idParam ?? '');
 
     const { videosState, setVideos } = useProfileVideos(channelId, isOwnProfile);
     const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
