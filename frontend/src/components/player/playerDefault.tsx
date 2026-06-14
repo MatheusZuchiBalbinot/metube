@@ -22,11 +22,10 @@ import {
     useClickDoubleClick,
     useClickOutside,
     usePlayerAbRepeat,
+    usePlayerHoldSpeed,
+    HOLD_SPEED_RATE,
     usePlaybackPrefs,
 } from '@hooks';
-
-const HOLD_SPEED_DELAY_MS = 350;
-const HOLD_SPEED_RATE = 2;
 
 function loadCaptionSize(): CaptionSize {
     const raw = localStorage.getItem(STORAGE_KEYS.CAPTION_SIZE);
@@ -72,18 +71,12 @@ export function DefaultVideoPlayer({
     const [showSettings, setShowSettings] = useState(false);
     const [showCaptionsMenu, setShowCaptionsMenu] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    const [holdSpeedActive, setHoldSpeedActive] = useState(false);
     const [isLoop, setIsLoop] = useState(false);
     const { abRepeat, abStatus, handleAbRepeat } = usePlayerAbRepeat(videoRef, src);
     const [ambientEnabled, setAmbientEnabled] = useState(() => localStorage.getItem(STORAGE_KEYS.PLAYER_AMBIENT) !== 'false');
     const [captionSize, setCaptionSize] = useState<CaptionSize>(loadCaptionSize);
 
     const { autoplay, setAutoplay } = usePlaybackPrefs();
-
-    // Press-and-hold anywhere on the video to temporarily play at 2×.
-    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const holdPrevRateRef = useRef(1);
-    const suppressClickRef = useRef(false);
 
     // ─── Hooks ────────────────────────────────────────────────────────────────
 
@@ -158,46 +151,12 @@ export function DefaultVideoPlayer({
     const { handleClick: handleContainerClick, handleDoubleClick: handleContainerDoubleClick } =
         useClickDoubleClick(handleTogglePlayWithFeedback, toggleFullscreen);
 
-    function handleSurfacePointerDown(e: React.PointerEvent) {
-        const isPrimary = e.button === 0;
-        const isOnControls = (e.target as HTMLElement).closest('.vp__controls') !== null;
-
-        if (!isPrimary || isOnControls) {
-            return;
-        }
-
-        holdTimerRef.current = setTimeout(() => {
-            holdPrevRateRef.current = playbackRate;
-            setHoldSpeedActive(true);
-            applyPlaybackRate(HOLD_SPEED_RATE);
-        }, HOLD_SPEED_DELAY_MS);
-    }
-
-    function handleSurfacePointerEnd() {
-        if (holdTimerRef.current) {
-            clearTimeout(holdTimerRef.current);
-            holdTimerRef.current = null;
-        }
-
-        if (!holdSpeedActive) {
-            return;
-        }
-
-        applyPlaybackRate(holdPrevRateRef.current);
-        setHoldSpeedActive(false);
-        // A click event fires right after the hold ends — swallow it so playback
-        // doesn't toggle.
-        suppressClickRef.current = true;
-    }
-
-    function handleSurfaceClick() {
-        if (suppressClickRef.current) {
-            suppressClickRef.current = false;
-            return;
-        }
-
-        handleContainerClick();
-    }
+    const {
+        holdSpeedActive,
+        handleSurfacePointerDown,
+        handleSurfacePointerEnd,
+        handleSurfaceClick,
+    } = usePlayerHoldSpeed(playbackRate, applyPlaybackRate, handleContainerClick);
 
     const shouldCaptureKeyboard = captureKeyboard ?? true;
     usePlayerKeyboard({
