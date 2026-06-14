@@ -16,6 +16,7 @@ export { useInView } from './useInView';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useMediaQuery } from './useMediaQuery';
 export { useObjectUrl } from './useObjectUrl';
+export { usePlayerAbRepeat } from './usePlayerAbRepeat';
 export { usePlayerControls } from './usePlayerControls';
 export { usePlayerKeyboard } from './usePlayerKeyboard';
 export { usePlayerPlayback } from './usePlayerPlayback';

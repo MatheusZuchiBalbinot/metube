@@ -21,6 +21,7 @@ import {
     useVolumeWheel,
     useClickDoubleClick,
     useClickOutside,
+    usePlayerAbRepeat,
     useVideo,
 } from '@hooks';
 
@@ -73,8 +74,7 @@ export function DefaultVideoPlayer({
     const [isDragging, setIsDragging] = useState(false);
     const [holdSpeedActive, setHoldSpeedActive] = useState(false);
     const [isLoop, setIsLoop] = useState(false);
-    const [abRepeat, setAbRepeat] = useState<{ a: number | null; b: number | null }>({ a: null, b: null });
-    const abRepeatRef = useRef(abRepeat);
+    const { abRepeat, abStatus, handleAbRepeat } = usePlayerAbRepeat(videoRef, src);
     const [ambientEnabled, setAmbientEnabled] = useState(() => localStorage.getItem(STORAGE_KEYS.PLAYER_AMBIENT) !== 'false');
     const [captionSize, setCaptionSize] = useState<CaptionSize>(loadCaptionSize);
 
@@ -248,37 +248,11 @@ export function DefaultVideoPlayer({
         setShowCaptionsMenu(false);
         setIsDragging(false);
         setIsLoop(false);
-        setAbRepeat({ a: null, b: null });
         if (videoRef.current) {
             videoRef.current.loop = false;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src]);
-
-    // Keep the A–B loop bounds in a ref so the timeupdate listener stays stable.
-    useEffect(() => {
-        abRepeatRef.current = abRepeat;
-    }, [abRepeat]);
-
-    // A–B repeat: jump back to A whenever playback passes B.
-    useEffect(() => {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-
-        function onTimeUpdate() {
-            const video = videoRef.current;
-            const { a, b } = abRepeatRef.current;
-
-            if (video !== null && a !== null && b !== null && video.currentTime >= b) {
-                video.currentTime = a;
-            }
-        }
-
-        el.addEventListener('timeupdate', onTimeUpdate);
-        return () => el.removeEventListener('timeupdate', onTimeUpdate);
-    }, [videoRef]);
 
     function handleToggleLoop() {
         const el = videoRef.current;
@@ -289,38 +263,6 @@ export function DefaultVideoPlayer({
         }
     }
 
-    function handleAbRepeat() {
-        const el = videoRef.current;
-        if (!el) {
-            return;
-        }
-
-        setAbRepeat(prev => {
-            if (prev.a === null) {
-                return { a: el.currentTime, b: null };
-            }
-
-            if (prev.b === null) {
-                const now = el.currentTime;
-                return now > prev.a ? { a: prev.a, b: now } : { a: now, b: prev.a };
-            }
-
-            return { a: null, b: null };
-        });
-    }
-
-    function getAbStatus() {
-        if (abRepeat.a === null) {
-            return 0;
-        }
-
-        if (abRepeat.b === null) {
-            return 1;
-        }
-
-        return 2;
-    }
-    const abStatus = getAbStatus();
     const chapterTitle = activeChapterTitle(chapters, currentTime);
 
     function handleToggleAmbient() {
