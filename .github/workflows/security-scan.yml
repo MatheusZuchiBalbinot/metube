@@ -1,0 +1,32 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  trivy:
+    name: Trivy Filesystem Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Scan the repo filesystem for known vulnerabilities in dependencies
+      # AND for IaC/Dockerfile/compose misconfigurations. Only HIGH/CRITICAL
+      # findings fail the job so low-severity noise does not block merges.
+      - name: Run Trivy vulnerability & misconfiguration scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table

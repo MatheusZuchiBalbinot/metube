@@ -1,4 +1,4 @@
-name: Backend Unit Tests
+name: Backend Tests
 
 on:
   push:
@@ -17,8 +17,8 @@ defaults:
     working-directory: backend
 
 jobs:
-  unit-tests:
-    name: Unit Tests
+  tests:
+    name: Lint & Tests
     runs-on: ubuntu-latest
     env:
       # ext-opentelemetry is not available on the runner; disabling the auto-instrumentation
@@ -44,14 +44,17 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-opentelemetry
 
+      - name: Audit dependencies for known vulnerabilities
+        run: composer audit
+
       - name: Copy environment file
         run: cp .env.example .env
 
       - name: Generate application key
         run: php artisan key:generate
 
-      - name: Run unit tests
-        run: php ./vendor/bin/pest tests/Unit/ --no-coverage
+      - name: Run unit and feature tests
+        run: php ./vendor/bin/pest tests/Unit/ tests/Feature/ --no-coverage
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
