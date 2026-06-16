@@ -88,6 +88,24 @@ describe('CommentController', function () {
         $response->assertStatus(422);
     });
 
+    test('POST /videos/{vuid}/comments rejects replying to a comment from another video', function () {
+        $user = User::factory()->create();
+        $videoA = Video::factory()->for($user, 'channel')->create();
+        $videoB = Video::factory()->for($user, 'channel')->create();
+        $parentOnB = Comment::factory()->for($user)->for($videoB)->create();
+
+        $response = $this->actingAs($user)->postJson("/api/videos/{$videoA->vuid}/comments", [
+            'content' => 'Cross-video reply.',
+            'parent_cuid' => $parentOnB->cuid,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertEquals(0, $parentOnB->fresh()->replies_count);
+        $this->assertDatabaseMissing('comments', [
+            'content' => 'Cross-video reply.',
+        ]);
+    });
+
     test('PATCH /comments/{cuid} updates own comment', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();

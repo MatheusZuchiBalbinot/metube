@@ -21,6 +21,14 @@ use Illuminate\Support\Facades\DB;
  */
 final class UserService
 {
+    /**
+     * Maximum number of subscriptions returned by getUserSubscriptions.
+     *
+     * Caps the result so a user with an unbounded number of subscriptions
+     * never loads every channel row into memory at once.
+     */
+    private const MAX_SUBSCRIPTIONS = 1000;
+
     public function __construct(private readonly CacheService $cache) {}
 
     /**
@@ -40,7 +48,11 @@ final class UserService
     }
 
     /**
-     * Get all subscriptions for a user.
+     * Get subscriptions for a user.
+     *
+     * Capped at the MAX_SUBSCRIPTIONS most recent channels to avoid loading an
+     * unbounded number of rows into memory. The response shape remains an
+     * unenveloped list, preserving the existing UserResource contract.
      *
      * @return Collection<int, User>
      */
@@ -48,7 +60,7 @@ final class UserService
     {
         return $this->cache->rememberUserSubscriptions(
             $user->id,
-            fn () => $user->subscriptions()->get(),
+            fn () => $user->subscriptions()->limit(self::MAX_SUBSCRIPTIONS)->get(),
         );
     }
 
