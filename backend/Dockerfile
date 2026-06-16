@@ -4,10 +4,14 @@ WORKDIR /app
 
 COPY . .
 
+# --no-dev keeps dev/test tooling (PHPUnit/Pest, PHPStan, Pint, etc.) out of the
+# production image. CI installs dev deps separately on the runner, so this stage
+# only ever feeds the runtime image and is safe to slim down.
 RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
+    --no-dev \
     --ignore-platform-reqs \
     --no-scripts
 
