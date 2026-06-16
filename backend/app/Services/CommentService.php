@@ -21,6 +21,14 @@ use Illuminate\Support\Facades\DB;
 final class CommentService
 {
     /**
+     * Maximum number of comment versions returned by versions().
+     *
+     * Caps the result to the most recent edits so a comment with an unbounded
+     * edit history never loads every version row into memory at once.
+     */
+    private const MAX_VERSIONS = 100;
+
+    /**
      * List top-level comments for a video, paginated.
      *
      * Attaches is_liked as a virtual attribute resolved in bulk.
@@ -64,6 +72,10 @@ final class CommentService
             $isNestedReply = $parent->parent_id !== null;
 
             abort_if($isNestedReply, 422, 'Cannot reply to a reply.');
+
+            $isParentFromAnotherVideo = $parent->video_id !== $video->id;
+
+            abort_if($isParentFromAnotherVideo, 422, 'Cannot reply to a comment from another video.');
 
             $parentId = $parent->id;
         }
@@ -149,13 +161,17 @@ final class CommentService
     }
 
     /**
-     * Get all saved versions of a comment, newest first.
+     * Get saved versions of a comment, newest first.
+     *
+     * Capped at the MAX_VERSIONS most recent edits to avoid loading an
+     * unbounded number of version rows into memory. The response shape is an
+     * unenveloped list, preserving the existing CommentVersionResource contract.
      *
      * @param Comment $comment The comment whose versions to retrieve
      */
     public function versions(Comment $comment): BaseCollection
     {
-        return $comment->versions()->newest()->get();
+        return $comment->versions()->newest()->limit(self::MAX_VERSIONS)->get();
     }
 
     /**
