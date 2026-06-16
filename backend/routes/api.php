@@ -102,11 +102,11 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         // progress on a video they are allowed to see. For non-owners this means the
         // video must be published; owners may interact with any status (e.g. their own
         // drafts). This blocks reactions/progress against hidden drafts of other users.
-        Route::post('/{video}/views', [VideoController::class, 'recordView']);
-        Route::post('/{video}/like', [VideoController::class, 'toggleLike']);
-        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike']);
-        Route::post('/{video}/save', [VideoController::class, 'toggleSave']);
-        Route::put('/{video}/progress', [VideoController::class, 'updateProgress']);
+        Route::post('/{video}/views', [VideoController::class, 'recordView'])->can('view', 'video');
+        Route::post('/{video}/like', [VideoController::class, 'toggleLike'])->can('view', 'video');
+        Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike'])->can('view', 'video');
+        Route::post('/{video}/save', [VideoController::class, 'toggleSave'])->can('view', 'video');
+        Route::put('/{video}/progress', [VideoController::class, 'updateProgress'])->can('view', 'video');
         Route::post('/{video}/publish', [VideoController::class, 'publish'])->can('publish', 'video');
         Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
             ->can('retryTranscription', 'video');

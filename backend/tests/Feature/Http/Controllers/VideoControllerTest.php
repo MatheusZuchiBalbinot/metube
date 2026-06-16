@@ -81,7 +81,7 @@ describe('VideoController', function () {
 
     test('toggle like creates like reaction', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/like");
 
@@ -91,7 +91,7 @@ describe('VideoController', function () {
 
     test('record view increments view count and creates history entry', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create(['views' => 0]);
+        $video = Video::factory()->published()->create(['views' => 0]);
 
         $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
 
@@ -102,7 +102,7 @@ describe('VideoController', function () {
 
     test('record view is ignored within one hour for the same user and video', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create(['views' => 0]);
+        $video = Video::factory()->published()->create(['views' => 0]);
 
         $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
         $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
@@ -113,7 +113,7 @@ describe('VideoController', function () {
 
     test('update progress saves watch progress', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", [
             'percent' => 50,
@@ -380,7 +380,7 @@ describe('VideoController', function () {
 
     test('updateProgress returns 422 when percent exceeds 100', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", [
             'percent' => 101,
@@ -392,7 +392,7 @@ describe('VideoController', function () {
 
     test('updateProgress returns 422 when percent is negative', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", [
             'percent' => -1,
@@ -404,7 +404,7 @@ describe('VideoController', function () {
 
     test('updateProgress returns 422 when percent is missing', function () {
         $user = User::factory()->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->putJson("/api/videos/{$video->vuid}/progress", []);
 
@@ -636,5 +636,42 @@ describe('video-chat rate limiter', function () {
         $this->actingAs($user)
             ->postJson("/api/videos/{$video->vuid}/chat", ['question' => 'one too many'])
             ->assertStatus(429);
+    });
+});
+
+describe('VideoController reaction authorization', function () {
+    test('non-owner cannot react to or track progress on another users draft', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $draft = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)->postJson("/api/videos/{$draft->vuid}/views")->assertForbidden();
+        $this->actingAs($other)->postJson("/api/videos/{$draft->vuid}/like")->assertForbidden();
+        $this->actingAs($other)->postJson("/api/videos/{$draft->vuid}/dislike")->assertForbidden();
+        $this->actingAs($other)->postJson("/api/videos/{$draft->vuid}/save")->assertForbidden();
+        $this->actingAs($other)
+            ->putJson("/api/videos/{$draft->vuid}/progress", ['percent' => 50])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('user_video_reactions', ['video_id' => $draft->id]);
+        $this->assertDatabaseMissing('video_progress', ['video_id' => $draft->id]);
+    });
+
+    test('owner can react to and track progress on their own draft', function () {
+        $owner = User::factory()->create();
+        $draft = Video::factory()->draft()->for($owner, 'channel')->create();
+
+        $this->actingAs($owner)->postJson("/api/videos/{$draft->vuid}/like")->assertNoContent();
+        $this->actingAs($owner)
+            ->putJson("/api/videos/{$draft->vuid}/progress", ['percent' => 50])
+            ->assertNoContent();
+    });
+
+    test('any authenticated user can react to a published video', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $video = Video::factory()->published()->for($owner, 'channel')->create();
+
+        $this->actingAs($other)->postJson("/api/videos/{$video->vuid}/like")->assertNoContent();
     });
 });
