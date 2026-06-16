@@ -37,7 +37,9 @@ export default function ShortsPage() {
         <div className="shorts-page">
             <div className="shorts-page__feed" ref={feedRef}>
                 {shorts.map((video, index) => {
-                    const isWithinWindow = Math.abs(index - renderedIndex) <= 2;
+                    // Mount only the active short and its immediate neighbours so
+                    // the rest stay as empty spacer divs (kept for ref/scroll math).
+                    const isWithinWindow = Math.abs(index - renderedIndex) <= 1;
                     return (
                         <div
                             key={video.id}

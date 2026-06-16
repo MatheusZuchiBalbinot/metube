@@ -18,11 +18,23 @@ interface ChatSectionProps {
 }
 
 interface ChatEntry {
+    id: string
     role: 'user' | 'assistant'
     content: string
 }
 
 const QUICK_QUESTIONS = ['chat.quick_q1', 'chat.quick_q2', 'chat.quick_q3'] as const;
+
+// Keep at most this many messages mounted; older ones drop off the top so a
+// long conversation can't grow the DOM unbounded (no virtualization library).
+const MAX_RENDERED_MESSAGES = 80;
+
+let messageIdSeq = 0;
+
+function nextMessageId(): string {
+    messageIdSeq += 1;
+    return `msg-${messageIdSeq}`;
+}
 
 // Streams `fullText` word-by-word, targeting at most 2.5 seconds total.
 function computeStreamInterval(wordCount: number): number {
@@ -131,7 +143,7 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                 streamTimerRef.current = null;
                 setIsStreaming(false);
                 setStreamingText('');
-                setMessages(prev => [...prev, { role: 'assistant', content: fullText }]);
+                setMessages(prev => [...prev, { id: nextMessageId(), role: 'assistant', content: fullText }]);
             }
         }, intervalMs);
     }, []);
@@ -143,7 +155,7 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
             return;
         }
 
-        setMessages(prev => [...prev, { role: 'user', content: trimmed }]);
+        setMessages(prev => [...prev, { id: nextMessageId(), role: 'user', content: trimmed }]);
         setInput('');
         setLoading(true);
 
@@ -237,10 +249,10 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                     </div>
                 )}
 
-                {messages.map((msg, i) => (
+                {messages.slice(-MAX_RENDERED_MESSAGES).map(msg => (
                     msg.role === 'user'
-                        ? <UserBubble key={i} content={msg.content} />
-                        : <AiBubble key={i} content={msg.content} />
+                        ? <UserBubble key={msg.id} content={msg.content} />
+                        : <AiBubble key={msg.id} content={msg.content} />
                 ))}
 
                 {loading && <TypingIndicator />}

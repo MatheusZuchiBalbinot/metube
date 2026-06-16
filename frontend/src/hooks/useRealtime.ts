@@ -63,11 +63,16 @@ export function useRealtime(): void {
         void fetchInitialCount();
 
         let isCancelled = false;
+        // Captured inside the promise so cleanup leaves the exact channel that
+        // was subscribed, without resolving getEcho() a second time.
+        let activeEcho: Awaited<ReturnType<typeof getEcho>> = null;
 
         void getEcho().then(echo => {
             if (isCancelled || echo === null) {
                 return;
             }
+
+            activeEcho = echo;
 
             const channel = echo.private(`users.${userUuid}`);
 
@@ -177,7 +182,10 @@ export function useRealtime(): void {
 
         return () => {
             isCancelled = true;
-            void getEcho().then(echo => echo?.leave(`users.${userUuid}`));
+            // Leave only this user's channel; never destroy the singleton here —
+            // the logout effect below owns teardown. Switching users would
+            // otherwise leak the previous private subscription.
+            activeEcho?.leave(`users.${userUuid}`);
         };
     }, [dispatch, userUuid, notify]);
 
