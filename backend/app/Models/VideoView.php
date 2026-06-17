@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\VideoViewBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 
 /**
@@ -42,6 +44,18 @@ class VideoView extends Model
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * Create a new typed Eloquent query builder for the model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return VideoViewBuilder
+     */
+    public function newEloquentBuilder($query): VideoViewBuilder
+    {
+        return new VideoViewBuilder($query);
     }
 
     /**

@@ -55,7 +55,7 @@ final class VideoService
      */
     public function getVideoByUuid(string $vuid): Video
     {
-        $queryFn = fn () => Video::byVuid($vuid)->with('channel')->firstOrFail();
+        $queryFn = fn () => Video::query()->byVuid($vuid)->with('channel')->firstOrFail();
 
         return $this->cache->rememberVideoMeta($vuid, $queryFn);
     }
@@ -65,7 +65,7 @@ final class VideoService
      */
     private function queryVideos(VideoListFilterDTO $filters): LengthAwarePaginator
     {
-        $query = Video::filter([
+        $query = Video::query()->filter([
             'page' => $filters->page,
             'search' => $filters->search,
             'tags' => $filters->tags,

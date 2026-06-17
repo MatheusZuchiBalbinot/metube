@@ -362,7 +362,7 @@ final class RecommendationService
      */
     private function basePool(array $excludeIds): Builder
     {
-        return Video::published()
+        return Video::query()->published()
             ->whereNotIn('id', $excludeIds)
             ->with('channel')
             ->orderByDesc('views')
@@ -412,7 +412,7 @@ final class RecommendationService
      */
     private function relatedBaseQuery(Video $video, array $excludeIds = []): Builder
     {
-        return Video::published()
+        return Video::query()->published()
             ->where('id', '!=', $video->id)
             ->whereNotIn('id', $excludeIds)
             ->orderByDesc('views')
@@ -542,7 +542,7 @@ final class RecommendationService
     {
         $perPage = PaginationSize::RECOMMENDATIONS;
 
-        return Video::published()
+        return Video::query()->published()
             ->orderByDesc('views')
             ->with('channel')
             ->skip(($page - 1) * $perPage)

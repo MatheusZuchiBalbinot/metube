@@ -39,7 +39,7 @@ final class CommentService
      */
     public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
     {
-        $video = Video::byVuid($vuid)->firstOrFail();
+        $video = Video::query()->byVuid($vuid)->firstOrFail();
 
         $paginator = Comment::with('user')
             ->forVideo($video->id)
@@ -63,7 +63,7 @@ final class CommentService
      */
     public function store(string $vuid, StoreCommentDTO $data, User $user): Comment
     {
-        $video = Video::byVuid($vuid)->firstOrFail();
+        $video = Video::query()->byVuid($vuid)->firstOrFail();
 
         $parentId = null;
 

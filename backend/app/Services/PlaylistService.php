@@ -109,7 +109,7 @@ final class PlaylistService
     public function addVideoToPlaylist(Playlist $playlist, string $vuid): Playlist
     {
         return DB::transaction(function () use ($playlist, $vuid) {
-            $video = Video::byVuid($vuid)->firstOrFail();
+            $video = Video::query()->byVuid($vuid)->firstOrFail();
 
             $playlist->videos()->syncWithoutDetaching($video->id);
             $playlist->touch();
@@ -128,7 +128,7 @@ final class PlaylistService
     public function removeVideoFromPlaylist(Playlist $playlist, string $vuid): void
     {
         DB::transaction(function () use ($playlist, $vuid) {
-            $video = Video::byVuid($vuid)->firstOrFail();
+            $video = Video::query()->byVuid($vuid)->firstOrFail();
 
             $playlist->videos()->detach($video->id);
             $playlist->touch();

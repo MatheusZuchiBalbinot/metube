@@ -6,12 +6,14 @@ namespace App\Models;
 
 use App\Enums\PlaylistName;
 use App\Enums\ReactionType;
+use App\Models\Builders\UserBuilder;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -175,6 +177,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification(mixed $token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Create a typed Eloquent builder for this model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return UserBuilder
+     */
+    public function newEloquentBuilder($query): UserBuilder
+    {
+        return new UserBuilder($query);
     }
 
     /**

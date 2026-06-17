@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\VideoEventType;
+use App\Models\Builders\UserAnalyticBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 
 /**
@@ -82,6 +84,18 @@ class UserAnalytic extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'channel_id');
+    }
+
+    /**
+     * Create a typed Eloquent builder for this model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return UserAnalyticBuilder
+     */
+    public function newEloquentBuilder($query): UserAnalyticBuilder
+    {
+        return new UserAnalyticBuilder($query);
     }
 
     /**

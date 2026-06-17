@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\UserSubscriptionBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * @property int $user_id
@@ -44,6 +46,18 @@ class UserSubscription extends Pivot
     public function channel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'channel_id');
+    }
+
+    /**
+     * Create a typed Eloquent builder for this model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return UserSubscriptionBuilder
+     */
+    public function newEloquentBuilder($query): UserSubscriptionBuilder
+    {
+        return new UserSubscriptionBuilder($query);
     }
 
     /**
