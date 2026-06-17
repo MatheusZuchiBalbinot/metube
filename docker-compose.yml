@@ -55,6 +55,9 @@ services:
     mem_limit: 512m
 
   whisper:
+    # Gated by COMPOSE_PROFILES; omit it to use a hosted API via WHISPER_URL.
+    profiles:
+      - whisper
     build:
       context: ./whisper
       args:
@@ -89,12 +92,11 @@ services:
     env_file:
       - ./backend/.env
     command: php artisan horizon
+    # No whisper dependency: it may be disabled; jobs retry until it responds.
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      whisper:
         condition: service_healthy
     volumes:
       - ./backend:/app

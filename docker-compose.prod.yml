@@ -1,11 +1,10 @@
 services:
-  # Dev frontend server is disabled; dist is built by frontend-build below.
+  # Dev Vite server off; the SPA is prebuilt by frontend-build below.
   frontend:
     profiles:
       - dev
 
-  # One-shot container: builds the SPA and copies dist/ into the named volume.
-  # nginx waits for this to complete before starting.
+  # One-shot SPA build → frontend_dist volume; nginx waits for it.
   frontend-build:
     build:
       context: ./frontend
@@ -22,12 +21,34 @@ services:
     networks:
       - app_net
 
-  # Don't expose postgres or redis ports to the host in production.
+  # ports closed to the host; tuning sized for SSD + ~2–4 GB RAM.
   postgres:
     ports: []
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_connections=100
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
 
   redis:
     ports: []
+
+  # "auto" → one Octane worker per core (resolved in entrypoint.sh).
+  backend:
+    environment:
+      OCTANE_WORKERS: auto
+    mem_limit: 1g
 
   nginx:
     ports:
@@ -37,6 +58,17 @@ services:
       - ./nginx/prod:/etc/nginx/conf.d:ro
       - frontend_dist:/var/www/frontend:ro
       - metube_storage:/var/www/storage-root:ro
+      - certbot_certs:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    # Reload every 6h to pick up renewed certificates.
+    command: sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+    # `/` redirects to HTTPS, so probe the plaintext /healthz instead.
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       backend:
         condition: service_started
@@ -45,5 +77,18 @@ services:
       frontend-build:
         condition: service_completed_successfully
 
+  # Initial cert issued by deploy.sh; this loop renews it twice a day.
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
+    networks:
+      - app_net
+
 volumes:
   frontend_dist:
+  certbot_certs:
+  certbot_www:

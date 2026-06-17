@@ -43,6 +43,7 @@ RUN cp -a /app/vendor /vendor-backup && \
     md5sum /app/composer.lock | awk '{print $1}' > /vendor-backup/.lock-hash
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
