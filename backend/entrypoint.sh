@@ -27,9 +27,14 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 if [ "$APP_ENV" = "production" ]; then
+    # Skip file re-stat in prod (code is immutable between deploys).
+    echo "opcache.validate_timestamps=0" > /usr/local/etc/php/conf.d/zz-opcache-prod.ini
+
     echo "Caching Laravel config, routes, events, views..."
     php artisan optimize || true
 else
+    rm -f /usr/local/etc/php/conf.d/zz-opcache-prod.ini || true
+
     echo "Clearing Laravel caches..."
     php artisan optimize:clear || true
     rm -rf bootstrap/cache/*.php || true
@@ -52,9 +57,16 @@ echo "Database ready ✔"
 echo "Running migrations..."
 php artisan migrate --force
 
-echo "Starting Octane..."
+# "auto"/"0" → one worker per CPU core.
+WORKERS="${OCTANE_WORKERS:-2}"
+if [ "$WORKERS" = "auto" ] || [ "$WORKERS" = "0" ]; then
+    WORKERS=$(nproc 2>/dev/null || echo 2)
+fi
+
+echo "Starting Octane with ${WORKERS} worker(s)..."
 exec php artisan octane:start \
   --server=frankenphp \
   --host=0.0.0.0 \
   --port=8000 \
-  --workers="${OCTANE_WORKERS:-2}"
+  --workers="$WORKERS" \
+  --max-requests=500
