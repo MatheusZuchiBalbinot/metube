@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ReactionType;
+use App\Models\Builders\UserVideoReactionBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * @property int $user_id
@@ -46,6 +48,18 @@ class UserVideoReaction extends Pivot
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * Create a new typed Eloquent query builder for the model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return UserVideoReactionBuilder
+     */
+    public function newEloquentBuilder($query): UserVideoReactionBuilder
+    {
+        return new UserVideoReactionBuilder($query);
     }
 
     /**

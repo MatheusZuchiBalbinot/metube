@@ -29,7 +29,7 @@ class CommentController extends Controller
      */
     public function index(string $vuid, Request $request): JsonResponse
     {
-        $this->authorize('view', Video::byVuid($vuid)->firstOrFail());
+        $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
 
         $page = (int) $request->query('page', '1');
         $user = $request->user();
@@ -46,7 +46,7 @@ class CommentController extends Controller
      */
     public function store(string $vuid, StoreCommentRequest $request): JsonResponse
     {
-        $this->authorize('view', Video::byVuid($vuid)->firstOrFail());
+        $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
 
         $user = $request->user();
         $comment = $this->commentService->store($vuid, $request->getDTO(), $user);

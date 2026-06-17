@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\CommentLikeBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * @property int $user_id
@@ -34,6 +36,18 @@ class CommentLike extends Pivot
     public function comment(): BelongsTo
     {
         return $this->belongsTo(Comment::class);
+    }
+
+    /**
+     * Create a new typed Eloquent query builder for the model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return CommentLikeBuilder
+     */
+    public function newEloquentBuilder($query): CommentLikeBuilder
+    {
+        return new CommentLikeBuilder($query);
     }
 
     /**

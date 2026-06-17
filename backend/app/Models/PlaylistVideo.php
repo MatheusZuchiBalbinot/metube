@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\PlaylistVideoBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * @property int $playlist_id
@@ -35,6 +37,18 @@ class PlaylistVideo extends Pivot
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * Use the dedicated PlaylistVideoBuilder for typed, chainable queries.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return PlaylistVideoBuilder
+     */
+    public function newEloquentBuilder($query): PlaylistVideoBuilder
+    {
+        return new PlaylistVideoBuilder($query);
     }
 
     /**

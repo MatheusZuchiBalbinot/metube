@@ -120,7 +120,7 @@ final class FeedService
             ->pluck('channel_id')
             ->all();
 
-        return Video::published()
+        return Video::query()->published()
             ->whereIn('channel_id', $channelIds)
             ->newestPublished()
             ->with('channel')
@@ -140,7 +140,7 @@ final class FeedService
      */
     private function trending(): Collection
     {
-        return Video::published()
+        return Video::query()->published()
             ->where('published_at', '>=', now()->subDays(self::TRENDING_WINDOW_DAYS))
             ->orderByDesc('views')
             ->with('channel')
@@ -178,7 +178,7 @@ final class FeedService
      */
     private function recent(): Collection
     {
-        return Video::published()
+        return Video::query()->published()
             ->newestPublished()
             ->with('channel')
             ->limit(PaginationSize::FEED_SHELF)
@@ -192,7 +192,7 @@ final class FeedService
      */
     private function shorts(): Collection
     {
-        return Video::published()
+        return Video::query()->published()
             ->filter(['tags' => [self::SHORTS_TAG]])
             ->newestPublished()
             ->with('channel')
@@ -226,7 +226,7 @@ final class FeedService
             return null;
         }
 
-        $videos = Video::published()
+        $videos = Video::query()->published()
             ->filter(['tags' => [$topTag]])
             ->newestPublished()
             ->with('channel')

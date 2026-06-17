@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\VideoProgressBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * @property int $id
@@ -49,6 +51,18 @@ class VideoProgress extends Model
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * Create a new typed Eloquent query builder for the model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return VideoProgressBuilder
+     */
+    public function newEloquentBuilder($query): VideoProgressBuilder
+    {
+        return new VideoProgressBuilder($query);
     }
 
     /**

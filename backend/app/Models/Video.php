@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\VideoStatus;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Builders\VideoBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -159,164 +160,16 @@ class Video extends Model
     }
 
     /**
-     * Filter videos by search, tags, and status.
+     * Use the dedicated VideoBuilder so query logic lives in typed, chainable
+     * methods (Video::query()->published()->newestPublished()).
      *
-     * On PostgreSQL, search uses a pre-computed tsvector column (GIN-indexed).
-     * On other drivers (SQLite in tests), falls back to LIKE.
-     * Tag filtering uses OR semantics: any matching tag includes the video.
+     * @param QueryBuilder $query
      *
-     * @param Builder<Video> $query
-     * @param array<string, mixed> $filters
-     *
-     * @return Builder<Video>
+     * @return VideoBuilder
      */
-    public function scopeFilter(Builder $query, array $filters): Builder
+    public function newEloquentBuilder($query): VideoBuilder
     {
-        if (isset($filters['search'])) {
-            $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
-
-            if ($isPgsql) {
-                $term = str_replace(' ', ' & ', trim($filters['search']));
-                $query = $query->whereRaw("search_tsv @@ to_tsquery('simple', ?)", [$term . ':*']);
-            } else {
-                $term = "%{$filters['search']}%";
-                $query = $query->where(function (Builder $q) use ($term): void {
-                    $q->where('title', 'like', $term)
-                        ->orWhere('description', 'like', $term);
-                });
-            }
-        }
-
-        if (isset($filters['tags'])) {
-            $tags = array_values($filters['tags']);
-            $isPgsql = $query->getConnection()->getDriverName() === 'pgsql';
-
-            if ($isPgsql) {
-                $placeholders = implode(',', array_fill(0, count($tags), '?'));
-                $query = $query->whereRaw("tags ??| array[{$placeholders}]", $tags);
-            } else {
-                $query = $query->where(function (Builder $q) use ($tags): void {
-                    foreach ($tags as $tag) {
-                        $q->orWhereJsonContains('tags', $tag);
-                    }
-                });
-            }
-        }
-
-        if (isset($filters['status'])) {
-            $query = $query->where('status', $filters['status']);
-        }
-
-        return $query;
-    }
-
-    /**
-     * Filter only published videos.
-     *
-     * @param Builder<Video> $query
-     *
-     * @return Builder<Video>
-     */
-    public function scopePublished(Builder $query): Builder
-    {
-        $query->where('status', VideoStatus::PUBLISHED);
-
-        return $query;
-    }
-
-    /**
-     * Order by publication date, newest first.
-     *
-     * Named distinctly from Eloquent's native latest() which orders by created_at.
-     *
-     * @param Builder<Video> $query
-     *
-     * @return Builder<Video>
-     */
-    public function scopeNewestPublished(Builder $query): Builder
-    {
-        $query->orderByDesc('published_at');
-
-        return $query;
-    }
-
-    /**
-     * Filter videos by status.
-     *
-     * @param Builder<Video> $query
-     * @param VideoStatus $status
-     *
-     * @return Builder<Video>
-     */
-    public function scopeByStatus(Builder $query, VideoStatus $status): Builder
-    {
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Filter scheduled videos that are due for publication.
-     *
-     * @param Builder<Video> $query
-     *
-     * @return Builder<Video>
-     */
-    public function scopeScheduledDue(Builder $query): Builder
-    {
-        return $query->where('status', VideoStatus::SCHEDULED)
-            ->where('scheduled_at', '<=', now());
-    }
-
-    /**
-     * Filter video by UUID.
-     *
-     * @param Builder<Video> $query
-     * @param string $vuid Video UUID
-     *
-     * @return Builder<Video>
-     */
-    public function scopeByVuid(Builder $query, string $vuid): Builder
-    {
-        return $query->where('vuid', $vuid);
-    }
-
-    /**
-     * Filter videos from a specific channel.
-     *
-     * @param Builder<Video> $query
-     * @param int $channelId Channel ID
-     *
-     * @return Builder<Video>
-     */
-    public function scopeOfChannel(Builder $query, int $channelId): Builder
-    {
-        return $query->where('channel_id', $channelId);
-    }
-
-    /**
-     * Order by publication date, newest first.
-     *
-     * @param Builder<Video> $query
-     *
-     * @return Builder<Video>
-     */
-    public function scopeOrderByPublished(Builder $query): Builder
-    {
-        return $query->orderByDesc('published_at');
-    }
-
-    /**
-     * Filter videos published on a specific date.
-     *
-     * @param Builder<Video> $query
-     * @param Carbon|string $date
-     *
-     * @return Builder<Video>
-     */
-    public function scopePublishedOn(Builder $query, $date): Builder
-    {
-        $date = \is_string($date) ? Carbon::parse($date) : $date;
-
-        return $query->whereDate('published_at', $date);
+        return new VideoBuilder($query);
     }
 
     /**

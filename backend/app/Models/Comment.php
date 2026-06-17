@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\CommentBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -66,6 +68,18 @@ class Comment extends Model
     public function getRouteKeyName(): string
     {
         return 'cuid';
+    }
+
+    /**
+     * Create a new typed Eloquent query builder for the model.
+     *
+     * @param QueryBuilder $query
+     *
+     * @return CommentBuilder
+     */
+    public function newEloquentBuilder($query): CommentBuilder
+    {
+        return new CommentBuilder($query);
     }
 
     protected static function boot(): void
