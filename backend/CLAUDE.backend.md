@@ -129,7 +129,10 @@ app/
     UserAnalytic.php                # Registro de eventos analytics do usuário
     UserSubscription.php            # Pivot: user_id → channel_id
     UserVideoReaction.php           # Pivot: user_id, video_id, type (like|dislike)
-    Video.php                       # vuid; scopeFilter, scopePublished, scopeNewestPublished
+    Video.php                       # vuid; usa VideoBuilder (newEloquentBuilder)
+    Builders/                        # Custom Eloquent Builders — um por model com query logic
+      VideoBuilder.php               # filter, published, newestPublished, scheduledDue, byVuid
+      CommentBuilder.php, ...        # toda query reaproveitável vive aqui (não em scopes)
     VideoAiSuggestion.php           # status (AiSuggestionStatus), suggested_title/description/tags
     VideoProgress.php               # user_id, video_id, percent (0-100)
     VideoSummary.php                # keyPoints, chapters, readingMode (gerado por IA)
@@ -428,7 +431,36 @@ do controller. A única solução é o `except` no nível do framework.
 `User::boot()` cria automaticamente uma playlist "Watch Later" para todo usuário novo.
 **Impacto nos testes:** `User::factory()->create()` → banco já tem 1 playlist. Ajuste contagens.
 
-### Video::scopeFilter
+### Query Builders (não use scopes)
+
+Toda query reaproveitável vive num **Custom Eloquent Builder** em `app/Models/Builders/`, **não** em query scopes. Builders dão métodos tipados, encadeáveis e legíveis (`Video::query()->published()->newestPublished()`), com suporte total ao PHPStan nível 8.
+
+Padrão obrigatório:
+```php
+// app/Models/Builders/VideoBuilder.php
+/** @extends Builder<Video> */
+class VideoBuilder extends Builder
+{
+    public function published(): self
+    {
+        return $this->where('status', VideoStatus::PUBLISHED);
+    }
+}
+
+// no model:
+public function newEloquentBuilder($query): VideoBuilder  // $query: Query\Builder
+{
+    return new VideoBuilder($query);
+}
+```
+
+Regras:
+- Métodos do builder retornam `self` (`return $this->...`).
+- **Nunca** adicione `@method` no docblock do model — quebra a inferência do Larastan (gera `Collection<stdClass>`). Deixe o retorno do `newEloquentBuilder` tipar.
+- Chame estaticamente via `Model::query()->metodo()`; em relations o método resolve sozinho (`$channel->videos()->published()`).
+- Não redefina métodos nativos do Eloquent (`oldest`, `latest`, `where*`) — use os nativos.
+
+### VideoBuilder::filter
 Full-text search com fallback por driver:
 - **PostgreSQL:** usa coluna `search_tsv` (tsvector GIN-indexed) com `to_tsquery`
 - **SQLite (testes):** fallback com `LIKE` em `title` e `description`
@@ -487,7 +519,7 @@ public function metodo(TipoA $paramA, TipoB $paramB): TipoRetorno
 - `@var` inline proibido. Corrija a causa raiz do erro de tipo.
 - Elvis operator `?:` proibido (`ternary.shortNotAllowed`). Use `!== null ? ... : ...`.
 - `readStream()` retorna `resource|null` — faça null-guard antes de passar para `put()`.
-- Scopes que chamam métodos que retornam `Builder` e depois retornam `$query`: descarte o retorno intermediário.
+- Custom Builders: métodos retornam `self`; nunca anote `@method` no model (quebra a inferência do Larastan). Ver "Query Builders".
 
 ### Verificar antes de commitar
 
