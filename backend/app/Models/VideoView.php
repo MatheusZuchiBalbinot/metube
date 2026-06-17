@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\VideoViewBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -56,45 +55,5 @@ class VideoView extends Model
     public function newEloquentBuilder($query): VideoViewBuilder
     {
         return new VideoViewBuilder($query);
-    }
-
-    /**
-     * @param Builder<VideoView> $query
-     *
-     * @return Builder<VideoView>
-     */
-    public function scopeForUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * @param Builder<VideoView> $query
-     *
-     * @return Builder<VideoView>
-     */
-    public function scopeForVideo(Builder $query, int $videoId): Builder
-    {
-        return $query->where('video_id', $videoId);
-    }
-
-    /**
-     * @param Builder<VideoView> $query
-     *
-     * @return Builder<VideoView>
-     */
-    public function scopeWithSource(Builder $query, string $source): Builder
-    {
-        return $query->where('source', $source);
-    }
-
-    /**
-     * @param Builder<VideoView> $query
-     *
-     * @return Builder<VideoView>
-     */
-    public function scopeWithSession(Builder $query, string $sessionId): Builder
-    {
-        return $query->where('session_id', $sessionId);
     }
 }

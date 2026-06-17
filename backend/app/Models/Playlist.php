@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\PlaylistBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,7 +36,7 @@ class Playlist extends Model
      */
     public function resolveRouteBinding($value, $field = null): ?self
     {
-        return self::byPuid((string) $value)
+        return self::query()->byPuid((string) $value)
             ->with(['videos' => fn ($q) => $q->orderByPivot('position')])
             ->first();
     }
@@ -84,56 +83,5 @@ class Playlist extends Model
             ->using(PlaylistVideo::class)
             ->withPivot('position')
             ->orderByPivot('position');
-    }
-
-    /**
-     * Filter playlist by PUID.
-     *
-     * @param Builder<Playlist> $query
-     * @param string $puid Playlist unique ID
-     *
-     * @return Builder<Playlist>
-     */
-    public function scopeByPuid(Builder $query, string $puid): Builder
-    {
-        return $query->where('puid', $puid);
-    }
-
-    /**
-     * Filter playlists owned by a specific user.
-     *
-     * @param Builder<Playlist> $query
-     * @param int $userId User ID
-     *
-     * @return Builder<Playlist>
-     */
-    public function scopeOfUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * Order playlists by creation date, newest first.
-     *
-     * @param Builder<Playlist> $query
-     *
-     * @return Builder<Playlist>
-     */
-    public function scopeNewest(Builder $query): Builder
-    {
-        return $query->orderByDesc('created_at');
-    }
-
-    /**
-     * Filter playlists created recently (last N days).
-     *
-     * @param Builder<Playlist> $query
-     * @param int $days Number of days (default 30)
-     *
-     * @return Builder<Playlist>
-     */
-    public function scopeRecent(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('created_at', '>=', now()->subDays($days));
     }
 }

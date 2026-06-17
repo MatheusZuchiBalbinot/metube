@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enums\VideoEventType;
 use App\Models\Builders\UserAnalyticBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -96,44 +95,5 @@ class UserAnalytic extends Model
     public function newEloquentBuilder($query): UserAnalyticBuilder
     {
         return new UserAnalyticBuilder($query);
-    }
-
-    /**
-     * Filter events from a specific user.
-     *
-     * @param Builder<UserAnalytic> $query
-     * @param int $userId User ID
-     *
-     * @return Builder<UserAnalytic>
-     */
-    public function scopeForUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * Filter events from the last N days.
-     *
-     * @param Builder<UserAnalytic> $query
-     * @param int $days Number of days (default 30)
-     *
-     * @return Builder<UserAnalytic>
-     */
-    public function scopeRecentDays(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('occurred_at', '>=', now()->subDays($days));
-    }
-
-    /**
-     * Filter events of a specific type.
-     *
-     * @param Builder<UserAnalytic> $query
-     * @param VideoEventType $eventType
-     *
-     * @return Builder<UserAnalytic>
-     */
-    public function scopeOfType(Builder $query, VideoEventType $eventType): Builder
-    {
-        return $query->where('event_type', $eventType);
     }
 }

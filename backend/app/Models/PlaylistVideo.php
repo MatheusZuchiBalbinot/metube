@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\PlaylistVideoBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -49,35 +48,5 @@ class PlaylistVideo extends Pivot
     public function newEloquentBuilder($query): PlaylistVideoBuilder
     {
         return new PlaylistVideoBuilder($query);
-    }
-
-    /**
-     * @param Builder<PlaylistVideo> $query
-     *
-     * @return Builder<PlaylistVideo>
-     */
-    public function scopeForPlaylist(Builder $query, int $playlistId): Builder
-    {
-        return $query->where('playlist_id', $playlistId);
-    }
-
-    /**
-     * @param Builder<PlaylistVideo> $query
-     *
-     * @return Builder<PlaylistVideo>
-     */
-    public function scopeForVideo(Builder $query, int $videoId): Builder
-    {
-        return $query->where('video_id', $videoId);
-    }
-
-    /**
-     * @param Builder<PlaylistVideo> $query
-     *
-     * @return Builder<PlaylistVideo>
-     */
-    public function scopeOrdered(Builder $query): Builder
-    {
-        return $query->orderBy('position');
     }
 }

@@ -38,7 +38,7 @@ final class ChannelService
     {
         return $this->cache->rememberChannelInfo(
             $uuid,
-            fn () => User::byUuid($uuid)->firstOrFail(),
+            fn () => User::query()->byUuid($uuid)->firstOrFail(),
         );
     }
 
@@ -85,7 +85,7 @@ final class ChannelService
      */
     public function toggleSubscription(User $subscriber, string $uuid): void
     {
-        $channel = User::byUuid($uuid)->firstOrFail();
+        $channel = User::query()->byUuid($uuid)->firstOrFail();
 
         DB::transaction(function () use ($subscriber, $channel) {
             $unsubscribed = UserSubscription::query()

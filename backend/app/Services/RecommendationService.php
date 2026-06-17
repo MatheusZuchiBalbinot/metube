@@ -165,7 +165,7 @@ final class RecommendationService
      */
     private function getUserEventScores(int $userId): Collection
     {
-        $events = UserAnalytic::forUser($userId)
+        $events = UserAnalytic::query()->forUser($userId)
             ->recentDays(30)
             ->get();
 
