@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\CommentVersionBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -50,17 +49,5 @@ class CommentVersion extends Model
     public function newEloquentBuilder($query): CommentVersionBuilder
     {
         return new CommentVersionBuilder($query);
-    }
-
-    /**
-     * Order versions by version number, newest first.
-     *
-     * @param Builder<CommentVersion> $query
-     *
-     * @return Builder<CommentVersion>
-     */
-    public function scopeNewest(Builder $query): Builder
-    {
-        return $query->orderByDesc('version');
     }
 }

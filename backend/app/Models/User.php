@@ -9,7 +9,6 @@ use App\Enums\ReactionType;
 use App\Models\Builders\UserBuilder;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -189,45 +188,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function newEloquentBuilder($query): UserBuilder
     {
         return new UserBuilder($query);
-    }
-
-    /**
-     * Filter users by UUID.
-     *
-     * @param Builder<self> $query
-     * @param string $uuid User UUID
-     *
-     * @return Builder<self>
-     */
-    public function scopeByUuid(Builder $query, string $uuid): Builder
-    {
-        return $query->where('uuid', $uuid);
-    }
-
-    /**
-     * Get users created recently (last N days).
-     *
-     * @param Builder<self> $query
-     * @param int $days Number of days (default 30)
-     *
-     * @return Builder<self>
-     */
-    public function scopeRecent(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('created_at', '>=', now()->subDays($days));
-    }
-
-    /**
-     * Get users who have been active recently.
-     *
-     * @param Builder<self> $query
-     * @param int $days Number of days (default 7)
-     *
-     * @return Builder<self>
-     */
-    public function scopeActive(Builder $query, int $days = 7): Builder
-    {
-        return $query->where('updated_at', '>=', now()->subDays($days));
     }
 
     /**

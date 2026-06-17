@@ -46,7 +46,7 @@ final class VideoReactionService
     public function toggleLike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $unliked = UserVideoReaction::byUser($user->id)
+            $unliked = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
                 ->likes()
                 ->delete();
@@ -57,7 +57,7 @@ final class VideoReactionService
                 return;
             }
 
-            $wasDisliked = UserVideoReaction::byUser($user->id)
+            $wasDisliked = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
                 ->dislikes()
                 ->delete();
@@ -78,7 +78,7 @@ final class VideoReactionService
             }
 
             event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
-            $likeCount = UserVideoReaction::forVideo($video->id)
+            $likeCount = UserVideoReaction::query()->forVideo($video->id)
                 ->likes()
                 ->count();
             event(new VideoLiked($video, $user, $likeCount));
@@ -97,7 +97,7 @@ final class VideoReactionService
     public function toggleDislike(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
-            $undisliked = UserVideoReaction::byUser($user->id)
+            $undisliked = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
                 ->dislikes()
                 ->delete();
@@ -108,7 +108,7 @@ final class VideoReactionService
                 return;
             }
 
-            $wasLiked = UserVideoReaction::byUser($user->id)
+            $wasLiked = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
                 ->likes()
                 ->delete();

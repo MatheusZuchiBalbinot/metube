@@ -68,7 +68,7 @@ final class CommentService
         $parentId = null;
 
         if ($data->parentCuid !== null) {
-            $parent = Comment::byCuid($data->parentCuid)->firstOrFail();
+            $parent = Comment::query()->byCuid($data->parentCuid)->firstOrFail();
             $isNestedReply = $parent->parent_id !== null;
 
             abort_if($isNestedReply, 422, 'Cannot reply to a reply.');
@@ -137,7 +137,7 @@ final class CommentService
     public function update(Comment $comment, UpdateCommentDTO $data, User $user): Comment
     {
         return DB::transaction(function () use ($comment, $data, $user): Comment {
-            $isLiked = CommentLike::byUser($user->id)
+            $isLiked = CommentLike::query()->byUser($user->id)
                 ->forComment($comment->id)
                 ->exists();
 
@@ -212,7 +212,7 @@ final class CommentService
     public function toggleLike(Comment $comment, User $user): array
     {
         return DB::transaction(function () use ($comment, $user): array {
-            $unliked = CommentLike::byUser($user->id)
+            $unliked = CommentLike::query()->byUser($user->id)
                 ->forComment($comment->id)
                 ->delete();
 
@@ -280,7 +280,7 @@ final class CommentService
 
         $commentIds = $comments->pluck('id')->all();
 
-        $likedIds = CommentLike::byUser($user->id)
+        $likedIds = CommentLike::query()->byUser($user->id)
             ->forComments($commentIds)
             ->pluck('comment_id')
             ->flip()

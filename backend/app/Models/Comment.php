@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\CommentBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -159,93 +158,5 @@ class Comment extends Model
     public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(CommentVersion::class, 'current_version_id');
-    }
-
-    /**
-     * Scope to get only top-level comments (no parent).
-     *
-     * @param Builder<Comment> $query
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeTopLevel(Builder $query): Builder
-    {
-        return $query->whereNull('parent_id');
-    }
-
-    /**
-     * Scope to get comments for a specific video.
-     *
-     * @param Builder<Comment> $query
-     * @param int $videoId Video ID
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeForVideo(Builder $query, int $videoId): Builder
-    {
-        return $query->where('video_id', $videoId);
-    }
-
-    /**
-     * Filter comment by CUID.
-     *
-     * @param Builder<Comment> $query
-     * @param string $cuid Comment unique ID
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeByCuid(Builder $query, string $cuid): Builder
-    {
-        return $query->where('cuid', $cuid);
-    }
-
-    /**
-     * Scope to get comments by a specific user.
-     *
-     * @param Builder<Comment> $query
-     * @param int $userId User ID
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeByUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * Scope to get replies to a specific comment.
-     *
-     * @param Builder<Comment> $query
-     * @param int $parentId Parent comment ID
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeRepliesTo(Builder $query, int $parentId): Builder
-    {
-        return $query->where('parent_id', $parentId);
-    }
-
-    /**
-     * Order comments by creation date, newest first.
-     *
-     * @param Builder<Comment> $query
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeNewest(Builder $query): Builder
-    {
-        return $query->orderByDesc('created_at');
-    }
-
-    /**
-     * Order comments by creation date, oldest first.
-     *
-     * @param Builder<Comment> $query
-     *
-     * @return Builder<Comment>
-     */
-    public function scopeOldest(Builder $query): Builder
-    {
-        return $query->orderBy('created_at');
     }
 }

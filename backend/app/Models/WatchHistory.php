@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\HistoryPeriod;
 use App\Models\Builders\WatchHistoryBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,77 +54,5 @@ class WatchHistory extends Model
     public function newEloquentBuilder($query): WatchHistoryBuilder
     {
         return new WatchHistoryBuilder($query);
-    }
-
-    /**
-     * @param Builder<WatchHistory> $query
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeForUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * @param Builder<WatchHistory> $query
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeForVideo(Builder $query, int $videoId): Builder
-    {
-        return $query->where('video_id', $videoId);
-    }
-
-    /**
-     * @param Builder<WatchHistory> $query
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeRecentDays(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('watched_at', '>=', now()->subDays($days));
-    }
-
-    /**
-     * @param Builder<WatchHistory> $query
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeGroupedByDate(Builder $query): Builder
-    {
-        return $query->orderByDesc('watched_at');
-    }
-
-    /**
-     * Filter history by video VUID using a joined query.
-     *
-     * @param Builder<WatchHistory> $query
-     * @param string $vuid Video VUID
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeByVideoVuid(Builder $query, string $vuid): Builder
-    {
-        return $query->whereHas('video', fn ($q) => $q->where('vuid', $vuid));
-    }
-
-    /**
-     * Restrict history to a time window. HistoryPeriod::ALL applies no constraint.
-     *
-     * @param Builder<WatchHistory> $query
-     * @param HistoryPeriod $period Time window to filter by
-     *
-     * @return Builder<WatchHistory>
-     */
-    public function scopeFilterByPeriod(Builder $query, HistoryPeriod $period): Builder
-    {
-        $startDate = $period->startDate();
-
-        if ($startDate === null) {
-            return $query;
-        }
-
-        return $query->where('watched_at', '>=', $startDate);
     }
 }
