@@ -20,7 +20,7 @@ Não comece a codificar antes de ter lido o guia. Esses arquivos contêm todas a
 ```
                      :80                   :5173
                    ┌───────┐            ┌──────────┐
-  browser ──────── │ nginx │ ─── /api → │ backend  │ (FrankenPHP/Octane)
+  browser ──────── │ caddy │ ─── /api → │ backend  │ (FrankenPHP/Octane)
                    └───┬───┘            └────┬─────┘
                        │                     │
                    ┌───┴───┐          ┌──────┴─────┐
@@ -34,7 +34,7 @@ Não comece a codificar antes de ter lido o guia. Esses arquivos contêm todas a
 - **Auth**: Laravel Sanctum stateful (cookie de sessão, nunca JWT)
 - **DB**: PostgreSQL 16
 - **Cache/Sessions**: Redis 7
-- **Proxy**: Nginx Alpine (porta 80 pública)
+- **Proxy**: Caddy 2 (porta 80/443 pública; TLS automático em produção)
 
 ---
 
@@ -55,7 +55,7 @@ npm run stop      # docker compose down
 | redis      | redis:7-alpine     | 6379          |
 | backend    | FrankenPHP/Octane  | — (interna)   |
 | frontend   | Node/Vite          | 5173          |
-| nginx      | nginx:alpine       | 80            |
+| caddy      | caddy:2-alpine     | 80 / 443      |
 | queue      | FrankenPHP (worker)| —             |
 
 ---

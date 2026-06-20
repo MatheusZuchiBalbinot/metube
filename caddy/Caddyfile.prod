@@ -1,0 +1,77 @@
+# Production proxy. Caddy obtains and renews the Let's Encrypt certificate for
+# {$DOMAIN} automatically (HTTP-01/TLS-ALPN), and redirects HTTP→HTTPS.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	handle /app/* {
+		reverse_proxy reverb:8080
+	}
+
+	# HLS manifest — rewritten in place on re-transcode, so never cache it.
+	@m3u8 path_regexp ^/storage/(.+\.m3u8)$
+	handle @m3u8 {
+		root * /var/www/storage-root/app/public
+		uri strip_prefix /storage
+		header Cache-Control "no-cache"
+		header Content-Type "application/vnd.apple.mpegurl"
+		file_server
+	}
+
+	# HLS segment — immutable name. Go mismaps .ts, so set the type explicitly.
+	@ts path_regexp ^/storage/(.+\.ts)$
+	handle @ts {
+		root * /var/www/storage-root/app/public
+		uri strip_prefix /storage
+		header Cache-Control "public, immutable"
+		header Content-Type "video/mp2t"
+		file_server
+	}
+
+	handle_path /storage/* {
+		root * /var/www/storage-root/app/public
+		header Cache-Control "public, immutable"
+		file_server
+	}
+
+	# tus chunks are capped at 10 MB.
+	@tus path /api/uploads/tus*
+	handle @tus {
+		request_body {
+			max_size 10MB
+		}
+		reverse_proxy backend:8000
+	}
+
+	@backend path /api/* /sanctum/*
+	handle @backend {
+		reverse_proxy backend:8000
+	}
+
+	# SPA — static build with client-side routing fallback.
+	handle {
+		root * /var/www/frontend
+		@assets path /assets/*
+		header @assets Cache-Control "public, immutable, max-age=31536000"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Health endpoint on a plain port (used by the container healthcheck).
+:9000 {
+	handle /healthz {
+		respond "ok" 200
+	}
+}

@@ -106,7 +106,7 @@ export default defineConfig({
                 changeOrigin: true,
             },
             '/storage': {
-                target: 'http://nginx',
+                target: 'http://caddy',
                 changeOrigin: true,
             },
             '/app': {
@@ -130,7 +130,7 @@ export default defineConfig({
                 changeOrigin: true,
             },
             '/storage': {
-                target: 'http://nginx',
+                target: 'http://caddy',
                 changeOrigin: true,
             },
             '/app': {

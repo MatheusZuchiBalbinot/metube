@@ -8,11 +8,11 @@ namespace App\Contracts;
  * Abstracts every physical disk operation in the video pipeline, decoupling
  * all services from the concrete disk driver.
  *
- * "Temp disk" = the 'local' disk (private, not web-accessible).
- * "Public disk" = the 'public' disk (web-accessible, symlinked to storage/app/public).
+ * "Temp disk" = a private, non-web-accessible disk (default: local).
+ * "Public disk" = a web-accessible disk (default: local, symlinked to storage/app/public).
  *
- * Swapping to S3 is a single-file change: bind a new implementation in
- * AppServiceProvider::register() — no other file needs to change.
+ * Both disks are config-driven (filesystems.temp_disk / filesystems.public_disk),
+ * so moving storage to S3 is an env change — no implementation change.
  */
 interface StorageContract
 {
