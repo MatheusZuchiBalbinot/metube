@@ -610,7 +610,7 @@ Controllers são thin: recebem request, autorizam, chamam service, formatam resp
 |------------------------|------------------------------------------------------------------------------|
 | `AuthService`          | login, logout, me, register, updateProfile, sendPasswordResetLink, resetPassword |
 | `VideoService`         | CRUD, finalizeUpload (tus), toggleLike/Dislike/Save, updateProgress, getSummary, transcription, AI suggestion |
-| `StorageService`       | Única classe que chama `Storage::disk()`. Implementa `StorageContract`. Troca por S3 = mudar o binding em `AppServiceProvider` |
+| `StorageService`       | Única classe que chama `Storage::disk()`. Implementa `StorageContract`. Discos vêm da config (`filesystems.temp_disk`/`public_disk`); troca por S3 = mudar `FILESYSTEM_DISK`/`FILESYSTEM_DISK_PUBLIC`, sem código |
 | `VideoStorageService`  | publishVideo, publishThumbnail, publishCaption, cleanupTmp. Injeta `StorageContract` |
 | `ThumbnailService`     | redimensiona e salva thumbnail                                               |
 | `ChannelService`       | show, videos, toggleSubscription                                             |
@@ -848,7 +848,7 @@ GEMINI_MODEL=gemini-2.0-flash
 ```env
 QUEUE_CONNECTION=redis
 FILESYSTEM_DISK=local          # uploads temporários (privado)
-FILESYSTEM_DISK_PUBLIC=public  # arquivos servidos pelo nginx
+FILESYSTEM_DISK_PUBLIC=public  # arquivos servidos pelo Caddy
 
 TUS_MAX_UPLOAD_BYTES=5368709120  # 5 GB (opcional — padrão no config/tus.php)
 

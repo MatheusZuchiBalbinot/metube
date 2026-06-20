@@ -70,7 +70,7 @@ Segue arquitetura **orientada a hooks** com separação estrita entre lógica e 
 - **Upload** — protocolo tus (tus-php + tus-js-client)
 - **IA** — Whisper ASR (transcrição, self-hosted) + LLM via interface agnóstica de provider (metadados e resumos)
 - **Auth** — Laravel Sanctum stateful (cookie HttpOnly, sem JWT)
-- **Proxy** — Nginx Alpine como único ponto de entrada
+- **Proxy** — Caddy 2 como único ponto de entrada (TLS automático em produção)
 
 ---
 
@@ -97,7 +97,7 @@ npm run start   # docker compose up --build
 npm run stop    # docker compose down
 ```
 
-Acesse em `http://localhost` (nginx) ou `http://localhost:5173` (Vite com HMR direto).
+Acesse em `http://localhost` (Caddy) ou `http://localhost:5173` (Vite com HMR direto).
 
 ---
 
@@ -121,7 +121,7 @@ Cinco workflows no GitHub Actions, disparados apenas quando os arquivos da área
 ├── backend/     Laravel 12 — API, services, jobs, events, observers
 ├── frontend/    React 19 — SPA, Redux, player, shorts, upload
 ├── whisper/     Whisper ASR self-hosted
-├── nginx/       Proxy reverso
+├── caddy/        Proxy reverso (Caddyfile dev + prod)
 └── docker-compose.yml
 ```
 

@@ -19,6 +19,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | StorageService disks
+    |--------------------------------------------------------------------------
+    |
+    | Disk names used by StorageService. Point either at any disk below (local,
+    | s3, ...) to move storage without touching code. "temp" is private; "public"
+    | is web-served.
+    |
+    */
+
+    'temp_disk' => env('FILESYSTEM_DISK', 'local'),
+    'public_disk' => env('FILESYSTEM_DISK_PUBLIC', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

@@ -30,7 +30,7 @@ return [
     | Maximum upload size (bytes)
     |--------------------------------------------------------------------------
     |
-    | 0 = no limit enforced by tus-php itself (nginx / PHP already cap it).
+    | 0 = no limit enforced by tus-php itself (Caddy / PHP already cap it).
     | Set to a positive value to enforce an explicit cap here too.
     |
     */

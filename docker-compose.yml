@@ -149,22 +149,20 @@ services:
       - backend
     mem_limit: 1g
 
-  nginx:
-    image: nginx:1.27-alpine
+  caddy:
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - ./nginx:/etc/nginx/conf.d:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - metube_storage:/var/www/storage-root:ro
     depends_on:
       - backend
     networks:
       - app_net
-    # nginx:alpine ships wget (busybox), so probe the local listener.
-    # --spider issues a request without saving the body; any 2xx/3xx passes.
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/healthz"]
       interval: 15s
       timeout: 5s
       retries: 3

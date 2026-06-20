@@ -10,15 +10,28 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Local-disk implementation of {@see StorageContract}.
+ * Disk-agnostic implementation of {@see StorageContract}.
  *
  * This is the ONLY class in the application permitted to call Storage::disk().
- * Every other service must interact with storage exclusively through this contract.
- * Swapping to S3 means binding a different implementation in AppServiceProvider
- * — no other file changes.
+ * The two disks it uses are resolved from config (filesystems.temp_disk /
+ * filesystems.public_disk), so pointing storage at S3 is an env change
+ * (FILESYSTEM_DISK / FILESYSTEM_DISK_PUBLIC) — no code change.
  */
 final class StorageService implements StorageContract
 {
+    private readonly string $tempDisk;
+
+    private readonly string $publicDisk;
+
+    public function __construct()
+    {
+        $temp = config('filesystems.temp_disk');
+        $public = config('filesystems.public_disk');
+
+        $this->tempDisk = \is_string($temp) ? $temp : 'local';
+        $this->publicDisk = \is_string($public) ? $public : 'public';
+    }
+
     /**
      * Move a file from an absolute source path to a temp-disk-relative destination.
      *
@@ -48,7 +61,7 @@ final class StorageService implements StorageContract
      */
     public function tempPath(string $path): string
     {
-        return Storage::disk('local')->path($path);
+        return Storage::disk($this->tempDisk)->path($path);
     }
 
     /**
@@ -58,7 +71,7 @@ final class StorageService implements StorageContract
      */
     public function deleteTempFile(string $path): void
     {
-        Storage::disk('local')->delete($path);
+        Storage::disk($this->tempDisk)->delete($path);
     }
 
     /**
@@ -68,7 +81,7 @@ final class StorageService implements StorageContract
      */
     public function ensureDirectoryExists(string $path): void
     {
-        Storage::disk('local')->makeDirectory($path);
+        Storage::disk($this->tempDisk)->makeDirectory($path);
     }
 
     /**
@@ -80,7 +93,7 @@ final class StorageService implements StorageContract
      */
     public function publicPath(string $path): string
     {
-        return Storage::disk('public')->path($path);
+        return Storage::disk($this->publicDisk)->path($path);
     }
 
     /**
@@ -100,7 +113,7 @@ final class StorageService implements StorageContract
             return $path;
         }
 
-        return Storage::disk('public')->url($path);
+        return Storage::disk($this->publicDisk)->url($path);
     }
 
     /**
@@ -111,7 +124,7 @@ final class StorageService implements StorageContract
      */
     public function putPublic(string $path, string $content): void
     {
-        Storage::disk('public')->put($path, $content);
+        Storage::disk($this->publicDisk)->put($path, $content);
     }
 
     /**
@@ -123,7 +136,7 @@ final class StorageService implements StorageContract
      */
     public function existsPublic(string $path): bool
     {
-        return Storage::disk('public')->exists($path);
+        return Storage::disk($this->publicDisk)->exists($path);
     }
 
     /**
@@ -133,7 +146,7 @@ final class StorageService implements StorageContract
      */
     public function deleteFile(string $path): void
     {
-        Storage::disk('public')->delete($path);
+        Storage::disk($this->publicDisk)->delete($path);
     }
 
     /**
@@ -143,6 +156,6 @@ final class StorageService implements StorageContract
      */
     public function deleteDirectory(string $path): void
     {
-        Storage::disk('public')->deleteDirectory($path);
+        Storage::disk($this->publicDisk)->deleteDirectory($path);
     }
 }

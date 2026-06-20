@@ -4,7 +4,7 @@ services:
     profiles:
       - dev
 
-  # One-shot SPA build → frontend_dist volume; nginx waits for it.
+  # One-shot SPA build → frontend_dist volume; caddy waits for it.
   frontend-build:
     build:
       context: ./frontend
@@ -50,25 +50,19 @@ services:
       OCTANE_WORKERS: auto
     mem_limit: 1g
 
-  nginx:
+  caddy:
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/prod:/etc/nginx/conf.d:ro
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - frontend_dist:/var/www/frontend:ro
       - metube_storage:/var/www/storage-root:ro
-      - certbot_certs:/etc/letsencrypt:ro
-      - certbot_www:/var/www/certbot:ro
-    # Reload every 6h to pick up renewed certificates.
-    command: sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
-    # `/` redirects to HTTPS, so probe the plaintext /healthz instead.
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/healthz"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
     depends_on:
       backend:
         condition: service_started
@@ -77,18 +71,7 @@ services:
       frontend-build:
         condition: service_completed_successfully
 
-  # Initial cert issued by deploy.sh; this loop renews it twice a day.
-  certbot:
-    image: certbot/certbot:latest
-    restart: unless-stopped
-    volumes:
-      - certbot_certs:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-    entrypoint: sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
-    networks:
-      - app_net
-
 volumes:
   frontend_dist:
-  certbot_certs:
-  certbot_www:
+  caddy_data:
+  caddy_config:

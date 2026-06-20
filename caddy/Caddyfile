@@ -1,0 +1,63 @@
+# Dev proxy. Plain HTTP; the SPA is served by Vite (:5173), which proxies
+# /storage here and hits the backend/reverb directly.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	encode gzip
+
+	handle /app/* {
+		reverse_proxy reverb:8080
+	}
+
+	# HLS manifest — rewritten in place on re-transcode, so never cache it.
+	@m3u8 path_regexp ^/storage/(.+\.m3u8)$
+	handle @m3u8 {
+		root * /var/www/storage-root/app/public
+		uri strip_prefix /storage
+		header Cache-Control "no-cache"
+		header Content-Type "application/vnd.apple.mpegurl"
+		header Access-Control-Allow-Origin "*"
+		file_server
+	}
+
+	# HLS segment — immutable name. Go mismaps .ts, so set the type explicitly.
+	@ts path_regexp ^/storage/(.+\.ts)$
+	handle @ts {
+		root * /var/www/storage-root/app/public
+		uri strip_prefix /storage
+		header Cache-Control "public, immutable"
+		header Content-Type "video/mp2t"
+		header Access-Control-Allow-Origin "*"
+		file_server
+	}
+
+	handle_path /storage/* {
+		root * /var/www/storage-root/app/public
+		header Cache-Control "public, immutable"
+		header Access-Control-Allow-Origin "*"
+		file_server
+	}
+
+	# tus chunks are capped at 10 MB.
+	@tus path /api/uploads/tus*
+	handle @tus {
+		request_body {
+			max_size 10MB
+		}
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy backend:8000
+	}
+}
+
+# Health endpoint on a plain port (used by the container healthcheck).
+:9000 {
+	handle /healthz {
+		respond "ok" 200
+	}
+}
