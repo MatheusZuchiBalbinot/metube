@@ -1,0 +1,5 @@
+# Accepted: containers run as root in this single-VPS Compose stack behind Caddy.
+# Non-root needs reworked volume permissions + the backend entrypoint (writes to
+# php conf.d at runtime). Revisit if the threat model changes.
+DS-0002
+AVD-DS-0002
