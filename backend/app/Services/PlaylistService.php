@@ -185,34 +185,46 @@ final class PlaylistService
                     ->setModel(Video::class, array_merge($extraVuids, $absentVuids));
             }
 
-            // One UPDATE using CASE WHEN, instead of N separate updates.
-            $cases = [];
-            $bindings = [];
-            $videoIds = [];
-
-            foreach ($data->vuids as $position => $vuid) {
-                $videoId = $idByVuid[$vuid];
-                $cases[] = 'WHEN ? THEN CAST(? AS INTEGER)';
-                $bindings[] = $videoId;
-                $bindings[] = $position;
-                $videoIds[] = $videoId;
-            }
-
-            $placeholders = implode(',', array_fill(0, count($videoIds), '?'));
-            $sql = 'UPDATE playlist_video SET position = CASE video_id '
-                . implode(' ', $cases)
-                . " END WHERE playlist_id = ? AND video_id IN ({$placeholders})";
-
-            $bindings[] = $playlist->id;
-
-            foreach ($videoIds as $videoId) {
-                $bindings[] = $videoId;
-            }
-
-            DB::update($sql, $bindings);
+            $this->applyPositions($playlist->id, $idByVuid, $data->vuids);
             $playlist->touch();
 
             return $playlist->load(['videos' => fn ($q) => $q->orderByPivot('position')]);
         });
+    }
+
+    /**
+     * Persist new positions for a playlist's videos in a single CASE-WHEN UPDATE
+     * (instead of N separate updates).
+     *
+     * @param int $playlistId Playlist whose pivot rows are updated
+     * @param array<string, int> $idByVuid Map of vuid → video id
+     * @param list<string> $vuids Vuids in their target order
+     */
+    private function applyPositions(int $playlistId, array $idByVuid, array $vuids): void
+    {
+        $cases = [];
+        $bindings = [];
+        $videoIds = [];
+
+        foreach ($vuids as $position => $vuid) {
+            $videoId = $idByVuid[$vuid];
+            $cases[] = 'WHEN ? THEN CAST(? AS INTEGER)';
+            $bindings[] = $videoId;
+            $bindings[] = $position;
+            $videoIds[] = $videoId;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($videoIds), '?'));
+        $sql = 'UPDATE playlist_video SET position = CASE video_id '
+            . implode(' ', $cases)
+            . " END WHERE playlist_id = ? AND video_id IN ({$placeholders})";
+
+        $bindings[] = $playlistId;
+
+        foreach ($videoIds as $videoId) {
+            $bindings[] = $videoId;
+        }
+
+        DB::update($sql, $bindings);
     }
 }

@@ -21,7 +21,7 @@ jobs:
       # AND for IaC/Dockerfile/compose misconfigurations. Only HIGH/CRITICAL
       # findings fail the job so low-severity noise does not block merges.
       - name: Run Trivy vulnerability & misconfiguration scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           scan-ref: .
