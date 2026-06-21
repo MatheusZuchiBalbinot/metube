@@ -334,9 +334,11 @@ final class RecommendationService
             ->where(function (Builder $query) use ($affinityTags, $affinityChannelIds): void {
                 $this->whereMatchesTags($query, $affinityTags);
 
-                if ($affinityChannelIds !== []) {
-                    $query->orWhereIn('channel_id', $affinityChannelIds);
+                if ($affinityChannelIds === []) {
+                    return;
                 }
+
+                $query->orWhereIn('channel_id', $affinityChannelIds);
             })
             ->get();
 

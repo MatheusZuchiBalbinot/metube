@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { VideoChapter } from '@api';
 import type { Seconds } from '@models';
 import { formatDuration, parseChapterTimestamp } from '@utils';
@@ -24,6 +25,8 @@ export default function PlayerSeekBar({
     videoRef, src, duration, bufferedPct, currentTime,
     chapters, abRepeat, forceShow, scheduleHideControls, onDraggingChange,
 }: PlayerSeekBarProps) {
+    const { t } = useTranslation();
+
     const seekInnerRef = useRef<HTMLDivElement>(null);
     const previewVideoRef = useRef<HTMLVideoElement>(null);
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
