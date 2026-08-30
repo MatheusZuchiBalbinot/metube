@@ -2,20 +2,15 @@ import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { videoUiActions } from '@store/videoUiSlice';
-import { domain } from '@domain';
-import type { Video, VideoId } from '@models';
+import type { VideoId } from '@models';
+import { useProgressBackendSync } from './useProgressBackendSync';
 
 const PROGRESS_THROTTLE_MS = 3000;
-const BACKEND_SYNC_INTERVAL_MS = 5000;
-const SIMULATE_DURATION_S = 60;
-const SIMULATE_TICK_MS = 2000;
 const COMPLETION_DISPLAY_MS = 1800;
 
 interface UseVideoProgressOptions {
     id: VideoId | undefined
     videoRef: React.RefObject<HTMLVideoElement | null>
-    video: Video | undefined
-    videoProgress: Record<VideoId, number>
     updateProgress: (id: VideoId, pct: number) => void
     onBackendSync?: (id: VideoId, percent: number) => void
     consumePendingVideoSeek: (id: VideoId) => number | null
@@ -26,8 +21,6 @@ interface UseVideoProgressOptions {
 export function useVideoProgress({
     id,
     videoRef,
-    video,
-    videoProgress,
     updateProgress,
     onBackendSync,
     consumePendingVideoSeek,
@@ -38,9 +31,6 @@ export function useVideoProgress({
 
     const progressThrottleRef = useRef<number>(0);
     const pendingSeekRef = useRef<number | null>(null);
-    const simulatedSecondsRef = useRef<number>(0);
-    const simulateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const backendSyncTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const currentTimeRef = useRef<number>(0);
     const durationRef = useRef<number>(0);
     const hasCompletedRef = useRef(false);
@@ -56,12 +46,21 @@ export function useVideoProgress({
     const [currentTime, setCurrentTime] = useState(0);
     const [showCompletion, setShowCompletion] = useState(false);
 
-    // Reset completion flag when video id changes
+    // Single source of truth for "how far along is playback" — every consumer
+    // below (backend sync, Redux persistence, getCurrentTime) reads through
+    // this instead of re-deriving seconds/percent from the refs itself.
+    function readProgress(): { seconds: number; percent: number } {
+        const seconds = currentTimeRef.current;
+        const duration = durationRef.current;
+        const percent = duration > 0 ? (seconds / duration) * 100 : 0;
+
+        return { seconds, percent };
+    }
+
     useEffect(() => {
         hasCompletedRef.current = false;
     }, [id]);
 
-    // Consume a pending resume-seek when id changes
     useEffect(() => {
         if (!id) {
             return;
@@ -70,6 +69,8 @@ export function useVideoProgress({
         if (resumeTime !== null) {
             pendingSeekRef.current = resumeTime;
         }
+    // consumePendingVideoSeek is a fresh closure from useVideo() on every render;
+    // depending on it would re-run this seek-consumption effect on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
@@ -91,125 +92,33 @@ export function useVideoProgress({
         }
     }, []);
 
-    // Simulate progress for videos without a real file
-    useEffect(() => {
-        const isVideoMissing = !video || !id;
-        if (isVideoMissing) {
-            return;
-        }
-
-        const hasFile = video.videoUrl !== undefined && video.videoUrl !== '';
-        if (hasFile) {
-            return;
-        }
-
-        const existing = videoProgress[id] ?? 0;
-        const isFinished = domain.video.isWatched(existing);
-        if (isFinished) {
-            return;
-        }
-
-        // Start at least 4s in so the mini player always triggers on navigate-away
-        simulatedSecondsRef.current = Math.max(4, (existing / 100) * SIMULATE_DURATION_S);
-
-        simulateTimerRef.current = setInterval(() => {
-            simulatedSecondsRef.current += SIMULATE_TICK_MS / 1000;
-            const pct = Math.min((simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100, 100);
-            setCurrentTime(simulatedSecondsRef.current);
-            updateProgress(id, pct);
-
-            const isVideoFinished = pct >= 100;
-            if (isVideoFinished) {
-                clearInterval(simulateTimerRef.current!);
-                simulateTimerRef.current = null;
-                triggerCompletion();
-                onCompletedRef.current();
-            }
-        }, SIMULATE_TICK_MS);
-
-        return () => {
-            if (simulateTimerRef.current) {
-                clearInterval(simulateTimerRef.current);
-                simulateTimerRef.current = null;
-            }
-        };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, !!video]);
-
     // Sync progress to backend every 5 seconds, independent of the local throttle
-    useEffect(() => {
-        if (!id) {
-            return;
-        }
-
-        backendSyncTimerRef.current = setInterval(() => {
-            const hasDuration = durationRef.current > 0;
-            const hasCurrentTime = currentTimeRef.current > 0;
-
-            let percent: number | null = null;
-
-            if (hasDuration && hasCurrentTime) {
-                percent = (currentTimeRef.current / durationRef.current) * 100;
-            } else if (simulatedSecondsRef.current > 0) {
-                percent = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
-            }
-
-            if (percent !== null && percent > 0) {
-                onBackendSyncRef.current?.(id, Math.round(percent));
-            }
-        }, BACKEND_SYNC_INTERVAL_MS);
-
-        return () => {
-            if (backendSyncTimerRef.current) {
-                clearInterval(backendSyncTimerRef.current);
-                backendSyncTimerRef.current = null;
-            }
-        };
-    }, [id]);
+    useProgressBackendSync({ id, readProgress, onBackendSync });
 
     // Persist progress and open mini player on unmount / id change
     function updateProgressDispatch(videoId: VideoId) {
-        const hasCurrentTime = currentTimeRef.current > 0;
-        const hasDuration = durationRef.current > 0;
-        const hasRealProgress = hasCurrentTime && hasDuration;
+        const { seconds, percent } = readProgress();
+        const hasRealProgress = seconds > 0 && durationRef.current > 0;
         if (hasRealProgress) {
-            const percent = (currentTimeRef.current / durationRef.current) * 100;
             dispatch(videoActions.updateProgress({ videoId, percent }));
-        }
-
-        const shouldUpdateSimulated = !hasCurrentTime && simulatedSecondsRef.current > 0;
-        if (!shouldUpdateSimulated) {
-            return;
-        }
-
-        const simPct = (simulatedSecondsRef.current / SIMULATE_DURATION_S) * 100;
-        const isSimFinished = simPct >= 100;
-        if (!isSimFinished) {
-            dispatch(videoActions.updateProgress({ videoId, percent: simPct }));
         }
     }
 
     function persistProgressOnUnmount() {
-        if (simulateTimerRef.current) {
-            clearInterval(simulateTimerRef.current);
-        }
-
         if (!id) {
             return;
         }
 
         const videoId = id;
-        const hasCurrentTime = currentTimeRef.current > 0;
-        const currentT = hasCurrentTime ? currentTimeRef.current : simulatedSecondsRef.current;
-        const hasDuration = durationRef.current > 0;
-        const hasVideoEnded = hasDuration && currentT >= durationRef.current;
+        const { seconds } = readProgress();
+        const hasVideoEnded = durationRef.current > 0 && seconds >= durationRef.current;
 
         if (hasVideoEnded) {
             return;
         }
 
-        dispatch(videoUiActions.setPendingVideoSeek({ videoId, time: currentT }));
-        dispatch(videoUiActions.openMiniPlayer({ videoId, currentTime: currentT }));
+        dispatch(videoUiActions.setPendingVideoSeek({ videoId, time: seconds }));
+        dispatch(videoUiActions.openMiniPlayer({ videoId, currentTime: seconds }));
         updateProgressDispatch(videoId);
     }
 
@@ -217,6 +126,9 @@ export function useVideoProgress({
         return () => {
             persistProgressOnUnmount();
         };
+    // persistProgressOnUnmount reads refs (currentTimeRef, durationRef) at the
+    // moment of unmount, not stale closure values — it intentionally only needs
+    // to re-register when the video id itself changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
@@ -245,6 +157,7 @@ export function useVideoProgress({
         }
 
         currentTimeRef.current = el.currentTime;
+        durationRef.current = el.duration;
         setCurrentTime(el.currentTime);
 
         const now = Date.now();
@@ -254,7 +167,7 @@ export function useVideoProgress({
         }
 
         progressThrottleRef.current = now;
-        const percent = el.duration > 0 ? (el.currentTime / el.duration) * 100 : 0;
+        const { percent } = readProgress();
         updateProgress(id, percent);
     }, [id, updateProgress, videoRef]);
 
@@ -270,9 +183,8 @@ export function useVideoProgress({
 
     }, [id, updateProgress, dispatch, onFinished]);
 
-    // Returns the best-known current playback position (real or simulated)
     function getCurrentTime(): number {
-        return currentTimeRef.current || simulatedSecondsRef.current;
+        return readProgress().seconds;
     }
 
     return {

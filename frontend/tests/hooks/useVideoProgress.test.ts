@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useVideoProgress } from '@hooks/useVideoProgress';
 import videoSlice from '@store/videoSlice';
-import { vid, makeVideo } from '../helpers/factories';
+import { vid } from '../helpers/factories';
 
 function makeStore(preloaded = {}) {
     return configureStore({
@@ -57,8 +57,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -80,8 +78,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -108,8 +104,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted,
@@ -134,8 +128,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -162,8 +154,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => 45,
             onCompleted: vi.fn(),
@@ -185,8 +175,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress: vi.fn(),
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -197,7 +185,6 @@ describe('useVideoProgress', () => {
         });
         expect(result.current.showCompletion).toBe(true);
 
-        // Second call should not reset showCompletion (already completed)
         act(() => {
             result.current.handleVideoEnded();
         });
@@ -207,28 +194,36 @@ describe('useVideoProgress', () => {
         vi.useRealTimers();
     });
 
-    it('starts simulation for videos without a file', () => {
-        const { ref } = makeVideoRef();
+    // The hook used to fabricate a parallel "simulated"
+    // progress clock for videos without a real file (e.g. a FAILED upload, which
+    // is the only status that reaches this hook with no videoUrl/hlsUrl). That
+    // silently marked such videos as watched and pushed fake progress to the
+    // backend even though the UI shows "No video file available" and never
+    // mounts a <video> element. The hook must now stay fully idle until a real
+    // playback event (handleTimeUpdate/handleLoadedMetadata) fires.
+    it('does not fabricate progress when no real playback event ever fires', () => {
         const updateProgress = vi.fn();
+        const onBackendSync = vi.fn();
+        const onCompleted = vi.fn();
         const store = makeStore();
-        const id = vid('v-sim');
-        const videoWithoutFile = makeVideo({ id, videoUrl: undefined });
+        const id = vid('v-nofile');
 
         renderHook(() => useVideoProgress({
             id,
-            videoRef: ref,
-            video: videoWithoutFile,
-            videoProgress: {},
+            videoRef: { current: null },
             updateProgress,
+            onBackendSync,
             consumePendingVideoSeek: () => null,
-            onCompleted: vi.fn(),
+            onCompleted,
         }), { wrapper: makeWrapper(store) });
 
         act(() => {
-            vi.advanceTimersByTime(2000);
+            vi.advanceTimersByTime(60_000);
         });
 
-        expect(updateProgress).toHaveBeenCalled();
+        expect(updateProgress).not.toHaveBeenCalled();
+        expect(onBackendSync).not.toHaveBeenCalled();
+        expect(onCompleted).not.toHaveBeenCalled();
     });
 
     it('does no work when id is undefined', () => {
@@ -239,8 +234,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id: undefined,
             videoRef: ref,
-            video: undefined,
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -264,8 +257,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: { current: null },
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -286,8 +277,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: { current: null },
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
@@ -310,8 +299,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             onBackendSync,
             consumePendingVideoSeek: () => null,
@@ -340,8 +327,6 @@ describe('useVideoProgress', () => {
         const { result } = renderHook(() => useVideoProgress({
             id,
             videoRef: ref,
-            video: makeVideo({ id }),
-            videoProgress: {},
             updateProgress,
             consumePendingVideoSeek: () => null,
             onCompleted: vi.fn(),
