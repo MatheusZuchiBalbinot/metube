@@ -48,4 +48,11 @@ final class TusUploadResolver implements TusResolverContract
     {
         Cache::forget("tus:owner:{$key}");
     }
+
+    public function getOwner(string $key): ?int
+    {
+        $ownerId = Cache::get("tus:owner:{$key}");
+
+        return $ownerId !== null ? (int) $ownerId : null;
+    }
 }

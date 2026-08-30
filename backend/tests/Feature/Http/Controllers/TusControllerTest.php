@@ -3,9 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
+use Illuminate\Support\Facades\Cache;
 
 describe('TusController', function () {
     test('POST to tus endpoint returns 401 for unauthenticated guest', function () {
@@ -54,5 +52,69 @@ describe('TusController', function () {
 
         $isNotUnauthorized = $response->getStatusCode() !== 401;
         expect($isNotUnauthorized)->toBeTrue();
+    });
+
+    test('PATCH to an upload session owned by another user is rejected before any bytes are read', function () {
+        $owner = User::factory()->create();
+        $attacker = User::factory()->create();
+        $key = 'hijack-test-key';
+
+        // Simulate what the upload.created listener does on creation, without
+        // needing a live tus-php/Redis round trip: cache ownership under the
+        // owner's id, exactly as TusHandlerService::handle() does.
+        Cache::put("tus:owner:{$key}", $owner->id, 3600);
+
+        $response = $this->actingAs($attacker)->call(
+            'PATCH',
+            "/api/uploads/tus/{$key}",
+            [],
+            [],
+            [],
+            [
+                'HTTP_TUS_RESUMABLE' => '1.0.0',
+                'HTTP_UPLOAD_OFFSET' => '0',
+                'HTTP_CONTENT_TYPE' => 'application/offset+octet-stream',
+            ],
+        );
+
+        $response->assertForbidden();
+    });
+
+    test('DELETE to an upload session owned by another user is rejected', function () {
+        $owner = User::factory()->create();
+        $attacker = User::factory()->create();
+        $key = 'hijack-delete-key';
+
+        Cache::put("tus:owner:{$key}", $owner->id, 3600);
+
+        $response = $this->actingAs($attacker)->call(
+            'DELETE',
+            "/api/uploads/tus/{$key}",
+            [],
+            [],
+            [],
+            ['HTTP_TUS_RESUMABLE' => '1.0.0'],
+        );
+
+        $response->assertForbidden();
+    });
+
+    test('PATCH to an upload session with no cached owner is rejected', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->call(
+            'PATCH',
+            '/api/uploads/tus/never-created-key',
+            [],
+            [],
+            [],
+            [
+                'HTTP_TUS_RESUMABLE' => '1.0.0',
+                'HTTP_UPLOAD_OFFSET' => '0',
+                'HTTP_CONTENT_TYPE' => 'application/offset+octet-stream',
+            ],
+        );
+
+        $response->assertForbidden();
     });
 });

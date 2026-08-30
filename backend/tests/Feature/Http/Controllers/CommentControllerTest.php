@@ -5,10 +5,7 @@ declare(strict_types=1);
 use App\Models\Comment;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 describe('CommentController', function () {
     test('GET /videos/{vuid}/comments returns paginated top-level comments', function () {
@@ -230,5 +227,46 @@ describe('CommentController', function () {
         $this->deleteJson("/api/comments/{$comment->cuid}")->assertUnauthorized();
         $this->postJson("/api/comments/{$comment->cuid}/like")->assertUnauthorized();
         $this->getJson("/api/comments/{$comment->cuid}/replies")->assertUnauthorized();
+    });
+
+    test('GET /comments/{cuid}/versions allows the comment author', function () {
+        $author = User::factory()->create();
+        $channelOwner = User::factory()->create();
+        $video = Video::factory()->for($channelOwner, 'channel')->create();
+        $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
+
+        $this->actingAs($author)
+            ->getJson("/api/comments/{$comment->cuid}/versions")
+            ->assertOk();
+    });
+
+    test('GET /comments/{cuid}/versions allows the owning channel to moderate', function () {
+        $author = User::factory()->create();
+        $channelOwner = User::factory()->create();
+        $video = Video::factory()->for($channelOwner, 'channel')->create();
+        $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
+
+        $this->actingAs($channelOwner)
+            ->getJson("/api/comments/{$comment->cuid}/versions")
+            ->assertOk();
+    });
+
+    test('GET /comments/{cuid}/versions returns 403 for an unrelated authenticated user', function () {
+        $author = User::factory()->create();
+        $channelOwner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $video = Video::factory()->for($channelOwner, 'channel')->create();
+        $comment = Comment::factory()->for($author, 'user')->for($video, 'video')->create();
+
+        $this->actingAs($stranger)
+            ->getJson("/api/comments/{$comment->cuid}/versions")
+            ->assertForbidden();
+    });
+
+    test('GET /comments/{cuid}/versions requires authentication', function () {
+        $video = Video::factory()->create();
+        $comment = Comment::factory()->for(User::factory())->for($video)->create();
+
+        $this->getJson("/api/comments/{$comment->cuid}/versions")->assertUnauthorized();
     });
 });

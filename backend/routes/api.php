@@ -134,7 +134,7 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::delete('/', [CommentController::class, 'destroy'])->can('delete', 'comment');
         Route::post('/like', [CommentController::class, 'toggleLike']);
         Route::get('/replies', [CommentController::class, 'replies']);
-        Route::get('/versions', [CommentController::class, 'versions']);
+        Route::get('/versions', [CommentController::class, 'versions'])->can('viewVersions', 'comment');
     });
 
     Route::prefix('channels/{uuid}')->group(function (): void {
