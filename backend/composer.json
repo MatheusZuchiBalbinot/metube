@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "metube/backend",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "MeTube — Laravel API backend for the MeTube video platform.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
@@ -12,15 +12,16 @@
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.46",
         "laravel/octane": "^2.13",
+        "laravel/reverb": "^1.10",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^2.10.1",
         "open-telemetry/exporter-otlp": "^1.0",
         "open-telemetry/opentelemetry-auto-laravel": "^1.0",
         "open-telemetry/opentelemetry-auto-pdo": "^0.4",
         "open-telemetry/sdk": "^1.0",
         "php-http/guzzle7-adapter": "^1.0",
-        "laravel/reverb": "^1.10",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1",
-        "pusher/pusher-php-server": "^7.2"
+        "pusher/pusher-php-server": "^7.2",
+        "symfony/http-client": "^8.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -53,13 +54,11 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "@php artisan migrate --force"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" --names=server,queue,logs --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

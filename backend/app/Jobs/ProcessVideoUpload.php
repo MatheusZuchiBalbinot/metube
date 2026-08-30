@@ -38,8 +38,9 @@ class ProcessVideoUpload implements ShouldQueue
     /**
      * Move files from temp storage to public storage and update the video record.
      *
-     * Single (non-batch) uploads land in DRAFT so the creator can review AI
-     * suggestions before publishing. Batch uploads publish immediately.
+     * Both batch and single uploads land in DRAFT so the creator can review
+     * AI suggestions before publishing — VideoPublished fires only later,
+     * when the creator explicitly publishes from the staging page.
      */
     public function handle(VideoStorageService $storage): void
     {
@@ -57,46 +58,18 @@ class ProcessVideoUpload implements ShouldQueue
 
         $videoUrl = $storage->publishVideo($this->tmpPath, $video->vuid);
 
-        $isBatch = $video->is_batch;
-
-        if ($isBatch) {
-            $this->finalizeBatch($video, $videoUrl, $thumbnailUrl);
-        } else {
-            $this->finalizeSingle($video, $videoUrl, $thumbnailUrl);
-        }
+        $this->finalize($video, $videoUrl, $thumbnailUrl);
     }
 
     /**
-     * Finalize a batch upload: move to DRAFT so the creator reviews AI suggestions
-     * before publishing. VideoPublished fires only on explicit publish, same as single
-     * uploads — subscribers are never notified until the creator clicks "Publish".
+     * Finalize an upload (batch or single): move to DRAFT and kick off
+     * transcription. Does NOT fire VideoPublished — that happens later when
+     * the creator explicitly publishes from the staging page.
      *
      * @param string $videoUrl Public URL of the published video file
      * @param string|null $thumbnailUrl Public URL of the thumbnail, or null
      */
-    private function finalizeBatch(Video $video, string $videoUrl, ?string $thumbnailUrl): void
-    {
-        $video->update([
-            'thumbnail_url' => $thumbnailUrl,
-            'video_url' => $videoUrl,
-            'status' => VideoStatus::DRAFT,
-        ]);
-
-        event(new VideoStatusUpdated($video, VideoStatus::DRAFT));
-
-        TranscodeVideoToHls::dispatch($video);
-    }
-
-    /**
-     * Finalize a single upload: move to DRAFT and kick off transcription.
-     *
-     * Does NOT fire VideoPublished — that happens later when the creator
-     * explicitly publishes from the staging page.
-     *
-     * @param string $videoUrl Public URL of the published video file
-     * @param string|null $thumbnailUrl Public URL of the thumbnail, or null
-     */
-    private function finalizeSingle(Video $video, string $videoUrl, ?string $thumbnailUrl): void
+    private function finalize(Video $video, string $videoUrl, ?string $thumbnailUrl): void
     {
         $video->update([
             'thumbnail_url' => $thumbnailUrl,

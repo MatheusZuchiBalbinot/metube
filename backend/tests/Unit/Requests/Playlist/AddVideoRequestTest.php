@@ -5,10 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\Playlist\AddVideoRequest;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-
-uses(RefreshDatabase::class);
 
 describe('AddVideoRequest', function () {
     test('vuid is required', function () {

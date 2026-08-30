@@ -8,11 +8,8 @@ use App\Jobs\ProcessVideoUpload;
 use App\Jobs\TranscodeVideoToHls;
 use App\Models\Video;
 use App\Services\VideoStorageService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
-
-uses(RefreshDatabase::class);
 
 /**
  * Return a mock VideoStorageService that stubs all methods with sensible defaults.
