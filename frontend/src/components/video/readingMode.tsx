@@ -151,7 +151,6 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
                 style={{ transform: `scaleX(${readingProgress / 100})` }}
             />
 
-            {/* Transcription — raw output card */}
             <section className="video-page__transcription-block">
                 <header className="video-page__rm-section-header">
                     <FileText size={13} aria-hidden="true" />

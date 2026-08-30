@@ -147,7 +147,6 @@ export default function VideoInfo({
                 </div>
             </div>
 
-            {/* Meta bar — views + date, flat, with icons */}
             <div className="video-page__meta-bar">
                 <Eye size={13} aria-hidden="true" />
                 <span>{Format.views(video.views)} {t('video.views')}</span>
@@ -156,7 +155,6 @@ export default function VideoInfo({
                 <span>{formatRelativeDate(video.publishedAt, language)}</span>
             </div>
 
-            {/* Description — flat, no card box */}
             {video.description && (
                 <div className="video-page__description-block">
                     <p className={cn('video-page__description', !descExpanded && hasLongDesc && 'video-page__description--clamped')}>

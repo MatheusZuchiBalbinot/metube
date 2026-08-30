@@ -88,8 +88,6 @@ export default function VideoPage() {
     } = useVideoProgress({
         id: id as VideoId | undefined,
         videoRef,
-        video,
-        videoProgress,
         updateProgress: (vid, pct) => updateProgress(vid, pct),
         onBackendSync: (vid, pct) => videoApi.updateProgress(toVuid(vid), pct).catch(() => { }),
         consumePendingVideoSeek: (vid) => consumePendingVideoSeek(vid),
@@ -210,7 +208,7 @@ export default function VideoPage() {
 
                     {authUser !== null && (
                         <div ref={chatRef} className="chat-wrapper">
-                            <ChatSection vuid={toVuid(video.id)} transcription={transcription} summary={summary} />
+                            <ChatSection vuid={toVuid(video.id)} transcription={transcription} />
                         </div>
                     )}
 

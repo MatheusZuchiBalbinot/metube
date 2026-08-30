@@ -15,14 +15,12 @@ export default function PlayerOverlays({
 }: PlayerOverlaysProps) {
     return (
         <>
-            {/* Buffering spinner — hidden during completion overlay */}
             {isBuffering && !showCompletion && (
                 <div className="vp__buffering">
                     <div className="vp__buffering-spinner" />
                 </div>
             )}
 
-            {/* Play/Pause flash icon */}
             {popIcon && (
                 <div className="vp__pop-icon" key={popIcon.key}>
                     {popIcon.type === PopIconType.PLAY
@@ -32,7 +30,6 @@ export default function PlayerOverlays({
                 </div>
             )}
 
-            {/* Keyboard skip indicator */}
             {skipIndicator && (
                 <div
                     key={skipIndicator.key}
@@ -50,7 +47,6 @@ export default function PlayerOverlays({
                 </div>
             )}
 
-            {/* Completion overlay */}
             {showCompletion && (
                 <div className="vp__completion">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" className="vp__completion-icon">

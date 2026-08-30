@@ -7,9 +7,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 // empty for this file, but we still guard against cross-test bleed.
 
 describe('viewedVideos', () => {
-    // Re-import so we always get the live Set reference.  Vitest re-uses the
-    // same module instance within a single test file, which is what we want:
-    // we can test accumulation across markViewed calls within a single `it`.
     let markViewed: (id: string) => void;
     let hasViewed: (id: string) => boolean;
 

@@ -37,7 +37,6 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
         setAutoplayCountdown(AUTOPLAY_COUNTDOWN);
     }
 
-    // Reset per-video state when navigating to a different video
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of per-video state when the id changes
         setStopAfterCurrent(false);
@@ -45,7 +44,6 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
 
     }, [id]);
 
-    // Drive the countdown timer
     useEffect(() => {
         const isCountingDown = autoplayCountdown !== null;
         if (!isCountingDown) {
@@ -73,7 +71,7 @@ export function useAutoplay({ id, autoplay, relatedVideos }: UseAutoplayOptions)
                 clearInterval(autoplayTimerRef.current);
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoplayCountdown]);
 
     return { autoplayCountdown, startAutoplayCountdown, cancelAutoplay, stopAfterCurrent, toggleStopAfterCurrent };

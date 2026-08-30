@@ -144,40 +144,6 @@
     overflow: hidden;
 }
 
-/* ─── Meta ─────────────────────────────────────────────────────────────────── */
-
-.video-row__meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-size: var(--text-sm);
-}
-
-.video-row__meta-channel {
-    color: var(--text-2);
-    font-weight: var(--font-medium);
-    cursor: pointer;
-    transition: color var(--duration-slow);
-    width: fit-content;
-}
-
-.video-row__meta-channel:hover {
-    color: var(--text);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.video-row__meta-sub {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--text-3);
-}
-
-.video-row__meta-dot {
-    color: var(--text-3);
-}
-
 /* ─── Tags ─────────────────────────────────────────────────────────────────── */
 
 .video-row__tags {

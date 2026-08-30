@@ -13,7 +13,6 @@ export function useScrollRestoration(): void {
     const navigationType = useNavigationType();
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Continuously save scroll position for the current route (debounced).
     useEffect(() => {
         function onScroll() {
             if (timerRef.current) {

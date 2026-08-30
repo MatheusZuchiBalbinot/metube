@@ -109,7 +109,6 @@ describe('useProfileVideos', () => {
             { wrapper: makeWrapper(store) },
         );
 
-        // While loading, setVideos should not crash and should leave state unchanged
         act(() => {
             result.current.setVideos(prev => [...prev, makeVideo()]);
         });

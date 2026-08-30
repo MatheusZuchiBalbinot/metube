@@ -55,7 +55,6 @@ describe('Dropdown', () => {
         renderDropdown();
         await userEvent.click(screen.getByRole('button'));
         await userEvent.click(screen.getByText('Option A'));
-        // Options should no longer be visible after selection
         expect(screen.queryByText('Option B')).toBeNull();
     });
 

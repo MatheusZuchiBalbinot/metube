@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@utils';
 
-// Maximum number of recent search terms to persist.
 // Keeps the dropdown concise and avoids unbounded localStorage growth.
 const MAX_RECENT_SEARCHES = 5;
 

@@ -29,6 +29,9 @@ export interface ShortPlayerProps {
     children?: React.ReactNode
 }
 
+// Renders the short-form overlay (pop icon, skip indicator, buffering spinner) on top of
+// the video element — each is an independent, mutually-exclusive UI state; playback logic
+// itself is delegated to usePlayerPlayback/usePlayerKeyboard.
 // eslint-disable-next-line complexity
 export default function ShortPlayer({
     videoRef,
@@ -71,7 +74,6 @@ export default function ShortPlayer({
 
     useShaka(videoRef, src);
 
-    // ─── Register video element with parent (ShortsPage) ──────────────────────
     useLayoutEffect(() => {
         if (!onVideoMounted) {
             return;
@@ -81,15 +83,12 @@ export default function ShortPlayer({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ─── Reset local state when src changes ───────────────────────────────────
     useEffect(() => {
         resetPopIcon();
         resetSkipIndicator();
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of own state when the source changes
         setShortDragPct(null);
     }, [src, resetPopIcon, resetSkipIndicator]);
-
-    // ─── Keyboard shortcuts ───────────────────────────────────────────────────
 
     function handleTogglePlayWithFeedback() {
         const wasPaused = videoRef.current?.paused ?? true;
@@ -107,8 +106,6 @@ export default function ShortPlayer({
         onMuteToggle: applyMuteToggle,
         onFullscreenToggle: () => { },
     });
-
-    // ─── Event handlers ───────────────────────────────────────────────────────
 
     function handleTap() {
         onTap?.();

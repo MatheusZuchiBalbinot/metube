@@ -38,7 +38,6 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
 
     const sections = (
         <>
-            {/* Theme */}
             <div className="prefs-section">
                 <p className="prefs-label">{t('preferences.theme')}</p>
                 <div className="prefs-toggle">
@@ -58,7 +57,6 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                 </div>
             </div>
 
-            {/* Accent color */}
             <div className="prefs-section">
                 <p className="prefs-label">{t('preferences.accent_color')}</p>
                 <div className="prefs-colors">
@@ -78,7 +76,6 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                 </div>
             </div>
 
-            {/* Language */}
             <div className="prefs-section">
                 <p className="prefs-label">{t('preferences.language')}</p>
                 <div className="prefs-toggle">
@@ -98,7 +95,6 @@ export default function PreferencesPanel({ inline = false }: PreferencesPanelPro
                 </div>
             </div>
 
-            {/* Autoplay */}
             <div className="prefs-section">
                 <label className="prefs-autoplay-row">
                     <span className="prefs-label">{t('preferences.autoplay')}</span>

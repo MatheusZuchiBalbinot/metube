@@ -15,7 +15,6 @@ export interface VideoPlayerProps {
     theaterMode?: boolean
     showCompletion?: boolean
     ambientColor?: string
-    // Whether this player instance should capture document keyboard events
     captureKeyboard?: boolean
     onTheaterToggle?: () => void
     // All modes

@@ -31,7 +31,6 @@ export function usePlayerAbRepeat(
         abRepeatRef.current = abRepeat;
     }, [abRepeat]);
 
-    // Reset when the source changes.
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of A–B bounds when the source changes
         setAbRepeat({ a: null, b: null });

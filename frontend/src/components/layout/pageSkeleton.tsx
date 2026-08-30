@@ -27,8 +27,6 @@ function GridSkeleton({ count, className }: { count: number; className: string }
     );
 }
 
-// ─── Home ─────────────────────────────────────────────────────────────────
-
 function HomePageSkeleton() {
     return (
         <div className="ps ps--home" aria-hidden="true">
@@ -73,8 +71,6 @@ function HomePageSkeleton() {
         </div>
     );
 }
-
-// ─── History ──────────────────────────────────────────────────────────────
 
 function HistoryPageSkeleton() {
     return (
@@ -124,8 +120,6 @@ function CollectionPageSkeleton() {
     );
 }
 
-// ─── Search ───────────────────────────────────────────────────────────────
-
 function SearchPageSkeleton() {
     return (
         <div className="ps ps--search" aria-hidden="true">
@@ -144,8 +138,6 @@ function SearchPageSkeleton() {
         </div>
     );
 }
-
-// ─── Profile ──────────────────────────────────────────────────────────────
 
 function ProfilePageSkeleton() {
     return (
@@ -182,8 +174,6 @@ function ProfilePageSkeleton() {
         </div>
     );
 }
-
-// ─── Video ────────────────────────────────────────────────────────────────
 
 function VideoPageSkeleton() {
     return (

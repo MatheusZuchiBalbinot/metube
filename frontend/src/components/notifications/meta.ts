@@ -52,7 +52,6 @@ const ACTION_LABEL_KEYS: Partial<Record<NotificationType, string>> = {
     [NotificationType.VIDEO_AI_SUMMARY_READY]: 'notifications.actions.read_summary',
 };
 
-/** Buckets a notification into people-driven ("social") vs own-video-pipeline ("video"). */
 export function getCategory(type: NotificationType): NotificationCategory {
     return SOCIAL_TYPES.has(type) ? 'social' : 'video';
 }
@@ -69,7 +68,6 @@ export function getActorName(notification: Notification): string | null {
     return typeof value === 'string' ? value : null;
 }
 
-/** Icon + colour variant for the notification's type badge. */
 export function getBadgeMeta(type: NotificationType): BadgeMeta {
     return BADGE_META[type];
 }

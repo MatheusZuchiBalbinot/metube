@@ -4,7 +4,6 @@ import type { Suggestion } from './types';
 
 const MAX_SUGGESTIONS = 8 as const;
 
-// eslint-disable-next-line complexity
 export function buildSuggestions(query: string, videos: Video[]): Suggestion[] {
     const needle = query.toLowerCase();
     const seen = new Set<string>();

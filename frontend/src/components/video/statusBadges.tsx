@@ -10,7 +10,35 @@ interface VideoStatusBadgesProps {
     classPrefix: string
 }
 
-// eslint-disable-next-line complexity
+type BadgeStatus = 'processing' | 'failed' | 'scheduled' | 'watched' | null;
+
+// Only one badge can show at a time — resolve the priority once instead of
+// repeating "!isProcessing && !isFailed" guards in every branch below.
+function resolveBadgeStatus({
+    isProcessing,
+    isFailed,
+    isScheduledAndFuture,
+    isWatched,
+}: Omit<VideoStatusBadgesProps, 'classPrefix'>): BadgeStatus {
+    if (isProcessing) {
+        return 'processing';
+    }
+
+    if (isFailed) {
+        return 'failed';
+    }
+
+    if (isScheduledAndFuture) {
+        return 'scheduled';
+    }
+
+    if (isWatched) {
+        return 'watched';
+    }
+
+    return null;
+}
+
 export default function VideoStatusBadges({
     isScheduledAndFuture,
     isWatched,
@@ -19,10 +47,11 @@ export default function VideoStatusBadges({
     classPrefix,
 }: VideoStatusBadgesProps) {
     const { t } = useTranslation();
+    const status = resolveBadgeStatus({ isProcessing, isFailed, isScheduledAndFuture, isWatched });
 
     return (
         <>
-            {isProcessing && (
+            {status === 'processing' && (
                 <div className={`${classPrefix}__badge-overlay`}>
                     <Badge variant="default">
                         <Loader2 size={10} className="badge-spin" />
@@ -30,7 +59,7 @@ export default function VideoStatusBadges({
                     </Badge>
                 </div>
             )}
-            {isFailed && !isProcessing && (
+            {status === 'failed' && (
                 <div className={`${classPrefix}__badge-overlay`}>
                     <Badge variant="danger">
                         <AlertCircle size={10} />
@@ -38,12 +67,12 @@ export default function VideoStatusBadges({
                     </Badge>
                 </div>
             )}
-            {isScheduledAndFuture && !isProcessing && !isFailed && (
+            {status === 'scheduled' && (
                 <div className={`${classPrefix}__badge-overlay`}>
                     <Badge variant="warning">{t('video.scheduled')}</Badge>
                 </div>
             )}
-            {isWatched && !isProcessing && !isFailed && (
+            {status === 'watched' && (
                 <div className={`${classPrefix}__watched-overlay`}>
                     <CheckCircle2 size={12} />
                     {t('video.watched')}

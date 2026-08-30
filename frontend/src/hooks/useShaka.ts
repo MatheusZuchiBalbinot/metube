@@ -93,7 +93,6 @@ export function useShaka(
 
             setLevels(uniqueLevels.sort((a, b) => b.height - a.height));
 
-            // Restore the viewer's preferred quality when this video offers it.
             const savedHeight = getSavedQualityHeight();
             const savedLevel = savedHeight > 0
                 ? uniqueLevels.find(level => level.height === savedHeight)
@@ -102,7 +101,6 @@ export function useShaka(
                 setQuality(savedLevel.index);
             }
 
-            // Load caption tracks via Shaka after video is ready.
             // Native <track> elements do not render when the video src is a MSE blob: URL.
             for (const caption of captions) {
                 try {

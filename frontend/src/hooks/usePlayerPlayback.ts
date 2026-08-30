@@ -54,7 +54,6 @@ export function usePlayerPlayback(
         muteChangeRef.current = onMuteChange;
     });
 
-    // ─── Sync controlled muted from parent ────────────────────────────────────
     useEffect(() => {
         const hasValue = controlledMuted !== undefined;
         if (!hasValue) {
@@ -68,7 +67,6 @@ export function usePlayerPlayback(
         }
     }, [controlledMuted, videoRef]);
 
-    // ─── Sync controlled volume from parent ───────────────────────────────────
     useEffect(() => {
         const hasValue = controlledVolume !== undefined;
         if (!hasValue) {

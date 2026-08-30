@@ -73,7 +73,6 @@ function isWithinPeriod(dateStr: string, period: HistoryPeriodType): boolean {
     return date >= monthStart;
 }
 
-// eslint-disable-next-line complexity
 export default function HistoryPage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();

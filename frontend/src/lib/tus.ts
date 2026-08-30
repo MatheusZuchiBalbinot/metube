@@ -12,12 +12,6 @@ export const TUS_ENDPOINT = '/api/uploads/tus';
 export const TUS_CHUNK_SIZE = 5 * 1024 * 1024;
 export const TUS_RETRY_DELAYS = [0, 1_000, 3_000, 5_000, 10_000];
 
-/**
- * Extracts the upload key (last path segment) from a tus upload URL.
- *
- * @param url - The `upload.url` produced by tus on success, possibly absent.
- * @returns The trailing path segment, or `null` when the URL is missing/empty.
- */
 export function extractUploadKey(url: string | null | undefined): string | null {
     const isMissing = url === null || url === undefined;
 
@@ -35,14 +29,8 @@ export interface TusUploadHandlers {
 }
 
 /**
- * Builds a `tus.Upload` for `file` wired to the shared endpoint, chunk size and
- * retry policy. Callers are responsible for calling `.start()` (optionally after
- * `findPreviousUploads()` for resume support).
- *
- * @param file - The file to upload.
- * @param handlers - Progress/error/success callbacks. `onSuccess` receives the
- *   extracted upload key (or `null` when the URL is missing).
- * @returns The configured upload instance.
+ * Callers are responsible for calling `.start()` (optionally after
+ * `findPreviousUploads()` for resume support) — this only configures the upload.
  */
 export function createTusUpload(file: File, handlers: TusUploadHandlers): tus.Upload {
     const upload = new tus.Upload(file, {
@@ -61,13 +49,7 @@ export function createTusUpload(file: File, handlers: TusUploadHandlers): tus.Up
     return upload;
 }
 
-/**
- * Fire-and-forget tus upload used by batch mode (parallel via `Promise.all`).
- *
- * @param file - The file to upload.
- * @param onProgress - Receives the upload percentage (0–100).
- * @returns A promise resolving to the upload key, or `null` on error.
- */
+/** Fire-and-forget tus upload used by batch mode (parallel via `Promise.all`). */
 export function uploadViaTus(file: File, onProgress: (percent: number) => void): Promise<string | null> {
     return new Promise((resolve) => {
         const upload = createTusUpload(file, {

@@ -67,7 +67,6 @@ describe('impressionBatcher', () => {
         vi.advanceTimersByTime(1000);
         expect(analytics.impressions).toHaveBeenCalledTimes(1);
 
-        // No new impressions, no extra flush
         vi.advanceTimersByTime(5000);
         expect(analytics.impressions).toHaveBeenCalledTimes(1);
     });

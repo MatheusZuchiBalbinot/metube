@@ -49,7 +49,25 @@ function DropdownOptionItem({ opt, selected, onSelect }: DropdownOptionItemProps
     );
 }
 
-// eslint-disable-next-line complexity
+interface DropdownTriggerValueProps {
+    selected: DropdownOption | undefined
+    placeholder: string
+}
+
+// Isolated so the selected-vs-placeholder branching doesn't count against Dropdown's own complexity.
+function DropdownTriggerValue({ selected, placeholder }: DropdownTriggerValueProps) {
+    if (!selected) {
+        return <>{placeholder}</>;
+    }
+
+    return (
+        <span className="dropdown-value-inner">
+            {selected.icon && <span className="dropdown-value-icon">{selected.icon}</span>}
+            {selected.label}
+        </span>
+    );
+}
+
 export default function Dropdown({
     options,
     value,
@@ -93,16 +111,7 @@ export default function Dropdown({
                     aria-expanded={open}
                 >
                     <span className={selected ? 'dropdown-value' : 'dropdown-value dropdown-value--placeholder'}>
-                        {selected ? (
-                            <span className="dropdown-value-inner">
-                                {selected.icon && (
-                                    <span className="dropdown-value-icon">{selected.icon}</span>
-                                )}
-                                {selected.label}
-                            </span>
-                        ) : (
-                            placeholder
-                        )}
+                        <DropdownTriggerValue selected={selected} placeholder={placeholder} />
                     </span>
                     <ChevronDown
                         size={15}
