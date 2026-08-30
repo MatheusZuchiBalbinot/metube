@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { initCrossTabSync } from '@store/crossTabSync';
 import { themeActions } from '@store/themeSlice';
 import { videoActions } from '@store/videoSlice';
 import { playbackActions } from '@store/playbackSlice';
-import { playlistActions } from '@store/playlistSlice';
+import playlistSlice, { playlistActions } from '@store/playlistSlice';
 import { subscriptionActions } from '@store/subscriptionSlice';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 import type { AppDispatch } from '@store/types';
+import type { Playlist } from '@models';
 
 function fireStorageEvent(key: string, newValue: string | null) {
     window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
@@ -244,6 +246,34 @@ describe('crossTabSync', () => {
             window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: 'some-value' }));
 
             expect(dispatch).not.toHaveBeenCalled();
+        });
+    });
+
+    // ─── Two real stores, not a mocked dispatch ──────────────────────────────
+    //
+    // Every test above asserts that dispatch() was CALLED WITH the right action —
+    // it never runs a real reducer, so a bug in xTabSetPlaylists itself (e.g.
+    // merging instead of replacing) would still pass every one of them. This
+    // wires a second real store to initCrossTabSync and checks its actual state
+    // after the storage event, mirroring what two real browser tabs would show.
+
+    describe('playlist edit converges across two real stores', () => {
+        it('a playlist edit committed in tab A reaches tab B through the real reducer', () => {
+            const storeA = configureStore({ reducer: { playlist: playlistSlice.reducer } });
+            const storeB = configureStore({ reducer: { playlist: playlistSlice.reducer } });
+            const cleanupB = initCrossTabSync(storeB.dispatch as AppDispatch);
+
+            const edited: Playlist[] = [{ id: 'pl-1', name: 'Renamed by tab A', videoIds: [] } as Playlist];
+            storeA.dispatch(playlistActions.setPlaylists(edited));
+
+            // Mirrors what persistMiddleware's debounced effect eventually writes to
+            // localStorage for the playlist slice — asserted directly here instead of
+            // advancing the middleware's debounce timer, which has its own coverage.
+            fireStorageEvent(STORAGE_KEYS.PLAYLISTS, JSON.stringify(storeA.getState().playlist.playlists));
+
+            expect(storeB.getState().playlist.playlists).toEqual(edited);
+
+            cleanupB();
         });
     });
 });
