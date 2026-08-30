@@ -14,9 +14,13 @@ Plataforma de vídeo full-stack construída do zero, com **upload resumível, pr
 * Upload de vídeos com retomada automática via **tus**, continuando do último offset confirmado
 * Processamento assíncrono com **Laravel Horizon** e feedback em tempo real via WebSocket
 * Transcrição automática com **faster-whisper / Whisper ASR**
+* **Chat com IA sobre o vídeo**, utilizando a transcrição como contexto
 * Geração de títulos, descrições, tags e resumos via **LLM**
 * Capítulos com timestamp e modo leitura
-* Streaming adaptativo **HLS**, legendas e Picture-in-Picture
+* **Tradução automática de legendas** via Whisper Translate
+* **Agendamento de publicação** de vídeos
+* Streaming adaptativo **HLS com múltiplas renditions**, respeitando a resolução da fonte
+* Legendas e Picture-in-Picture
 * Feed de Shorts com scroll vertical e volume persistente
 * Likes, dislikes, saves, inscrições, playlists e histórico
 * Recomendações server-side com scoring por afinidade de tags, comportamento, popularidade e frescor
@@ -25,6 +29,7 @@ Plataforma de vídeo full-stack construída do zero, com **upload resumível, pr
 * Analytics com **event batching** e **bulk inserts** assíncronos
 * Persistência e retomada de progresso de reprodução
 * Cross-tab synchronization via `storage events`
+* **i18n bilíngue (PT/EN)** via `react-i18next`
 * Temas e cores de acento persistidos por usuário
 * Acessibilidade e navegação completa por teclado
 
@@ -70,7 +75,8 @@ flowchart TB
 * Filas priorizadas com **Laravel Horizon**
 * **Session versioning** para invalidação global de sessões
 * PostgreSQL Full-Text Search com `tsvector` + **GIN**
-* **OpenTelemetry** — auto-instrumentação de Laravel e PDO, exportando traces/metrics/logs via OTLP (desligado por padrão em dev; basta configurar o endpoint/API key para habilitar)
+* **Rate limiting por domínio**, com janelas independentes para autenticação, recuperação de senha, verificação de email e chat com IA
+* **OpenTelemetry** com auto-instrumentação de Laravel/PDO e exportação via OTLP
 * PHPStan nível 8 + Pint + PHP Insights (**gate de 99%**)
 
 Detalhes de rotas, services e convenções: [`backend/CLAUDE.backend.md`](backend/CLAUDE.backend.md).
@@ -87,6 +93,7 @@ Detalhes de rotas, services e convenções: [`backend/CLAUDE.backend.md`](backen
 * Player modularizado em hooks especializados
 * **Code splitting**, lazy loading e virtualização de listas via `@tanstack/react-virtual`
 * Throttle local de 3s + sync de 5s com o backend para progresso de reprodução
+* **i18n** com `react-i18next`
 * Acessibilidade com ARIA e focus management
 * ESLint com complexidade ciclomática máxima de 8 e `no-explicit-any` como erro
 
@@ -110,6 +117,7 @@ Detalhes de aliases, convenções e testes: [`frontend/CLAUDE.frontend.md`](fron
 | ------------- | -------------------------------------------- |
 | Frontend      | React 19 · TypeScript · Vite / Rolldown      |
 | State         | Redux Toolkit                                |
+| i18n          | react-i18next                                |
 | CSS           | Tailwind CSS 4                               |
 | Backend       | Laravel 12 · FrankenPHP / Octane · PHP 8.2+  |
 | Database      | PostgreSQL 16                                |
@@ -121,7 +129,7 @@ Detalhes de aliases, convenções e testes: [`frontend/CLAUDE.frontend.md`](fron
 | LLM           | Groq · interface agnóstica de provider       |
 | Auth          | Laravel Sanctum · stateful / HttpOnly cookie |
 | Proxy         | Caddy 2                                      |
-| Observability | OpenTelemetry · OTLP (traces/metrics/logs)   |
+| Observability | OpenTelemetry · OTLP                         |
 | Infra         | Docker Compose                               |
 
 ---
@@ -141,17 +149,17 @@ Detalhes de aliases, convenções e testes: [`frontend/CLAUDE.frontend.md`](fron
 
 A arquitetura atual prioriza simplicidade operacional. Em uma escala maior:
 
-| Atual                         | Possível evolução                |
-| ------------------------------ | --------------------------------- |
-| Sanctum / sessão stateful       | OAuth 2.0 / OIDC                  |
-| Whisper self-hosted             | ASR gerenciado / GPU workers      |
-| LLM via Groq                    | AI Gateway / múltiplos providers  |
-| Filesystem local                | Object Storage                    |
-| Mídia servida pela aplicação    | CDN                                |
-| Analytics em PostgreSQL         | Event streaming / Data Warehouse  |
-| PostgreSQL FTS                  | Search engine dedicado            |
-| Redis compartilhado             | Cache / filas separados           |
-| Monólito modular                | Extração seletiva de serviços     |
+| Atual                        | Possível evolução                |
+| ---------------------------- | -------------------------------- |
+| Sanctum / sessão stateful    | OAuth 2.0 / OIDC                 |
+| Whisper self-hosted          | ASR gerenciado / GPU workers     |
+| LLM via Groq                 | AI Gateway / múltiplos providers |
+| Filesystem local             | Object Storage                   |
+| Mídia servida pela aplicação | CDN                              |
+| Analytics em PostgreSQL      | Event streaming / Data Warehouse |
+| PostgreSQL FTS               | Search engine dedicado           |
+| Redis compartilhado          | Cache / filas separados          |
+| Monólito modular             | Extração seletiva de serviços    |
 
 > A ideia é escalar os componentes conforme os gargalos aparecem, sem introduzir complexidade distribuída prematuramente.
 
@@ -163,7 +171,7 @@ A arquitetura atual prioriza simplicidade operacional. Em uma escala maior:
 
 * Docker + Docker Compose
 * Node.js
-* PHP + Composer para executar os testes/lint localmente
+* PHP + Composer para executar testes e lint localmente
 
 ```bash
 cp backend/.env.example backend/.env
@@ -189,7 +197,7 @@ Para o pipeline completo, configure uma API key compatível com o provider selec
 AI_API_KEY=
 ```
 
-Sem a chave, upload, processamento de vídeo, transcrição e player continuam disponíveis; apenas geração de metadados e resumos fica indisponível.
+Sem a chave, upload, processamento de vídeo, transcrição e player continuam disponíveis; apenas geração de metadados, resumos e chat com IA ficam indisponíveis.
 
 A transcrição utiliza **faster-whisper em CPU** por padrão. O modelo é baixado no primeiro build do serviço `whisper`.
 
@@ -197,11 +205,13 @@ Também é possível utilizar um serviço externo de ASR configurando `WHISPER_U
 
 ### Observability (opcional)
 
-O backend já vem com auto-instrumentação OpenTelemetry (Laravel + PDO), mas o export fica **desligado por padrão** — sem `OTEL_EXPORTER_OTLP_HEADERS` preenchido, os spans/logs são descartados silenciosamente (você pode ver mensagens de "Export failure" nos logs, são inofensivas). Para habilitar, configure em `backend/.env`:
+O backend possui auto-instrumentação OpenTelemetry para Laravel e PDO. O export fica desativado por padrão.
+
+Para habilitar, configure em `backend/.env`:
 
 ```env
-OTEL_EXPORTER_OTLP_ENDPOINT=   # endpoint OTLP do seu collector/vendor (ex.: New Relic, Honeycomb, um coletor local)
-OTEL_EXPORTER_OTLP_HEADERS=    # ex.: api-key=SEU_TOKEN
+OTEL_EXPORTER_OTLP_ENDPOINT=
+OTEL_EXPORTER_OTLP_HEADERS=
 ```
 
 ### Acesso
@@ -224,16 +234,16 @@ npm run stop
 GitHub Actions com **path filtering** para executar apenas workflows afetados pelas alterações:
 
 | Workflow                | Responsabilidade                                     |
-| ------------------------ | ------------------------------------------------------ |
-| `frontend.yml`           | TypeScript + ESLint                                    |
-| `frontend-test.yml`      | Vitest                                                  |
-| `frontend-security.yml`  | npm audit                                               |
-| `backend-lint.yml`       | PHPStan + Pint                                          |
-| `backend-quality.yml`    | PHP Insights · gate de 99%                              |
-| `backend-tests.yml`      | Pest · SQLite in-memory                                 |
-| `whisper.yml`            | Testes do serviço Whisper                               |
-| `security-scan.yml`      | Trivy                                                   |
-| `docs-drift.yml`         | Validação dos caminhos referenciados na documentação    |
+| ----------------------- | ---------------------------------------------------- |
+| `frontend.yml`          | TypeScript + ESLint                                  |
+| `frontend-test.yml`     | Vitest                                               |
+| `frontend-security.yml` | npm audit                                            |
+| `backend-lint.yml`      | PHPStan + Pint                                       |
+| `backend-quality.yml`   | PHP Insights · gate de 99%                           |
+| `backend-tests.yml`     | Pest · SQLite in-memory                              |
+| `whisper.yml`           | Testes do serviço Whisper                            |
+| `security-scan.yml`     | Trivy                                                |
+| `docs-drift.yml`        | Validação dos caminhos referenciados na documentação |
 
 ---
 
