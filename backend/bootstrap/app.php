@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Exceptions\InvalidCredentialsException;
+use App\Exceptions\VideoNotDraftException;
 use App\Http\Middleware\CheckSessionVersion;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,6 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (InvalidCredentialsException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 401);
+            }
+        });
+
+        $exceptions->render(function (VideoNotDraftException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], 409);
             }
         });
     })->create();

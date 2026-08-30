@@ -8,6 +8,7 @@ use App\DTOs\UpdateVideoDTO;
 use App\DTOs\VideoListFilterDTO;
 use App\Enums\VideoSource;
 use App\Enums\VideoStatus;
+use App\Http\Requests\Video\IndexVideoRequest;
 use App\Http\Requests\Video\RecordViewRequest;
 use App\Http\Requests\Video\StoreVideoRequest;
 use App\Http\Requests\Video\UpdateProgressRequest;
@@ -30,9 +31,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * VideoController — Routes video HTTP requests to services.
- *
- * Responsibility: Parse input, call service, format response.
  * Authorization is enforced by route ->can() middleware in api.php.
  */
 class VideoController extends Controller
@@ -50,11 +48,15 @@ class VideoController extends Controller
 
     /**
      * List all videos with pagination and filters.
+     *
+     * A non-published `status` filter is a privileged read, enforced by
+     * {@see IndexVideoRequest::authorize()} and scoped to the requester's own
+     * channel by {@see VideoService::listVideos()}.
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexVideoRequest $request): JsonResponse
     {
-        $filters = VideoListFilterDTO::fromArray($request->all());
-        $videos = $this->videoService->listVideos($filters);
+        $filters = VideoListFilterDTO::fromArray($request->validated());
+        $videos = $this->videoService->listVideos($filters, $request->user());
 
         return $this->json(VideoResource::collection($videos));
     }
@@ -81,20 +83,16 @@ class VideoController extends Controller
         return $this->json(new VideoResource($video));
     }
 
-    /**
-     * Update a video's metadata.
-     */
     public function update(UpdateVideoRequest $request, Video $video): JsonResponse
     {
-        $updated = $this->publishingService->updateVideo($video, UpdateVideoDTO::fromRequest($request->validated()));
+        $dto = UpdateVideoDTO::fromRequest($request->validated());
+        $updated = $this->publishingService->updateVideo($video, $dto);
 
         return $this->json(new VideoResource($updated->load('channel')));
     }
 
     /**
      * Delete a video permanently.
-     *
-     * @return Response HTTP 204 No Content
      */
     public function destroy(Video $video): Response
     {
@@ -103,11 +101,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Record that a user viewed a video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function recordView(RecordViewRequest $request, Video $video): Response
     {
         $validated = $request->validated();
@@ -120,11 +113,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Toggle like status for a video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function toggleLike(Video $video): Response
     {
         $this->reactionService->toggleLike(auth()->user(), $video);
@@ -132,11 +120,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Toggle dislike status for a video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function toggleDislike(Video $video): Response
     {
         $this->reactionService->toggleDislike(auth()->user(), $video);
@@ -144,11 +127,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Toggle save status for a video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function toggleSave(Video $video): Response
     {
         $this->reactionService->toggleSave(auth()->user(), $video);
@@ -156,11 +134,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Update user's watch progress for a video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function updateProgress(UpdateProgressRequest $request, Video $video): Response
     {
         $this->progressService->updateProgress(auth()->user(), $video, $request->validated()['percent']);
@@ -168,9 +141,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Get AI-generated summary for a video.
-     */
     public function summary(Video $video): JsonResponse
     {
         $summary = $this->aiService->getSummary($video);
@@ -196,8 +166,6 @@ class VideoController extends Controller
 
     /**
      * Retry a failed transcription.
-     *
-     * @return Response HTTP 204 No Content
      */
     public function retryTranscription(Video $video): Response
     {
@@ -222,11 +190,6 @@ class VideoController extends Controller
         return $this->json(new VideoAiSuggestionResource($suggestion));
     }
 
-    /**
-     * Accept pending AI suggestions and apply to video.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function acceptSuggestion(Video $video): Response
     {
         $this->aiService->acceptAiSuggestion($video);
@@ -234,9 +197,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Publish a draft video, making it publicly visible.
-     */
     public function publish(Video $video): JsonResponse
     {
         $isNotDraft = $video->status !== VideoStatus::DRAFT;
@@ -250,11 +210,6 @@ class VideoController extends Controller
         return $this->json(new VideoResource($video->fresh('channel')));
     }
 
-    /**
-     * Dismiss pending AI suggestions without applying them.
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function dismissSuggestion(Video $video): Response
     {
         $this->aiService->dismissAiSuggestion($video);
@@ -262,9 +217,6 @@ class VideoController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Get personalized video recommendations for the authenticated user.
-     */
     public function recommendations(Request $request): JsonResponse
     {
         $page = (int) $request->query('page', '1');

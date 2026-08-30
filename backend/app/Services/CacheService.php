@@ -42,14 +42,10 @@ use Illuminate\Support\Facades\Cache;
 class CacheService
 {
     /**
-     * Build the [fresh, stale] window for a stale-while-revalidate group.
-     *
      * The fresh window is the configured TTL; the stale window doubles it,
      * giving an equally long grace period for background refresh.
      *
-     * @param string $ttlConfigKey Config key holding the integer TTL in seconds
-     *
-     * @return array{0: int, 1: int} The [fresh, stale] seconds pair
+     * @return array{0: int, 1: int}
      */
     private function staleWindow(string $ttlConfigKey): array
     {
@@ -59,95 +55,109 @@ class CacheService
     }
 
     /**
-     * Return the cached paginated public feed, or resolve and store it.
+     * Bypasses the cache entirely when the group is deactivated (see class docblock).
      *
+     * @template T
+     *
+     * @param string $group Dot-path under cache.metube.* holding this group's active/ttl config
+     * @param list<string> $tags
+     * @param Closure(): T $callback
+     *
+     * @return T
+     */
+    private function remember(string $group, array $tags, string $key, Closure $callback): mixed
+    {
+        if (!(bool) config("cache.metube.{$group}.active")) {
+            return $callback();
+        }
+
+        return Cache::tags($tags)->remember($key, config("cache.metube.{$group}.ttl"), $callback);
+    }
+
+    /**
+     * Bypasses the cache entirely when the group is deactivated (see class docblock).
+     *
+     * @template T
+     *
+     * @param string $group Dot-path under cache.metube.* holding this group's active/ttl config
+     * @param list<string> $tags
+     * @param Closure(): T $callback
+     *
+     * @return T
+     */
+    private function rememberFlexible(string $group, array $tags, string $key, Closure $callback): mixed
+    {
+        if (!(bool) config("cache.metube.{$group}.active")) {
+            return $callback();
+        }
+
+        return Cache::tags($tags)->flexible($key, $this->staleWindow("cache.metube.{$group}.ttl"), $callback);
+    }
+
+    /**
+     * Thin wrapper around Cache::add so throttling never bypasses CacheService
+     * directly (repo rule: every cache operation goes through this class).
+     *
+     * @return bool True when the key was free and is now claimed (caller may proceed);
+     *              false when it was already claimed (caller should be throttled)
+     */
+    public function throttle(string $key, int $seconds): bool
+    {
+        return Cache::add($key, 1, now()->addSeconds($seconds));
+    }
+
+    /**
      * @param Closure(): LengthAwarePaginator<int, Video> $callback
      *
      * @return LengthAwarePaginator<int, Video>
      */
     public function rememberFeed(int $page, Closure $callback): LengthAwarePaginator
     {
-        if (!(bool) config('cache.metube.feed.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(['feed'])
-            ->flexible("feed:page:{$page}", $this->staleWindow('cache.metube.feed.ttl'), $callback);
+        return $this->rememberFlexible('feed', ['feed'], "feed:page:{$page}", $callback);
     }
 
-    /**
-     * Flush the entire feed cache (all pages).
-     */
     public function forgetFeed(): void
     {
         Cache::tags(['feed'])->flush();
     }
 
     /**
-     * Return the cached channel (User) for the given UUID, or resolve and store it.
-     *
-     * @param Closure(): User $callback DB resolver on cache miss
-     *
-     * @return User Channel user
+     * @param Closure(): User $callback
      */
     public function rememberChannelInfo(string $uuid, Closure $callback): User
     {
-        if (!(bool) config('cache.metube.channel.info.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:info:{$uuid}", config('cache.metube.channel.info.ttl'), $callback);
+        return $this->remember('channel.info', ["channel:{$uuid}"], "channel:info:{$uuid}", $callback);
     }
 
     /**
-     * Return the cached paginated video list for a channel page.
-     *
      * @param Closure(): LengthAwarePaginator<int, Video> $callback
      *
      * @return LengthAwarePaginator<int, Video>
      */
     public function rememberChannelVideos(string $uuid, int $page, Closure $callback): LengthAwarePaginator
     {
-        if (!(bool) config('cache.metube.channel.videos.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["channel:{$uuid}"])
-            ->remember("channel:videos:{$uuid}:page:{$page}", config('cache.metube.channel.videos.ttl'), $callback);
+        return $this->remember('channel.videos', ["channel:{$uuid}"], "channel:videos:{$uuid}:page:{$page}", $callback);
     }
 
-    /**
-     * Flush all cached data for a channel (info + all video pages).
-     */
     public function forgetChannel(string $uuid): void
     {
         Cache::tags(["channel:{$uuid}"])->flush();
     }
 
     /**
-     * Return the cached video for the given vuid, or resolve and store it.
-     *
-     * @param Closure(): Video $callback DB resolver on cache miss
+     * @param Closure(): Video $callback
      */
     public function rememberVideoMeta(string $vuid, Closure $callback): Video
     {
-        if (!(bool) config('cache.metube.video.meta.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["video:{$vuid}"])
-            ->remember("video:meta:{$vuid}", config('cache.metube.video.meta.ttl'), $callback);
+        return $this->remember('video.meta', ["video:{$vuid}"], "video:meta:{$vuid}", $callback);
     }
 
     /**
-     * Return the cached AI summary for a video, storing it forever when present.
-     *
      * Deliberately does NOT cache null — when the summary is not yet generated,
      * each request re-queries so the result appears as soon as it exists without
      * waiting for a TTL to expire.
      *
-     * @param Closure(): (VideoSummary|null) $callback DB resolver on cache miss
+     * @param Closure(): (VideoSummary|null) $callback
      */
     public function getOrCacheVideoSummary(string $vuid, Closure $callback): ?VideoSummary
     {
@@ -173,128 +183,80 @@ class CacheService
         return $summary;
     }
 
-    /**
-     * Flush all cached data for a video (metadata + summary).
-     */
     public function forgetVideo(string $vuid): void
     {
         Cache::tags(["video:{$vuid}"])->flush();
     }
 
     /**
-     * Return the cached playlist collection for a user.
-     *
      * @param Closure(): Collection<int, Playlist> $callback
      *
      * @return Collection<int, Playlist>
      */
     public function rememberUserPlaylists(int $userId, Closure $callback): Collection
     {
-        if (!(bool) config('cache.metube.user.playlists.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["user:{$userId}"])
-            ->remember("user:playlists:{$userId}", config('cache.metube.user.playlists.ttl'), $callback);
+        return $this->remember('user.playlists', ["user:{$userId}"], "user:playlists:{$userId}", $callback);
     }
 
-    /**
-     * Invalidate the playlist cache for a user.
-     */
     public function forgetUserPlaylists(int $userId): void
     {
         Cache::tags(["user:{$userId}"])->forget("user:playlists:{$userId}");
     }
 
     /**
-     * Return the cached subscription collection for a user.
-     *
      * @param Closure(): Collection<int, User> $callback
      *
      * @return Collection<int, User>
      */
     public function rememberUserSubscriptions(int $userId, Closure $callback): Collection
     {
-        if (!(bool) config('cache.metube.user.subscriptions.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["user:{$userId}"])
-            ->remember("user:subscriptions:{$userId}", config('cache.metube.user.subscriptions.ttl'), $callback);
+        return $this->remember('user.subscriptions', ["user:{$userId}"], "user:subscriptions:{$userId}", $callback);
     }
 
-    /**
-     * Invalidate the subscription cache for a user.
-     */
     public function forgetUserSubscriptions(int $userId): void
     {
         Cache::tags(["user:{$userId}"])->forget("user:subscriptions:{$userId}");
     }
 
     /**
-     * Return the cached watch-history heatmap for a user.
-     *
      * @param Closure(): list<array{date: string, count: int}> $callback
      *
      * @return list<array{date: string, count: int}>
      */
     public function rememberHistoryEvents(int $userId, Closure $callback): array
     {
-        if (!(bool) config('cache.metube.user.history_events.active')) {
-            return $callback();
-        }
-
-        return Cache::tags(["user:{$userId}"])
-            ->remember("user:history-events:{$userId}", config('cache.metube.user.history_events.ttl'), $callback);
+        return $this->remember('user.history_events', ["user:{$userId}"], "user:history-events:{$userId}", $callback);
     }
 
-    /**
-     * Invalidate the history-events cache for a user.
-     */
     public function forgetHistoryEvents(int $userId): void
     {
         Cache::tags(["user:{$userId}"])->forget("user:history-events:{$userId}");
     }
 
     /**
-     * Return the cached recommended videos for a user page, or resolve and store.
-     *
      * @param Closure(): Collection<int, Video> $callback
      *
      * @return Collection<int, Video>
      */
     public function rememberRecommendations(int $userId, int $page, Closure $callback): Collection
     {
-        if (!(bool) config('cache.metube.recommendations.active')) {
-            return $callback();
-        }
+        $tags = ["user:{$userId}"];
+        $key = "user:recommendations:{$userId}:page:{$page}";
 
-        return Cache::tags(["user:{$userId}"])
-            ->flexible(
-                "user:recommendations:{$userId}:page:{$page}",
-                $this->staleWindow('cache.metube.recommendations.ttl'),
-                $callback,
-            );
+        return $this->rememberFlexible('recommendations', $tags, $key, $callback);
     }
 
     /**
-     * Return the cached home feed sections for a user (or the shared guest feed),
-     * or resolve and store them.
-     *
      * @param int|null $userId Authenticated user id, or null for guests
-     * @param Closure(): array<int, FeedSection> $callback Resolver on cache miss
+     * @param Closure(): array<int, FeedSection> $callback
      *
      * @return array<int, FeedSection>
      */
     public function rememberUserFeed(?int $userId, Closure $callback): array
     {
-        if (!(bool) config('cache.metube.feed.active')) {
-            return $callback();
-        }
-
         $tags = $userId !== null ? ['feed', "user:{$userId}"] : ['feed'];
         $key = $userId !== null ? "feed:user:{$userId}" : 'feed:guest';
 
-        return Cache::tags($tags)->flexible($key, $this->staleWindow('cache.metube.feed.ttl'), $callback);
+        return $this->rememberFlexible('feed', $tags, $key, $callback);
     }
 }

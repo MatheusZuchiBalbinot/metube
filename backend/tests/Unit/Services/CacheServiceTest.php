@@ -6,11 +6,8 @@ use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoSummary;
 use App\Services\CacheService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
-
-uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
 

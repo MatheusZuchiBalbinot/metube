@@ -8,13 +8,11 @@ use App\Jobs\TranscribeVideo;
 use App\Models\Transcription;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\VideoView;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-
-uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
 
@@ -27,6 +25,51 @@ describe('VideoController', function () {
 
         $response->assertOk();
         $response->assertJsonCount(5, 'data');
+    });
+
+    test('index is accessible to guests for the default published feed', function () {
+        Video::factory(3)->create(['status' => VideoStatus::PUBLISHED]);
+
+        $response = $this->getJson('/api/videos');
+
+        $response->assertOk();
+        $response->assertJsonCount(3, 'data');
+    });
+
+    test('index rejects a non-published status filter from guests', function () {
+        Video::factory(2)->create(['status' => VideoStatus::DRAFT]);
+
+        $response = $this->getJson('/api/videos?status=draft');
+
+        $response->assertForbidden();
+    });
+
+    test('index scopes a non-published status filter to the requester\'s own channel', function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        Video::factory(2)->for($owner, 'channel')->create(['status' => VideoStatus::DRAFT]);
+        Video::factory(4)->for($other, 'channel')->create(['status' => VideoStatus::DRAFT]);
+
+        $response = $this->actingAs($owner)->getJson('/api/videos?status=draft');
+
+        $response->assertOk();
+        $response->assertJsonCount(2, 'data');
+    });
+
+    test('index rejects an invalid status filter value', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/videos?status=not-a-real-status');
+
+        $response->assertStatus(422);
+    });
+
+    test('index rejects a malformed search parameter instead of erroring', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/videos?search[]=x');
+
+        $response->assertStatus(422);
     });
 
     test('show returns specific video', function () {
@@ -96,7 +139,12 @@ describe('VideoController', function () {
         $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
 
         $response->assertNoContent();
-        $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
+        // The `videos.views` counter bump is deferred to DB::afterCommit (see
+        // VideoReactionService::recordView), which never fires inside
+        // RefreshDatabase's per-test transaction — assert the durable,
+        // synchronous side effects instead: the video_views and
+        // watch_histories rows.
+        $this->assertDatabaseHas('video_views', ['user_id' => $user->id, 'video_id' => $video->id]);
         $this->assertDatabaseHas('watch_histories', ['user_id' => $user->id, 'video_id' => $video->id]);
     });
 
@@ -107,7 +155,7 @@ describe('VideoController', function () {
         $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
         $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/views");
 
-        $this->assertDatabaseHas('videos', ['id' => $video->id, 'views' => 1]);
+        expect(VideoView::query()->where('user_id', $user->id)->where('video_id', $video->id)->count())->toBe(1);
         expect($user->history()->where('video_id', $video->id)->count())->toBe(1);
     });
 

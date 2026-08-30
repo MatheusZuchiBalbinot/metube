@@ -8,6 +8,7 @@ use App\DTOs\UpdateVideoDTO;
 use App\Enums\VideoStatus;
 use App\Events\VideoPublished;
 use App\Events\VideoStatusUpdated;
+use App\Exceptions\VideoNotDraftException;
 use App\Models\Video;
 use Illuminate\Support\Facades\DB;
 
@@ -24,17 +25,21 @@ final class VideoPublishingService
     public function __construct(private readonly CacheService $cache) {}
 
     /**
-     * Publish a draft video immediately.
-     *
      * Sets status to PUBLISHED, records published_at, fires VideoPublished
      * for subscriber notifications, and invalidates the video cache.
      *
-     * Authorization must be checked by caller via VideoPolicy::publish().
+     * Ownership must be checked by the caller via VideoPolicy::publish(); the
+     * draft-only business rule is enforced here so every caller — controller,
+     * job, artisan command, or seeder — is protected the same way.
      *
-     * @param Video $video Video in DRAFT status to publish
+     * @throws VideoNotDraftException When $video is not in DRAFT status
      */
     public function publishVideo(Video $video): void
     {
+        if ($video->status !== VideoStatus::DRAFT) {
+            throw new VideoNotDraftException();
+        }
+
         $video->update([
             'status' => VideoStatus::PUBLISHED,
             'published_at' => now(),
@@ -45,14 +50,6 @@ final class VideoPublishingService
         $this->cache->forgetVideo($video->vuid);
     }
 
-    /**
-     * Update video metadata (title, description, tags).
-     *
-     * @param Video $video Video to update
-     * @param UpdateVideoDTO $data Updated metadata
-     *
-     * @return Video Updated video
-     */
     public function updateVideo(Video $video, UpdateVideoDTO $data): Video
     {
         return DB::transaction(function () use ($video, $data) {
@@ -65,36 +62,34 @@ final class VideoPublishingService
     /**
      * Publish all scheduled videos that are due.
      *
-     * Finds videos with status=SCHEDULED and scheduled_at <= now(),
-     * publishes them in bulk, and clears relevant caches.
-     *
-     * @return int Number of videos published
+     * Finds videos with status=SCHEDULED and scheduled_at <= now() and
+     * publishes them one by one — a mass Eloquent update() would fire no
+     * model/domain events at all, so subscriber notifications, the
+     * transcription/AI-suggestion pipeline, and the owner's Reverb broadcast
+     * would silently never happen for scheduled publishes.
      */
     public function publishDueVideos(): int
     {
-        $vuids = Video::query()->scheduledDue()->pluck('vuid');
+        $videos = Video::query()->scheduledDue()->get();
 
-        $hasVideos = !$vuids->isEmpty();
+        $count = 0;
 
-        if (!$hasVideos) {
-            return 0;
+        foreach ($videos as $video) {
+            $video->update([
+                'status' => VideoStatus::PUBLISHED,
+                'published_at' => $video->scheduled_at,
+            ]);
+
+            event(new VideoPublished($video));
+            event(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
+
+            $this->cache->forgetVideo($video->vuid);
+            $count++;
         }
 
-        $updatePayload = [
-            'status' => VideoStatus::PUBLISHED,
-            'published_at' => DB::raw('scheduled_at'),
-            'updated_at' => now(),
-        ];
-
-        $count = Video::query()
-            ->whereIn('vuid', $vuids)
-            ->update($updatePayload);
-
-        foreach ($vuids as $vuid) {
-            $this->cache->forgetVideo($vuid);
+        if ($count > 0) {
+            $this->cache->forgetFeed();
         }
-
-        $this->cache->forgetFeed();
 
         return $count;
     }

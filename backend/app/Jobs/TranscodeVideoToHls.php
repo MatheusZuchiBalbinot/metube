@@ -66,7 +66,15 @@ class TranscodeVideoToHls implements ShouldBeUnique, ShouldQueue
     {
         $video = Video::find($this->video->id);
 
-        $isNothingToDo = $video === null || $video->video_url === null;
+        if ($video === null) {
+            return;
+        }
+
+        if ($this->reuseExistingPackage($video, $storage)) {
+            return;
+        }
+
+        $isNothingToDo = $video->video_url === null;
 
         if ($isNothingToDo) {
             return;
@@ -113,16 +121,56 @@ class TranscodeVideoToHls implements ShouldBeUnique, ShouldQueue
     }
 
     /**
+     * "Already transcoded" must be detected from the actual output artifact,
+     * not from video_url being null — that flag is set by THIS job right
+     * before it deletes the source and dispatches TranscribeVideo. If
+     * anything throws after that update (e.g. deletePublished on an
+     * already-removed file, or the Reverb broadcast failing), a retry would
+     * otherwise see video_url === null, treat it as "nothing to do", and
+     * silently drop the TranscribeVideo dispatch forever. TranscribeVideo is
+     * safe to re-dispatch: it is ShouldBeUnique and no-ops when the
+     * transcription is already COMPLETED.
+     *
+     * @return bool True when the package already exists and the caller should return early.
+     */
+    private function reuseExistingPackage(Video $video, VideoStorageService $storage): bool
+    {
+        $hlsMasterPath = "{$video->hlsDirectory()}/master.m3u8";
+
+        if (!$storage->exists($hlsMasterPath)) {
+            return false;
+        }
+
+        Log::info('TranscodeVideoToHls: HLS package already exists, ensuring transcription was dispatched', [
+            'vuid' => $video->vuid,
+        ]);
+
+        TranscribeVideo::dispatch($video);
+
+        return true;
+    }
+
+    /**
      * Mark the video as failed when all retries are exhausted.
      *
      * The source file is left in place so a failed transcode still leaves a playable
-     * progressive fallback for inspection.
+     * progressive fallback for inspection. Never downgrades an already-PUBLISHED
+     * video: HLS transcoding is a post-publish enhancement step, and this progressive
+     * fallback is exactly why a video that made it to PUBLISHED should stay that way
+     * even if the HLS package never finishes — contradicting that would hide a
+     * working, watchable video behind a failure banner.
      */
     public function failed(Throwable $_): void
     {
         $video = Video::find($this->video->id);
 
         if ($video === null) {
+            return;
+        }
+
+        $isAlreadyPublished = $video->status === VideoStatus::PUBLISHED;
+
+        if ($isAlreadyPublished) {
             return;
         }
 

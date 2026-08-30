@@ -29,13 +29,7 @@ final class CommentService
     private const MAX_VERSIONS = 100;
 
     /**
-     * List top-level comments for a video, paginated.
-     *
      * Attaches is_liked as a virtual attribute resolved in bulk.
-     *
-     * @param string $vuid Public video identifier
-     * @param User|null $user Authenticated user, or null for guests
-     * @param int $page Page number
      */
     public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
     {
@@ -53,13 +47,7 @@ final class CommentService
     }
 
     /**
-     * Store a new comment on a video.
-     *
-     * @param string $vuid Public video identifier
-     * @param StoreCommentDTO $data Validated comment data
-     * @param User $user Authenticated user
-     *
-     * @return Comment Newly created comment with user loaded
+     * @return Comment Newly created comment with the user relation loaded
      */
     public function store(string $vuid, StoreCommentDTO $data, User $user): Comment
     {
@@ -122,18 +110,6 @@ final class CommentService
         return $comment;
     }
 
-    /**
-     * Update an existing comment's content.
-     *
-     * Saves a new version, marks the comment as edited, and returns the
-     * comment with the user relation loaded and is_liked set.
-     *
-     * @param Comment $comment Comment to update
-     * @param UpdateCommentDTO $data Validated comment data
-     * @param User $user Authenticated user (for is_liked resolution)
-     *
-     * @return Comment Updated comment with user loaded
-     */
     public function update(Comment $comment, UpdateCommentDTO $data, User $user): Comment
     {
         return DB::transaction(function () use ($comment, $data, $user): Comment {
@@ -161,13 +137,8 @@ final class CommentService
     }
 
     /**
-     * Get saved versions of a comment, newest first.
-     *
-     * Capped at the MAX_VERSIONS most recent edits to avoid loading an
-     * unbounded number of version rows into memory. The response shape is an
-     * unenveloped list, preserving the existing CommentVersionResource contract.
-     *
-     * @param Comment $comment The comment whose versions to retrieve
+     * The response shape is an unenveloped list, preserving the existing
+     * CommentVersionResource contract.
      */
     public function versions(Comment $comment): BaseCollection
     {
@@ -177,7 +148,10 @@ final class CommentService
     /**
      * Delete a comment and maintain parent reply counter.
      *
-     * @param Comment $comment Comment to delete
+     * A root comment cascades its replies at the DB level (see the comments
+     * table migration), so deleting one with N replies removes 1 + N rows.
+     * The video's comments_count must be decremented by that same amount, or
+     * it drifts upward forever with no reconciliation job to correct it.
      */
     public function destroy(Comment $comment): void
     {
@@ -188,7 +162,10 @@ final class CommentService
                 Comment::where('id', $comment->parent_id)->decrement('replies_count');
             }
 
-            Video::where('id', $comment->video_id)->decrement('comments_count');
+            $isRoot = $comment->parent_id === null;
+            $deletedCount = $isRoot ? 1 + $comment->replies()->count() : 1;
+
+            Video::where('id', $comment->video_id)->decrement('comments_count', $deletedCount);
 
             $comment->delete();
         });
@@ -201,11 +178,6 @@ final class CommentService
      * simultaneous clicks would previously both read "not liked" and both
      * insert, causing a unique violation. Now the first DELETE wins; if it
      * removes a row the request is an unlike, otherwise it's a like.
-     *
-     * Returns the new like state and updated count.
-     *
-     * @param Comment $comment Comment to like/unlike
-     * @param User $user Authenticated user
      *
      * @return array{liked: bool, likes_count: int}
      */
@@ -223,11 +195,20 @@ final class CommentService
                 return ['liked' => false, 'likes_count' => $comment->likes_count];
             }
 
-            CommentLike::insertOrIgnore([
+            $inserted = CommentLike::insertOrIgnore([
                 'user_id' => $user->id,
                 'comment_id' => $comment->id,
                 'created_at' => now(),
             ]);
+
+            // Two concurrent clicks can both reach here after both DELETEs above
+            // found nothing to remove; the unique constraint on (user_id,
+            // comment_id) lets only one INSERT win. Skipping the increment when
+            // insertOrIgnore reports 0 rows keeps likes_count from inflating
+            // permanently — unlike decrements, an extra increment never self-corrects.
+            if ($inserted === 0) {
+                return ['liked' => true, 'likes_count' => $comment->likes_count];
+            }
 
             Comment::where('id', $comment->id)->increment('likes_count');
             $comment->refresh();
@@ -239,12 +220,7 @@ final class CommentService
     }
 
     /**
-     * Get all replies for a comment.
-     *
      * Attaches is_liked as a virtual attribute resolved in bulk.
-     *
-     * @param Comment $comment Parent comment
-     * @param User $user Authenticated user
      */
     public function replies(Comment $comment, User $user): BaseCollection
     {
@@ -256,10 +232,6 @@ final class CommentService
     }
 
     /**
-     * Bulk-resolve is_liked for a collection of comments and attach as virtual attribute.
-     *
-     * Guests (null user) always get is_liked = false.
-     *
      * @param BaseCollection<int, mixed> $comments
      */
     private function attachIsLiked(BaseCollection $comments, ?User $user): void

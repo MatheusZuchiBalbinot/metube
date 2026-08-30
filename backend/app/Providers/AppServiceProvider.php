@@ -14,7 +14,6 @@ use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
 use App\Events\CommentLiked;
 use App\Events\SearchPerformed;
-use App\Events\TranscriptionStatusUpdated;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoFinished;
 use App\Events\VideoImpressionsBatch;
@@ -39,7 +38,6 @@ use App\Listeners\SendNewSubscriberNotification;
 use App\Listeners\SendVideoLikedNotification;
 use App\Listeners\SendVideoProcessedNotification;
 use App\Listeners\SendVideoPublishedNotifications;
-use App\Listeners\SendVideoTranscribedNotification;
 use App\Listeners\SendVideoTranscriptionCompletedListener;
 use App\Listeners\SendVideoTranscriptionStartedListener;
 use App\Listeners\TranscribeVideoListener;
@@ -67,9 +65,6 @@ use Laravel\Horizon\Horizon;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->bind(AiClient::class, GroqClient::class);
@@ -89,9 +84,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ViewCounterStore::class, $viewCounterStore);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->registerRateLimiters();
@@ -173,13 +165,13 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
 
-        // Transcription events — split to handle STARTED and COMPLETED separately
+        // Transcription events — split to handle STARTED and COMPLETED separately.
+        // TranscriptionStatusUpdated(FAILED) — dispatched by TranscribeVideo::failed() —
+        // currently has no notification listener; see SendVideoTranscribedNotification's
+        // removal (it only ever handled PROCESSING/COMPLETED, which STARTED/COMPLETED
+        // above already cover, so it was dead code with a misleading passing test).
         Event::listen(VideoTranscriptionStarted::class, SendVideoTranscriptionStartedListener::class);
         Event::listen(VideoTranscriptionCompleted::class, SendVideoTranscriptionCompletedListener::class);
-
-        // Deprecated: TranscriptionStatusUpdated is kept for FAILED status only.
-        // Use VideoTranscriptionStarted/VideoTranscriptionCompleted instead.
-        Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscribedNotification::class);
 
         Event::subscribe(InvalidateCacheSubscriber::class);
     }

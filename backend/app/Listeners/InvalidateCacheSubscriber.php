@@ -33,25 +33,19 @@ class InvalidateCacheSubscriber
     public function subscribe(Dispatcher $events): array
     {
         return [
-            ChannelSubscribed::class => 'onChannelSubscribed',
-            ChannelUnsubscribed::class => 'onChannelUnsubscribed',
+            ChannelSubscribed::class => 'onSubscriptionChanged',
+            ChannelUnsubscribed::class => 'onSubscriptionChanged',
             VideoViewed::class => 'onVideoViewed',
         ];
     }
 
     /**
      * Flush channel info (subscriber count changed) and the subscriber's cached subscription list.
+     *
+     * Shared by ChannelSubscribed and ChannelUnsubscribed — both events carry the
+     * same $channel/$subscriber shape and invalidate exactly the same cache entries.
      */
-    public function onChannelSubscribed(ChannelSubscribed $event): void
-    {
-        $this->cache->forgetChannel($event->channel->uuid);
-        $this->cache->forgetUserSubscriptions($event->subscriber->id);
-    }
-
-    /**
-     * Flush channel info (subscriber count changed) and the subscriber's cached subscription list.
-     */
-    public function onChannelUnsubscribed(ChannelUnsubscribed $event): void
+    public function onSubscriptionChanged(ChannelSubscribed|ChannelUnsubscribed $event): void
     {
         $this->cache->forgetChannel($event->channel->uuid);
         $this->cache->forgetUserSubscriptions($event->subscriber->id);

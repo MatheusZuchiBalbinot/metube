@@ -19,7 +19,8 @@ use App\Models\User;
 use App\Models\UserVideoReaction;
 use App\Models\Video;
 use App\Models\VideoView;
-use Illuminate\Support\Facades\Cache;
+use Carbon\CarbonInterface;
+use Closure;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,112 +33,108 @@ use Illuminate\Support\Facades\DB;
  */
 final class VideoReactionService
 {
-    public function __construct(private readonly ViewCounterService $viewCounter) {}
+    public function __construct(
+        private readonly ViewCounterService $viewCounter,
+        private readonly CacheService $cache,
+    ) {}
 
     /**
-     * Toggle like reaction on a video.
-     *
-     * Removes existing like if present, otherwise removes dislike (if any)
-     * and creates a like reaction.
-     *
-     * @param User $user Authenticated user
-     * @param Video $video Video to like/unlike
+     * Fires VideoLiked with the fresh like count — the one behavior that is
+     * NOT shared with toggleDislike.
      */
     public function toggleLike(User $user, Video $video): void
     {
-        DB::transaction(function () use ($user, $video) {
-            $unliked = UserVideoReaction::query()->byUser($user->id)
-                ->forVideo($video->id)
-                ->likes()
-                ->delete();
-
-            if ($unliked > 0) {
-                event(new VideoUnliked($user, $video));
-
-                return;
-            }
-
-            $wasDisliked = UserVideoReaction::query()->byUser($user->id)
-                ->forVideo($video->id)
-                ->dislikes()
-                ->delete();
-
-            if ($wasDisliked > 0) {
-                event(new VideoUndisliked($user, $video));
-            }
-
-            $likePayload = [
-                'user_id' => $user->id,
-                'video_id' => $video->id,
-                'type' => ReactionType::LIKE->value,
-            ];
-            $inserted = UserVideoReaction::insertOrIgnore($likePayload);
-
-            if ($inserted === 0) {
-                return;
-            }
-
-            event(new VideoReactionApplied($user, $video, VideoEventType::LIKE));
-            $likeCount = UserVideoReaction::query()->forVideo($video->id)
-                ->likes()
-                ->count();
+        $this->toggleReaction($user, $video, ReactionType::LIKE, function () use ($user, $video): void {
+            $likeCount = UserVideoReaction::query()->forVideo($video->id)->likes()->count();
             event(new VideoLiked($video, $user, $likeCount));
         });
     }
 
-    /**
-     * Toggle dislike reaction on a video.
-     *
-     * Removes existing dislike if present, otherwise removes like (if any)
-     * and creates a dislike reaction.
-     *
-     * @param User $user Authenticated user
-     * @param Video $video Video to dislike/undislike
-     */
     public function toggleDislike(User $user, Video $video): void
     {
-        DB::transaction(function () use ($user, $video) {
-            $undisliked = UserVideoReaction::query()->byUser($user->id)
+        $this->toggleReaction($user, $video, ReactionType::DISLIKE);
+    }
+
+    /**
+     * Shared toggle logic for like/dislike reactions.
+     *
+     * Delete-first avoids the read-then-write race: two simultaneous clicks
+     * would otherwise both read "not reacted" and both attempt to insert,
+     * tripping the unique constraint. The first DELETE wins and the request
+     * becomes an "un-react"; otherwise any opposite reaction is removed
+     * (like/dislike are mutually exclusive) before the new one is inserted.
+     *
+     * insertOrIgnore's return value is checked so a second concurrent
+     * request — whose own DELETE found nothing, same as the first — never
+     * fires a duplicate VideoReactionApplied/onApplied for a row it didn't
+     * actually create.
+     *
+     * @param Closure(): void|null $onApplied Extra side effect run only when a new
+     *                                        reaction row was actually inserted — e.g. toggleLike's VideoLiked with a
+     *                                        fresh count. Null for reactions with no such extra behavior.
+     */
+    private function toggleReaction(User $user, Video $video, ReactionType $type, ?Closure $onApplied = null): void
+    {
+        DB::transaction(function () use ($user, $video, $type, $onApplied): void {
+            $unset = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
-                ->dislikes()
+                ->ofType($type->value)
                 ->delete();
 
-            if ($undisliked > 0) {
-                event(new VideoUndisliked($user, $video));
+            if ($unset > 0) {
+                event($this->unReactedEvent($type, $user, $video));
 
                 return;
             }
 
-            $wasLiked = UserVideoReaction::query()->byUser($user->id)
+            $oppositeType = $type->opposite();
+
+            $oppositeRemoved = UserVideoReaction::query()->byUser($user->id)
                 ->forVideo($video->id)
-                ->likes()
+                ->ofType($oppositeType->value)
                 ->delete();
 
-            if ($wasLiked > 0) {
-                event(new VideoUnliked($user, $video));
+            if ($oppositeRemoved > 0) {
+                event($this->unReactedEvent($oppositeType, $user, $video));
             }
 
-            $dislikePayload = [
+            $payload = [
                 'user_id' => $user->id,
                 'video_id' => $video->id,
-                'type' => ReactionType::DISLIKE->value,
+                'type' => $type->value,
             ];
-            $inserted = UserVideoReaction::insertOrIgnore($dislikePayload);
+            $inserted = UserVideoReaction::insertOrIgnore($payload);
 
             if ($inserted === 0) {
                 return;
             }
 
-            event(new VideoReactionApplied($user, $video, VideoEventType::DISLIKE));
+            event(new VideoReactionApplied($user, $video, $this->reactionEventType($type)));
+
+            if ($onApplied === null) {
+                return;
+            }
+
+            $onApplied();
         });
     }
 
-    /**
-     * Toggle save reaction on a video (adds/removes from watch later).
-     *
-     * @param User $user Authenticated user
-     * @param Video $video Video to save/unsave
-     */
+    private function unReactedEvent(ReactionType $type, User $user, Video $video): VideoUnliked|VideoUndisliked
+    {
+        return match ($type) {
+            ReactionType::LIKE => new VideoUnliked($user, $video),
+            ReactionType::DISLIKE => new VideoUndisliked($user, $video),
+        };
+    }
+
+    private function reactionEventType(ReactionType $type): VideoEventType
+    {
+        return match ($type) {
+            ReactionType::LIKE => VideoEventType::LIKE,
+            ReactionType::DISLIKE => VideoEventType::DISLIKE,
+        };
+    }
+
     public function toggleSave(User $user, Video $video): void
     {
         DB::transaction(function () use ($user, $video) {
@@ -169,20 +166,21 @@ final class VideoReactionService
     /**
      * Record a video view for a user.
      *
-     * Uses a 60-second Redis TTL to throttle duplicate views per user per video.
-     * The watched_hour uniqueness constraint on video_views remains as a safety net
-     * for concurrent edge cases. On PostgreSQL, watched_hour is auto-generated;
-     * on SQLite (tests), we populate it manually for deduplication.
+     * Uses a 60-second cache-backed throttle to dedupe rapid repeat views per
+     * user per video. The watched_hour uniqueness constraint on video_views
+     * is a separate, coarser safety net (hourly, not 60s) for concurrent
+     * edge cases — so insertOrIgnore's return is checked and the views
+     * counter is only bumped when a row was actually inserted; otherwise
+     * `videos.views` would keep counting views the DB itself deduped away.
      *
-     * @param User $user Authenticated user
-     * @param Video $video Video being watched
-     * @param VideoSource|null $source Optional source of the view (e.g., feed, search, recommendation)
-     * @param string|null $sessionId Optional session identifier for grouping views
+     * The counter increment is deferred to DB::afterCommit so a rollback of
+     * this transaction never leaves a Redis-buffered increment stranded
+     * with no matching video_views row.
      */
     public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
         $throttleKey = "views:throttle:{$video->id}:{$user->id}";
-        $isThrottled = !Cache::add($throttleKey, 1, now()->addSeconds(60));
+        $isThrottled = !$this->cache->throttle($throttleKey, 60);
 
         if ($isThrottled) {
             return;
@@ -194,18 +192,11 @@ final class VideoReactionService
             $watchedHour = $watchedAt->copy()->startOfHour();
             $isNotPgsql = DB::connection()->getDriverName() !== 'pgsql';
 
-            $viewRow = [
+            $viewRow = $this->withWatchedHour([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'watched_at' => $watchedAt,
-            ];
-
-            // On PostgreSQL, watched_hour is a GENERATED ALWAYS AS column and
-            // must not be set manually. On SQLite (tests), it is a plain nullable
-            // column that we populate so the unique constraint can deduplicate.
-            if ($isNotPgsql) {
-                $viewRow['watched_hour'] = $watchedHour;
-            }
+            ], $watchedHour, $isNotPgsql);
 
             if ($source !== null) {
                 $viewRow['source'] = $source->value;
@@ -215,23 +206,43 @@ final class VideoReactionService
                 $viewRow['session_id'] = $sessionId;
             }
 
-            VideoView::insertOrIgnore($viewRow);
+            $inserted = VideoView::insertOrIgnore($viewRow);
 
-            $historyRow = [
+            if ($inserted === 0) {
+                return;
+            }
+
+            $historyRow = $this->withWatchedHour([
                 'user_id' => $user->id,
                 'video_id' => $video->id,
                 'watched_at' => $watchedAt,
-            ];
-
-            if ($isNotPgsql) {
-                $historyRow['watched_hour'] = $watchedHour;
-            }
+            ], $watchedHour, $isNotPgsql);
 
             DB::table('watch_histories')->insertOrIgnore($historyRow);
 
-            $this->viewCounter->increment($video->id);
+            DB::afterCommit(fn () => $this->viewCounter->increment($video->id));
 
             event(new VideoViewed($user, $video, $source));
         });
+    }
+
+    /**
+     * Add watched_hour to a video_views/watch_histories row when needed.
+     *
+     * On PostgreSQL, watched_hour is a GENERATED ALWAYS AS column and must
+     * not be set manually. On SQLite (tests), it is a plain nullable column
+     * that must be populated so the unique constraint can deduplicate.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>
+     */
+    private function withWatchedHour(array $row, CarbonInterface $watchedHour, bool $isNotPgsql): array
+    {
+        if ($isNotPgsql) {
+            $row['watched_hour'] = $watchedHour;
+        }
+
+        return $row;
     }
 }

@@ -9,11 +9,8 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\HlsTranscodeService;
 use App\Services\VideoStorageService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-
-uses(RefreshDatabase::class);
 
 /**
  * Create a draft video with a source file present on the faked public disk.
@@ -41,6 +38,9 @@ function makeSourceVideo(bool $isBatch = false, ?string $thumbnailUrl = null): V
 function makeStorageMock(string $sourceAbsPath = '/abs/videos/source.mp4'): Mockery\MockInterface
 {
     $storage = Mockery::mock(VideoStorageService::class);
+    $storage->shouldReceive('exists')
+        ->once()
+        ->andReturn(false);
     $storage->shouldReceive('absolutePublicPath')
         ->with('videos/source.mp4')
         ->andReturn($sourceAbsPath);
@@ -160,6 +160,7 @@ describe('TranscodeVideoToHls', function () {
             $hls->shouldNotReceive('transcode');
 
             $storage = Mockery::mock(VideoStorageService::class);
+            $storage->shouldReceive('exists')->once()->andReturn(false);
             $storage->shouldNotReceive('absolutePublicPath');
 
             (new TranscodeVideoToHls($video))->handle($hls, $storage);

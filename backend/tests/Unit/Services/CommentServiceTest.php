@@ -10,11 +10,8 @@ use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\CommentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-
-uses(RefreshDatabase::class);
 
 describe('CommentService', function () {
     $service = app(CommentService::class);
