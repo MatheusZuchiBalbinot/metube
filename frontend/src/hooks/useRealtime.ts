@@ -14,8 +14,23 @@ import { getEcho, destroyEcho } from '@lib/echo';
 import { playNotificationSound } from '@utils';
 import { ToastType } from '@enums/toastType';
 import { VideoStatus } from '@models';
-import type { Video } from '@models';
+import type { Video, VideoId } from '@models';
 import type { Toast } from '@store/toastSlice';
+
+interface VideoStatusEvent {
+    vuid: string
+    status: string
+}
+
+interface TranscriptionStatusEvent {
+    vuid: string
+    status: string
+}
+
+interface AiSuggestionEvent {
+    vuid: string
+    title: string
+}
 
 export function useRealtime(): void {
     const { t } = useTranslation();
@@ -67,6 +82,119 @@ export function useRealtime(): void {
         // was subscribed, without resolving getEcho() a second time.
         let activeEcho: Awaited<ReturnType<typeof getEcho>> = null;
 
+        // Exact id match — a substring check here previously matched the wrong
+        // video whenever one vuid happened to contain another.
+        function findVideoByVuid(vuid: string): Video | undefined {
+            return videosRef.current.find(v => v.id === (vuid as unknown as VideoId));
+        }
+
+        function refreshVideoOnAiSummaryReady(notification: Notification): void {
+            if (notification.type !== NotificationType.VIDEO_AI_SUMMARY_READY) {
+                return;
+            }
+
+            const vuid = notification.data.vuid as string | undefined;
+            const currentVuid = new URLSearchParams(locationRef.current.search).get('v');
+            const isCurrentlyWatching = vuid !== undefined && vuid === currentVuid;
+
+            // VideoPage handles its own updates via useVideoFetch/useVideoContent.
+            // Dispatching updateVideo here would cause a spurious re-render and
+            // briefly re-trigger related video logic on the currently open page.
+            if (!vuid || isCurrentlyWatching) {
+                return;
+            }
+
+            void videoApi.get(vuid as Vuid).then(result => {
+                if (result.ok) {
+                    dispatch(videoActions.updateVideo(result.data));
+                }
+            });
+        }
+
+        function handleNotification(payload: Record<string, unknown>): void {
+            const notification = normalizeBroadcastNotification(payload);
+
+            if (notification === null) {
+                return;
+            }
+
+            dispatch(notificationsActions.addNotification(notification));
+            refreshVideoOnAiSummaryReady(notification);
+
+            const hasDedicatedBroadcastHandler = BROADCAST_HANDLED_TYPES.has(notification.type);
+
+            if (hasDedicatedBroadcastHandler) {
+                return;
+            }
+
+            const thumbnail = notification.data.thumbnail_url as string | undefined;
+            const subtitle = notification.data.video_title as string | undefined;
+
+            notify({
+                message: formatNotificationMessage(notification, tRef.current),
+                type: ToastType.INFO,
+                thumbnail: thumbnail ?? undefined,
+                subtitle,
+            });
+        }
+
+        function handleVideoStatus(data: VideoStatusEvent): void {
+            dispatch(videoActions.updateVideoStatus({ vuid: data.vuid as Vuid, status: data.status as VideoStatus }));
+
+            const isTerminalStatus = data.status !== VideoStatus.PROCESSING;
+
+            if (isTerminalStatus) {
+                videoApi.get(data.vuid as Vuid).then(result => {
+                    if (result.ok) {
+                        dispatch(videoActions.updateVideo(result.data));
+                    }
+                });
+            }
+
+            const isProcessing = data.status === VideoStatus.PROCESSING;
+
+            if (!isProcessing) {
+                return;
+            }
+
+            const video = findVideoByVuid(data.vuid);
+
+            notify({
+                message: tRef.current('video.processing_toast'),
+                type: ToastType.INFO,
+                thumbnail: video?.thumbnail,
+                subtitle: video?.title,
+            });
+        }
+
+        function handleTranscriptionStatus(data: TranscriptionStatusEvent): void {
+            const toastConfig = TRANSCRIPTION_TOAST[data.status];
+
+            if (toastConfig === undefined) {
+                return;
+            }
+
+            const video = findVideoByVuid(data.vuid);
+
+            notify({
+                message: tRef.current(toastConfig.key),
+                type: toastConfig.type,
+                thumbnail: video?.thumbnail,
+                subtitle: video?.title,
+            });
+        }
+
+        function handleAiSuggestion(payload: AiSuggestionEvent): void {
+            const video = findVideoByVuid(payload.vuid);
+
+            notify({
+                message: tRef.current('ai_suggestion.pending_toast', { title: payload.title }),
+                type: ToastType.SUCCESS,
+                thumbnail: video?.thumbnail,
+                subtitle: video?.title,
+            });
+        }
+
         void getEcho().then(echo => {
             if (isCancelled || echo === null) {
                 return;
@@ -76,108 +204,10 @@ export function useRealtime(): void {
 
             const channel = echo.private(`users.${userUuid}`);
 
-            channel.notification((payload: Record<string, unknown>) => {
-                const notification = normalizeBroadcastNotification(payload);
-
-                if (notification === null) {
-                    return;
-                }
-
-                dispatch(notificationsActions.addNotification(notification));
-
-                if (notification.type === NotificationType.VIDEO_AI_SUMMARY_READY) {
-                    const vuid = notification.data.vuid as string | undefined;
-                    const currentVuid = new URLSearchParams(locationRef.current.search).get('v');
-                    const isCurrentlyWatching = vuid !== undefined && vuid === currentVuid;
-
-                    // VideoPage handles its own updates via useVideoFetch/useVideoContent.
-                    // Dispatching updateVideo here would cause a spurious re-render and
-                    // briefly re-trigger related video logic on the currently open page.
-                    if (vuid && !isCurrentlyWatching) {
-                        void videoApi.get(vuid as Vuid).then(result => {
-                            if (result.ok) {
-                                dispatch(videoActions.updateVideo(result.data));
-                            }
-                        });
-                    }
-                }
-
-                const hasDedicatedBroadcastHandler = BROADCAST_HANDLED_TYPES.has(notification.type);
-
-                if (!hasDedicatedBroadcastHandler) {
-                    const thumbnail = notification.data.thumbnail_url as string | undefined;
-                    const subtitle = notification.data.video_title as string | undefined;
-                    notify({
-                        message: formatNotificationMessage(notification, tRef.current),
-                        type: ToastType.INFO,
-                        thumbnail: thumbnail ?? undefined,
-                        subtitle,
-                    });
-                }
-            });
-
-            channel.listen('.VideoStatusUpdated', (data: { vuid: string; status: string }) => {
-                dispatch(videoActions.updateVideoStatus({ vuid: data.vuid as Vuid, status: data.status as VideoStatus }));
-
-                const isTerminalStatus = data.status !== VideoStatus.PROCESSING;
-
-                if (isTerminalStatus) {
-                    videoApi.get(data.vuid as Vuid).then(result => {
-                        if (result.ok) {
-                            dispatch(videoActions.updateVideo(result.data));
-                        }
-                    });
-                }
-
-                if (data.status === VideoStatus.PROCESSING) {
-                    const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
-                    notify({
-                        message: tRef.current('video.processing_toast'),
-                        type: ToastType.INFO,
-                        thumbnail: video?.thumbnail,
-                        subtitle: video?.title,
-                    });
-                }
-            });
-
-            channel.listen('.TranscriptionStatusUpdated', (data: { vuid: string; status: string }) => {
-                const video = videosRef.current.find(v => v.videoUrl?.includes(data.vuid));
-                const thumbnail = video?.thumbnail;
-                const subtitle = video?.title;
-
-                if (data.status === 'processing') {
-                    notify({
-                        message: tRef.current('video.transcription_started_toast'),
-                        type: ToastType.INFO,
-                        thumbnail,
-                        subtitle,
-                    });
-                } else if (data.status === 'completed') {
-                    notify({
-                        message: tRef.current('video.transcription_completed_toast'),
-                        type: ToastType.SUCCESS,
-                        thumbnail,
-                        subtitle,
-                    });
-                } else if (data.status === 'failed') {
-                    notify({
-                        message: tRef.current('video.transcription_failed_toast'),
-                        type: ToastType.ERROR,
-                        thumbnail,
-                        subtitle,
-                    });
-                }
-            });
-
-            channel.listen('.AiSuggestionReady', (payload: { vuid: string; title: string }) => {
-                const video = videosRef.current.find(v => v.videoUrl?.includes(payload.vuid));
-                notify({
-                    message: tRef.current('ai_suggestion.pending_toast', { title: payload.title }),
-                    type: ToastType.SUCCESS,
-                    thumbnail: video?.thumbnail,
-                    subtitle: video?.title,
-                });
-            });
+            channel.notification(handleNotification);
+            channel.listen('.VideoStatusUpdated', handleVideoStatus);
+            channel.listen('.TranscriptionStatusUpdated', handleTranscriptionStatus);
+            channel.listen('.AiSuggestionReady', handleAiSuggestion);
         });
 
         return () => {
@@ -218,6 +248,14 @@ const NOTIFICATION_CLASS_MAP: Record<string, NotificationType> = {
     'App\\Notifications\\NewSubscriberNotification': NotificationType.NEW_SUBSCRIBER,
     'App\\Notifications\\CommentRepliedNotification': NotificationType.COMMENT_REPLIED,
     'App\\Notifications\\CommentLikedNotification': NotificationType.COMMENT_LIKED,
+};
+
+// Lookup table replacing an if/else-if chain over `data.status` — adding a
+// new transcription status means adding a row here, not another branch.
+const TRANSCRIPTION_TOAST: Record<string, { key: string; type: ToastType }> = {
+    processing: { key: 'video.transcription_started_toast', type: ToastType.INFO },
+    completed: { key: 'video.transcription_completed_toast', type: ToastType.SUCCESS },
+    failed: { key: 'video.transcription_failed_toast', type: ToastType.ERROR },
 };
 
 function normalizeBroadcastNotification(payload: Record<string, unknown>): Notification | null {
