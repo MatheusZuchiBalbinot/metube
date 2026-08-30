@@ -160,6 +160,7 @@ export function makeRootState(overrides: Partial<RootState> = {}): RootState {
             hasMore: false,
             loading: false,
         },
+        recentChannels: { channels: [] },
         ...overrides,
     };
 }
