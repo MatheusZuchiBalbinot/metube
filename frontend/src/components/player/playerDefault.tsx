@@ -28,6 +28,11 @@ import {
     usePlaybackPrefs,
 } from '@hooks';
 
+const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+};
+
 function activeChapterTitle(chapters: VideoPlayerProps['chapters'], currentTime: number): string | null {
     if (chapters === undefined || chapters.length === 0) {
         return null;
@@ -42,6 +47,9 @@ function activeChapterTitle(chapters: VideoPlayerProps['chapters'], currentTime:
     return title;
 }
 
+// Orchestrates playback, controls-bar, theatre/fullscreen and chapter overlays for the
+// full desktop player; the branching is the JSX for those mutually-exclusive UI states,
+// already thin — most logic lives in usePlayerControls/usePlayerPlayback/usePopIcon.
 // eslint-disable-next-line complexity
 export function DefaultVideoPlayer({
     videoRef,
@@ -225,61 +233,41 @@ export function DefaultVideoPlayer({
 
     // ─── Event handlers ───────────────────────────────────────────────────────
 
-    function handleTogglePlayBtn(e: React.MouseEvent) {
-        e.stopPropagation();
-        handleTogglePlayWithFeedback();
-    }
+    // stop() is a plain (non-hook) factory: the compiler can't prove it defers
+    // calling its argument, so it conservatively flags any ref read reachable
+    // through it — but stop() only stores fn and calls it from the returned
+    // click handler, never during render.
+    // eslint-disable-next-line react-hooks/refs
+    const handleTogglePlayBtn = stop(handleTogglePlayWithFeedback);
+    const handleToggleMute = stop(applyMuteToggle);
+    const handleFullscreenBtn = stop(toggleFullscreen);
+    const handleTheaterBtn = stop(() => onTheaterToggle?.());
+    const handlePipBtn = stop(togglePiP);
+    const handleToggleSettings = stop(() => setShowSettings(v => !v));
+    const handleToggleCaptionsMenu = stop(() => setShowCaptionsMenu(v => !v));
 
     function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
         e.stopPropagation();
         applyVolume(Number(e.target.value));
     }
 
-    function handleToggleMute(e: React.MouseEvent) {
-        e.stopPropagation();
-        applyMuteToggle();
-    }
-
     function handleSpeedChange(e: React.MouseEvent, rate: number) {
-        e.stopPropagation();
-        applyPlaybackRate(rate);
-        setShowSettings(false);
+        stop(() => {
+            applyPlaybackRate(rate);
+            setShowSettings(false);
+        })(e);
     }
 
     function handleQualityChange(e: React.MouseEvent, index: number) {
-        e.stopPropagation();
-        setQuality(index);
-        setShowSettings(false);
-    }
-
-    function handleFullscreenBtn(e: React.MouseEvent) {
-        e.stopPropagation();
-        toggleFullscreen();
-    }
-
-    function handleToggleSettings(e: React.MouseEvent) {
-        e.stopPropagation();
-        setShowSettings(v => !v);
-    }
-
-    function handleToggleCaptionsMenu(e: React.MouseEvent) {
-        e.stopPropagation();
-        setShowCaptionsMenu(v => !v);
+        stop(() => {
+            setQuality(index);
+            setShowSettings(false);
+        })(e);
     }
 
     function handleCaptionSelect(lang: string | null) {
         setActiveTrack(lang);
         setShowCaptionsMenu(false);
-    }
-
-    function handleTheaterBtn(e: React.MouseEvent) {
-        e.stopPropagation();
-        onTheaterToggle?.();
-    }
-
-    function handlePipBtn(e: React.MouseEvent) {
-        e.stopPropagation();
-        togglePiP();
     }
 
     // ─── Render ───────────────────────────────────────────────────────────────
@@ -353,49 +341,30 @@ export function DefaultVideoPlayer({
                 />
 
                 <PlayerControlsBar
-                    isPlaying={isPlaying}
-                    currentTime={currentTime}
-                    duration={duration}
-                    volume={volume}
-                    isMuted={isMuted}
-                    playbackRate={playbackRate}
-                    isFullscreen={isFullscreen}
-                    isTheaterMode={isTheaterMode}
-                    isPiP={isPiP}
-                    isPiPSupported={isPiPSupported}
-                    showSettings={showSettings}
-                    settingsRef={settingsRef}
-                    captions={captions}
-                    activeTrack={activeTrack}
-                    showCaptionsMenu={showCaptionsMenu}
-                    captionsMenuRef={captionsMenuRef}
-                    levels={levels}
-                    currentQuality={currentQuality}
-                    onBarClick={handleBarClick}
-                    onTogglePlay={handleTogglePlayBtn}
-                    onToggleMute={handleToggleMute}
-                    onVolumeChange={handleVolumeChange}
-                    onToggleSettings={handleToggleSettings}
-                    onToggleCaptionsMenu={handleToggleCaptionsMenu}
-                    onSpeedChange={handleSpeedChange}
-                    onQualityChange={handleQualityChange}
-                    onPip={handlePipBtn}
-                    onTheater={handleTheaterBtn}
-                    onFullscreen={handleFullscreenBtn}
-                    onCaptionSelect={handleCaptionSelect}
-                    showTheaterButton={onTheaterToggle !== undefined}
-                    fullscreenIcon={isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-                    isLoop={isLoop}
-                    onToggleLoop={handleToggleLoop}
-                    abStatus={abStatus}
-                    onAbRepeat={handleAbRepeat}
-                    chapterTitle={chapterTitle}
-                    isAutoplay={autoplay}
-                    onToggleAutoplay={handleToggleAutoplay}
-                    isAmbient={ambientEnabled}
-                    onToggleAmbient={toggleAmbient}
-                    captionSize={captionSize}
-                    onCaptionSize={setCaptionSize}
+                    playback={{
+                        isPlaying, currentTime, duration, playbackRate,
+                        onTogglePlay: handleTogglePlayBtn, onSpeedChange: handleSpeedChange,
+                        isLoop, onToggleLoop: handleToggleLoop, abStatus, onAbRepeat: handleAbRepeat,
+                        isAutoplay: autoplay, onToggleAutoplay: handleToggleAutoplay, chapterTitle,
+                    }}
+                    audio={{
+                        volume, isMuted, onToggleMute: handleToggleMute, onVolumeChange: handleVolumeChange,
+                    }}
+                    display={{
+                        isFullscreen, isTheaterMode, isPiP, isPiPSupported,
+                        showTheaterButton: onTheaterToggle !== undefined,
+                        fullscreenIcon: isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />,
+                        onFullscreen: handleFullscreenBtn, onTheater: handleTheaterBtn, onPip: handlePipBtn,
+                        isAmbient: ambientEnabled, onToggleAmbient: toggleAmbient,
+                        captionSize, onCaptionSize: setCaptionSize,
+                    }}
+                    menus={{
+                        showSettings, settingsRef, onToggleSettings: handleToggleSettings,
+                        captions, activeTrack, showCaptionsMenu, captionsMenuRef,
+                        onToggleCaptionsMenu: handleToggleCaptionsMenu, onCaptionSelect: handleCaptionSelect,
+                        levels, currentQuality, onQualityChange: handleQualityChange,
+                        onBarClick: handleBarClick,
+                    }}
                 />
             </div>
         </div>

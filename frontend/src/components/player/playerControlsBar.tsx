@@ -12,63 +12,84 @@ import type { VideoCaption, Seconds } from '@models';
 
 const AB_HINT_KEYS = ['player.ab_hint_a', 'player.ab_hint_b', 'player.ab_hint_clear'] as const;
 
-interface PlayerControlsBarProps {
+export interface PlayerControlsPlayback {
     isPlaying: boolean
     currentTime: number
     duration: number
-    volume: number
-    isMuted: boolean
     playbackRate: number
-    isFullscreen: boolean
-    isTheaterMode: boolean
-    isPiP: boolean
-    isPiPSupported: boolean
-    showSettings: boolean
-    settingsRef: React.RefObject<HTMLDivElement | null>
-    captions: VideoCaption[]
-    activeTrack: string | null
-    showCaptionsMenu: boolean
-    captionsMenuRef: React.RefObject<HTMLDivElement | null>
-    levels: ShakaLevel[]
-    currentQuality: number
-    onBarClick: (e: React.MouseEvent) => void
     onTogglePlay: (e: React.MouseEvent) => void
-    onToggleMute: (e: React.MouseEvent) => void
-    onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    onToggleSettings: (e: React.MouseEvent) => void
-    onToggleCaptionsMenu: (e: React.MouseEvent) => void
     onSpeedChange: (e: React.MouseEvent, rate: number) => void
-    onQualityChange: (e: React.MouseEvent, index: number) => void
-    onPip: (e: React.MouseEvent) => void
-    onTheater: (e: React.MouseEvent) => void
-    onFullscreen: (e: React.MouseEvent) => void
-    onCaptionSelect: (lang: string | null) => void
-    showTheaterButton: boolean
-    fullscreenIcon: React.ReactNode
     isLoop: boolean
     onToggleLoop: () => void
     abStatus: number
     onAbRepeat: () => void
-    chapterTitle: string | null
     isAutoplay: boolean
     onToggleAutoplay: () => void
+    chapterTitle: string | null
+}
+
+export interface PlayerControlsAudio {
+    volume: number
+    isMuted: boolean
+    onToggleMute: (e: React.MouseEvent) => void
+    onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}
+
+export interface PlayerControlsDisplay {
+    isFullscreen: boolean
+    isTheaterMode: boolean
+    isPiP: boolean
+    isPiPSupported: boolean
+    showTheaterButton: boolean
+    fullscreenIcon: React.ReactNode
+    onFullscreen: (e: React.MouseEvent) => void
+    onTheater: (e: React.MouseEvent) => void
+    onPip: (e: React.MouseEvent) => void
     isAmbient: boolean
     onToggleAmbient: () => void
     captionSize: CaptionSize
     onCaptionSize: (size: CaptionSize) => void
 }
 
-export default function PlayerControlsBar({
-    isPlaying, currentTime, duration, volume, isMuted, playbackRate,
-    isFullscreen, isTheaterMode, isPiP, isPiPSupported,
-    showSettings, settingsRef, captions, activeTrack, showCaptionsMenu, captionsMenuRef,
-    levels, currentQuality,
-    onBarClick, onTogglePlay, onToggleMute, onVolumeChange,
-    onToggleSettings, onToggleCaptionsMenu, onSpeedChange, onQualityChange,
-    onPip, onTheater, onFullscreen, onCaptionSelect,
-    showTheaterButton, fullscreenIcon, isLoop, onToggleLoop, abStatus, onAbRepeat,
-    chapterTitle, isAutoplay, onToggleAutoplay, isAmbient, onToggleAmbient, captionSize, onCaptionSize,
-}: PlayerControlsBarProps) {
+export interface PlayerControlsMenus {
+    showSettings: boolean
+    settingsRef: React.RefObject<HTMLDivElement | null>
+    onToggleSettings: (e: React.MouseEvent) => void
+    captions: VideoCaption[]
+    activeTrack: string | null
+    showCaptionsMenu: boolean
+    captionsMenuRef: React.RefObject<HTMLDivElement | null>
+    onToggleCaptionsMenu: (e: React.MouseEvent) => void
+    onCaptionSelect: (lang: string | null) => void
+    levels: ShakaLevel[]
+    currentQuality: number
+    onQualityChange: (e: React.MouseEvent, index: number) => void
+    onBarClick: (e: React.MouseEvent) => void
+}
+
+interface PlayerControlsBarProps {
+    playback: PlayerControlsPlayback
+    audio: PlayerControlsAudio
+    display: PlayerControlsDisplay
+    menus: PlayerControlsMenus
+}
+
+export default function PlayerControlsBar({ playback, audio, display, menus }: PlayerControlsBarProps) {
+    const {
+        isPlaying, currentTime, duration, playbackRate, onTogglePlay, onSpeedChange,
+        isLoop, onToggleLoop, abStatus, onAbRepeat, isAutoplay, onToggleAutoplay, chapterTitle,
+    } = playback;
+    const { volume, isMuted, onToggleMute, onVolumeChange } = audio;
+    const {
+        isFullscreen, isTheaterMode, isPiP, isPiPSupported, showTheaterButton, fullscreenIcon,
+        onFullscreen, onTheater, onPip, isAmbient, onToggleAmbient, captionSize, onCaptionSize,
+    } = display;
+    const {
+        showSettings, settingsRef, onToggleSettings, captions, activeTrack, showCaptionsMenu,
+        captionsMenuRef, onToggleCaptionsMenu, onCaptionSelect, levels, currentQuality,
+        onQualityChange, onBarClick,
+    } = menus;
+
     const { t } = useTranslation();
     const [showRemaining, setShowRemaining] = useState(false);
 

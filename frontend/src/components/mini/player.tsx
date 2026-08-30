@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Maximize2 } from 'lucide-react';
@@ -8,9 +8,8 @@ import Tooltip from '@ui/tooltip/tooltip';
 import VideoPlayer from '@components/player/player';
 import type { Video } from '@models';
 import './player.css';
-import { useVideo } from '@hooks';
+import { useVideo, useDraggablePosition } from '@hooks';
 
-// eslint-disable-next-line complexity
 export default function MiniPlayer() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -18,10 +17,7 @@ export default function MiniPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const playerRef = useRef<HTMLDivElement>(null);
     const pendingMiniSeekRef = useRef<number | null>(null);
-    const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const isDraggingRef = useRef(false);
-    const dragOffsetRef = useRef({ x: 0, y: 0 });
+    const { pos, isDragging, startDrag, nudge, resetPos } = useDraggablePosition(playerRef);
 
     const video = miniPlayer ? videos.find((v: Video) => v.id === miniPlayer.videoId) : null;
     const hasVideoFile = video?.videoUrl !== undefined && video?.videoUrl !== '';
@@ -33,7 +29,7 @@ export default function MiniPlayer() {
             return;
         }
 
-        setPos(null);
+        resetPos();
         pendingMiniSeekRef.current = miniPlayer.currentTime;
         el.load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,56 +49,13 @@ export default function MiniPlayer() {
         }
     }
 
-    useEffect(() => {
-        if (!isDragging) {
-            return;
-        }
-
-        function handleMouseMove(e: MouseEvent) {
-            const el = playerRef.current;
-            const playerW = el?.offsetWidth ?? 360;
-            const playerH = el?.offsetHeight ?? 254;
-            const x = Math.max(0, Math.min(e.clientX - dragOffsetRef.current.x, window.innerWidth - playerW));
-            const y = Math.max(0, Math.min(e.clientY - dragOffsetRef.current.y, window.innerHeight - playerH));
-            setPos({ x, y });
-        }
-
-        function handleMouseUp() {
-            isDraggingRef.current = false;
-            setIsDragging(false);
-        }
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
-
-    // eslint-disable-next-line complexity
     function handleDragStart(e: React.MouseEvent<HTMLDivElement>) {
         const isButton = (e.target as HTMLElement).closest('button');
         if (isButton) {
             return;
         }
 
-        const rect = playerRef.current?.getBoundingClientRect();
-        const currentX = rect?.left ?? pos?.x ?? 0;
-        const currentY = rect?.top ?? pos?.y ?? 0;
-
-        if (pos === null) {
-            setPos({ x: currentX, y: currentY });
-        }
-
-        isDraggingRef.current = true;
-        setIsDragging(true);
-        dragOffsetRef.current = {
-            x: e.clientX - currentX,
-            y: e.clientY - currentY,
-        };
-
+        startDrag(e);
         e.preventDefault();
     }
 
@@ -117,7 +70,6 @@ export default function MiniPlayer() {
         return deltas[e.key] ?? null;
     }
 
-    // eslint-disable-next-line complexity
     function handleDragKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
         const delta = getArrowKeyDelta(e);
         if (!delta) {
@@ -125,30 +77,25 @@ export default function MiniPlayer() {
         }
 
         e.preventDefault();
+        nudge(delta.x, delta.y);
+    }
 
-        const el = playerRef.current;
-        const playerW = el?.offsetWidth ?? 360;
-        const playerH = el?.offsetHeight ?? 0;
-        const rect = el?.getBoundingClientRect();
-        const baseX = pos?.x ?? rect?.left ?? 0;
-        const baseY = pos?.y ?? rect?.top ?? 0;
+    function persistAndPause(): number | null {
+        const el = videoRef.current;
+        if (!el || !miniPlayer) {
+            return null;
+        }
 
-        const rawX = baseX + delta.x;
-        const rawY = baseY + delta.y;
-        const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - playerW));
-        const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - playerH));
-
-        setPos({ x: clampedX, y: clampedY });
+        const currentTime = el.currentTime;
+        updateProgress(miniPlayer.videoId, el.duration > 0 ? (currentTime / el.duration) * 100 : 0);
+        el.pause();
+        return currentTime;
     }
 
     function handleExpand() {
-        const el = videoRef.current;
-        if (el && miniPlayer) {
-            const currentTime = el.currentTime;
-            updateProgress(miniPlayer.videoId, el.duration > 0 ? (currentTime / el.duration) * 100 : 0);
+        const currentTime = persistAndPause();
+        if (currentTime !== null && miniPlayer) {
             setPendingVideoSeek(miniPlayer.videoId, currentTime);
-
-            el.pause();
         }
 
         closeMiniPlayer();
@@ -158,12 +105,7 @@ export default function MiniPlayer() {
     }
 
     function handleClose() {
-        const el = videoRef.current;
-        if (el && miniPlayer) {
-            updateProgress(miniPlayer.videoId, el.duration > 0 ? (el.currentTime / el.duration) * 100 : 0);
-            el.pause();
-        }
-
+        persistAndPause();
         closeMiniPlayer();
     }
 

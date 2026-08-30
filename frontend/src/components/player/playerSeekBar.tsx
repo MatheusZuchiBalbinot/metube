@@ -1,10 +1,10 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { VideoChapter } from '@api';
 import type { Seconds } from '@models';
 import { formatDuration, parseChapterTimestamp } from '@utils';
+import { useSeekDrag, useSeekPreview } from '@hooks';
 
-// Width of the scrubber thumbnail preview (px).
 const PREVIEW_W = 160;
 const PREVIEW_HALF_W = PREVIEW_W / 2;
 
@@ -30,127 +30,23 @@ export default function PlayerSeekBar({
     const seekInnerRef = useRef<HTMLDivElement>(null);
     const previewVideoRef = useRef<HTMLVideoElement>(null);
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-    const wasDraggingRef = useRef(false);
 
-    const [hoverSeekPct, setHoverSeekPct] = useState<number | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragPct, setDragPct] = useState<number | null>(null);
-    const [seekInnerWidth, setSeekInnerWidth] = useState(0);
+    const {
+        isDragging, dragPct, hoverSeekPct,
+        handleSeekClick, handleSeekMouseDown, handleSeekMouseMove, handleSeekMouseLeave,
+        resetDragState,
+    } = useSeekDrag(seekInnerRef, videoRef, { duration, forceShow, scheduleHideControls, onDraggingChange });
 
-    function changeDragging(v: boolean) {
-        setIsDragging(v);
-        onDraggingChange(v);
-    }
+    const { seekInnerWidth, handlePreviewSeeked, resetPreview } = useSeekPreview(
+        seekInnerRef, previewVideoRef, previewCanvasRef, { hoverSeekPct, duration },
+    );
 
-    // Reset own state when video source changes
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of own state when the source changes
-        changeDragging(false);
-        setDragPct(null);
-        setHoverSeekPct(null);
-        wasDraggingRef.current = false;
-        const canvas = previewCanvasRef.current;
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx?.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        resetDragState();
+        resetPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [src]);
-
-    // Track seek inner width for precise preview-arrow alignment
-    useEffect(() => {
-        const el = seekInnerRef.current;
-        if (!el) {
-            return;
-        }
-        const ro = new ResizeObserver(entries => {
-            const entry = entries[0];
-            if (entry) {
-                setSeekInnerWidth(entry.contentRect.width);
-            }
-        });
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, []);
-
-    // Seek the hidden preview video to the cursor hover position
-    useEffect(() => {
-        const pv = previewVideoRef.current;
-
-        if (!pv || hoverSeekPct === null || duration === 0) {
-            return;
-        }
-
-        pv.currentTime = hoverSeekPct * duration;
-    }, [hoverSeekPct, duration]);
-
-    // Attach document-level mousemove/mouseup while dragging
-    useEffect(() => {
-        if (!isDragging) {
-            return;
-        }
-        forceShow();
-
-        function getPctFromEvent(e: MouseEvent): number {
-            const inner = seekInnerRef.current;
-            if (!inner) {
-                return 0;
-            }
-            const rect = inner.getBoundingClientRect();
-            return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        }
-
-        function onMouseMove(e: MouseEvent) {
-            const pct = getPctFromEvent(e);
-            setDragPct(pct);
-            setHoverSeekPct(pct);
-        }
-
-        function onMouseUp(e: MouseEvent) {
-            const el = videoRef.current;
-            if (el && el.duration > 0) {
-                el.currentTime = getPctFromEvent(e) * el.duration;
-            }
-            wasDraggingRef.current = true;
-            changeDragging(false);
-            setDragPct(null);
-            setHoverSeekPct(null);
-            scheduleHideControls();
-        }
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        return () => {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDragging]);
-
-    function handlePreviewSeeked() {
-        const pv = previewVideoRef.current;
-        const canvas = previewCanvasRef.current;
-        if (!pv || !canvas) {
-            return;
-        }
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            return;
-        }
-        try {
-            ctx.drawImage(pv, 0, 0, canvas.width, canvas.height);
-        } catch { /* CORS/decode error — canvas stays black */ }
-    }
-
-    function getSeekPct(e: React.MouseEvent<HTMLDivElement> | MouseEvent): number {
-        const inner = seekInnerRef.current;
-        if (!inner) {
-            return 0;
-        }
-        const rect = inner.getBoundingClientRect();
-        const clientX = 'clientX' in e ? (e as MouseEvent).clientX : (e as TouchEvent).touches[0].clientX;
-        return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    }
 
     function handleChapterClick(e: React.MouseEvent, timestamp: string) {
         e.stopPropagation();
@@ -221,6 +117,19 @@ export default function PlayerSeekBar({
         );
     }
 
+    // ─── Derived values ────────────────────────────────────────────────────────
+
+    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const displayPct = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
+    const activePct = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
+
+    const activePixel = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
+    const maxClamp = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
+    const clampedPixel = Math.min(Math.max(activePixel, PREVIEW_HALF_W), maxClamp);
+    const arrowOffset = activePixel - clampedPixel;
+    const arrowLeftPct = Math.min(Math.max(50 + (arrowOffset / PREVIEW_W) * 100, 8), 92);
+    const hoverTime = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
+
     function renderPreview() {
         const showHoverElements = hoverSeekPct !== null || isDragging;
         if (!showHoverElements || duration <= 0) {
@@ -246,54 +155,6 @@ export default function PlayerSeekBar({
             </div>
         );
     }
-
-    function handleSeekClick(e: React.MouseEvent<HTMLDivElement>) {
-        e.stopPropagation();
-        if (wasDraggingRef.current) {
-            wasDraggingRef.current = false;
-            return;
-        }
-        const el = videoRef.current;
-        const hasDuration = duration > 0;
-        if (!el || !hasDuration) {
-            return;
-        }
-        el.currentTime = getSeekPct(e) * duration;
-    }
-
-    function handleSeekMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-        e.stopPropagation();
-        e.preventDefault();
-        const pct = getSeekPct(e);
-        changeDragging(true);
-        setDragPct(pct);
-        setHoverSeekPct(pct);
-    }
-
-    function handleSeekMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-        if (!isDragging) {
-            setHoverSeekPct(getSeekPct(e));
-        }
-    }
-
-    function handleSeekMouseLeave() {
-        if (!isDragging) {
-            setHoverSeekPct(null);
-        }
-    }
-
-    // ─── Derived values ────────────────────────────────────────────────────────
-
-    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
-    const displayPct = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
-    const activePct = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;
-
-    const activePixel = seekInnerWidth > 0 ? (activePct / 100) * seekInnerWidth : 0;
-    const maxClamp = Math.max(seekInnerWidth - PREVIEW_HALF_W, PREVIEW_HALF_W);
-    const clampedPixel = Math.min(Math.max(activePixel, PREVIEW_HALF_W), maxClamp);
-    const arrowOffset = activePixel - clampedPixel;
-    const arrowLeftPct = Math.min(Math.max(50 + (arrowOffset / PREVIEW_W) * 100, 8), 92);
-    const hoverTime = (hoverSeekPct !== null ? hoverSeekPct : (dragPct ?? 0)) * duration;
 
     return (
         <>
