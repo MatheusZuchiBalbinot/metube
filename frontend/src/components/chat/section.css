@@ -275,22 +275,6 @@
     height: 42px !important;
 }
 
-/* ─── Streaming cursor ─────────────────────────────────────────────────────── */
-
-.chat-section__bubble-text--streaming::after {
-    content: '▌';
-    display: inline-block;
-    color: var(--accent);
-    opacity: 1;
-    margin-left: 1px;
-    animation: chat-cursor-blink 0.7s step-end infinite;
-}
-
-@keyframes chat-cursor-blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-}
-
 /* ─── Light mode ───────────────────────────────────────────────────────────── */
 
 :root[data-mode='light'] .chat-section {

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from '@utils';
+import { cn, VIDEO_MIME_TYPES } from '@utils';
 import BatchItemRow from './batchItemRow';
 import type { BatchItem } from './useUploadModal';
 
@@ -47,7 +47,7 @@ export default function UploadBatchZone({
                 <input
                     ref={batchInputRef}
                     type="file"
-                    accept="video/*"
+                    accept={VIDEO_MIME_TYPES.join(',')}
                     multiple
                     className="dnd-input"
                     onChange={onInputChange}

@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { List, BookOpen, Tv2 } from 'lucide-react';
-import DOMPurify from 'dompurify';
 import VideoRow from '@components/video/row';
 import VideoRowSkeleton from '@components/video/rowSkeleton';
 import FilterPanel from '@components/filter/panel';
@@ -9,10 +8,11 @@ import type { FilterState } from '@components/filter/panel';
 import { SidebarTab } from '@enums/sidebarTab';
 import { AnalyticsSource } from '@api';
 import type { VideoSummary, VideoTranscription } from '@api';
-import { VideoFilter, cn, parseChapterTimestamp } from '@utils';
-import type { Video, Tag } from '@models';
+import { VideoFilter, cn, parseChapterTimestamp, renderSummaryMarkdown } from '@utils';
+import type { Video } from '@models';
 import { Spinner, EmptyState } from '@ui';
 import { domain } from '@domain';
+import { useAllTags, useSeekFeedback } from '@hooks';
 
 const WAVEFORM_BARS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -40,7 +40,7 @@ export default function VideoSidebar({
     );
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
     const [currentTime, setCurrentTime] = useState(0);
-    const [seekingIndex, setSeekingIndex] = useState<number | null>(null);
+    const { seekingIndex, seekToIndex } = useSeekFeedback(videoRef);
     const autoSwitchedRef = useRef(false);
 
     // Auto-switch to Summary tab once when a transcription/summary process appears.
@@ -50,7 +50,6 @@ export default function VideoSidebar({
     useEffect(() => {
         if (showSummaryTab && !autoSwitchedRef.current) {
             autoSwitchedRef.current = true;
-            // One-shot auto-switch guarded by a ref — fires at most once per video, cannot cascade.
             setSidebarTab(SidebarTab.SUMMARY);
         } else if (!showSummaryTab) {
             autoSwitchedRef.current = false;
@@ -71,17 +70,7 @@ export default function VideoSidebar({
         return () => clearInterval(interval);
     }, [sidebarTab, getCurrentTime]);
 
-    const allRelatedTags = useMemo(() => {
-        const tagSet = new Set<Tag>();
-
-        for (const v of relatedVideos) {
-            for (const tag of v.tags) {
-                tagSet.add(tag);
-            }
-        }
-
-        return Array.from(tagSet).sort();
-    }, [relatedVideos]);
+    const allRelatedTags = useAllTags(relatedVideos);
 
     const filteredRelated = useMemo(
         () => VideoFilter.apply(relatedVideos, filterState),
@@ -92,17 +81,7 @@ export default function VideoSidebar({
     const hasChapters = hasSummary && summary.chapters.length > 0;
     const hasSummaryProse = hasSummary && summary.readingMode.trim() !== '';
 
-    const summaryHtml = hasSummaryProse
-        ? DOMPurify.sanitize(
-            summary.readingMode
-                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/^/, '<p>')
-                .replace(/$/, '</p>'),
-        )
-        : '';
+    const summaryHtml = hasSummaryProse ? renderSummaryMarkdown(summary.readingMode) : '';
 
     return (
         <aside className="video-page__sidebar">
@@ -216,13 +195,7 @@ export default function VideoSidebar({
                                             <button
                                                 className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
                                                 disabled={isSeeking}
-                                                onClick={() => {
-                                                    setSeekingIndex(i);
-                                                    onSeekToChapter(seconds);
-                                                    videoRef.current?.addEventListener('seeked', () => {
-                                                        setSeekingIndex(null);
-                                                    }, { once: true });
-                                                }}
+                                                onClick={() => seekToIndex(i, () => onSeekToChapter(seconds))}
                                             >
                                                 {isSeeking
                                                     ? <Spinner size="sm" className="video-page__chapter-spinner" />

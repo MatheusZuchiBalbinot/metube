@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, SendHorizontal, X } from 'lucide-react';
-import type { VideoSummary, VideoTranscription, Vuid } from '@api';
+import type { VideoTranscription, Vuid } from '@api';
 import { chat as chatApi } from '@api';
 import type { ChatMessage } from '@api';
 import { Button, Tooltip } from '@ui';
@@ -14,7 +14,6 @@ import './section.css';
 interface ChatSectionProps {
     vuid: Vuid
     transcription: VideoTranscription | null
-    summary: VideoSummary | null
 }
 
 interface ChatEntry {
@@ -34,12 +33,6 @@ let messageIdSeq = 0;
 function nextMessageId(): string {
     messageIdSeq += 1;
     return `msg-${messageIdSeq}`;
-}
-
-// Streams `fullText` word-by-word, targeting at most 2.5 seconds total.
-function computeStreamInterval(wordCount: number): number {
-    const TARGET_MS = 2500;
-    return Math.max(12, Math.min(60, TARGET_MS / wordCount));
 }
 
 function TypingIndicator() {
@@ -65,40 +58,32 @@ function UserBubble({ content }: { content: string }) {
     );
 }
 
-interface AiBubbleProps {
-    content: string
-    isStreaming?: boolean
-}
-
-function AiBubble({ content, isStreaming = false }: AiBubbleProps) {
+function AiBubble({ content }: { content: string }) {
     return (
         <div className="chat-section__bubble chat-section__bubble--ai">
             <span className="chat-section__ai-badge" aria-hidden="true">
                 <Sparkles size={11} />
             </span>
-            <p className={`chat-section__bubble-text${isStreaming ? ' chat-section__bubble-text--streaming' : ''}`}>
-                {content}
-            </p>
+            <p className="chat-section__bubble-text">{content}</p>
         </div>
     );
 }
 
+// Owns the whole chat flow (transcription-readiness gate, loading/empty states,
+// send-message + quick-question handlers) in one component; splitting it would just move
+// the same branches into props threaded back down, not remove them.
 // eslint-disable-next-line complexity
-export default function ChatSection({ vuid, transcription, summary: _summary }: ChatSectionProps) {
+export default function ChatSection({ vuid, transcription }: ChatSectionProps) {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const [messages, setMessages] = useState<ChatEntry[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [streamingText, setStreamingText] = useState('');
-    const [isStreaming, setIsStreaming] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const isTranscriptionReady = transcription !== null && domain.transcription.isCompleted(transcription);
     const hasMessages = messages.length > 0;
-    const isBusy = loading || isStreaming;
 
     useEffect(() => {
         const el = listRef.current;
@@ -106,15 +91,7 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
             return;
         }
         el.scrollTop = el.scrollHeight;
-    }, [messages, loading, streamingText]);
-
-    useEffect(() => {
-        return () => {
-            if (streamTimerRef.current !== null) {
-                clearInterval(streamTimerRef.current);
-            }
-        };
-    }, []);
+    }, [messages, loading]);
 
     function growTextarea() {
         const el = textareaRef.current;
@@ -125,33 +102,10 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
         el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
     }
 
-    const streamResponse = useCallback((fullText: string) => {
-        const words = fullText.split(' ');
-        const intervalMs = computeStreamInterval(words.length);
-        let idx = 0;
-
-        setStreamingText('');
-        setIsStreaming(true);
-
-        streamTimerRef.current = setInterval(() => {
-            idx += 1;
-            setStreamingText(words.slice(0, idx).join(' '));
-
-            const isDone = idx >= words.length;
-            if (isDone) {
-                clearInterval(streamTimerRef.current!);
-                streamTimerRef.current = null;
-                setIsStreaming(false);
-                setStreamingText('');
-                setMessages(prev => [...prev, { id: nextMessageId(), role: 'assistant', content: fullText }]);
-            }
-        }, intervalMs);
-    }, []);
-
     const sendMessage = useCallback(async (question: string) => {
         const trimmed = question.trim();
 
-        if (trimmed === '' || isBusy) {
+        if (trimmed === '' || loading) {
             return;
         }
 
@@ -173,8 +127,8 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
             return;
         }
 
-        streamResponse(result.data.answer);
-    }, [isBusy, messages, vuid, dispatch, t, streamResponse]);
+        setMessages(prev => [...prev, { id: nextMessageId(), role: 'assistant', content: result.data.answer }]);
+    }, [loading, messages, vuid, dispatch, t]);
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
         const isEnterWithoutShift = e.key === 'Enter' && !e.shiftKey;
@@ -190,18 +144,11 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
     }
 
     function handleClear() {
-        if (streamTimerRef.current !== null) {
-            clearInterval(streamTimerRef.current);
-            streamTimerRef.current = null;
-        }
-        setIsStreaming(false);
-        setStreamingText('');
         setMessages([]);
     }
 
     return (
         <div className="chat-section">
-            {/* Header */}
             <div className="chat-section__header">
                 <div className="chat-section__header-left">
                     <Sparkles size={14} className="chat-section__header-icon" aria-hidden="true" />
@@ -222,9 +169,8 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                 )}
             </div>
 
-            {/* Message area */}
             <div className="chat-section__list" ref={listRef}>
-                {!hasMessages && !isBusy && (
+                {!hasMessages && !loading && (
                     <div className="chat-section__empty">
                         {isTranscriptionReady ? (
                             <>
@@ -256,12 +202,8 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                 ))}
 
                 {loading && <TypingIndicator />}
-                {isStreaming && streamingText !== '' && (
-                    <AiBubble content={streamingText} isStreaming />
-                )}
             </div>
 
-            {/* Input row — only when transcription is ready */}
             {isTranscriptionReady && (
                 <div className="chat-section__input-row">
                     <div className="chat-section__input-wrap">
@@ -276,7 +218,7 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                                 growTextarea();
                             }}
                             onKeyDown={handleKeyDown}
-                            disabled={isBusy}
+                            disabled={loading}
                             aria-label={t('chat.placeholder')}
                         />
                         <span className="chat-section__hint">
@@ -289,7 +231,7 @@ export default function ChatSection({ vuid, transcription, summary: _summary }: 
                             size="icon"
                             className="chat-section__send-btn"
                             onClick={() => void sendMessage(input)}
-                            disabled={isBusy || input.trim() === ''}
+                            disabled={loading || input.trim() === ''}
                             aria-label={t('chat.send')}
                             leftIcon={<SendHorizontal size={18} />}
                         />

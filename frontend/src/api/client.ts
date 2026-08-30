@@ -27,12 +27,10 @@ class ApiClient {
         );
     }
 
-    /** Dispatches a global app event carrying a translated message for the given key. */
     private emitAppEvent(name: string, messageKey: string): void {
         window.dispatchEvent(new CustomEvent(name, { detail: { message: i18n.t(messageKey) } }));
     }
 
-    /** Extracts the url, lowercased method and status from a failed request. */
     private describeError(error: AxiosError): { url: string; method: string; status: number | undefined } {
         return {
             url: error.config?.url ?? '',
@@ -65,7 +63,7 @@ class ApiClient {
         return Promise.reject(error);
     }
 
-    private startGet(url: string): AbortSignal {
+    private startGet(url: string): AbortController {
         const existing = this.pendingGets.get(url);
 
         if (existing) {
@@ -74,11 +72,17 @@ class ApiClient {
 
         const controller = new AbortController();
         this.pendingGets.set(url, controller);
-        return controller.signal;
+        return controller;
     }
 
-    private finishGet(url: string): void {
-        this.pendingGets.delete(url);
+    /** Only clears the map entry if it's still the controller this call registered — a
+     *  stale in-flight request (aborted by a newer one) must not delete the newer entry. */
+    private finishGet(url: string, controller: AbortController): void {
+        const isStillCurrent = this.pendingGets.get(url) === controller;
+
+        if (isStillCurrent) {
+            this.pendingGets.delete(url);
+        }
     }
 
     private isValidResponse<T>(data: unknown): data is T {
@@ -114,10 +118,10 @@ class ApiClient {
     }
 
     async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResult<T>> {
-        const signal = this.startGet(url);
+        const controller = this.startGet(url);
 
         try {
-            const { data } = await this.axiosInstance.get<T>(url, { ...config, signal });
+            const { data } = await this.axiosInstance.get<T>(url, { ...config, signal: controller.signal });
 
             if (!this.isValidResponse<T>(data)) {
                 this.logError(url, 'GET', 'Invalid response: empty or null data');
@@ -134,7 +138,7 @@ class ApiClient {
 
             return { ok: false, error: this.extractErrorMessage(error) };
         } finally {
-            this.finishGet(url);
+            this.finishGet(url, controller);
         }
     }
 
@@ -148,7 +152,6 @@ class ApiClient {
         }
     }
 
-    /** Runs a body-bearing request, validates the response shape, and maps it to an ApiResult. */
     private async runMutation<T>(method: string, url: string, send: () => Promise<{ data: T }>): Promise<ApiResult<T>> {
         try {
             const { data } = await send();
@@ -187,7 +190,6 @@ class ApiClient {
         }
     }
 
-    /** Parses a successful raw result, mapping a parse miss to a 'Parse failed' ApiResult. */
     private finalizeValidated<T>(raw: ApiResult<unknown>, parse: (raw: unknown) => T | null, url: string, method: string): ApiResult<T> {
         if (!raw.ok) {
             return raw;

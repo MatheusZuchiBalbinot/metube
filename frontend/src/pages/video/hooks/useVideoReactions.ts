@@ -1,8 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { useAppDispatch } from '@store';
-import { toastActions } from '@store/toastSlice';
-import { useBurstAnimation } from '@hooks';
-import { ToastType } from '@enums/toastType';
+import { useReactions } from '@hooks';
+import type { UseReactionsResult } from '@hooks';
 import type { VideoId } from '@models';
 
 interface UseVideoReactionsParams {
@@ -13,50 +10,16 @@ interface UseVideoReactionsParams {
     dislikeVideo: (id: VideoId) => void
 }
 
-export interface UseVideoReactionsResult {
-    isLiked: boolean
-    isDisliked: boolean
-    likeAnimating: boolean
-    dislikeAnimating: boolean
-    handleLike: () => void
-    handleDislike: () => void
-}
+export type UseVideoReactionsResult = UseReactionsResult;
 
-export function useVideoReactions({
-    videoId,
-    likedVideos,
-    dislikedVideos,
-    likeVideo,
-    dislikeVideo,
-}: UseVideoReactionsParams): UseVideoReactionsResult {
-    const { t } = useTranslation();
-    const dispatch = useAppDispatch();
-    const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
-    const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
-
-    const isLiked = videoId !== undefined && likedVideos.has(videoId);
-    const isDisliked = videoId !== undefined && dislikedVideos.has(videoId);
-
-    function handleLike() {
-        dispatch(toastActions.addToast({
-            message: t(isLiked ? 'toast.unliked' : 'toast.liked'),
-            type: ToastType.SUCCESS,
-        }));
-
-        if (videoId !== undefined) {
-            likeVideo(videoId);
-        }
-
-        triggerLikeAnimation();
-    }
-
-    function handleDislike() {
-        if (videoId !== undefined) {
-            dislikeVideo(videoId);
-        }
-
-        triggerDislikeAnimation();
-    }
-
-    return { isLiked, isDisliked, likeAnimating, dislikeAnimating, handleLike, handleDislike };
+/**
+ * Thin wrapper around the shared `useReactions` hook (see `@hooks/useReactions`),
+ * kept so the video page's existing call shape doesn't need to change.
+ * `likedVideos`/`dislikedVideos`/`likeVideo`/`dislikeVideo` are accepted for
+ * backward compatibility but not read — `useReactions` sources the same Redux
+ * state itself. The video page toasts on like (its pre-existing behavior),
+ * preserved here via `{ toast: true }`.
+ */
+export function useVideoReactions({ videoId }: UseVideoReactionsParams): UseVideoReactionsResult {
+    return useReactions(videoId, { toast: true });
 }

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { DragAndDrop, Input } from '@ui';
-import { Format, formatEta } from '@utils';
+import { Format, formatEta, IMAGE_MIME_TYPES, VIDEO_MIME_TYPES, THUMBNAIL_MAX_SIZE_MB, VIDEO_MAX_SIZE_MB } from '@utils';
 import TagInput from '@components/tag/input';
 import type { FormState } from './useUploadModal';
 import type { UploadProgress } from '@utils';
@@ -83,8 +83,8 @@ export default function UploadSingleForm({
                 <div className="upload-modal__field">
                     <label className="upload-modal__label">{t('video.upload_thumbnail')}</label>
                     <DragAndDrop
-                        accept="image/*"
-                        maxSizeMB={10}
+                        accept={IMAGE_MIME_TYPES.join(',')}
+                        maxSizeMB={THUMBNAIL_MAX_SIZE_MB}
                         label={t('video.drag_image')}
                         sublabel={t('video.drag_image_sub')}
                         onFileSelect={onThumbnailFile}
@@ -95,8 +95,8 @@ export default function UploadSingleForm({
                 <div className="upload-modal__field">
                     <label className="upload-modal__label">{t('video.upload_video_file')}</label>
                     <DragAndDrop
-                        accept="video/*"
-                        maxSizeMB={2048}
+                        accept={VIDEO_MIME_TYPES.join(',')}
+                        maxSizeMB={VIDEO_MAX_SIZE_MB}
                         label={t('video.drag_video')}
                         sublabel={t('video.drag_video_sub')}
                         onFileSelect={onVideoFile}

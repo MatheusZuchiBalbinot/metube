@@ -1,4 +1,4 @@
-export type UserId = number & { readonly _brand: 'UserId' };
+export type UserId = string & { readonly _brand: 'UserId' };
 
 export interface User {
     id: UserId

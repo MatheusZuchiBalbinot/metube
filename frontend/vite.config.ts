@@ -1,30 +1,12 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { resolve } from 'path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vite.dev/config/
 export default defineConfig({
-    resolve: {
-        alias: {
-            '@api': resolve(__dirname, 'src/api'),
-            '@context': resolve(__dirname, 'src/context'),
-            '@components': resolve(__dirname, 'src/components'),
-            '@ui': resolve(__dirname, 'src/components/ui'),
-            '@pages': resolve(__dirname, 'src/pages'),
-            '@styles': resolve(__dirname, 'src/styles'),
-            '@data': resolve(__dirname, 'src/data'),
-            '@utils': resolve(__dirname, 'src/utils'),
-            '@hooks': resolve(__dirname, 'src/hooks'),
-            '@store': resolve(__dirname, 'src/store'),
-            '@models': resolve(__dirname, 'src/types'),
-            '@validation': resolve(__dirname, 'src/validation'),
-            '@lib': resolve(__dirname, 'src/lib'),
-            '@enums': resolve(__dirname, 'src/enums'),
-            '@domain': resolve(__dirname, 'src/domain'),
-        },
-    },
     plugins: [
+        tsconfigPaths({ projects: ['tsconfig.app.json', 'tsconfig.node.json', 'tsconfig.test.json'] }),
         tailwindcss(),
         react({
             babel: {
@@ -58,23 +40,6 @@ export default defineConfig({
         environment: 'jsdom',
         include: ['tests/**/*.test.{ts,tsx}'],
         setupFiles: ['tests/setup.ts'],
-        alias: {
-            '@api': resolve(__dirname, 'src/api'),
-            '@components': resolve(__dirname, 'src/components'),
-            '@context': resolve(__dirname, 'src/context'),
-            '@data': resolve(__dirname, 'src/data'),
-            '@hooks': resolve(__dirname, 'src/hooks'),
-            '@models': resolve(__dirname, 'src/types'),
-            '@pages': resolve(__dirname, 'src/pages'),
-            '@store': resolve(__dirname, 'src/store'),
-            '@styles': resolve(__dirname, 'src/styles'),
-            '@ui': resolve(__dirname, 'src/components/ui'),
-            '@utils': resolve(__dirname, 'src/utils'),
-            '@validation': resolve(__dirname, 'src/validation'),
-            '@lib': resolve(__dirname, 'src/lib'),
-            '@enums': resolve(__dirname, 'src/enums'),
-            '@domain': resolve(__dirname, 'src/domain'),
-        },
     },
     server: {
         host: '0.0.0.0',

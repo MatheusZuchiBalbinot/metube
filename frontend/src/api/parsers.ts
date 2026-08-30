@@ -80,6 +80,64 @@ function brand<T>(value: string | number): T {
     return value as unknown as T;
 }
 
+// ─── Generic envelope factories ─────────────────────────────────────────────────
+//
+// Both shapes below mirror the Laravel `JsonResource` envelope exactly, so a
+// per-collection copy of either one is a maintenance trap: a field added on the
+// backend (e.g. `from`/`to` on pagination) has to be remembered in every copy.
+
+/**
+ * Builds a parser for a Laravel paginated envelope: `{ data: T[], meta: {...} }`.
+ * `item` parses a single row; rows that fail to parse are dropped. Returns null
+ * when the envelope or its `meta` block is missing.
+ */
+function paginatedParser<T>(item: (raw: unknown) => T | null): (raw: unknown) => PaginatedResponse<T> | null {
+    return (raw: unknown) => {
+        const rawData = toRaw(raw);
+
+        if (!rawData) {
+            return null;
+        }
+
+        const meta = toRaw(rawData['meta']);
+
+        if (!meta) {
+            return null;
+        }
+
+        const rows = Array.isArray(rawData['data'])
+            ? rawData['data'].map(item).filter((row): row is T => row !== null)
+            : [];
+
+        return {
+            data: rows,
+            meta: {
+                total: num(meta['total']),
+                page: num(meta['current_page']),
+                perPage: num(meta['per_page']),
+                lastPage: num(meta['last_page']),
+            },
+        };
+    };
+}
+
+/**
+ * Builds a parser for a bare Laravel resource collection: `{ data: T[] }` (no
+ * pagination `meta`). `item` parses a single row; rows that fail to parse are
+ * dropped. Returns null when the envelope's `data` array is missing entirely.
+ */
+function collectionParser<T>(item: (raw: unknown) => T | null): (raw: unknown) => T[] | null {
+    return (raw: unknown) => {
+        const rawData = toRaw(raw);
+
+        if (!rawData || !Array.isArray(rawData['data'])) {
+            return null;
+        }
+
+        return rawData['data'].map(item).filter((row): row is T => row !== null);
+    };
+}
+
 // ─── Video ─────────────────────────────────────────────────────────────────────
 
 export function parseVideo(raw: unknown): Video | null {
@@ -121,33 +179,7 @@ export function parseVideo(raw: unknown): Video | null {
     };
 }
 
-export function parseVideoList(raw: unknown): VideoListApiResponse | null {
-    const rawData = toRaw(raw);
-
-    if (!rawData) {
-        return null;
-    }
-
-    const meta = toRaw(rawData['meta']);
-
-    if (!meta) {
-        return null;
-    }
-
-    const videos = Array.isArray(rawData['data'])
-        ? rawData['data'].map(parseVideo).filter((video): video is Video => video !== null)
-        : [];
-
-    return {
-        data: videos,
-        meta: {
-            total: num(meta['total']),
-            page: num(meta['current_page']),
-            perPage: num(meta['per_page']),
-            lastPage: num(meta['last_page']),
-        },
-    };
-}
+export const parseVideoList = paginatedParser<Video>(parseVideo);
 
 /**
  * Parse a non-paginated video collection such as `/recommendations`, which returns
@@ -159,13 +191,7 @@ export function parseVideoCollection(raw: unknown): Video[] | null {
         return raw.map(parseVideo).filter((video): video is Video => video !== null);
     }
 
-    const rawData = toRaw(raw);
-
-    if (rawData === null || !Array.isArray(rawData['data'])) {
-        return null;
-    }
-
-    return rawData['data'].map(parseVideo).filter((video): video is Video => video !== null);
+    return collectionParser<Video>(parseVideo)(raw);
 }
 
 // ─── User ──────────────────────────────────────────────────────────────────────
@@ -259,43 +285,9 @@ export function parseComment(raw: unknown): Comment | null {
     };
 }
 
-export function parseCommentList(raw: unknown): CommentListApiResponse | null {
-    const rawData = toRaw(raw);
+export const parseCommentList = paginatedParser<Comment>(parseComment);
 
-    if (!rawData) {
-        return null;
-    }
-
-    const meta = toRaw(rawData['meta']);
-
-    if (!meta) {
-        return null;
-    }
-
-    const comments = Array.isArray(rawData['data'])
-        ? rawData['data'].map(parseComment).filter((comment): comment is Comment => comment !== null)
-        : [];
-
-    return {
-        data: comments,
-        meta: {
-            total: num(meta['total']),
-            page: num(meta['current_page']),
-            perPage: num(meta['per_page']),
-            lastPage: num(meta['last_page']),
-        },
-    };
-}
-
-export function parseCommentReplies(raw: unknown): Comment[] | null {
-    const rawData = toRaw(raw);
-
-    if (!rawData || !Array.isArray(rawData['data'])) {
-        return null;
-    }
-
-    return rawData['data'].map(parseComment).filter((comment): comment is Comment => comment !== null);
-}
+export const parseCommentReplies = collectionParser<Comment>(parseComment);
 
 export function parseToggleLike(raw: unknown): ToggleLikeApiResponse | null {
     const rawData = toRaw(raw);
@@ -324,15 +316,7 @@ export function parseCommentVersion(raw: unknown): CommentVersion | null {
     };
 }
 
-export function parseCommentVersions(raw: unknown): CommentVersion[] | null {
-    const rawData = toRaw(raw);
-
-    if (!rawData || !Array.isArray(rawData['data'])) {
-        return null;
-    }
-
-    return rawData['data'].map(parseCommentVersion).filter((version): version is CommentVersion => version !== null);
-}
+export const parseCommentVersions = collectionParser<CommentVersion>(parseCommentVersion);
 
 // ─── Playlist ──────────────────────────────────────────────────────────────────
 
@@ -357,15 +341,7 @@ export function parsePlaylist(raw: unknown): Playlist | null {
     };
 }
 
-export function parsePlaylistList(raw: unknown): Playlist[] | null {
-    const rawData = toRaw(raw);
-
-    if (!rawData || !Array.isArray(rawData['data'])) {
-        return null;
-    }
-
-    return rawData['data'].map(parsePlaylist).filter((playlist): playlist is Playlist => playlist !== null);
-}
+export const parsePlaylistList = collectionParser<Playlist>(parsePlaylist);
 
 // ─── Video Summary ─────────────────────────────────────────────────────────────
 

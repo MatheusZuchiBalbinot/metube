@@ -1,33 +1,10 @@
-import { useVideoData, useVideoActions, useBurstAnimation } from '@hooks';
+import { useReactions } from '@hooks';
+import type { UseReactionsResult } from '@hooks';
 import type { VideoId } from '@models';
 
-export interface ShortReactions {
-    isLiked: boolean
-    isDisliked: boolean
-    likeAnimating: boolean
-    dislikeAnimating: boolean
-    handleLike: () => void
-    handleDislike: () => void
-}
+export type ShortReactions = UseReactionsResult;
 
+/** Thin wrapper around the shared `useReactions` hook — shorts never toast on like/dislike. */
 export function useShortReactions(videoId: VideoId): ShortReactions {
-    const { likedVideos, dislikedVideos } = useVideoData();
-    const { likeVideo, dislikeVideo } = useVideoActions();
-    const [likeAnimating, triggerLikeAnimation] = useBurstAnimation();
-    const [dislikeAnimating, triggerDislikeAnimation] = useBurstAnimation();
-
-    const isLiked = likedVideos.has(videoId);
-    const isDisliked = dislikedVideos.has(videoId);
-
-    function handleLike() {
-        likeVideo(videoId);
-        triggerLikeAnimation();
-    }
-
-    function handleDislike() {
-        dislikeVideo(videoId);
-        triggerDislikeAnimation();
-    }
-
-    return { isLiked, isDisliked, likeAnimating, dislikeAnimating, handleLike, handleDislike };
+    return useReactions(videoId);
 }

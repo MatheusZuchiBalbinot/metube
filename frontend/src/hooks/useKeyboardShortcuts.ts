@@ -1,7 +1,15 @@
-/* eslint-disable complexity */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES, isTypingInInput } from '@utils';
+
+// How long a leading "g" stays armed waiting for its second chord key (g+h, g+p, g+s).
+const CHORD_WINDOW_MS = 800;
+
+const CHORD_ROUTES: Record<string, string> = {
+    h: ROUTES.HISTORY,
+    p: ROUTES.PROFILE,
+    s: ROUTES.SEARCH,
+};
 
 interface KeyboardShortcutsOptions {
     onOpenUpload: () => void
@@ -27,6 +35,48 @@ export function useKeyboardShortcuts({
     const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
+        const globalActions: Record<string, () => void> = {
+            u: onOpenUpload,
+            '?': onOpenShortcuts,
+        };
+
+        const videoActions: Record<string, (() => void) | undefined> = {
+            l: onLike,
+            s: onSave,
+            t: onToggleTheater,
+        };
+
+        // Consumes a pending "g" chord if one is armed. Always clears the pending
+        // state once "g" was armed, but only reports the key as handled (returning
+        // true) when it matches a known chord route — an unmatched second key still
+        // falls through to be evaluated as a normal shortcut below.
+        function consumePendingChord(key: string): boolean {
+            if (pendingKeyRef.current !== 'g') {
+                return false;
+            }
+
+            if (pendingTimerRef.current) {
+                clearTimeout(pendingTimerRef.current);
+            }
+            pendingKeyRef.current = null;
+
+            const route = CHORD_ROUTES[key];
+
+            if (!route) {
+                return false;
+            }
+
+            navigate(route);
+            return true;
+        }
+
+        function armChord() {
+            pendingKeyRef.current = 'g';
+            pendingTimerRef.current = setTimeout(() => {
+                pendingKeyRef.current = null;
+            }, CHORD_WINDOW_MS);
+        }
+
         function handleKeyDown(e: KeyboardEvent) {
             if (isTypingInInput(e.target)) {
                 return;
@@ -34,35 +84,15 @@ export function useKeyboardShortcuts({
 
             const key = e.key.toLowerCase();
 
-            // Chord sequences: G + H, G + P, G + S
-            if (pendingKeyRef.current === 'g') {
-                if (pendingTimerRef.current) {
-                    clearTimeout(pendingTimerRef.current);
-                }
-                pendingKeyRef.current = null;
-
-                if (key === 'h') {
-                    navigate(ROUTES.HISTORY); return;
-                }
-
-                if (key === 'p') {
-                    navigate(ROUTES.PROFILE); return;
-                }
-
-                if (key === 's') {
-                    navigate(ROUTES.SEARCH); return;
-                }
-            }
-
-            if (key === 'g') {
-                pendingKeyRef.current = 'g';
-                pendingTimerRef.current = setTimeout(() => {
-                    pendingKeyRef.current = null;
-                }, 800);
+            if (consumePendingChord(key)) {
                 return;
             }
 
-            // Single key shortcuts (no modifiers other than Shift for '?')
+            if (key === 'g') {
+                armChord();
+                return;
+            }
+
             if (e.ctrlKey || e.altKey || e.metaKey) {
                 return;
             }
@@ -73,32 +103,15 @@ export function useKeyboardShortcuts({
                 return;
             }
 
-            if (key === 'u') {
-                onOpenUpload();
+            const globalAction = globalActions[key];
+
+            if (globalAction) {
+                globalAction();
                 return;
             }
 
-            if (key === '?' || (e.shiftKey && key === '/')) {
-                onOpenShortcuts();
-                return;
-            }
-
-            // Video page shortcuts
             if (videoPageId) {
-                if (key === 'l' && onLike) {
-                    onLike();
-                    return;
-                }
-
-                if (key === 's' && onSave) {
-                    onSave();
-                    return;
-                }
-
-                if (key === 't' && onToggleTheater) {
-                    onToggleTheater();
-                    return;
-                }
+                videoActions[key]?.();
             }
         }
 

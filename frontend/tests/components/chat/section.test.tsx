@@ -39,7 +39,7 @@ function renderChat(transcription: VideoTranscription | null) {
     });
 
     return renderWithProviders(
-        <ChatSection vuid={mockVuid} transcription={transcription} summary={null} />,
+        <ChatSection vuid={mockVuid} transcription={transcription} />,
         { preloadedState },
     );
 }
@@ -72,7 +72,6 @@ describe('ChatSection', () => {
         renderChat(completedTranscription);
 
         expect(screen.getByRole('textbox')).toBeInTheDocument();
-        // At least one chip renders
         expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(1);
     });
 
@@ -176,7 +175,6 @@ describe('ChatSection', () => {
         const user = userEvent.setup();
         renderChat(completedTranscription);
 
-        // No clear button initially
         expect(screen.queryByRole('button', { name: /clear|limpar/i })).not.toBeInTheDocument();
 
         await user.type(screen.getByRole('textbox'), 'Question?');
