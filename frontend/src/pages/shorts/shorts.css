@@ -384,8 +384,8 @@
 
 /* Disliked state */
 .shorts-page__action--disliked .rbtn__icon {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--color-error-a15);
+    border-color: var(--color-error-a40);
     color: var(--color-error);
 }
 

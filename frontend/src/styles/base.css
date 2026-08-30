@@ -59,6 +59,22 @@ button {
     --color-warning: #f59e0b;
     --color-warning-subtle: rgba(245, 158, 11, 0.12);
     --color-warning-fg: #fbbf24;
+
+    /* Semantic status color alpha scale — derived from --color-* via color-mix()
+       so they automatically track whichever theme (dark/light) is active.
+       Named tokens only for the exact alpha values actually used across components. */
+    --color-error-a08: color-mix(in srgb, var(--color-error) 8%, transparent);
+    --color-error-a10: color-mix(in srgb, var(--color-error) 10%, transparent);
+    --color-error-a12: color-mix(in srgb, var(--color-error) 12%, transparent);
+    --color-error-a15: color-mix(in srgb, var(--color-error) 15%, transparent);
+    --color-error-a18: color-mix(in srgb, var(--color-error) 18%, transparent);
+    --color-error-a20: color-mix(in srgb, var(--color-error) 20%, transparent);
+    --color-error-a40: color-mix(in srgb, var(--color-error) 40%, transparent);
+    --color-error-a70: color-mix(in srgb, var(--color-error) 70%, transparent);
+    --color-success-a10: color-mix(in srgb, var(--color-success) 10%, transparent);
+    --color-success-a15: color-mix(in srgb, var(--color-success) 15%, transparent);
+    --color-success-a40: color-mix(in srgb, var(--color-success) 40%, transparent);
+    --color-warning-a10: color-mix(in srgb, var(--color-warning) 10%, transparent);
 }
 
 :root[data-mode='light'] {

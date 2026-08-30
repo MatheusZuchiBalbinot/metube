@@ -286,7 +286,7 @@
 
 .app-header__dropdown-logout:hover {
     color: var(--color-error);
-    background: rgba(239, 68, 68, 0.08);
+    background: var(--color-error-a08);
 }
 
 /* ─── Search bar ──────────────────────────────────────────────────────────── */

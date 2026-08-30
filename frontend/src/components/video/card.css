@@ -177,44 +177,6 @@
     color: var(--vc-color, var(--text));
 }
 
-/* ─── Meta ────────────────────────────────────────────────────────────────── */
-
-.video-card__meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-size: var(--text-sm);
-}
-
-.video-card__meta-channel {
-    color: var(--text-2);
-    font-weight: var(--font-medium);
-    text-decoration: none;
-    cursor: pointer;
-    transition: color var(--duration-default);
-}
-
-.video-card__meta-channel:hover {
-    color: var(--accent);
-    text-decoration: underline;
-}
-
-.video-card__meta-sub {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--text-3);
-}
-
-.video-card__meta-dot {
-    color: var(--text-3);
-}
-
-.video-card__meta-views,
-.video-card__meta-date {
-    color: var(--text-3);
-}
-
 /* ─── Tags ────────────────────────────────────────────────────────────────── */
 
 .video-card__tags {
@@ -324,7 +286,7 @@
 }
 
 .video-card__menu-item--danger:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--color-error-a10);
 }
 
 .video-card__menu-divider {
@@ -387,14 +349,6 @@
     z-index: 1;
 }
 
-/* ─── Pin button active state ────────────────────────────────────────────── */
-
-.video-card__pin-btn--active {
-    color: var(--accent) !important;
-    border-color: var(--accent-subtle) !important;
-    background: var(--accent-subtle) !important;
-}
-
 /* ─── Save trigger ────────────────────────────────────────────────────────── */
 
 .video-card__save-trigger {
@@ -412,19 +366,14 @@
     opacity: 1;
 }
 
-.video-card__save-btn {
-    background: rgba(0, 0, 0, 0.65) !important;
-    color: var(--text-on-overlay) !important;
-    border: none !important;
-}
-
-.video-card__save-btn:hover {
-    background: rgba(0, 0, 0, 0.85) !important;
-}
-
-.video-card__save-btn--active {
-    color: var(--accent) !important;
-    background: rgba(0, 0, 0, 0.75) !important;
+/* Base look (dark translucent scrim, no border) comes from Button's own
+   `variant="overlay"` — no override needed here. Only the toggled "saved" state
+   is card-specific; the compound `.btn.video-card__save-btn--active` selector
+   gives it enough specificity to beat `.btn--overlay` without `!important`,
+   regardless of CSS import order. */
+.btn.video-card__save-btn--active {
+    color: var(--accent);
+    background: rgba(0, 0, 0, 0.75);
 }
 
 /* ─── Duration badge ──────────────────────────────────────────────────────── */

@@ -14,7 +14,13 @@ function buildInputClass(icon: React.ReactNode, error: string | undefined, class
         .join(' ');
 }
 
-// eslint-disable-next-line complexity
+function buildInputAria(id: string | undefined, error: string | undefined) {
+    return {
+        invalid: error ? true : undefined,
+        describedBy: error ? `${id}-error` : undefined,
+    };
+}
+
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     label,
     icon,
@@ -25,6 +31,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     ...props
 }, ref) {
     const inputClass = buildInputClass(icon, error, className);
+    const aria = buildInputAria(id, error);
 
     return (
         <div className="input-field-wrap">
@@ -44,8 +51,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
                     ref={ref}
                     id={id}
                     className={inputClass}
-                    aria-invalid={error ? true : undefined}
-                    aria-describedby={error ? `${id}-error` : undefined}
+                    aria-invalid={aria.invalid}
+                    aria-describedby={aria.describedBy}
                     {...props}
                 />
             </div>

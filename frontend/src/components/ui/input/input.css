@@ -66,13 +66,13 @@
 }
 
 .input-field--error {
-    border-color: rgba(239, 68, 68, 0.4);
+    border-color: var(--color-error-a40);
 }
 
 .input-field--error:focus,
 .input-field--error:focus-visible {
-    border-color: rgba(239, 68, 68, 0.7);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    border-color: var(--color-error-a70);
+    box-shadow: 0 0 0 3px var(--color-error-a10);
 }
 
 .input-error-msg {

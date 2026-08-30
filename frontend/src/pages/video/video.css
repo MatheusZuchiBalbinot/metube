@@ -295,11 +295,11 @@
 
 .video-page__pill-btn--disliked {
     color: var(--color-error);
-    background: rgba(239, 68, 68, 0.12);
+    background: var(--color-error-a12);
 }
 
 .video-page__pill-btn--disliked:hover {
-    background: rgba(239, 68, 68, 0.18);
+    background: var(--color-error-a18);
     color: var(--color-error);
 }
 
@@ -406,8 +406,8 @@
 
 /* Disliked state */
 .video-page__reaction-btn--disliked .rbtn__icon {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--color-error-a15);
+    border-color: var(--color-error-a40);
     color: var(--color-error);
 }
 
@@ -444,8 +444,8 @@
 
 /* Copied state */
 .video-page__reaction-btn--copied .rbtn__icon {
-    background: rgba(16, 185, 129, 0.15);
-    border-color: rgba(16, 185, 129, 0.4);
+    background: var(--color-success-a15);
+    border-color: var(--color-success-a40);
     color: var(--color-success-fg);
 }
 
