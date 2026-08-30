@@ -44,9 +44,30 @@ echo "Building and starting production stack..."
 $COMPOSE up --build -d
 
 echo "Waiting for backend to be ready..."
-until $COMPOSE exec -T backend php artisan about --only=Environment 2>/dev/null | grep -q "production"; do
+backend_ready=false
+for _ in $(seq 1 60); do
+    if $COMPOSE exec -T backend php artisan about --only=Environment 2>/dev/null | grep -q "production"; then
+        backend_ready=true
+        break
+    fi
     sleep 2
 done
+
+if [[ "$backend_ready" != "true" ]]; then
+    echo "Error: backend did not become ready within 120s. Last logs:"
+    $COMPOSE logs --tail=100 backend
+    exit 1
+fi
+
+echo "Checking Caddy /healthz..."
+# :9000/healthz is only exposed inside the container network (see
+# caddy/Caddyfile.prod), so probe it from inside the caddy container itself,
+# the same way its own Docker healthcheck does.
+if ! $COMPOSE exec -T caddy wget --quiet --tries=1 --spider "http://localhost:9000/healthz"; then
+    echo "Error: /healthz did not return success."
+    $COMPOSE logs --tail=100 caddy
+    exit 1
+fi
 
 echo ""
 echo "Stack status:"

@@ -45,10 +45,26 @@ services:
     ports: []
 
   # "auto" → one Octane worker per core (resolved in entrypoint.sh).
+  # Volumes are overridden (not extended) to drop the ./backend:/app bind-mount
+  # from the base file: in prod the built image already has vendor/ and code
+  # baked in, and entrypoint.sh sets opcache.validate_timestamps=0 on the
+  # premise that code is immutable between deploys — a live bind-mount would
+  # silently contradict that and serve the host's on-disk code instead of the
+  # image's. Only the storage volume (uploaded media) needs to persist here.
   backend:
     environment:
       OCTANE_WORKERS: auto
+    volumes: !override
+      - metube_storage:/app/storage
     mem_limit: 1g
+
+  horizon:
+    volumes: !override
+      - metube_storage:/app/storage
+
+  reverb:
+    volumes: !override
+      - metube_storage:/app/storage
 
   caddy:
     ports:

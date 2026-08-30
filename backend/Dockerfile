@@ -1,4 +1,4 @@
-FROM composer:latest AS vendor
+FROM composer:2.10 AS vendor
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN composer install \
     --ignore-platform-reqs \
     --no-scripts
 
-FROM dunglas/frankenphp:latest
+FROM dunglas/frankenphp:1.12-php8.4
 
 WORKDIR /app
 

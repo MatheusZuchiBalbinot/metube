@@ -1,0 +1,40 @@
+name: Whisper Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'whisper/**'
+      - '.github/workflows/whisper.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'whisper/**'
+      - '.github/workflows/whisper.yml'
+
+defaults:
+  run:
+    working-directory: whisper
+
+jobs:
+  tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: whisper/requirements.txt
+
+      - name: Install dependencies
+        # pytest/httpx are test-only tooling, not runtime deps, so they are not
+        # in requirements.txt (mirrors how backend keeps dev tooling in
+        # composer.json's require-dev instead of the production image).
+        run: pip install -r requirements.txt pytest httpx
+
+      - name: Run tests
+        run: pytest -v

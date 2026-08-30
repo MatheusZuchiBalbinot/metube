@@ -7,7 +7,7 @@ services:
     env_file:
       - .env.postgres
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -53,6 +53,12 @@ services:
     networks:
       - app_net
     mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   whisper:
     # Gated by COMPOSE_PROFILES; omit it to use a hosted API via WHISPER_URL.
@@ -133,7 +139,7 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
       NODE_OPTIONS: "--max-old-space-size=768"
       CHOKIDAR_USEPOLLING: "0"
@@ -150,7 +156,7 @@ services:
     mem_limit: 1g
 
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2.11-alpine
     restart: unless-stopped
     ports:
       - "80:80"
