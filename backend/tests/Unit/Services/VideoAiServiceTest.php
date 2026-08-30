@@ -37,12 +37,12 @@ describe('VideoAiService::getSummary', function () {
 
         $summary = app(VideoAiService::class)->getSummary($video);
 
-        // Key order below matches what json_decode() on the round-tripped DB
-        // value actually produces (title before timestamp) — not the order the
-        // fixture above was written in. Pest's toBe() compares associative
-        // arrays with ===, which is order-sensitive.
+        // toEqual() (== semantics) is used for chapters instead of toBe() (===)
+        // because associative-array key order in the JSON round-trip through
+        // the DB is not a meaningful part of the contract and isn't guaranteed
+        // stable across PHP versions/environments.
         expect($summary->keyPoints)->toBe(['Point A', 'Point B'])
-            ->and($summary->chapters)->toBe([['title' => 'Intro', 'timestamp' => '0:00']])
+            ->and($summary->chapters)->toEqual([['timestamp' => '0:00', 'title' => 'Intro']])
             ->and($summary->readingMode)->toBe('Full summary text');
     });
 });
