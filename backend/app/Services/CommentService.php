@@ -152,22 +152,32 @@ final class CommentService
      * table migration), so deleting one with N replies removes 1 + N rows.
      * The video's comments_count must be decremented by that same amount, or
      * it drifts upward forever with no reconciliation job to correct it.
+     *
+     * Deletes via the query builder (not the $comment model instance) so its
+     * return value — rows actually removed — gates the decrements. Two requests
+     * racing a double-submit delete can both resolve the same $comment before
+     * either's DELETE commits; without this guard the second call would still
+     * see itself as "1 + replies" and decrement again for a row already gone.
      */
     public function destroy(Comment $comment): void
     {
         DB::transaction(function () use ($comment): void {
-            $hasParent = $comment->parent_id !== null;
+            $isRoot = $comment->parent_id === null;
+            $replyCount = $isRoot ? $comment->replies()->count() : 0;
 
-            if ($hasParent) {
+            $deleted = Comment::where('id', $comment->id)->delete();
+
+            if ($deleted === 0) {
+                return;
+            }
+
+            if (!$isRoot) {
                 Comment::where('id', $comment->parent_id)->decrement('replies_count');
             }
 
-            $isRoot = $comment->parent_id === null;
-            $deletedCount = $isRoot ? 1 + $comment->replies()->count() : 1;
+            $deletedCount = $isRoot ? 1 + $replyCount : 1;
 
             Video::where('id', $comment->video_id)->decrement('comments_count', $deletedCount);
-
-            $comment->delete();
         });
     }
 

@@ -6,6 +6,7 @@ use App\DTOs\StoreCommentDTO;
 use App\DTOs\UpdateCommentDTO;
 use App\Events\CommentLiked;
 use App\Models\Comment;
+use App\Models\CommentLike;
 use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
@@ -103,6 +104,20 @@ describe('CommentService', function () {
         $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
     });
 
+    test('two concurrent destroy calls on the same comment only decrement comments_count once', function () use (&$service) {
+        // Mirrors a double-submit delete: both requests' route-model-binding resolve
+        // the comment before either's DELETE commits, so both call destroy() with an
+        // equally "fresh" $comment object.
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create(['comments_count' => 3]);
+        $root = Comment::factory()->create(['video_id' => $video->id, 'parent_id' => null]);
+        Comment::factory(2)->create(['video_id' => $video->id, 'parent_id' => $root->id]);
+
+        simulateRace(fn () => $service->destroy($root));
+
+        expect($video->refresh()->comments_count)->toBe(0); // 3 - (1 root + 2 replies), not decremented twice
+    });
+
     test('destroy decrements parent replies_count', function () use (&$service) {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
@@ -157,6 +172,44 @@ describe('CommentService', function () {
         $service->toggleLike($comment, $user);
 
         Event::assertDispatched(CommentLiked::class);
+    });
+
+    test('a second concurrent like insert is ignored by the unique constraint, not double-counted', function () {
+        // toggleLike() is DELETE-first (see its docblock), which handles the common
+        // interleaving. The gap it still guards against is two requests that both run
+        // their DELETE before either INSERT commits: both find 0 rows to delete and
+        // both attempt to INSERT. This test drives that exact interleaving directly
+        // against the unique(user_id, comment_id) constraint the service relies on,
+        // since a single PHP process can't fork two real concurrent transactions.
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+        $comment = Comment::factory()->create(['video_id' => $video->id, 'likes_count' => 0]);
+
+        $firstInsert = CommentLike::insertOrIgnore([
+            'user_id' => $user->id,
+            'comment_id' => $comment->id,
+            'created_at' => now(),
+        ]);
+        $secondInsert = CommentLike::insertOrIgnore([
+            'user_id' => $user->id,
+            'comment_id' => $comment->id,
+            'created_at' => now(),
+        ]);
+
+        expect($firstInsert)->toBe(1)
+            ->and($secondInsert)->toBe(0);
+
+        // Mirrors the guard in CommentService::toggleLike(): only increment when
+        // insertOrIgnore() reports a row was actually written.
+        if ($firstInsert > 0) {
+            Comment::where('id', $comment->id)->increment('likes_count');
+        }
+
+        if ($secondInsert > 0) {
+            Comment::where('id', $comment->id)->increment('likes_count');
+        }
+
+        expect($comment->refresh()->likes_count)->toBe(1);
     });
 
     test('replies returns all replies for a comment', function () use (&$service) {
