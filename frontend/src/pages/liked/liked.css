@@ -1,51 +1,4 @@
-/* ─── LikedPage ───────────────────────────────────────────────────────────── */
-
-.liked-page {
-    display: flex;
-    flex-direction: column;
-    padding: var(--page-padding-y) var(--page-padding-x);
-    gap: var(--space-6);
-    max-width: var(--page-max-width);
-    margin-inline: auto;
-    width: 100%;
-}
-
-/* ─── Header ──────────────────────────────────────────────────────────────── */
-
-.liked-page__header {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-}
-
-.liked-page__title {
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
-    color: var(--text);
-    margin: 0;
-}
-
-.liked-page__count {
-    font-size: var(--text-base);
-    color: var(--text-3);
-    margin: 0;
-}
-
-/* ─── Filters ─────────────────────────────────────────────────────────────── */
-
-.liked-page__filters {
-    display: flex;
-}
-
-/* ─── Grid ────────────────────────────────────────────────────────────────── */
-
-.liked-page__grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-5);
-}
-
-/* ─── Item ────────────────────────────────────────────────────────────────── */
+/* ─── LikedPage — item overrides ──────────────────────────────────────────── */
 
 .liked-page__item {
     position: relative;
@@ -73,12 +26,3 @@
 .liked-page__unlike-btn:hover {
     color: var(--color-error-fg) !important;
 }
-
-@media (max-width: 1024px) {
-    .liked-page__grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 480px) {
-    .liked-page__grid { grid-template-columns: 1fr; }
-}
-
