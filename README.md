@@ -70,6 +70,7 @@ flowchart TB
 * Filas priorizadas com **Laravel Horizon**
 * **Session versioning** para invalidação global de sessões
 * PostgreSQL Full-Text Search com `tsvector` + **GIN**
+* **OpenTelemetry** — auto-instrumentação de Laravel e PDO, exportando traces/metrics/logs via OTLP (desligado por padrão em dev; basta configurar o endpoint/API key para habilitar)
 * PHPStan nível 8 + Pint + PHP Insights (**gate de 99%**)
 
 Detalhes de rotas, services e convenções: [`backend/CLAUDE.backend.md`](backend/CLAUDE.backend.md).
@@ -120,6 +121,7 @@ Detalhes de aliases, convenções e testes: [`frontend/CLAUDE.frontend.md`](fron
 | LLM           | Groq · interface agnóstica de provider       |
 | Auth          | Laravel Sanctum · stateful / HttpOnly cookie |
 | Proxy         | Caddy 2                                      |
+| Observability | OpenTelemetry · OTLP (traces/metrics/logs)   |
 | Infra         | Docker Compose                               |
 
 ---
@@ -192,6 +194,15 @@ Sem a chave, upload, processamento de vídeo, transcrição e player continuam d
 A transcrição utiliza **faster-whisper em CPU** por padrão. O modelo é baixado no primeiro build do serviço `whisper`.
 
 Também é possível utilizar um serviço externo de ASR configurando `WHISPER_URL` e desabilitando o profile local do Whisper.
+
+### Observability (opcional)
+
+O backend já vem com auto-instrumentação OpenTelemetry (Laravel + PDO), mas o export fica **desligado por padrão** — sem `OTEL_EXPORTER_OTLP_HEADERS` preenchido, os spans/logs são descartados silenciosamente (você pode ver mensagens de "Export failure" nos logs, são inofensivas). Para habilitar, configure em `backend/.env`:
+
+```env
+OTEL_EXPORTER_OTLP_ENDPOINT=   # endpoint OTLP do seu collector/vendor (ex.: New Relic, Honeycomb, um coletor local)
+OTEL_EXPORTER_OTLP_HEADERS=    # ex.: api-key=SEU_TOKEN
+```
 
 ### Acesso
 

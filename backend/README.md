@@ -4,6 +4,8 @@ API Laravel 12 (FrankenPHP/Octane) para o [MeTube](../README.md): controllers th
 
 Convenções completas (rotas, services, PHPStan, cache, filas, upload): [`CLAUDE.backend.md`](CLAUDE.backend.md).
 
+Vem com auto-instrumentação **OpenTelemetry** (Laravel + PDO) já instalada, exportando via OTLP — desligada por padrão em dev (`OTEL_EXPORTER_OTLP_HEADERS` vazio). Ver [Observability no README raiz](../README.md#observability-opcional) para habilitar.
+
 ---
 
 ## Requisitos
