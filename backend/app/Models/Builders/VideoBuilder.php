@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Builders;
 
+use App\Config\PaginationSize;
 use App\Enums\VideoStatus;
 use App\Models\Video;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,7 +36,7 @@ class VideoBuilder extends Builder
         }
 
         if (isset($filters['tags'])) {
-            $this->applyTags(array_values($filters['tags']));
+            $this->withAnyTag(array_values($filters['tags']));
         }
 
         if (isset($filters['status'])) {
@@ -45,39 +46,75 @@ class VideoBuilder extends Builder
         return $this;
     }
 
-    /**
-     * Restrict the query to published videos only.
-     */
     public function published(): self
     {
         return $this->where('status', VideoStatus::PUBLISHED);
     }
 
     /**
-     * Order by publication date, newest first.
-     *
-     * Named distinctly from Eloquent's native latest() which orders by created_at.
+     * Named distinctly from Eloquent's native latest(), which orders by created_at.
      */
     public function newestPublished(): self
     {
         return $this->orderByDesc('published_at');
     }
 
-    /**
-     * Restrict the query to scheduled videos whose scheduled_at has passed.
-     */
     public function scheduledDue(): self
     {
         return $this->where('status', VideoStatus::SCHEDULED)
             ->where('scheduled_at', '<=', now());
     }
 
-    /**
-     * Filter a video by its public VUID.
-     */
     public function byVuid(string $vuid): self
     {
         return $this->where('vuid', $vuid);
+    }
+
+    /**
+     * Common "home feed shelf" query shape: published, newest first, channel
+     * eager-loaded, capped at PaginationSize::FEED_SHELF.
+     *
+     * Consolidates the identical published()->newestPublished()->with('channel')
+     * ->limit(...) chain FeedService repeated across its subscriptions, recent,
+     * shorts and because-you-watched shelves. Callers should add any extra
+     * `where`/`filter()` constraints before calling this, since it terminates
+     * the chain with the limit.
+     */
+    public function feedShelf(): self
+    {
+        return $this->published()
+            ->newestPublished()
+            ->with('channel')
+            ->limit(PaginationSize::FEED_SHELF);
+    }
+
+    /**
+     * Exclude videos carrying the given tag.
+     *
+     * Used to keep shorts out of shelves (e.g. trending) that rank a broader
+     * candidate pool before re-scoring, so the exclusion happens in SQL
+     * instead of a PHP-side reject() over already-fetched rows.
+     */
+    public function excludingTag(string $tag): self
+    {
+        return $this->whereJsonDoesntContain('tags', $tag);
+    }
+
+    /**
+     * Constrain the query to videos carrying any of the given tags (OR semantics).
+     *
+     * Public so other call sites that build ad-hoc tag predicates (e.g.
+     * RecommendationService's candidate pools) reuse this driver-aware logic
+     * instead of re-implementing the PostgreSQL `?|` / SQLite `orWhereJsonContains`
+     * split by hand. No-op for an empty tag list.
+     *
+     * @param array<string> $tags
+     */
+    public function withAnyTag(array $tags): self
+    {
+        $this->applyTags($tags);
+
+        return $this;
     }
 
     /**
@@ -86,8 +123,11 @@ class VideoBuilder extends Builder
     private function applySearch(string $search): void
     {
         if ($this->isPostgres()) {
-            $term = str_replace(' ', ' & ', trim($search));
-            $this->whereRaw("search_tsv @@ to_tsquery('simple', ?)", [$term . ':*']);
+            // websearch_to_tsquery sanitizes user-facing search syntax itself
+            // (quotes, boolean operators, punctuation) and never throws a
+            // tsquery syntax error — unlike to_tsquery, which raised a 500 on
+            // ordinary input like "C++" or an empty string.
+            $this->whereRaw("search_tsv @@ websearch_to_tsquery('simple', ?)", [$search]);
 
             return;
         }
@@ -100,12 +140,17 @@ class VideoBuilder extends Builder
     }
 
     /**
-     * Apply the driver-aware tag predicate (OR semantics).
+     * Apply the driver-aware tag predicate (OR semantics). No-op for an empty
+     * tag list, so callers can pass an unfiltered affinity set safely.
      *
-     * @param list<string> $tags
+     * @param array<string> $tags
      */
     private function applyTags(array $tags): void
     {
+        if ($tags === []) {
+            return;
+        }
+
         if ($this->isPostgres()) {
             $placeholders = implode(',', array_fill(0, count($tags), '?'));
             $this->whereRaw("tags ??| array[{$placeholders}]", $tags);
@@ -120,9 +165,6 @@ class VideoBuilder extends Builder
         });
     }
 
-    /**
-     * Whether the underlying connection is PostgreSQL.
-     */
     private function isPostgres(): bool
     {
         return $this->getConnection()->getDriverName() === 'pgsql';

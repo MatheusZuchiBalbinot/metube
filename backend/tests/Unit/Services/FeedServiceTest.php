@@ -7,9 +7,6 @@ use App\Models\User;
 use App\Models\Video;
 use App\Models\WatchHistory;
 use App\Services\FeedService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 /**
  * @param array<int, App\DTOs\FeedSection> $sections

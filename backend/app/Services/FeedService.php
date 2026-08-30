@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\Video;
 use App\Models\WatchHistory;
+use App\Support\ScoringSignals;
 use Illuminate\Support\Collection;
 
 /**
@@ -33,9 +34,6 @@ final class FeedService
      */
     private const TRENDING_HALF_LIFE_DAYS = 14;
 
-    /**
-     * Candidate pool size pulled before applying decay ranking to trending.
-     */
     private const TRENDING_CANDIDATE_POOL = 100;
 
     /**
@@ -51,10 +49,6 @@ final class FeedService
     public function __construct(private readonly CacheService $cache) {}
 
     /**
-     * Build the ordered list of feed sections for a user (or guest when null).
-     *
-     * @param User|null $user Authenticated user, or null for the guest feed
-     *
      * @return array<int, FeedSection>
      */
     public function forUser(?User $user): array
@@ -67,39 +61,28 @@ final class FeedService
             function () use ($user): array {
                 $sections = [];
 
+                // Both personalised shelves need a logged-in user, so they're
+                // computed together behind a single check instead of two.
+                $subscriptions = null;
+                $becauseYouWatched = null;
+
                 if ($user !== null) {
                     $subscriptions = $this->subscriptions($user);
-
-                    if ($subscriptions->isNotEmpty()) {
-                        $sections[] = new FeedSection(FeedSectionKey::SUBSCRIPTIONS, null, $subscriptions);
-                    }
-                }
-
-                $trending = $this->trending();
-
-                if ($trending->isNotEmpty()) {
-                    $sections[] = new FeedSection(FeedSectionKey::TRENDING, null, $trending);
-                }
-
-                $recent = $this->recent();
-
-                if ($recent->isNotEmpty()) {
-                    $sections[] = new FeedSection(FeedSectionKey::RECENT, null, $recent);
-                }
-
-                if ($user !== null) {
                     $becauseYouWatched = $this->becauseYouWatched($user);
-
-                    if ($becauseYouWatched !== null) {
-                        $sections[] = $becauseYouWatched;
-                    }
                 }
 
-                $shorts = $this->shorts();
-
-                if ($shorts->isNotEmpty()) {
-                    $sections[] = new FeedSection(FeedSectionKey::SHORTS, null, $shorts);
+                if ($subscriptions !== null) {
+                    $this->appendIfNotEmpty($sections, FeedSectionKey::SUBSCRIPTIONS, $subscriptions);
                 }
+
+                $this->appendIfNotEmpty($sections, FeedSectionKey::TRENDING, $this->trending());
+                $this->appendIfNotEmpty($sections, FeedSectionKey::RECENT, $this->recent());
+
+                if ($becauseYouWatched !== null) {
+                    $sections[] = $becauseYouWatched;
+                }
+
+                $this->appendIfNotEmpty($sections, FeedSectionKey::SHORTS, $this->shorts());
 
                 return $sections;
             },
@@ -107,10 +90,6 @@ final class FeedService
     }
 
     /**
-     * Newest published videos from the channels the user is subscribed to.
-     *
-     * @param User $user Authenticated user
-     *
      * @return Collection<int, Video>
      */
     private function subscriptions(User $user): Collection
@@ -120,11 +99,9 @@ final class FeedService
             ->pluck('channel_id')
             ->all();
 
-        return Video::query()->published()
+        return Video::query()
             ->whereIn('channel_id', $channelIds)
-            ->newestPublished()
-            ->with('channel')
-            ->limit(PaginationSize::FEED_SHELF)
+            ->feedShelf()
             ->get();
     }
 
@@ -142,69 +119,44 @@ final class FeedService
     {
         return Video::query()->published()
             ->where('published_at', '>=', now()->subDays(self::TRENDING_WINDOW_DAYS))
+            ->excludingTag(self::SHORTS_TAG)
             ->orderByDesc('views')
             ->with('channel')
             ->limit(self::TRENDING_CANDIDATE_POOL)
             ->get()
-            ->reject(fn (Video $video) => in_array(self::SHORTS_TAG, $video->tags ?? [], true))
             ->sortByDesc(fn (Video $video) => $this->trendingScore($video))
             ->take(PaginationSize::FEED_SHELF)
             ->values();
     }
 
     /**
-     * Time-decayed trending score for a video: views weighted by an exponential
-     * decay on age since publication (half-life TRENDING_HALF_LIFE_DAYS).
-     *
-     * @param Video $video Video to score
-     *
      * @return float Decayed score; higher means more trending
      */
     private function trendingScore(Video $video): float
     {
-        $ageInDays = $video->published_at !== null
-            ? abs(now()->diffInDays($video->published_at))
-            : 0.0;
-
-        $decay = exp(-M_LN2 * $ageInDays / self::TRENDING_HALF_LIFE_DAYS);
-
-        return log1p($video->views) * $decay;
+        return log1p($video->views) * ScoringSignals::freshness($video->published_at, self::TRENDING_HALF_LIFE_DAYS);
     }
 
     /**
-     * Newest published videos overall.
-     *
      * @return Collection<int, Video>
      */
     private function recent(): Collection
     {
-        return Video::query()->published()
-            ->newestPublished()
-            ->with('channel')
-            ->limit(PaginationSize::FEED_SHELF)
-            ->get();
+        return Video::query()->feedShelf()->get();
     }
 
     /**
-     * Newest published shorts.
-     *
      * @return Collection<int, Video>
      */
     private function shorts(): Collection
     {
-        return Video::query()->published()
+        return Video::query()
             ->filter(['tags' => [self::SHORTS_TAG]])
-            ->newestPublished()
-            ->with('channel')
-            ->limit(PaginationSize::FEED_SHELF)
+            ->feedShelf()
             ->get();
     }
 
     /**
-     * Shelf of published videos sharing the user's most-watched tag.
-     *
-     * @param User $user Authenticated user
-     *
      * @return FeedSection|null Null when there is no dominant tag with enough videos
      */
     private function becauseYouWatched(User $user): ?FeedSection
@@ -226,11 +178,9 @@ final class FeedService
             return null;
         }
 
-        $videos = Video::query()->published()
+        $videos = Video::query()
             ->filter(['tags' => [$topTag]])
-            ->newestPublished()
-            ->with('channel')
-            ->limit(PaginationSize::FEED_SHELF)
+            ->feedShelf()
             ->get();
 
         if ($videos->count() < self::MIN_TAG_SHELF_VIDEOS) {
@@ -241,11 +191,26 @@ final class FeedService
     }
 
     /**
-     * Most frequent tag across the given watched videos (excluding shorts).
+     * Append a labelless feed section built from $videos, unless it's empty.
      *
-     * @param array<int, int> $watchedIds Watched video ids
+     * Collapses the "call shelf → check not-empty → push" pattern repeated
+     * across every shelf that doesn't need a dynamic label (only "because you
+     * watched" does, and it already returns a ready-made FeedSection or null).
      *
-     * @return string|null The dominant tag, or null when none
+     * @param array<int, FeedSection> $sections
+     * @param Collection<int, Video> $videos
+     */
+    private function appendIfNotEmpty(array &$sections, FeedSectionKey $key, Collection $videos): void
+    {
+        if ($videos->isEmpty()) {
+            return;
+        }
+
+        $sections[] = new FeedSection($key, null, $videos);
+    }
+
+    /**
+     * @param array<int, int> $watchedIds
      */
     private function topWatchedTag(array $watchedIds): ?string
     {

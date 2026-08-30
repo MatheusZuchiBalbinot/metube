@@ -8,10 +8,7 @@ use App\Models\UserAnalytic;
 use App\Models\Video;
 use App\Models\WatchHistory;
 use App\Services\RecommendationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 describe('RecommendationService', function () {
     test('returns popular videos for user with no event history', function () {
@@ -274,6 +271,42 @@ describe('RecommendationService', function () {
         expect($ids[0])->toBe($finishVideo->id)  // FINISH = 1.0 weight
             ->and($ids[1])->toBe($likeVideo->id) // LIKE = 0.8 weight
             ->and($ids[2])->toBe($saveVideo->id); // SAVE = 0.7 weight
+    });
+
+    test('does not let an old video with no affinity outrank a fresh video the user liked', function () {
+        // Carbon 3's diffInDays() is signed: without abs() in the freshness
+        // formula, a 365-day-old video's score exploded (exp(+12.17) instead
+        // of exp(-12.17)) and dominated every other signal regardless of tag
+        // or channel affinity — the recommendation feed silently sorted
+        // oldest-first. Same channel on both videos isolates the freshness
+        // term: with the bug, age alone flips the ranking.
+        $creator = User::factory()->create();
+
+        $oldNoAffinity = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['unrelated'],
+            'views' => 1,
+            'published_at' => now()->subDays(365),
+        ]);
+        $freshWithAffinity = Video::factory()->for($creator, 'channel')->create([
+            'status' => 'published',
+            'tags' => ['javascript'],
+            'views' => 1,
+            'published_at' => now(),
+        ]);
+
+        $user = User::factory()->create();
+        UserAnalytic::create([
+            'user_id' => $user->id,
+            'video_id' => $freshWithAffinity->id,
+            'channel_id' => $creator->id,
+            'event_type' => VideoEventType::LIKE,
+            'occurred_at' => now()->subDays(1),
+        ]);
+
+        $recommendations = app(RecommendationService::class)->forUser($user, 1);
+
+        expect($recommendations->first()->id)->toBe($freshWithAffinity->id);
     });
 });
 
