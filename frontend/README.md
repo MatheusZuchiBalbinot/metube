@@ -1,75 +1,50 @@
-# React + TypeScript + Vite
+# MeTube — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA React 19 + TypeScript para o [MeTube](../README.md): arquitetura orientada a hooks, lógica de domínio pura separada da renderização, e Redux Toolkit para estado global.
 
-Currently, two official plugins are available:
+Convenções completas (aliases, ESLint, Redux, testes): [`CLAUDE.frontend.md`](CLAUDE.frontend.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Requisitos
 
-## React Compiler
+* Node.js 22
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Setup
 
-Note: This will impact Vite dev & build performances.
+Dentro de `frontend/`:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev   # Vite dev server com HMR, em http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Para rodar junto com o restante da stack (backend, Postgres, Redis), use `npm run start` na raiz do repo em vez do dev server isolado — ver [README raiz](../README.md#como-rodar).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Comandos
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev          # servidor de desenvolvimento (Vite)
+npm run build         # type-check (tsc -b) + build de produção
+npm test               # Vitest
+npm run test:watch     # Vitest em watch mode
+npm run lint            # ESLint
+npm run lint:fix        # ESLint --fix
+npm run lint:css        # Stylelint
 ```
+
+> O bundler é [rolldown-vite](https://vite.dev/guide/rolldown), um fork experimental do Vite sobre o bundler Rolldown — pin deliberado em `package.json` (`"vite": "npm:rolldown-vite@..."`), não acidental.
+
+## Estrutura
+
+```text
+src/
+├── api/          Clientes HTTP + parsers de resposta
+├── components/   Componentes compartilhados (player, upload, video, ui/...)
+├── pages/        Páginas, cada uma com seus hooks locais em hooks/
+├── hooks/        Hooks globais (realtime, progresso, atalhos de teclado, ...)
+├── store/        Redux Toolkit — slices + selectors memoizados
+├── domain/       Lógica de negócio pura, sem efeitos colaterais nem dependência de React
+├── utils/         Funções puras compartilhadas
+└── types/         Branded types (VideoId, Vuid, Puid, ...)
+```
+
+Detalhes de aliases (`@components`, `@hooks`, `@utils`, ...), convenções de teste e estrutura de estado: [`CLAUDE.frontend.md`](CLAUDE.frontend.md).

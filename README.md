@@ -1,129 +1,242 @@
 # MeTube
 
-Plataforma de vídeo full-stack com pipeline de IA integrado — transcrição automática, geração de metadados e resumos. Construída do zero com foco em experiência de produto real.
+Plataforma de vídeo full-stack construída do zero, com **upload resumível, processamento assíncrono, streaming adaptativo e pipeline de IA** para transcrição, geração de metadados e sumarização.
+
+[![Backend Tests](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/frontend-test.yml/badge.svg)](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/frontend-test.yml)
+[![Backend Quality](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/backend-quality.yml/badge.svg)](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/backend-quality.yml)
+[![Security Scan](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/security-scan.yml/badge.svg)](https://github.com/MatheusZuchiBalbinot/metube/actions/workflows/security-scan.yml)
 
 ---
 
 ## Funcionalidades
 
-- Upload de vídeos com retomada automática via protocolo tus — a conexão pode cair no meio e o upload continua do byte exato onde parou
-- Processamento assíncrono com feedback em tempo real via WebSocket
-- Transcrição automática do áudio com Whisper ASR
-- Sugestões de título, descrição e tags geradas por IA
-- Resumos estruturados por IA: pontos-chave, capítulos com timestamp e modo leitura
-- Recomendações server-side com scoring por afinidade de tags e histórico do usuário
-- Player com streaming adaptativo HLS/DASH, legendas e picture-in-picture
-- Feed de Shorts — scroll vertical estilo YouTube Shorts com volume persistente entre vídeos
-- Sistema de reações (like/dislike/save), inscrições em canais, histórico de visualizações, playlists e mais
-- Busca com full-text search (PostgreSQL `tsvector` + índice GIN)
-- Notificações em tempo real: novo inscrito, like, vídeo publicado, transcrição concluída
-- Analytics passiva: impressões em batch, cliques, buscas, tempo assistido, skips
-- Múltiplos temas e cores de acento, persistidos por usuário
-- Sincronização de estado entre abas via `storage` events
+* Upload de vídeos com retomada automática via **tus**, continuando do último offset confirmado
+* Processamento assíncrono com **Laravel Horizon** e feedback em tempo real via WebSocket
+* Transcrição automática com **faster-whisper / Whisper ASR**
+* Geração de títulos, descrições, tags e resumos via **LLM**
+* Capítulos com timestamp e modo leitura
+* Streaming adaptativo **HLS**, legendas e Picture-in-Picture
+* Feed de Shorts com scroll vertical e volume persistente
+* Likes, dislikes, saves, inscrições, playlists e histórico
+* Recomendações server-side com scoring por afinidade de tags, comportamento, popularidade e frescor
+* Full-text search com PostgreSQL `tsvector` + índice **GIN**
+* Notificações em tempo real
+* Analytics com **event batching** e **bulk inserts** assíncronos
+* Persistência e retomada de progresso de reprodução
+* Cross-tab synchronization via `storage events`
+* Temas e cores de acento persistidos por usuário
+* Acessibilidade e navegação completa por teclado
+
+---
+
+## Arquitetura
+
+```mermaid
+flowchart TB
+
+    subgraph FE["React / TypeScript"]
+        direction TB
+        C["Components"] --> H["Hooks"] --> D["Domain"]
+        H <--> R["Redux Toolkit"]
+    end
+
+    FE -- "HTTP / WebSocket" --> Caddy
+
+    subgraph BE["Laravel / FrankenPHP"]
+        direction TB
+        Ctrl["Controllers"] --> DTO["DTOs"] --> Svc["Services"] --> Dom["Domain"]
+        Svc --- PE["Policies / Events"]
+    end
+
+    Caddy --> BE
+    BE --> PG[("PostgreSQL — FTS / GIN")]
+    BE --> Redis[("Redis — Cache / Queue")]
+    Redis --> Horizon
+    Horizon --> Whisper
+    Horizon --> LLM
+```
 
 ---
 
 ## Backend
 
-Segue arquitetura **MVC** com **Service Layer**, aplicando princípios **SOLID** e **Clean Code**:
+* **MVC + Service Layer**, com controllers thin e regras de negócio isoladas em services
+* **Dependency Injection** para composição de dependências
+* **DTOs tipados** entre camada HTTP e aplicação
+* **Policy-based Authorization** para ownership e permissões
+* **Domain Events / Subscribers** para side effects desacoplados
+* **Observers** para invalidação de cache
+* Filas priorizadas com **Laravel Horizon**
+* **Session versioning** para invalidação global de sessões
+* PostgreSQL Full-Text Search com `tsvector` + **GIN**
+* PHPStan nível 8 + Pint + PHP Insights (**gate de 99%**)
 
-- **MVC com controllers thin** — única responsabilidade: receber, autorizar e delegar ao service
-- **Service Layer** com toda a lógica de negócio, injetada via **Dependency Injection**
-- **Observer Pattern** para invalidação de cache — models notificam o cache automaticamente ao mudar, independente de quem os alterou
-- **Event/Subscriber Pattern** para side effects — eventos de domínio (`VideoPublished`, `VideoLiked`) desacoplam o disparo da reação; novo comportamento = novo listener, sem tocar no service
-- **DTOs** tipados entre controller e service — o `$request` nunca atravessa camadas
-- **Policy-based Authorization** — regras de ownership centralizadas, fora dos controllers
-- **Recommendation engine** com scoring server-side: vetores de eventos do usuário (FINISH=1.0, LIKE=0.8, SAVE=0.7, DISLIKE=−0.5, SKIP=−0.3) ponderados por afinidade de tags, popularidade e frescor — resultado em cache por usuário/página
-- **Analytics pipeline** com batching de impressões — endpoint fire-and-forget (204), bulk insert via evento, sessão e posição de render registrados por evento
-- **Session versioning** — coluna `session_version` no banco; middleware invalida a sessão se divergir, permitindo logout forçado de todos os dispositivos com um único `UPDATE`
-- PHPStan nível 8 com documentação obrigatória em todos os métodos públicos
-- +90% de cobertura nos services, models e jobs críticos — 422 testes, 811 assertions
+Detalhes de rotas, services e convenções: [`backend/CLAUDE.backend.md`](backend/CLAUDE.backend.md).
 
 ---
 
 ## Frontend
 
-Segue arquitetura **orientada a hooks** com separação estrita entre lógica e renderização:
+* Arquitetura orientada a **hooks**, separando UI, estado e lógica de domínio
+* **Domain Layer** puro em `src/domain/`, independente de React
+* Redux Toolkit com **selectors memoizados**
+* **Branded types** (`VideoId`, `Vuid`, `Puid`) para type safety em compile time
+* `ApiResult<T>` como contrato uniforme de API
+* Player modularizado em hooks especializados
+* **Code splitting**, lazy loading e virtualização de listas via `@tanstack/react-virtual`
+* Throttle local de 3s + sync de 5s com o backend para progresso de reprodução
+* Acessibilidade com ARIA e focus management
+* ESLint com complexidade ciclomática máxima de 8 e `no-explicit-any` como erro
 
-- **Container/Presenter** adaptado ao React — componentes orquestram hooks e renderizam JSX, sem lógica misturada
-- **Domain Layer** puro em `src/domain/` — lógica de negócio sem efeitos colaterais, 100% coberta por testes
-- **Flux/Redux** para estado global com seletores memoizados; estado de UI local fica em `useState`
-- **Branded types** (`VideoId`, `Vuid`, `Puid`) — segurança de tipos em compile time, sem overhead em runtime
-- **ApiResult\<T\>** como contrato de API — tratamento de erro uniforme, sem `try/catch` espalhado
-- **Player construído com 13+ hooks especializados** — playback, teclado, PiP, fullscreen, legendas, skip indicators, seekbar com preview frame-accurate via canvas e ResizeObserver
-- **Atalhos de teclado no estilo Gmail** — acordes como `G+H`, `G+P`, `G+S` com janela de 800ms para resolução, implementados em `useKeyboardShortcuts`
-- **Skeleton loaders, lazy loading e virtualização** — feedback visual imediato em todas as listas; `@tanstack/react-virtual` para listas longas
-- **Acessibilidade** — focus trap em modais, `aria-pressed`/`aria-haspopup`/`role="listbox"` nos controles do player, `aria-hidden` em decorativos, navegação completa por teclado
-- **Cross-tab sync** — tema, likes, playlists e histórico sincronizados entre abas via `storage` events, com deduplicação para evitar loops
-- **Persistência de progresso** — throttle de 3s local + sync de 5s com o backend; ponto de retomada no mini-player via Redux
-- ESLint com complexidade ciclomática máxima de 8 e `no-explicit-any` como erro
-- +90% de cobertura nas partes críticas — domínio em 100%, store em ~92% — 1.026 testes em 81 arquivos
+Detalhes de aliases, convenções e testes: [`frontend/CLAUDE.frontend.md`](frontend/CLAUDE.frontend.md).
+
+---
+
+## Testes
+
+|               |                   Backend · Pest |        Frontend · Vitest |
+| ------------- | -------------------------------: | -----------------------: |
+| **Testes**    |                              930 |                    1.696 |
+| **Arquivos**  |                                — |                      185 |
+| **Cobertura** | Services, Models e Jobs críticos | Domain 100% · Store ~92% |
 
 ---
 
 ## Stack
 
-- **Frontend** — React 19, TypeScript, Vite (rolldown), Redux Toolkit, Tailwind CSS 4
-- **Backend** — Laravel 12, FrankenPHP/Octane, PostgreSQL 16, Redis 7
-- **Fila** — Laravel Horizon com filas separadas por prioridade
-- **WebSockets** — Laravel Reverb (self-hosted, Pusher-compatible)
-- **Upload** — protocolo tus (tus-php + tus-js-client)
-- **IA** — Whisper ASR (transcrição, self-hosted) + LLM via interface agnóstica de provider (metadados e resumos)
-- **Auth** — Laravel Sanctum stateful (cookie HttpOnly, sem JWT)
-- **Proxy** — Caddy 2 como único ponto de entrada (TLS automático em produção)
+| Área          | Tecnologia                                   |
+| ------------- | -------------------------------------------- |
+| Frontend      | React 19 · TypeScript · Vite / Rolldown      |
+| State         | Redux Toolkit                                |
+| CSS           | Tailwind CSS 4                               |
+| Backend       | Laravel 12 · FrankenPHP / Octane · PHP 8.2+  |
+| Database      | PostgreSQL 16                                |
+| Cache / Queue | Redis 7                                      |
+| Jobs          | Laravel Horizon                              |
+| Realtime      | Laravel Reverb · self-hosted                 |
+| Upload        | tus · tus-php + tus-js-client                |
+| ASR           | faster-whisper · self-hosted                 |
+| LLM           | Groq · interface agnóstica de provider       |
+| Auth          | Laravel Sanctum · stateful / HttpOnly cookie |
+| Proxy         | Caddy 2                                      |
+| Infra         | Docker Compose                               |
 
 ---
 
-## Pipeline de IA
+## Decisões técnicas
 
-```
-Upload → ProcessVideoUpload → TranscribeVideo (Whisper) → GenerateAiMetadata (LLM)
-                                      ↓                            ↓
-                               broadcast ETA              broadcast sugestões prontas
-                                      ↓                            ↓
-                            transcrição disponível      dono aceita ou descarta
-```
+* **tus** em vez de multipart upload — uploads grandes sobrevivem a quedas de conexão sem reiniciar
+* **Sanctum stateful** em vez de JWT — SPA first-party servida pelo mesmo domínio, com autenticação baseada em cookie
+* **Reverb self-hosted** em vez de Pusher — reduz dependência externa no fluxo realtime
+* **Recommendation scoring server-side** — mantém dados comportamentais e lógica de ranking fora do cliente
+* **PostgreSQL FTS** em vez de search engine dedicado — `tsvector` + GIN atende ao workload atual
+* **Redis compartilhado** entre cache e filas — reduz infraestrutura enquanto o volume não justifica separação
+
+---
+
+## 🔭 Evolução
+
+A arquitetura atual prioriza simplicidade operacional. Em uma escala maior:
+
+| Atual                         | Possível evolução                |
+| ------------------------------ | --------------------------------- |
+| Sanctum / sessão stateful       | OAuth 2.0 / OIDC                  |
+| Whisper self-hosted             | ASR gerenciado / GPU workers      |
+| LLM via Groq                    | AI Gateway / múltiplos providers  |
+| Filesystem local                | Object Storage                    |
+| Mídia servida pela aplicação    | CDN                                |
+| Analytics em PostgreSQL         | Event streaming / Data Warehouse  |
+| PostgreSQL FTS                  | Search engine dedicado            |
+| Redis compartilhado             | Cache / filas separados           |
+| Monólito modular                | Extração seletiva de serviços     |
+
+> A ideia é escalar os componentes conforme os gargalos aparecem, sem introduzir complexidade distribuída prematuramente.
 
 ---
 
 ## Como rodar
+
+### Pré-requisitos
+
+* Docker + Docker Compose
+* Node.js
+* PHP + Composer para executar os testes/lint localmente
 
 ```bash
 cp backend/.env.example backend/.env
 cp .env.example .env
 cp .env.postgres.example .env.postgres
 
-npm run start   # docker compose up --build
-npm run stop    # docker compose down
+npm run start
 ```
 
-Acesse em `http://localhost` (Caddy) ou `http://localhost:5173` (Vite com HMR direto).
+O primeiro boot executa as migrations automaticamente.
+
+Para popular conteúdo de demonstração:
+
+```bash
+docker compose exec backend php artisan db:seed --class=DemoContentSeeder
+```
+
+### IA
+
+Para o pipeline completo, configure uma API key compatível com o provider selecionado:
+
+```env
+AI_API_KEY=
+```
+
+Sem a chave, upload, processamento de vídeo, transcrição e player continuam disponíveis; apenas geração de metadados e resumos fica indisponível.
+
+A transcrição utiliza **faster-whisper em CPU** por padrão. O modelo é baixado no primeiro build do serviço `whisper`.
+
+Também é possível utilizar um serviço externo de ASR configurando `WHISPER_URL` e desabilitando o profile local do Whisper.
+
+### Acesso
+
+```text
+http://localhost        # Caddy
+http://localhost:5173   # Vite + HMR
+```
+
+### Parar
+
+```bash
+npm run stop
+```
 
 ---
 
-## CI/CD
+## CI
 
-Cinco workflows no GitHub Actions, disparados apenas quando os arquivos da área mudam:
+GitHub Actions com **path filtering** para executar apenas workflows afetados pelas alterações:
 
-| Workflow                | O que faz                                        |
-|-------------------------|--------------------------------------------------|
-| `frontend.yml`          | TypeScript (`tsc --noEmit`) + ESLint             |
-| `frontend-test.yml`     | Vitest                                           |
-| `frontend-security.yml` | `npm audit --audit-level=high`                   |
-| `backend-lint.yml`      | PHPStan nível 8 + Pint                           |
-| `backend-tests.yml`     | Pest — `tests/Unit/` com SQLite in-memory        |
+| Workflow                | Responsabilidade                                     |
+| ------------------------ | ------------------------------------------------------ |
+| `frontend.yml`           | TypeScript + ESLint                                    |
+| `frontend-test.yml`      | Vitest                                                  |
+| `frontend-security.yml`  | npm audit                                               |
+| `backend-lint.yml`       | PHPStan + Pint                                          |
+| `backend-quality.yml`    | PHP Insights · gate de 99%                              |
+| `backend-tests.yml`      | Pest · SQLite in-memory                                 |
+| `whisper.yml`            | Testes do serviço Whisper                               |
+| `security-scan.yml`      | Trivy                                                   |
+| `docs-drift.yml`         | Validação dos caminhos referenciados na documentação    |
 
 ---
 
 ## Estrutura
 
-```
-├── backend/     Laravel 12 — API, services, jobs, events, observers
-├── frontend/    React 19 — SPA, Redux, player, shorts, upload
-├── whisper/     Whisper ASR self-hosted
-├── caddy/        Proxy reverso (Caddyfile dev + prod)
+```text
+├── backend/     Laravel 12 — API, Services, Jobs, Events, Observers
+├── frontend/    React 19 — SPA, Redux, Player, Shorts, Upload
+├── whisper/     faster-whisper — ASR self-hosted
+├── caddy/       Reverse Proxy
 └── docker-compose.yml
 ```
 
-- [`frontend/CLAUDE.frontend.md`](frontend/CLAUDE.frontend.md) — convenções, aliases, ESLint, Redux, testes
-- [`backend/CLAUDE.backend.md`](backend/CLAUDE.backend.md) — rotas, serviços, PHPStan, cache, fila, upload
+Documentação:
+
+* [`frontend/CLAUDE.frontend.md`](frontend/CLAUDE.frontend.md) — aliases, convenções, Redux e testes
+* [`backend/CLAUDE.backend.md`](backend/CLAUDE.backend.md) — rotas, services, PHPStan, cache, filas e upload
