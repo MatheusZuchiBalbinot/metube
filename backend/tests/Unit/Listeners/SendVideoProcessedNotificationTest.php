@@ -8,10 +8,7 @@ use App\Listeners\SendVideoProcessedNotification;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoProcessedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('SendVideoProcessedNotification', function () {
     test('notifies the owner when video status becomes published', function () {

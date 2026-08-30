@@ -10,10 +10,7 @@ use App\Events\VideoSkipped;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\AnalyticsService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-
-uses(RefreshDatabase::class);
 
 describe('AnalyticsService', function () {
     test('recordImpressions dispatches one batch event with all known vuids in order', function () {

@@ -8,10 +8,7 @@ use App\Models\Comment;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\CommentRepliedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('SendCommentRepliedNotification', function () {
     test('notifies the parent comment author when a different user replies', function () {

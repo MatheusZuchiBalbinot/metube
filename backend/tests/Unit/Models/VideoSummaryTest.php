@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use App\Models\Video;
 use App\Models\VideoSummary;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('VideoSummary Model', function () {
     test('summary belongs to a video', function () {

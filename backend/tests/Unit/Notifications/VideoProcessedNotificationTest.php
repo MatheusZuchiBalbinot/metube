@@ -7,9 +7,6 @@ use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoProcessedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('VideoProcessedNotification', function () {
     test('payload includes correct type, vuid, title, and status', function () {

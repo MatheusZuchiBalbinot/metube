@@ -9,11 +9,8 @@ use App\Models\Video;
 use App\Models\VideoProgress;
 use App\Models\WatchHistory;
 use App\Services\UserService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
 

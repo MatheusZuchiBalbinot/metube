@@ -5,11 +5,8 @@ declare(strict_types=1);
 use App\Http\Resources\VideoResource;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
-uses(RefreshDatabase::class);
 
 describe('VideoResource', function () {
     test('toArray includes expected keys', function () {

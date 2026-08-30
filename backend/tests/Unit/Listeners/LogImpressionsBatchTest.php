@@ -7,10 +7,7 @@ use App\Events\VideoImpressionsBatch;
 use App\Listeners\LogImpressionsBatch;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 describe('LogImpressionsBatch', function () {
     test('bulk-inserts impression rows for each item in the batch', function () {

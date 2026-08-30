@@ -6,10 +6,7 @@ use App\Enums\NotificationType;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoLikedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-
-uses(RefreshDatabase::class);
 
 describe('VideoLikedNotification', function () {
     test('payload includes correct type, liker name, vuid and video title', function () {

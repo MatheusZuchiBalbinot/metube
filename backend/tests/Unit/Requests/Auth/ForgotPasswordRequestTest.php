@@ -3,10 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Requests\Auth\ForgotPasswordRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-
-uses(RefreshDatabase::class);
 
 describe('ForgotPasswordRequest', function () {
     test('authorize returns true', function () {

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-
-uses(RefreshDatabase::class);
 
 describe('RegisterRequest', function () {
     test('authorize returns true', function () {

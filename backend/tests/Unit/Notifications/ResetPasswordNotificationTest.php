@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('ResetPasswordNotification', function () {
     test('reset link points to the frontend SPA, not the Laravel backend', function () {

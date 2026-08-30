@@ -7,10 +7,7 @@ use App\Listeners\SendVideoLikedNotification;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoLikedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('SendVideoLikedNotification', function () {
     test('notifies the video owner when a different user likes the video', function () {

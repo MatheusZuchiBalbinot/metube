@@ -7,10 +7,7 @@ use App\Models\Comment;
 use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-
-uses(RefreshDatabase::class);
 
 describe('CommentVersionResource', function () {
     test('toArray includes version, content, and created_at', function () {

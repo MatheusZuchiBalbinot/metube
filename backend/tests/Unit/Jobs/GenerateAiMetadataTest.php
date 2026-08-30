@@ -12,11 +12,8 @@ use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
 use App\Services\AiMetadataService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
-
-uses(RefreshDatabase::class);
 
 describe('GenerateAiMetadata', function () {
     $mockResponse = [
@@ -133,10 +130,8 @@ describe('GenerateAiMetadata', function () {
         $job = new GenerateAiMetadata($video);
         $exception = new Exception('Groq API error');
 
-        // Verify failed() method exists and can be called
         $job->failed($exception);
 
-        // Verify job doesn't create summary on API failure
         expect(VideoSummary::where('video_id', $video->id)->exists())->toBeFalse();
     });
 

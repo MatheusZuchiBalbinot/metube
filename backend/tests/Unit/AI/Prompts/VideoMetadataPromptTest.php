@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\AI\Prompts\VideoMetadataPrompt;
 use App\DTOs\VideoMetadataResult;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('VideoMetadataPrompt', function () {
     test('buildPrompt returns text containing video info and VTT transcription', function () {

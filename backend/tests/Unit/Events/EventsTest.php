@@ -24,10 +24,7 @@ use App\Models\User;
 use App\Models\Video;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-
-uses(RefreshDatabase::class);
 
 describe('AiSuggestionReady', function () {
     test('broadcastOn returns video channel and owner private channel', function () {

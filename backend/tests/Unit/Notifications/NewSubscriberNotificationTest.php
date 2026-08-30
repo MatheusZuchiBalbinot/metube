@@ -5,10 +5,7 @@ declare(strict_types=1);
 use App\Enums\NotificationType;
 use App\Models\User;
 use App\Notifications\NewSubscriberNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-
-uses(RefreshDatabase::class);
 
 describe('NewSubscriberNotification', function () {
     test('payload includes correct type and subscriber name', function () {

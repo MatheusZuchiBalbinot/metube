@@ -9,11 +9,8 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\TranscriptionService;
 use App\Services\VideoStorageService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
-
-uses(RefreshDatabase::class);
 
 describe('TranscribeVideo', function () {
     test('uniqueId returns the video id so concurrent runs are deduplicated', function () {

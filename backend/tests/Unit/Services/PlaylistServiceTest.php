@@ -11,9 +11,6 @@ use App\Models\Video;
 use App\Services\PlaylistService;
 use Faker\Factory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('PlaylistService', function () {
     $service = app(PlaylistService::class);

@@ -7,14 +7,11 @@ use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Passwords\PasswordBroker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
-
-uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
 

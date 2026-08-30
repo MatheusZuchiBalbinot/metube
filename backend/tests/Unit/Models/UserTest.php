@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('User Model', function () {
     test('user is created with auto-generated uuid', function () {

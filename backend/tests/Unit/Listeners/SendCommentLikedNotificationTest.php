@@ -8,10 +8,7 @@ use App\Models\Comment;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\CommentLikedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('SendCommentLikedNotification', function () {
     test('notifies the comment author when a different user likes their comment', function () {

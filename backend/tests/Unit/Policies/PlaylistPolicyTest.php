@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Models\Playlist;
 use App\Models\User;
 use App\Policies\PlaylistPolicy;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('PlaylistPolicy', function () {
     test('view allows owner to view playlist', function () {

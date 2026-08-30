@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Notifications\VideoFromSubscriptionNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
-
-uses(RefreshDatabase::class);
 
 function createNotificationFor(User $user, bool $read = false): DatabaseNotification
 {

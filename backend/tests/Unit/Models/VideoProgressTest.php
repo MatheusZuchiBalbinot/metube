@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoProgress;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('VideoProgress Model', function () {
     test('progress belongs to a user', function () {

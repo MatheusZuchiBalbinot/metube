@@ -6,9 +6,6 @@ use App\Models\Playlist;
 use App\Models\PlaylistVideo;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('PlaylistVideo Model', function () {
     test('playlist video entry belongs to a playlist', function () {

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\VideoStatus;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('videos:publish-scheduled', function () {
     test('publishes videos whose scheduled_at has passed', function () {

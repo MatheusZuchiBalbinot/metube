@@ -7,10 +7,7 @@ use App\Jobs\TranscribeVideo;
 use App\Listeners\TranscribeVideoListener;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
-
-uses(RefreshDatabase::class);
 
 describe('TranscribeVideoListener', function () {
     test('handle is a no-op and never dispatches TranscribeVideo', function () {

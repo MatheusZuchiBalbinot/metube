@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('ChannelController', function () {
     test('show returns channel profile', function () {

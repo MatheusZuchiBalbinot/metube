@@ -9,9 +9,6 @@ use App\Models\Video;
 use App\Services\TranscriptionService;
 use App\Services\VideoStorageService;
 use App\Services\WhisperClient;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('TranscriptionService', function () {
     test('transcribe saves transcription and captions from Whisper result', function () {

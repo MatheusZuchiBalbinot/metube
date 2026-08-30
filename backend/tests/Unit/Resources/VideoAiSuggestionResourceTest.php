@@ -7,10 +7,7 @@ use App\Http\Resources\VideoAiSuggestionResource;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-
-uses(RefreshDatabase::class);
 
 describe('VideoAiSuggestionResource', function () {
     test('toArray includes all expected fields', function () {

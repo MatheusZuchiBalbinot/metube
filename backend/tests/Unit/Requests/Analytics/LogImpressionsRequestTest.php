@@ -5,10 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\Analytics\LogImpressionsRequest;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-
-uses(RefreshDatabase::class);
 
 describe('LogImpressionsRequest', function () {
     test('vuids is required', function () {

@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\Video;
 use App\Models\WatchHistory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('WatchHistory Model', function () {
     test('watch history belongs to a user', function () {

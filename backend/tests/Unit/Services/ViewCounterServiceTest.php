@@ -10,9 +10,6 @@ use App\Services\RedisViewCounterStore;
 use App\Services\ViewCounterService;
 use Illuminate\Contracts\Redis\Connection as RedisConnection;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('ViewCounterService', function () {
     test('increment delegates to the store', function () {

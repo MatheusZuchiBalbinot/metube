@@ -14,9 +14,6 @@ use App\Models\User;
 use App\Models\UserAnalytic;
 use App\Models\Video;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('LogUserAnalytic', function () {
     test('listener implements ShouldQueueAfterCommit', function () {

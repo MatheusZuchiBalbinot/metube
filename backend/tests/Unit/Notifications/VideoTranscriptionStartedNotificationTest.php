@@ -6,10 +6,7 @@ use App\Enums\NotificationType;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoTranscriptionStartedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-
-uses(RefreshDatabase::class);
 
 describe('VideoTranscriptionStartedNotification', function () {
     test('payload includes correct type, vuid, and video title', function () {

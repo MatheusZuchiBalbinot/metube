@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Observers\UserObserver;
 use App\Services\CacheService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('UserObserver', function () {
     test('updated flushes channel cache when name changes', function () {

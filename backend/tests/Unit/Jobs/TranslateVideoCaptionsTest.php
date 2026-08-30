@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Jobs\TranslateVideoCaptions;
 use App\Models\Video;
 use App\Services\WhisperClient;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('TranslateVideoCaptions', function () {
     test('job skips if video not found', function () {

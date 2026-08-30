@@ -7,10 +7,7 @@ use App\Models\Comment;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\CommentLikedNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-
-uses(RefreshDatabase::class);
 
 describe('CommentLikedNotification', function () {
     test('payload includes correct type, liker name, cuid and vuid', function () {

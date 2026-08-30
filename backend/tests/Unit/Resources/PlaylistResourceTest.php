@@ -6,10 +6,7 @@ use App\Http\Resources\PlaylistResource;
 use App\Models\Playlist;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-
-uses(RefreshDatabase::class);
 
 describe('PlaylistResource', function () {
     test('toArray includes expected keys', function () {

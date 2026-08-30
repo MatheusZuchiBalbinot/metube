@@ -5,10 +5,7 @@ declare(strict_types=1);
 use App\Http\Requests\Analytics\LogSkipRequest;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-
-uses(RefreshDatabase::class);
 
 describe('LogSkipRequest', function () {
     test('vuid is required', function () {

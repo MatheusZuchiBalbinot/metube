@@ -9,9 +9,6 @@ use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
 use App\Services\AiMetadataService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('AiMetadataService', function () {
     test('apply stores summary for any video', function () {

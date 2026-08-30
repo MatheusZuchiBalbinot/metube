@@ -6,9 +6,6 @@ use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use App\Policies\VideoPolicy;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('VideoPolicy', function () {
     test('view allows owner to see draft video', function () {

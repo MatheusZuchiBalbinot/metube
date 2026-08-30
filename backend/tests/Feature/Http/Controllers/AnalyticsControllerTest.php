@@ -9,10 +9,7 @@ use App\Events\VideoImpressionsBatch;
 use App\Events\VideoSkipped;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-
-uses(RefreshDatabase::class);
 
 describe('AnalyticsController', function () {
     test('POST /analytics/impressions dispatches one batch event for all vuids', function () {

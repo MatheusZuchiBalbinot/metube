@@ -6,11 +6,8 @@ use App\Http\Resources\WatchHistoryResource;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\WatchHistory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-
-uses(RefreshDatabase::class);
 
 describe('WatchHistoryResource', function () {
     test('toArray includes vuid and watched_at', function () {

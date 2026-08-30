@@ -6,10 +6,7 @@ use App\Jobs\NotifySubscribersChunk;
 use App\Models\User;
 use App\Models\Video;
 use App\Notifications\VideoFromSubscriptionNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('NotifySubscribersChunk', function () {
     test('handle sends notification to each user in the chunk', function () {

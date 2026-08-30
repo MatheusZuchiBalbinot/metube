@@ -7,10 +7,7 @@ use App\Jobs\NotifySubscribersChunk;
 use App\Listeners\SendVideoPublishedNotifications;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
-
-uses(RefreshDatabase::class);
 
 describe('SendVideoPublishedNotifications', function () {
     test('dispatches NotifySubscribersChunk job for subscribers', function () {

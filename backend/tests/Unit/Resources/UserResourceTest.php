@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-
-uses(RefreshDatabase::class);
 
 describe('UserResource', function () {
     test('toArray includes expected keys', function () {

@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Enums\TranscriptionStatus;
 use App\Models\Transcription;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('Transcription Model', function () {
     test('transcription belongs to a video', function () {

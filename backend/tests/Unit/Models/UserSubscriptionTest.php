@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Models\UserSubscription;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('UserSubscription Model', function () {
     test('subscription subscriber belongs to a user', function () {

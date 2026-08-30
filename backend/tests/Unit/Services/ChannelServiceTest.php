@@ -8,10 +8,7 @@ use App\Events\ChannelUnsubscribed;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\ChannelService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-
-uses(RefreshDatabase::class);
 
 describe('ChannelService', function () {
     $service = app(ChannelService::class);

@@ -12,10 +12,7 @@ use App\Models\VideoProgress;
 use App\Models\VideoSummary;
 use App\Models\WatchHistory;
 use Faker\Factory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-
-uses(RefreshDatabase::class);
 
 describe('Video Model', function () {
     test('video is created with auto-generated vuid', function () {

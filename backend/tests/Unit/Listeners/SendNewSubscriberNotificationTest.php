@@ -6,10 +6,7 @@ use App\Events\ChannelSubscribed;
 use App\Listeners\SendNewSubscriberNotification;
 use App\Models\User;
 use App\Notifications\NewSubscriberNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-
-uses(RefreshDatabase::class);
 
 describe('SendNewSubscriberNotification', function () {
     test('notifies the channel owner when someone subscribes', function () {

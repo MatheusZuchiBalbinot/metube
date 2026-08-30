@@ -20,22 +20,18 @@ describe('HistoryPeriod Enum', function () {
     });
 
     test('start date returns correct date for each period', function () {
-        // TODAY
         $today = HistoryPeriod::TODAY->startDate();
         expect($today)->not->toBeNull();
         expect($today->isToday())->toBeTrue();
 
-        // WEEK
         $week = HistoryPeriod::WEEK->startDate();
         expect($week)->not->toBeNull();
         expect($week->isBefore(now()))->toBeTrue();
 
-        // MONTH
         $month = HistoryPeriod::MONTH->startDate();
         expect($month)->not->toBeNull();
         expect($month->isBefore(now()))->toBeTrue();
 
-        // ALL
         $all = HistoryPeriod::ALL->startDate();
         expect($all)->toBeNull();
     });

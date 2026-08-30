@@ -6,9 +6,6 @@ use App\Enums\VideoEventType;
 use App\Models\User;
 use App\Models\UserAnalytic;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('UserAnalytic Model', function () {
     test('user analytic belongs to a user', function () {

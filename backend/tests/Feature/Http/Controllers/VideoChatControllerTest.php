@@ -8,11 +8,8 @@ use App\Models\Transcription;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoSummary;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-
-uses(RefreshDatabase::class);
 
 beforeEach(fn () => Cache::flush());
 
@@ -91,7 +88,7 @@ describe('VideoChatController', function () {
             ->assertJsonValidationErrors(['history.0.role']);
     });
 
-    test('returns answer from IAService on success', function () {
+    test('returns answer from AiClient on success', function () {
         Http::fake(['*' => Http::response([
             'choices' => [['message' => ['content' => 'The video is about testing.']]],
         ])]);
@@ -156,7 +153,7 @@ describe('VideoChatController', function () {
             ->toContain('Full transcript here.');
     });
 
-    test('sends conversation history to IAService', function () {
+    test('sends conversation history to AiClient', function () {
         $capturedMessages = [];
 
         Http::fake(function ($request) use (&$capturedMessages) {
@@ -195,7 +192,7 @@ describe('VideoChatController', function () {
             ->and($capturedMessages[3]['content'])->toBe('Follow up?');
     });
 
-    test('returns 503 when IAService throws', function () {
+    test('returns 503 when AiClient throws', function () {
         Http::fake(['*' => Http::response([], 500)]);
 
         $user = User::factory()->create();

@@ -10,9 +10,6 @@ use App\Models\UserVideoReaction;
 use App\Models\Video;
 use App\Models\WatchHistory;
 use Database\Seeders\DemoContentSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('DemoContentSeeder', function () {
     test('seeds themed channels and a rich published catalogue', function () {

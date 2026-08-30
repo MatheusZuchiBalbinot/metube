@@ -7,10 +7,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Observers\VideoObserver;
 use App\Services\CacheService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 describe('VideoObserver', function () {
     test('updated always flushes video cache', function () {

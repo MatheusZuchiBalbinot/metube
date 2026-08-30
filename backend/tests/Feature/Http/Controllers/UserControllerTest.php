@@ -9,11 +9,8 @@ use App\Models\UserSubscription;
 use App\Models\Video;
 use App\Models\VideoProgress;
 use App\Models\WatchHistory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 describe('UserController', function () {
     test('likes returns videos liked by the authenticated user', function () {
