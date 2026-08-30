@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { auth } from '../api/auth';
+import { STORAGE_KEYS } from '@utils';
 import type { User } from '@models';
 
 interface AuthState {
@@ -48,8 +49,46 @@ export const signUpThunk = createAsyncThunk(
     },
 );
 
+/**
+ * Every key persistMiddleware writes to localStorage. Cleared on logout so a
+ * previous user's data (watch history, progress, likes, playlists, etc.) can
+ * never leak into or be merged into the next user's account on a shared
+ * machine. `rootReducer` already resets the
+ * in-memory Redux state on `signOutThunk.fulfilled` — this clears the
+ * persisted copy for belt-and-suspenders safety.
+ */
+const PERSISTED_STORAGE_KEYS: string[] = [
+    STORAGE_KEYS.WATCH_HISTORY,
+    STORAGE_KEYS.LIKED_VIDEOS,
+    STORAGE_KEYS.DISLIKED_VIDEOS,
+    STORAGE_KEYS.VIDEO_PROGRESS,
+    STORAGE_KEYS.AUTOPLAY,
+    STORAGE_KEYS.PINNED_VIDEO,
+    STORAGE_KEYS.SHORTS_MUTED,
+    STORAGE_KEYS.SHORTS_VOLUME,
+    STORAGE_KEYS.THEATER_MODE,
+    STORAGE_KEYS.THEME_MODE,
+    STORAGE_KEYS.THEME_COLOR,
+    STORAGE_KEYS.SUBSCRIPTIONS,
+    STORAGE_KEYS.PLAYLISTS,
+    STORAGE_KEYS.RECENT_SEARCHES,
+    STORAGE_KEYS.RECENT_CHANNELS,
+];
+
+function clearPersistedStorage(): void {
+    try {
+        for (const key of PERSISTED_STORAGE_KEYS) {
+            localStorage.removeItem(key);
+        }
+    } catch {
+        // storage unavailable — nothing to clear; the in-memory reset via
+        // rootReducer still applies regardless.
+    }
+}
+
 export const signOutThunk = createAsyncThunk('auth/signOut', async () => {
     await auth.logout().catch(() => null);
+    clearPersistedStorage();
 });
 
 const authSlice = createSlice({

@@ -1,4 +1,20 @@
 /**
+ * Writes to localStorage without throwing.
+ *
+ * `localStorage.setItem` can throw (quota exceeded, storage blocked — e.g.
+ * Safari private mode). Callers that write from a `catch` block after a
+ * failed `getItem`/`setItem` must not call the same throwing API again, or
+ * the new error goes completely unhandled.
+ */
+function safeSet(key: string, value: unknown): void {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        // storage unavailable — degrade to in-memory only
+    }
+}
+
+/**
  * Safely loads and validates a value from localStorage.
  *
  * If the key is missing, the seed value is written and returned.
@@ -14,7 +30,7 @@ export function loadFromStorage<T>(
         const raw = localStorage.getItem(key);
         const isMissing = raw === null;
         if (isMissing) {
-            localStorage.setItem(key, JSON.stringify(seed));
+            safeSet(key, seed);
             return seed;
         }
 
@@ -24,13 +40,13 @@ export function loadFromStorage<T>(
         if (isInvalid) {
             // eslint-disable-next-line no-console
             console.warn(`[storage] Invalid schema for key "${key}", resetting to seed`);
-            localStorage.setItem(key, JSON.stringify(seed));
+            safeSet(key, seed);
             return seed;
         }
 
         return parsed as T;
     } catch {
-        localStorage.setItem(key, JSON.stringify(seed));
+        safeSet(key, seed);
         return seed;
     }
 }
@@ -45,7 +61,6 @@ export function isArray(v: unknown): boolean {
     return Array.isArray(v);
 }
 
-/** Validates that a value is a number within [min, max]. */
 export function isNumberInRange(min: number, max: number): (v: unknown) => boolean {
     return (v) => typeof v === 'number' && v >= min && v <= max;
 }

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice, { authActions, fetchMe, signInThunk, signOutThunk } from '@store/authSlice';
+import { STORAGE_KEYS } from '@utils/storageKeys';
 import type { User } from '@models/user';
 
 vi.mock('@api/auth', () => ({
@@ -132,6 +133,57 @@ describe('authSlice — signOutThunk', () => {
         const state = makeState({ user: makeUser() });
         const next = reducer(state, signOutThunk.fulfilled(undefined, ''));
         expect(next.user).toBeNull();
+    });
+});
+
+// ─── signOutThunk — localStorage cleanup ───────────────────────────────────
+
+describe('authSlice — signOutThunk clears persisted localStorage', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        vi.mocked(auth.logout).mockResolvedValue({ ok: true, data: undefined } as never);
+    });
+
+    it('removes every key persistMiddleware writes, so a previous user\'s data cannot leak into the next login', async () => {
+        const persistedKeys = [
+            STORAGE_KEYS.WATCH_HISTORY,
+            STORAGE_KEYS.LIKED_VIDEOS,
+            STORAGE_KEYS.DISLIKED_VIDEOS,
+            STORAGE_KEYS.VIDEO_PROGRESS,
+            STORAGE_KEYS.AUTOPLAY,
+            STORAGE_KEYS.PINNED_VIDEO,
+            STORAGE_KEYS.SHORTS_MUTED,
+            STORAGE_KEYS.SHORTS_VOLUME,
+            STORAGE_KEYS.THEATER_MODE,
+            STORAGE_KEYS.THEME_MODE,
+            STORAGE_KEYS.THEME_COLOR,
+            STORAGE_KEYS.SUBSCRIPTIONS,
+            STORAGE_KEYS.PLAYLISTS,
+            STORAGE_KEYS.RECENT_SEARCHES,
+            STORAGE_KEYS.RECENT_CHANNELS,
+        ];
+
+        for (const key of persistedKeys) {
+            localStorage.setItem(key, JSON.stringify(['leftover-from-previous-user']));
+        }
+
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        await store.dispatch(signOutThunk());
+
+        for (const key of persistedKeys) {
+            expect(localStorage.getItem(key)).toBeNull();
+        }
+    });
+
+    it('does not throw when localStorage is unavailable', async () => {
+        const store = configureStore({ reducer: { auth: authSlice.reducer } });
+        const removeSpy = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+            throw new DOMException('SecurityError');
+        });
+
+        await expect(store.dispatch(signOutThunk())).resolves.not.toThrow();
+
+        removeSpy.mockRestore();
     });
 });
 

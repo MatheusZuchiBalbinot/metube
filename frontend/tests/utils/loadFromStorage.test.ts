@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { loadFromStorage, isObject, isArray, isNumberInRange } from '@utils/loadFromStorage';
 
 beforeEach(() => {
@@ -51,6 +51,47 @@ describe('loadFromStorage — corrupted JSON', () => {
         localStorage.setItem('test-key', 'not-json{{');
         const result = loadFromStorage('test-key', 'fallback');
         expect(result).toBe('fallback');
+    });
+});
+
+// ─── loadFromStorage — storage unavailable ──────────────────────────────────
+//
+// getItem throwing (quota exceeded / storage blocked, e.g. Safari private mode)
+// used to fall into a catch block that called the very same throwing setItem API,
+// producing a second, unhandled error. Since this runs at module-evaluation time
+// for several slices' initialState, that crashed the whole app on load.
+
+describe('loadFromStorage — storage unavailable', () => {
+    it('does not throw when both getItem and setItem throw', () => {
+        const getSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+            throw new DOMException('SecurityError');
+        });
+        const setSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new DOMException('QuotaExceededError');
+        });
+
+        let result: unknown;
+        expect(() => {
+            result = loadFromStorage('test-key', 'fallback');
+        }).not.toThrow();
+        expect(result).toBe('fallback');
+
+        getSpy.mockRestore();
+        setSpy.mockRestore();
+    });
+
+    it('still returns the seed when only setItem throws on a missing key', () => {
+        const setSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new DOMException('QuotaExceededError');
+        });
+
+        let result: unknown;
+        expect(() => {
+            result = loadFromStorage('missing-key', ['seed']);
+        }).not.toThrow();
+        expect(result).toEqual(['seed']);
+
+        setSpy.mockRestore();
     });
 });
 

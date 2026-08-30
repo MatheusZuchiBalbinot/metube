@@ -5,6 +5,21 @@ import type { RootState, AppDispatch } from './types';
 
 export const persistMiddleware = createListenerMiddleware<RootState, AppDispatch>();
 
+/**
+ * Writes to localStorage without throwing (quota exceeded, storage blocked —
+ * e.g. Safari private mode). RTK's listener middleware swallows effect
+ * errors, so an unguarded `setItem` here would fail silently and skip every
+ * write after it in the same effect; wrapping each call lets the others
+ * still land instead of relying on that silent-swallow behavior.
+ */
+function safeSet(key: string, value: string): void {
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        // storage unavailable — degrade to in-memory only
+    }
+}
+
 type EffectAPI = ListenerEffectAPI<RootState, AppDispatch>;
 type ActionLike = { type: string };
 
@@ -35,10 +50,10 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { video } = getState();
-            localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(video.watchHistory));
-            localStorage.setItem(STORAGE_KEYS.LIKED_VIDEOS, JSON.stringify(video.likedVideos));
-            localStorage.setItem(STORAGE_KEYS.DISLIKED_VIDEOS, JSON.stringify(video.dislikedVideos));
-            localStorage.setItem(STORAGE_KEYS.VIDEO_PROGRESS, JSON.stringify(video.videoProgress));
+            safeSet(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(video.watchHistory));
+            safeSet(STORAGE_KEYS.LIKED_VIDEOS, JSON.stringify(video.likedVideos));
+            safeSet(STORAGE_KEYS.DISLIKED_VIDEOS, JSON.stringify(video.dislikedVideos));
+            safeSet(STORAGE_KEYS.VIDEO_PROGRESS, JSON.stringify(video.videoProgress));
         },
     },
     {
@@ -47,11 +62,11 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { playback } = getState();
-            localStorage.setItem(STORAGE_KEYS.AUTOPLAY, JSON.stringify(playback.autoplay));
-            localStorage.setItem(STORAGE_KEYS.PINNED_VIDEO, JSON.stringify(playback.pinnedVideoId));
-            localStorage.setItem(STORAGE_KEYS.SHORTS_MUTED, JSON.stringify(playback.shortsMuted));
-            localStorage.setItem(STORAGE_KEYS.SHORTS_VOLUME, String(playback.shortsVolume));
-            localStorage.setItem(STORAGE_KEYS.THEATER_MODE, JSON.stringify(playback.theaterMode));
+            safeSet(STORAGE_KEYS.AUTOPLAY, JSON.stringify(playback.autoplay));
+            safeSet(STORAGE_KEYS.PINNED_VIDEO, JSON.stringify(playback.pinnedVideoId));
+            safeSet(STORAGE_KEYS.SHORTS_MUTED, JSON.stringify(playback.shortsMuted));
+            safeSet(STORAGE_KEYS.SHORTS_VOLUME, String(playback.shortsVolume));
+            safeSet(STORAGE_KEYS.THEATER_MODE, JSON.stringify(playback.theaterMode));
         },
     },
     {
@@ -61,8 +76,8 @@ const descriptors: PersistDescriptor[] = [
         timing: 'immediate',
         effect: ({ getState }) => {
             const { theme } = getState();
-            localStorage.setItem(STORAGE_KEYS.THEME_MODE, theme.mode);
-            localStorage.setItem(STORAGE_KEYS.THEME_COLOR, theme.color);
+            safeSet(STORAGE_KEYS.THEME_MODE, theme.mode);
+            safeSet(STORAGE_KEYS.THEME_COLOR, theme.color);
         },
     },
     {
@@ -80,7 +95,7 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { subscription } = getState();
-            localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(subscription.subscribedChannelIds));
+            safeSet(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(subscription.subscribedChannelIds));
         },
     },
     {
@@ -89,7 +104,7 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { playlist } = getState();
-            localStorage.setItem(STORAGE_KEYS.PLAYLISTS, JSON.stringify(playlist.playlists));
+            safeSet(STORAGE_KEYS.PLAYLISTS, JSON.stringify(playlist.playlists));
         },
     },
     {
@@ -97,7 +112,7 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { search } = getState();
-            localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(search.recentSearches));
+            safeSet(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(search.recentSearches));
         },
     },
     {
@@ -105,7 +120,7 @@ const descriptors: PersistDescriptor[] = [
         timing: 'debounced',
         effect: ({ getState }) => {
             const { recentChannels } = getState();
-            localStorage.setItem(STORAGE_KEYS.RECENT_CHANNELS, JSON.stringify(recentChannels.channels));
+            safeSet(STORAGE_KEYS.RECENT_CHANNELS, JSON.stringify(recentChannels.channels));
         },
     },
 ];

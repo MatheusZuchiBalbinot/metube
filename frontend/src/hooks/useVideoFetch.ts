@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { video as videoApi, toVuid } from '@api';
@@ -11,6 +11,15 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
 
     const [fetchedVideo, setFetchedVideo] = useState<Video | null>(null);
     const [fetchFailed, setFetchFailed] = useState(false);
+
+    // `id` intentionally isn't in the second effect's deps (see comment below), so a
+    // captured `id` closure variable would never observe navigation to another video.
+    // Track the latest id in a ref, synced via useLayoutEffect (react-hooks/refs), and
+    // compare against it at resolve time instead.
+    const idRef = useRef(id);
+    useLayoutEffect(() => {
+        idRef.current = id;
+    });
 
     useEffect(() => {
         if (id === undefined || storeVideo !== undefined) {
@@ -60,7 +69,7 @@ export function useVideoFetch(id: string | undefined, storeVideo: Video | undefi
         let isCancelled = false;
 
         videoApi.get(toVuid(requestedId)).then(result => {
-            const isStaleVideo = isCancelled || requestedId !== id;
+            const isStaleVideo = isCancelled || requestedId !== idRef.current;
 
             if (isStaleVideo || !result.ok) {
                 return;
