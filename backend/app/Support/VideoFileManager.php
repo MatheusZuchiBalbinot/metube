@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Config\MimeTypes;
 use App\Contracts\StorageContract;
 
 /**
@@ -33,10 +34,12 @@ final class VideoFileManager
     {
         $this->storage->ensureDirectoryExists('uploads/tmp');
 
-        $ext = $this->resolveExtension((string) ($fileMeta['name'] ?? 'video.mp4'), 'mp4');
-        $destination = "uploads/tmp/{$vuid}.{$ext}";
+        $filename = (string) ($fileMeta['name'] ?? 'video.mp4');
+        $sourcePath = (string) $fileMeta['file_path'];
+        $extension = $this->resolveExtension($filename, 'mp4', MimeTypes::VIDEO_EXTENSIONS);
+        $destination = "uploads/tmp/{$vuid}.{$extension}";
 
-        $this->storage->moveFile((string) $fileMeta['file_path'], $destination);
+        $this->storage->moveFile($sourcePath, $destination);
 
         return $destination;
     }
@@ -53,26 +56,35 @@ final class VideoFileManager
      */
     public function moveThumbnailFromTus(array $thumbMeta, string $vuid): string
     {
-        $ext = $this->resolveExtension((string) ($thumbMeta['name'] ?? 'thumb.jpg'), 'jpg');
-        $destination = "uploads/tmp/thumb_{$vuid}.{$ext}";
+        $filename = (string) ($thumbMeta['name'] ?? 'thumb.jpg');
+        $sourcePath = (string) $thumbMeta['file_path'];
+        $extension = $this->resolveExtension($filename, 'jpg', MimeTypes::IMAGE_EXTENSIONS);
+        $destination = "uploads/tmp/thumb_{$vuid}.{$extension}";
 
-        $this->storage->moveFile((string) $thumbMeta['file_path'], $destination);
+        $this->storage->moveFile($sourcePath, $destination);
 
         return $destination;
     }
 
     /**
-     * Extract a lowercase file extension, falling back when none is present.
+     * Extract a lowercase file extension, falling back to a safe default when
+     * the filename has none or its extension is not on the allowlist.
      *
-     * @param string $filename Original filename
-     * @param string $fallback Extension to use when the filename has none
+     * The filename originates from client-supplied tus metadata and must
+     * never be trusted directly — an attacker-chosen extension (e.g. `.html`,
+     * `.svg`) would otherwise let arbitrary content be published under a
+     * dangerous content type on the same origin as the session cookie.
      *
-     * @return string The resolved extension (without the dot)
+     * @param string $filename Original filename (client-controlled, untrusted)
+     * @param string $fallback Extension to use when the filename's extension is missing or not allowed
+     * @param list<string> $allowed Lowercase extensions permitted for this file kind
+     *
+     * @return string The resolved extension (without the dot), guaranteed to be in $allowed or equal to $fallback
      */
-    private function resolveExtension(string $filename, string $fallback): string
+    private function resolveExtension(string $filename, string $fallback, array $allowed): string
     {
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-        return $ext !== '' ? $ext : $fallback;
+        return in_array($ext, $allowed, true) ? $ext : $fallback;
     }
 }

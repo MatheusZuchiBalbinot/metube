@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Config\MimeTypes;
 use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
 use App\DTOs\CreateVideoDTO;
@@ -13,8 +14,11 @@ use App\Models\User;
 use App\Models\Video;
 use App\Support\VideoFileManager;
 use App\Support\VideoPayloadBuilder;
+use finfo;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * VideoUploadService — Orchestrates the video upload and deletion workflows.
@@ -38,11 +42,6 @@ final class VideoUploadService
     ) {}
 
     /**
-     * Create a new video from a direct file upload.
-     *
-     * @param User $user Video owner (channel)
-     * @param CreateVideoDTO $data Validated video metadata and files
-     *
      * @return Video Created video with status=PROCESSING
      */
     public function createVideo(User $user, CreateVideoDTO $data): Video
@@ -75,11 +74,9 @@ final class VideoUploadService
      * status=PROCESSING, and dispatches ProcessVideoUpload — exactly like
      * createVideo() does for the legacy single-POST path.
      *
-     * @param User $user Authenticated channel owner
-     * @param FinalizeUploadDTO $data Validated metadata + upload keys
-     *
      * @throws ModelNotFoundException When the upload_key is not found in tus cache
      * @throws \App\Exceptions\VideoStorageException When the assembled file cannot be moved
+     * @throws ValidationException When the assembled file's real content type is not an allowed video/image MIME type
      *
      * @return Video Freshly created Video (status=PROCESSING)
      */
@@ -98,7 +95,15 @@ final class VideoUploadService
             $video = Video::create(VideoPayloadBuilder::fromFinalizeDTO($user, $data));
 
             $tmpPath = $this->fileManager->moveVideoFromTus($fileMeta, $video->vuid);
-            $tmpThumbPath = $this->resolveThumbnail($data, $video->vuid);
+            $this->assertAllowedMime($tmpPath, MimeTypes::VIDEO_MIME_TYPES, 'video_file');
+
+            try {
+                $tmpThumbPath = $this->resolveThumbnail($data, $video->vuid);
+            } catch (Throwable $e) {
+                $this->storage->deleteTempFile($tmpPath);
+
+                throw $e;
+            }
 
             ProcessVideoUpload::dispatch($video, $tmpPath, $tmpThumbPath)->afterCommit();
 
@@ -110,16 +115,11 @@ final class VideoUploadService
     }
 
     /**
-     * Route an upload request to the correct upload path.
-     *
      * Determines whether the request carries a completed tus key (resumable upload)
      * or a raw multipart file (direct upload) and dispatches to the appropriate
      * method, so controllers do not need to branch on upload mode.
      *
-     * @param User $user Authenticated channel owner
-     * @param array<string, mixed> $validated Validated request payload
-     *
-     * @return Video Created video with status=PROCESSING
+     * @param array<string, mixed> $validated
      */
     public function handleUpload(User $user, array $validated): Video
     {
@@ -132,11 +132,6 @@ final class VideoUploadService
         return $this->createVideo($user, CreateVideoDTO::fromRequest($validated));
     }
 
-    /**
-     * Delete a video and its associated files.
-     *
-     * @param Video $video Video to delete
-     */
     public function deleteVideo(Video $video): void
     {
         $videoPath = $video->video_url;
@@ -152,12 +147,8 @@ final class VideoUploadService
     }
 
     /**
-     * Move the finalized thumbnail out of tus storage, if one was uploaded.
-     *
-     * @param FinalizeUploadDTO $data Validated metadata + upload keys
-     * @param string $vuid Video public identifier used as the filename stem
-     *
      * @throws \App\Exceptions\VideoStorageException When the thumbnail cannot be moved
+     * @throws ValidationException When the assembled thumbnail's real content type is not an allowed image MIME type
      *
      * @return string|null Disk-relative thumbnail path, or null when absent or incomplete
      */
@@ -179,6 +170,7 @@ final class VideoUploadService
         }
 
         $tmpThumbPath = $this->fileManager->moveThumbnailFromTus($thumbMeta, $vuid);
+        $this->assertAllowedMime($tmpThumbPath, MimeTypes::IMAGE_MIME_TYPES, 'thumbnail_key');
 
         $this->tusResolver->delete($thumbnailKey);
         $this->tusResolver->clearOwnerCache($thumbnailKey);
@@ -187,11 +179,36 @@ final class VideoUploadService
     }
 
     /**
-     * Delete published video files from storage.
+     * Verify that a tus-assembled file's real content matches an allowed MIME type.
      *
-     * @param string|null $videoPath Path to the video file on the public disk
-     * @param string|null $thumbnailPath Path to the thumbnail file on the public disk
+     * tus uploads never pass through Laravel's `mimes:` validation rule (only
+     * the direct multipart path does), so the client-supplied filename
+     * extension is the sole gate against arbitrary file types unless this
+     * check inspects the actual bytes. Deletes the offending temp file and
+     * fails validation when the content does not match.
+     *
+     * @param list<string> $allowedMimeTypes
+     *
+     * @throws ValidationException When the file's real content type is not in $allowedMimeTypes
      */
+    private function assertAllowedMime(string $tempDiskPath, array $allowedMimeTypes, string $field): void
+    {
+        $absolutePath = $this->storage->tempPath($tempDiskPath);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = is_file($absolutePath) ? $finfo->file($absolutePath) : false;
+        $isAllowed = is_string($mimeType) && in_array($mimeType, $allowedMimeTypes, true);
+
+        if ($isAllowed) {
+            return;
+        }
+
+        $this->storage->deleteTempFile($tempDiskPath);
+
+        throw ValidationException::withMessages([
+            $field => ['The uploaded file content does not match an allowed format.'],
+        ]);
+    }
+
     private function deleteVideoFiles(?string $videoPath, ?string $thumbnailPath): void
     {
         foreach ([$videoPath, $thumbnailPath] as $path) {

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Config\UploadLimits;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -33,8 +35,12 @@ return [
     | 0 = no limit enforced by tus-php itself (Caddy / PHP already cap it).
     | Set to a positive value to enforce an explicit cap here too.
     |
+    | Defaults to App\Config\UploadLimits::VIDEO_MAX_BYTES so the resumable
+    | (tus) path can never accept a larger file than the direct upload path
+    | validates for in StoreVideoRequest — they must share one ceiling.
+    |
     */
-    'max_size' => (int) env('TUS_MAX_UPLOAD_BYTES', 5 * 1024 * 1024 * 1024),
+    'max_size' => (int) env('TUS_MAX_UPLOAD_BYTES', UploadLimits::VIDEO_MAX_BYTES),
 
     /*
     |--------------------------------------------------------------------------

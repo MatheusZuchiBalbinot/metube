@@ -74,4 +74,39 @@ describe('StoreVideoRequest', function () {
 
         expect($validator->errors()->has('video_file'))->toBeFalse();
     });
+
+    test('thumbnail_file rejects a file larger than 10MB', function () {
+        $oversized = Illuminate\Http\UploadedFile::fake()->image('thumb.jpg')->size(10241);
+
+        $validator = Validator::make(
+            ['title' => 'My Video', 'status' => 'published', 'upload_key' => 'k', 'thumbnail_file' => $oversized],
+            (new StoreVideoRequest())->rules(),
+        );
+
+        expect($validator->fails())->toBeTrue()
+            ->and($validator->errors()->has('thumbnail_file'))->toBeTrue();
+    });
+
+    test('thumbnail_file accepts a file at the 10MB limit', function () {
+        $atLimit = Illuminate\Http\UploadedFile::fake()->image('thumb.jpg')->size(10240);
+
+        $validator = Validator::make(
+            ['title' => 'My Video', 'status' => 'published', 'upload_key' => 'k', 'thumbnail_file' => $atLimit],
+            (new StoreVideoRequest())->rules(),
+        );
+
+        expect($validator->errors()->has('thumbnail_file'))->toBeFalse();
+    });
+
+    test('thumbnail_file rejects a disallowed mime type', function () {
+        $svg = Illuminate\Http\UploadedFile::fake()->create('thumb.svg', 10, 'image/svg+xml');
+
+        $validator = Validator::make(
+            ['title' => 'My Video', 'status' => 'published', 'upload_key' => 'k', 'thumbnail_file' => $svg],
+            (new StoreVideoRequest())->rules(),
+        );
+
+        expect($validator->fails())->toBeTrue()
+            ->and($validator->errors()->has('thumbnail_file'))->toBeTrue();
+    });
 });
