@@ -139,6 +139,29 @@ describe('TranscodeVideoToHls', function () {
         });
     });
 
+    describe('handle — HLS package already exists', function () {
+        test('skips re-transcoding and re-dispatches TranscribeVideo', function () {
+            $video = makeSourceVideo();
+
+            $storage = Mockery::mock(VideoStorageService::class);
+            $storage->shouldReceive('exists')
+                ->once()
+                ->with("{$video->hlsDirectory()}/master.m3u8")
+                ->andReturn(true);
+            $storage->shouldNotReceive('absolutePublicPath');
+            $storage->shouldNotReceive('deletePublished');
+
+            $hls = Mockery::mock(HlsTranscodeService::class);
+            $hls->shouldNotReceive('transcode');
+            $hls->shouldNotReceive('extractAudio');
+            $hls->shouldNotReceive('extractThumbnail');
+
+            (new TranscodeVideoToHls($video))->handle($hls, $storage);
+
+            Queue::assertPushed(TranscribeVideo::class);
+        });
+    });
+
     describe('handle — nothing to do', function () {
         test('returns early when the video no longer exists', function () {
             $hls = Mockery::mock(HlsTranscodeService::class);
