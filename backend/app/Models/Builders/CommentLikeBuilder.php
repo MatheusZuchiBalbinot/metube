@@ -18,30 +18,18 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class CommentLikeBuilder extends Builder
 {
-    /**
-     * Filter likes by user.
-     *
-     * @param int $userId User ID
-     */
     public function byUser(int $userId): self
     {
         return $this->where('user_id', $userId);
     }
 
-    /**
-     * Filter likes for a comment.
-     *
-     * @param int $commentId Comment ID
-     */
     public function forComment(int $commentId): self
     {
         return $this->where('comment_id', $commentId);
     }
 
     /**
-     * Filter likes for multiple comments.
-     *
-     * @param array<int> $commentIds Comment IDs
+     * @param array<int> $commentIds
      */
     public function forComments(array $commentIds): self
     {

@@ -17,9 +17,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 /**
- * PlaylistController — Routes playlist HTTP requests to services.
- *
- * Responsibility: Parse input, call service, format response.
  * Authorization is enforced by route ->can() middleware in api.php.
  */
 class PlaylistController extends Controller
@@ -41,10 +38,8 @@ class PlaylistController extends Controller
      */
     public function store(StorePlaylistRequest $request): JsonResponse
     {
-        $playlist = $this->playlistService->createPlaylist(
-            auth()->user(),
-            $request->getDTO(),
-        );
+        $user = auth()->user();
+        $playlist = $this->playlistService->createPlaylist($user, $request->getDTO());
 
         return $this->json(new PlaylistResource($playlist->load('videos')), 201);
     }
@@ -102,10 +97,8 @@ class PlaylistController extends Controller
      */
     public function addVideo(AddVideoRequest $request, Playlist $playlist): JsonResponse
     {
-        $updated = $this->playlistService->addVideoToPlaylist(
-            $playlist,
-            $request->validated()['vuid'],
-        );
+        $vuid = $request->validated()['vuid'];
+        $updated = $this->playlistService->addVideoToPlaylist($playlist, $vuid);
 
         return $this->json(new PlaylistResource($updated));
     }
@@ -129,10 +122,7 @@ class PlaylistController extends Controller
      */
     public function reorderVideos(ReorderVideosRequest $request, Playlist $playlist): JsonResponse
     {
-        $updated = $this->playlistService->reorderPlaylistVideos(
-            $playlist,
-            $request->getDTO(),
-        );
+        $updated = $this->playlistService->reorderPlaylistVideos($playlist, $request->getDTO());
 
         return $this->json(new PlaylistResource($updated));
     }

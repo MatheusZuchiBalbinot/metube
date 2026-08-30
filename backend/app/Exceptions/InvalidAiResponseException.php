@@ -19,8 +19,6 @@ use RuntimeException;
 class InvalidAiResponseException extends RuntimeException
 {
     /**
-     * The response body could not be decoded as JSON.
-     *
      * @param string $raw Raw provider response (kept for logs only)
      */
     public static function invalidJson(string $raw): self
@@ -28,11 +26,6 @@ class InvalidAiResponseException extends RuntimeException
         return new self('AI service response is not valid JSON: ' . $raw);
     }
 
-    /**
-     * A key required by the prompt is absent from the decoded response.
-     *
-     * @param string $key The missing key
-     */
     public static function missingKey(string $key): self
     {
         return new self("AI response missing required key '{$key}'");
@@ -47,10 +40,6 @@ class InvalidAiResponseException extends RuntimeException
     }
 
     /**
-     * Render a client-safe response for API requests, hiding provider internals.
-     *
-     * @param Request $request The incoming request
-     *
      * @return JsonResponse|false A JSON response for api/* requests, false otherwise
      */
     public function render(Request $request): JsonResponse|false

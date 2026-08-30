@@ -13,11 +13,6 @@ class SendVideoLikedNotification implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /**
-     * Notify the video owner when their video is liked.
-     *
-     * Skips the notification if the liker is the channel owner.
-     */
     public function handle(VideoLiked $event): void
     {
         $owner = $event->video->channel;

@@ -46,11 +46,7 @@ class VideoView extends Model
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return VideoViewBuilder
      */
     public function newEloquentBuilder($query): VideoViewBuilder
     {

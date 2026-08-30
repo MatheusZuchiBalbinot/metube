@@ -18,8 +18,6 @@ class SendVideoPublishedNotifications implements ShouldQueueAfterCommit
     private const CHUNK_SIZE = 500;
 
     /**
-     * Fan out notifications to all subscribers via chunked child jobs.
-     *
      * The work is split into NotifySubscribersChunk jobs so the notifications
      * supervisor can parallelize the load across workers instead of one
      * worker iterating a single 100k-row stream.

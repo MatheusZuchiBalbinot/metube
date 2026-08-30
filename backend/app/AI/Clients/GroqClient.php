@@ -41,10 +41,6 @@ final class GroqClient implements AiClient
     }
 
     /**
-     * Execute an AiPrompt and return the parsed result.
-     *
-     * @param AiPrompt $prompt The prompt to execute
-     *
      * @throws RequestException When the API returns a non-2xx response
      * @throws InvalidAiResponseException When the response is not valid JSON or required keys are missing
      *
@@ -75,14 +71,8 @@ final class GroqClient implements AiClient
     }
 
     /**
-     * Send a prompt for JSON extraction and return the response content.
-     *
-     * @param string $prompt Full prompt text to send
-     *
      * @throws RequestException When the API returns a non-2xx response
      * @throws InvalidAiResponseException When the response content is missing or invalid
-     *
-     * @return string The plain-text response from the model
      */
     public function generateJson(string $prompt): string
     {
@@ -109,16 +99,10 @@ final class GroqClient implements AiClient
     }
 
     /**
-     * Send a multi-turn chat request and return the plain-text response.
-     *
-     * @param string $question The user's question for this turn
-     * @param string $systemPrompt System instructions
      * @param array<int, array{role: string, content: string}> $history Previous turns
      *
      * @throws RequestException When the API returns a non-2xx response
      * @throws InvalidAiResponseException When the response content is missing
-     *
-     * @return string The model's plain-text answer
      */
     public function chat(string $question, string $systemPrompt, array $history): string
     {
@@ -138,14 +122,10 @@ final class GroqClient implements AiClient
     }
 
     /**
-     * Send the payload and extract the response text.
-     *
      * @param array<string, mixed> $payload
      *
      * @throws RequestException
      * @throws InvalidAiResponseException
-     *
-     * @return string The response content
      */
     private function send(array $payload): string
     {

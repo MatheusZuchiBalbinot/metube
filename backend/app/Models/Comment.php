@@ -56,9 +56,6 @@ class Comment extends Model
         ];
     }
 
-    /**
-     * A comment is considered edited when it has a current_version_id set.
-     */
     public function isEdited(): Attribute
     {
         return Attribute::get(fn (): bool => $this->current_version_id !== null);
@@ -70,11 +67,7 @@ class Comment extends Model
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return CommentBuilder
      */
     public function newEloquentBuilder($query): CommentBuilder
     {
@@ -91,8 +84,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the author of this comment.
-     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -101,8 +92,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the video this comment belongs to.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
@@ -111,8 +100,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the parent comment (null for top-level comments).
-     *
      * @return BelongsTo<Comment, $this>
      */
     public function parent(): BelongsTo
@@ -121,8 +108,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the direct replies to this comment.
-     *
      * @return HasMany<Comment, $this>
      */
     public function replies(): HasMany
@@ -131,8 +116,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the users who liked this comment.
-     *
      * @return BelongsToMany<User, $this>
      */
     public function likes(): BelongsToMany
@@ -141,8 +124,6 @@ class Comment extends Model
     }
 
     /**
-     * Get all saved versions of this comment.
-     *
      * @return HasMany<CommentVersion, $this>
      */
     public function versions(): HasMany
@@ -151,8 +132,6 @@ class Comment extends Model
     }
 
     /**
-     * Get the version that was set as current on the last edit.
-     *
      * @return BelongsTo<CommentVersion, $this>
      */
     public function currentVersion(): BelongsTo

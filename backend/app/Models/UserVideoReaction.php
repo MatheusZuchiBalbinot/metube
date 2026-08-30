@@ -29,8 +29,6 @@ class UserVideoReaction extends Pivot
     public $timestamps = false;
 
     /**
-     * Get the user who created this reaction.
-     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -39,8 +37,6 @@ class UserVideoReaction extends Pivot
     }
 
     /**
-     * Get the video being reacted to.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
@@ -49,11 +45,7 @@ class UserVideoReaction extends Pivot
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return UserVideoReactionBuilder
      */
     public function newEloquentBuilder($query): UserVideoReactionBuilder
     {

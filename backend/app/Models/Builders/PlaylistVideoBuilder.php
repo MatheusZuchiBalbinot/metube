@@ -18,29 +18,16 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class PlaylistVideoBuilder extends Builder
 {
-    /**
-     * Filter rows belonging to a specific playlist.
-     *
-     * @param int $playlistId Playlist ID
-     */
     public function forPlaylist(int $playlistId): self
     {
         return $this->where('playlist_id', $playlistId);
     }
 
-    /**
-     * Filter rows referencing a specific video.
-     *
-     * @param int $videoId Video ID
-     */
     public function forVideo(int $videoId): self
     {
         return $this->where('video_id', $videoId);
     }
 
-    /**
-     * Order rows by their position within the playlist.
-     */
     public function ordered(): self
     {
         return $this->orderBy('position');

@@ -24,16 +24,8 @@ final class RedisViewCounterStore implements ViewCounterStore
 
     private const DIRTY_SET = 'metube:views:dirty';
 
-    /**
-     * @param RedisFactory $redis Redis connection factory injected for testability
-     */
     public function __construct(private readonly RedisFactory $redis) {}
 
-    /**
-     * Buffer a single view in Redis. Lock-free for concurrent writers.
-     *
-     * @param int $videoId Internal primary key of the video
-     */
     public function increment(int $videoId): void
     {
         $conn = $this->redis->connection();
@@ -47,7 +39,7 @@ final class RedisViewCounterStore implements ViewCounterStore
      * Each id is drained with GETDEL so a concurrent INCR after the read either
      * landed before (counted now) or after (re-flagged for the next cycle).
      *
-     * @return array<int, int> Map of video id to pending view count
+     * @return array<int, int>
      */
     public function pullDirtyCounts(): array
     {

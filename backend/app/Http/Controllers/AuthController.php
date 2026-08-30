@@ -21,13 +21,7 @@ class AuthController extends Controller
     public function __construct(private readonly AuthService $authService) {}
 
     /**
-     * Authenticate user with email and password.
-     *
-     * @param LoginRequest $request Validated: email, password
-     *
      * @throws ValidationException
-     *
-     * @return JsonResponse {user: User}
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -38,11 +32,6 @@ class AuthController extends Controller
         return $this->json($response);
     }
 
-    /**
-     * Logout authenticated user.
-     *
-     * @return JsonResponse {message: string}
-     */
     public function logout(): JsonResponse
     {
         $this->authService->logout();
@@ -52,23 +41,13 @@ class AuthController extends Controller
         return $this->json($response);
     }
 
-    /**
-     * Get authenticated user profile.
-     *
-     * @return JsonResponse User resource
-     */
     public function me(): JsonResponse
     {
         return $this->json(new UserResource($this->authService->me()));
     }
 
     /**
-     * Update a user profile. Only the user themself may patch their record.
-     *
-     * @param string $uuid Target user UUID (must match the authenticated user)
-     * @param UpdateProfileRequest $request Validated: name?, bio?
-     *
-     * @return JsonResponse User resource
+     * Only the user themself may patch their record.
      */
     public function updateProfile(string $uuid, UpdateProfileRequest $request): JsonResponse
     {
@@ -79,13 +58,6 @@ class AuthController extends Controller
         return $this->json(new UserResource($user));
     }
 
-    /**
-     * Register a new user account.
-     *
-     * @param RegisterRequest $request Validated: name, email, password, password_confirmation
-     *
-     * @return JsonResponse {user: User}
-     */
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = $this->authService->register($request->validated());
@@ -96,13 +68,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Send a password reset link to the given email address.
-     *
-     * @param ForgotPasswordRequest $request Validated: email
-     *
      * @throws ValidationException
-     *
-     * @return JsonResponse {message: string}
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
@@ -114,14 +80,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Reset the user's password using the given token.
-     *
-     * @param string $token Password reset token (from URL)
-     * @param ResetPasswordRequest $request Validated: email, password, password_confirmation
-     *
      * @throws ValidationException
-     *
-     * @return JsonResponse {message: string}
      */
     public function resetPassword(string $token, ResetPasswordRequest $request): JsonResponse
     {
@@ -137,13 +96,6 @@ class AuthController extends Controller
         return $this->json($response);
     }
 
-    /**
-     * Mark the authenticated user's email address as verified.
-     *
-     * @param EmailVerificationRequest $request Signed URL request
-     *
-     * @return JsonResponse {message: string}
-     */
     public function verifyEmail(EmailVerificationRequest $request): JsonResponse
     {
         $request->fulfill();
@@ -153,11 +105,6 @@ class AuthController extends Controller
         return $this->json($response);
     }
 
-    /**
-     * Resend the email verification notification.
-     *
-     * @return JsonResponse {message: string}
-     */
     public function resendVerification(Request $request): JsonResponse
     {
         $request->user()->sendEmailVerificationNotification();

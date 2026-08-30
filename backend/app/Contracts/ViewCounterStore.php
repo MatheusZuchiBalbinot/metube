@@ -17,8 +17,6 @@ namespace App\Contracts;
 interface ViewCounterStore
 {
     /**
-     * Record a single view for the given video.
-     *
      * @param int $videoId Internal primary key of the video
      */
     public function increment(int $videoId): void;

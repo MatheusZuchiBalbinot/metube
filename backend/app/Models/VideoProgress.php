@@ -33,8 +33,6 @@ class VideoProgress extends Model
     }
 
     /**
-     * Get the user who has this progress.
-     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -43,8 +41,6 @@ class VideoProgress extends Model
     }
 
     /**
-     * Get the video this progress is for.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
@@ -53,11 +49,7 @@ class VideoProgress extends Model
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return VideoProgressBuilder
      */
     public function newEloquentBuilder($query): VideoProgressBuilder
     {

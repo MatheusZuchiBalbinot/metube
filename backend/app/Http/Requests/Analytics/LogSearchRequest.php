@@ -7,8 +7,6 @@ namespace App\Http\Requests\Analytics;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * LogSearchRequest — Validates a search-performed event.
- *
  * @property string $query
  * @property int $result_count
  * @property string|null $session_id

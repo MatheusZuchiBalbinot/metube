@@ -20,13 +20,9 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class TusController extends Controller
 {
     /**
-     * Handle any tus protocol request by delegating to the service layer.
-     *
-     * @param Request $request Incoming Laravel request (passed through but tus-php reads
-     *                         from the global Symfony request internally)
-     * @param TusHandlerService $tusHandler Service layer for tus protocol handling
-     *
-     * @return SymfonyResponse tus-php Symfony response (Laravel renders it transparently)
+     * $request is passed through but unused directly — tus-php reads from the
+     * global Symfony request internally. The tus-php Symfony response it
+     * returns is rendered transparently by Laravel.
      */
     public function handle(Request $request, TusHandlerService $tusHandler): SymfonyResponse
     {

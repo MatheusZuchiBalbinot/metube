@@ -24,8 +24,6 @@ final readonly class FinalizeUploadDTO
     ) {}
 
     /**
-     * Build from a validated FinalizeUploadRequest payload.
-     *
      * @param array<string, mixed> $validated
      */
     public static function fromRequest(array $validated): self

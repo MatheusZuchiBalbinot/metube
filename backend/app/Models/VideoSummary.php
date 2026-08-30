@@ -32,8 +32,6 @@ class VideoSummary extends Model
     }
 
     /**
-     * Get the video this summary belongs to.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo

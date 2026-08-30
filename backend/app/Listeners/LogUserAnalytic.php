@@ -17,8 +17,6 @@ class LogUserAnalytic implements ShouldQueueAfterCommit
     public $tries = 3;
 
     /**
-     * Persist a loggable user event into user_analytics.
-     *
      * Runs only after the surrounding DB transaction commits, so we never
      * record events for actions that ended up rolled back.
      */

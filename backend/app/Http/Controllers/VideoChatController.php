@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\AI\Contracts\AiClient;
 use App\DTOs\ChatAnswerDTO;
 use App\Http\Requests\Video\VideoChatRequest;
 use App\Http\Resources\VideoChatAnswerResource;
-use App\Services\IAService;
 use App\Services\VideoAiService;
 use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
@@ -24,17 +24,9 @@ class VideoChatController extends Controller
     public function __construct(
         private readonly VideoService $videoService,
         private readonly VideoAiService $videoAiService,
-        private readonly IAService $iaService,
+        private readonly AiClient $aiClient,
     ) {}
 
-    /**
-     * Ask the AI a question about a specific video.
-     *
-     * @param VideoChatRequest $request Validated question + conversation history
-     * @param string $vuid Video unique ID
-     *
-     * @return JsonResponse 200 { answer: string } or 422 if context unavailable
-     */
     public function __invoke(VideoChatRequest $request, string $vuid): JsonResponse
     {
         $video = $this->videoService->getVideoByUuid($vuid);
@@ -57,7 +49,7 @@ class VideoChatController extends Controller
         $history = $request->input('history', []);
 
         try {
-            $answer = $this->iaService->chat($question, $systemPrompt, $history);
+            $answer = $this->aiClient->chat($question, $systemPrompt, $history);
         } catch (Throwable) {
             return $this->json(['message' => 'The AI service failed to respond. Please try again.'], 503);
         }

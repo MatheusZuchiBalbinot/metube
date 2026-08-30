@@ -13,11 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin Transcription */
 class TranscriptionResource extends JsonResource
 {
-    /**
-     * Transform the transcription into an array.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         $isProcessing = $this->status === TranscriptionStatus::PROCESSING;
@@ -32,8 +28,6 @@ class TranscriptionResource extends JsonResource
     }
 
     /**
-     * Estimated total wall-clock seconds for this transcription, derived from the video duration.
-     *
      * Returns null when the video duration is unknown.
      */
     private function estimatedSeconds(): ?float

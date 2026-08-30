@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs;
 
 /**
- * AI-generated metadata for a video.
- *
- * Returned by the AI provider after analyzing a video transcription.
+ * AI-generated metadata for a video, returned after analyzing its transcription.
  */
 readonly class VideoMetadataResult
 {

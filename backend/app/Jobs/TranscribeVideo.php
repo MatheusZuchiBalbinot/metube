@@ -63,9 +63,6 @@ class TranscribeVideo implements ShouldBeUnique, ShouldQueue
     }
 
     /**
-     * Orchestrate transcription: mark as processing, transcribe, mark as completed,
-     * and dispatch AI metadata generation.
-     *
      * When the source language is not English, a separate TranslateVideoCaptions job is dispatched
      * so the slower translate pass does not block the captions, transcription, and AI summary.
      *
@@ -127,9 +124,6 @@ class TranscribeVideo implements ShouldBeUnique, ShouldQueue
         dispatch(new TranslateVideoCaptions($video));
     }
 
-    /**
-     * Mark the transcription as failed when all retries are exhausted.
-     */
     public function failed(Throwable $_): void
     {
         $video = Video::find($this->video->id);
@@ -143,14 +137,11 @@ class TranscribeVideo implements ShouldBeUnique, ShouldQueue
             ['status' => TranscriptionStatus::FAILED],
         );
 
-        // Note: We dispatch TranscriptionStatusUpdated for FAILED so listeners can react.
-        // In future, we may create VideoTranscriptionFailed event if needed.
+        // In future, a dedicated VideoTranscriptionFailed event could replace this if needed.
         event(new TranscriptionStatusUpdated($video, TranscriptionStatus::FAILED));
     }
 
     /**
-     * Mark transcription as processing and emit broadcast event with ETA.
-     *
      * Only broadcasts on first attempt to avoid duplicate notifications.
      */
     private function markProcessing(Video $video): void

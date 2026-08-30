@@ -18,9 +18,6 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class CommentVersionBuilder extends Builder
 {
-    /**
-     * Order versions by version number, newest first.
-     */
     public function newest(): self
     {
         return $this->orderByDesc('version');

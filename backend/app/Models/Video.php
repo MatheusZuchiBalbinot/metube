@@ -82,7 +82,6 @@ class Video extends Model
     }
 
     /**
-     * @param mixed $value
      * @param string|null $field
      */
     public function resolveRouteBinding($value, $field = null): ?self
@@ -100,7 +99,7 @@ class Video extends Model
     }
 
     /**
-     * Get the user who published this video.
+     * A "channel" is a User — there's no separate Channel model.
      *
      * @return BelongsTo<User, $this>
      */
@@ -110,8 +109,6 @@ class Video extends Model
     }
 
     /**
-     * Get the summary for this video (if it exists).
-     *
      * @return HasOne<VideoSummary, $this>
      */
     public function summary(): HasOne
@@ -120,8 +117,6 @@ class Video extends Model
     }
 
     /**
-     * Get the transcription for this video (if it exists).
-     *
      * @return HasOne<Transcription, $this>
      */
     public function transcription(): HasOne
@@ -130,8 +125,6 @@ class Video extends Model
     }
 
     /**
-     * Get the AI-generated suggestion for this video (if it exists).
-     *
      * @return HasOne<VideoAiSuggestion, $this>
      */
     public function aiSuggestion(): HasOne
@@ -140,8 +133,6 @@ class Video extends Model
     }
 
     /**
-     * Get all watch progress entries for this video.
-     *
      * @return HasMany<VideoProgress, $this>
      */
     public function progress(): HasMany
@@ -150,8 +141,6 @@ class Video extends Model
     }
 
     /**
-     * Get all watch history entries for this video.
-     *
      * @return HasMany<WatchHistory, $this>
      */
     public function watchHistory(): HasMany
@@ -160,29 +149,18 @@ class Video extends Model
     }
 
     /**
-     * Use the dedicated VideoBuilder so query logic lives in typed, chainable
-     * methods (Video::query()->published()->newestPublished()).
-     *
      * @param QueryBuilder $query
-     *
-     * @return VideoBuilder
      */
     public function newEloquentBuilder($query): VideoBuilder
     {
         return new VideoBuilder($query);
     }
 
-    /**
-     * Check if this video already has English captions.
-     */
     public function hasEnglishCaptions(): bool
     {
         return \in_array('en', \array_column($this->captions ?? [], 'lang'), true);
     }
 
-    /**
-     * Append a caption track to this video's caption list.
-     */
     public function appendCaption(string $lang, string $label, string $url): void
     {
         $captions = $this->captions ?? [];

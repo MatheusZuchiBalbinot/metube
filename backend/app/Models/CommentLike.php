@@ -38,11 +38,7 @@ class CommentLike extends Pivot
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return CommentLikeBuilder
      */
     public function newEloquentBuilder($query): CommentLikeBuilder
     {

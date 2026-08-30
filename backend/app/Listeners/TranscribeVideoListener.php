@@ -27,15 +27,12 @@ use App\Events\VideoPublished;
 class TranscribeVideoListener
 {
     /**
-     * Handle the video published event.
-     *
      * Deliberately does nothing: TranscodeVideoToHls owns the TranscribeVideo dispatch.
      *
      * @param VideoPublished $event Published video event (unused)
      */
     public function handle(VideoPublished $event): void
     {
-        // No-op. See class docblock: TranscodeVideoToHls is the single dispatcher of
-        // TranscribeVideo. Dispatching here would re-introduce the double-transcription race.
+        // No-op — see class docblock.
     }
 }

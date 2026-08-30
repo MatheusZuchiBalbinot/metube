@@ -9,8 +9,6 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * LogImpressionsRequest — Validates a batch of video impressions.
- *
  * @property list<string> $vuids
  * @property string $source
  * @property string|null $session_id

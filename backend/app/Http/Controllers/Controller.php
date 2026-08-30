@@ -10,23 +10,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 
-/**
- * Controller — Base class for all HTTP controllers.
- *
- * Provides common functionality:
- * - Authorization via policies ($this->authorize)
- * - Validation helpers ($this->validate, ValidatesRequests)
- * - JSON responses ($this->json)
- */
 abstract class Controller
 {
     use AuthorizesRequests, ValidatesRequests;
 
     /**
-     * Return a JSON response.
-     *
-     * @param mixed $data Data to return as JSON
-     * @param int $status HTTP status code
+     * @param mixed $data
      */
     protected function json($data, int $status = 200): JsonResponse
     {
@@ -38,10 +27,6 @@ abstract class Controller
     }
 
     /**
-     * Return HTTP 204 No Content response.
-     *
-     * Use for successful operations with no response body (DELETE, etc.)
-     *
      * @return Response
      */
     protected function noContent()

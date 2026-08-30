@@ -6,15 +6,6 @@ namespace App\Enums;
 
 use Illuminate\Support\Carbon;
 
-/**
- * HistoryPeriod — Watch history time period enum.
- *
- * Values:
- * - TODAY: Last 24 hours
- * - WEEK: Last 7 days
- * - MONTH: Last 30 days
- * - ALL: Entire history
- */
 enum HistoryPeriod: string
 {
     case TODAY = 'today';
@@ -23,8 +14,6 @@ enum HistoryPeriod: string
     case ALL = 'all';
 
     /**
-     * Get all available values as array.
-     *
      * @return array<string>
      */
     public static function values(): array
@@ -32,9 +21,6 @@ enum HistoryPeriod: string
         return array_map(fn (self $case) => $case->value, self::cases());
     }
 
-    /**
-     * Get the start date for this period.
-     */
     public function startDate(): ?Carbon
     {
         return match ($this) {

@@ -21,9 +21,6 @@ enum VideoEventType: string
     case UNSUBSCRIBE = 'unsubscribe';
     case SEARCH = 'search';
 
-    /**
-     * Whether the event represents positive affinity toward a video or channel.
-     */
     public function isPositiveSignal(): bool
     {
         return match ($this) {
@@ -32,9 +29,6 @@ enum VideoEventType: string
         };
     }
 
-    /**
-     * Whether the event represents negative affinity toward a video or channel.
-     */
     public function isNegativeSignal(): bool
     {
         return match ($this) {

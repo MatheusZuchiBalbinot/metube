@@ -19,14 +19,9 @@ use App\Models\VideoSummary;
 final class AiMetadataService
 {
     /**
-     * Apply AI metadata result to a video.
-     *
      * - Always stores summary (key_points, chapters, reading_mode)
      * - For batch uploads: auto-applies tags/title/description when empty
      * - For single uploads: creates pending suggestion for review
-     *
-     * @param Video $video The video to apply metadata to
-     * @param VideoMetadataResult $result The AI-generated metadata
      */
     public function apply(Video $video, VideoMetadataResult $result): void
     {
@@ -39,9 +34,6 @@ final class AiMetadataService
         }
     }
 
-    /**
-     * Store the video summary.
-     */
     private function storeSummary(Video $video, VideoMetadataResult $result): void
     {
         $summaryPayload = [
@@ -55,9 +47,6 @@ final class AiMetadataService
         );
     }
 
-    /**
-     * Auto-apply metadata when fields are empty (batch mode).
-     */
     private function autoApplyToBatch(Video $video, VideoMetadataResult $result): void
     {
         $updates = [];
@@ -79,9 +68,6 @@ final class AiMetadataService
         $video->update($updates);
     }
 
-    /**
-     * Store pending suggestion for creator review (single mode).
-     */
     private function storePendingSuggestion(Video $video, VideoMetadataResult $result): void
     {
         $suggestionPayload = [

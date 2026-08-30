@@ -13,9 +13,6 @@ class SendVideoTranscriptionStartedListener implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /**
-     * Notify the video owner when transcription starts with estimated duration.
-     */
     public function handle(VideoTranscriptionStarted $event): void
     {
         $owner = $event->video->channel;

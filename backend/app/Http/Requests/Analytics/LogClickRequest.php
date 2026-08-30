@@ -9,8 +9,6 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * LogClickRequest — Validates a single feed click event.
- *
  * @property string $vuid
  * @property string $source
  * @property int|null $position

@@ -39,11 +39,7 @@ class PlaylistVideo extends Pivot
     }
 
     /**
-     * Use the dedicated PlaylistVideoBuilder for typed, chainable queries.
-     *
      * @param QueryBuilder $query
-     *
-     * @return PlaylistVideoBuilder
      */
     public function newEloquentBuilder($query): PlaylistVideoBuilder
     {

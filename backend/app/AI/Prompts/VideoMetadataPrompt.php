@@ -13,47 +13,41 @@ class VideoMetadataPrompt implements AiPrompt
 {
     public function __construct(private readonly Video $video) {}
 
-    /**
-     * Build the plain-text prompt to send to the AI model.
-     *
-     * @return string
-     */
     public function buildPrompt(): string
     {
+        $title = $this->video->title;
         $lang = $this->video->transcription->language ?? 'pt';
         $description = $this->video->description ?? '';
         $content = $this->video->transcription->vtt ?? $this->video->transcription->content ?? '';
 
         return <<<PROMPT
-You are a video content analyzer. Given the title, description and full transcription of a video, return ONLY valid JSON with this exact structure — no markdown, no explanation:
-{
-  "key_points": ["string"],
-  "chapters": [{"timestamp": "HH:MM:SS", "title": "string"}],
-  "reading_mode": "string",
-  "suggested_tags": ["string"],
-  "suggested_title": "string",
-  "suggested_description": "string"
-}
+                You are a video content analyzer. Given the title, description and full transcription of a video, return ONLY valid JSON with this exact structure — no markdown, no explanation:
+                {
+                "key_points": ["string"],
+                "chapters": [{"timestamp": "HH:MM:SS", "title": "string"}],
+                "reading_mode": "string",
+                "suggested_tags": ["string"],
+                "suggested_title": "string",
+                "suggested_description": "string"
+                }
 
-Rules:
-- key_points: 3 to 7 concise takeaways, each under 120 characters
-- chapters: detect natural topic breaks (minimum 2), use HH:MM:SS format (no milliseconds); the transcription below is in WebVTT format — anchor each chapter to a cue start time from the VTT, then strip the sub-second part
-- reading_mode: flowing prose summary, 150 to 300 words
-- suggested_tags: 3 to 6 relevant lowercase tags, no spaces (use hyphens)
-- suggested_title: improved, engaging title under 80 characters
-- suggested_description: engaging description between 80 and 200 characters
-- IMPORTANT: ALL text fields (key_points, reading_mode, suggested_title, suggested_description) MUST be written in the same language as the transcription (language code: {$lang})
+                Rules:
+                - key_points: 3 to 7 concise takeaways, each under 120 characters
+                - chapters: detect natural topic breaks (minimum 2), use HH:MM:SS format (no milliseconds); the transcription below is in WebVTT format — anchor each chapter to a cue start time from the VTT, then strip the sub-second part
+                - reading_mode: flowing prose summary, 150 to 300 words
+                - suggested_tags: 3 to 6 relevant lowercase tags, no spaces (use hyphens)
+                - suggested_title: improved, engaging title under 80 characters
+                - suggested_description: engaging description between 80 and 200 characters
+                - IMPORTANT: ALL text fields (key_points, reading_mode, suggested_title, suggested_description) MUST be written in the same language as the transcription (language code: {$lang})
 
-Video title: {$this->video->title}
-Video description: {$description}
-Transcription (WebVTT):
-{$content}
-PROMPT;
+                Video title: {$title}
+                Video description: {$description}
+                Transcription (WebVTT):
+                {$content}
+            PROMPT;
     }
 
     /**
-     * Return the JSON keys that must be present in the AI response.
-     *
      * @return array<string>
      */
     public function requiredKeys(): array
@@ -62,9 +56,7 @@ PROMPT;
     }
 
     /**
-     * Parse the decoded JSON response from the AI model.
-     *
-     * @param array<string, mixed> $raw Decoded JSON from the model
+     * @param array<string, mixed> $raw
      *
      * @throws InvalidAiResponseException If required keys are missing
      */
@@ -83,12 +75,8 @@ PROMPT;
     }
 
     /**
-     * Normalize a raw chapter entry into the strict shape expected by the result DTO.
-     *
      * The sub-second portion of the timestamp is stripped so chapters anchor to whole
      * seconds (HH:MM:SS).
-     *
-     * @param mixed $chapter Raw chapter value from the decoded JSON
      *
      * @return array{timestamp: string, title: string}
      */

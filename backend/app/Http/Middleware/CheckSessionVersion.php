@@ -11,22 +11,14 @@ use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * CheckSessionVersion — Validates session consistency across browser tabs.
- *
- * Ensures session_version stored in session matches the user's current
- * session_version in database. If mismatch, user is logged out (forced logout).
- *
- * This enables forced logout across all open tabs via a single logout action.
+ * Compares the session_version stored in the session against the user's
+ * current session_version in the database, so that a single logout action
+ * can force logout across all of that user's open tabs.
  */
 class CheckSessionVersion
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param Request $request The incoming HTTP request
-     * @param Closure(Request): Response $next The next middleware/handler
-     *
-     * @return Response HTTP response (401 if session mismatch)
+     * @param Closure(Request): Response $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -36,11 +28,11 @@ class CheckSessionVersion
             return $next($request);
         }
 
-        if (
-            Session::isStarted()
+        $hasSessionVersionMismatch = Session::isStarted()
             && session()->has('session_version')
-            && $user->session_version !== session('session_version')
-        ) {
+            && $user->session_version !== session('session_version');
+
+        if ($hasSessionVersionMismatch) {
             Auth::guard('web')->logout();
 
             if ($request->hasSession()) {

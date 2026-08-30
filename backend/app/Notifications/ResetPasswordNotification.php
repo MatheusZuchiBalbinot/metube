@@ -10,12 +10,8 @@ use Illuminate\Notifications\Messages\MailMessage;
 class ResetPasswordNotification extends ResetPassword
 {
     /**
-     * Build the mail message for password reset.
-     *
      * The reset link points to the frontend SPA so the user lands on the
      * React form instead of a server-rendered page.
-     *
-     * @param mixed $notifiable The user receiving the notification
      */
     public function toMail(mixed $notifiable): MailMessage
     {

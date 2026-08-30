@@ -21,8 +21,6 @@ class VideoImpressionsBatch
     ) {}
 
     /**
-     * Build the list of analytics rows to bulk-insert.
-     *
      * @return list<array<string, mixed>>
      */
     public function toAnalyticRows(): array

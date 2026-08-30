@@ -45,8 +45,6 @@ class TranslateVideoCaptions implements ShouldQueue
     }
 
     /**
-     * Translate the video to English captions via Whisper and append to the video.
-     *
      * WhisperException is allowed to bubble up and trigger retries. If all retries
      * exhaust, failed() logs the issue and the video keeps its original captions.
      *
@@ -76,12 +74,6 @@ class TranslateVideoCaptions implements ShouldQueue
         $video->appendCaption(lang: 'en', label: 'English', url: $captionPath);
     }
 
-    /**
-     * Log translation failure after all retries exhausted.
-     *
-     * Translation is best-effort: video already has original-language captions,
-     * so this is a nice-to-have that doesn't block the user experience.
-     */
     public function failed(Throwable $e): void
     {
         $video = Video::find($this->video->id);

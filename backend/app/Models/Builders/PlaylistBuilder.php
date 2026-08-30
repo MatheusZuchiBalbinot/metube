@@ -18,39 +18,21 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class PlaylistBuilder extends Builder
 {
-    /**
-     * Filter playlist by PUID.
-     *
-     * @param string $puid Playlist unique ID
-     */
     public function byPuid(string $puid): self
     {
         return $this->where('puid', $puid);
     }
 
-    /**
-     * Filter playlists owned by a specific user.
-     *
-     * @param int $userId User ID
-     */
     public function ofUser(int $userId): self
     {
         return $this->where('user_id', $userId);
     }
 
-    /**
-     * Order playlists by creation date, newest first.
-     */
     public function newest(): self
     {
         return $this->orderByDesc('created_at');
     }
 
-    /**
-     * Filter playlists created recently (last N days).
-     *
-     * @param int $days Number of days (default 30)
-     */
     public function recent(int $days = 30): self
     {
         return $this->where('created_at', '>=', now()->subDays($days));

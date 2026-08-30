@@ -9,11 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PlaylistResource extends JsonResource
 {
-    /**
-     * Transform the playlist into an array.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

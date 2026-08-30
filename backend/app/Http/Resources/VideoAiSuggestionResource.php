@@ -11,11 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin VideoAiSuggestion */
 class VideoAiSuggestionResource extends JsonResource
 {
-    /**
-     * Transform the AI suggestion into an array.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

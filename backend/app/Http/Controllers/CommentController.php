@@ -21,12 +21,6 @@ class CommentController extends Controller
 {
     public function __construct(private readonly CommentService $commentService) {}
 
-    /**
-     * List paginated top-level comments for a video.
-     *
-     * @param string $vuid Public video identifier
-     * @param Request $request Incoming HTTP request
-     */
     public function index(string $vuid, Request $request): JsonResponse
     {
         $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
@@ -38,12 +32,6 @@ class CommentController extends Controller
         return $this->json(CommentResource::collection($comments));
     }
 
-    /**
-     * Store a new comment on a video.
-     *
-     * @param string $vuid Public video identifier
-     * @param StoreCommentRequest $request Validated request
-     */
     public function store(string $vuid, StoreCommentRequest $request): JsonResponse
     {
         $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
@@ -54,12 +42,6 @@ class CommentController extends Controller
         return $this->json(new CommentResource($comment), 201);
     }
 
-    /**
-     * Update the content of an existing comment.
-     *
-     * @param Comment $comment Resolved via cuid route key
-     * @param UpdateCommentRequest $request Validated request
-     */
     public function update(Comment $comment, UpdateCommentRequest $request): JsonResponse
     {
         $updated = $this->commentService->update($comment, $request->getDTO(), $request->user());
@@ -67,11 +49,6 @@ class CommentController extends Controller
         return $this->json(new CommentResource($updated));
     }
 
-    /**
-     * Delete a comment.
-     *
-     * @param Comment $comment Resolved via cuid route key
-     */
     public function destroy(Comment $comment): Response
     {
         $this->commentService->destroy($comment);
@@ -79,12 +56,6 @@ class CommentController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Toggle a like on a comment for the authenticated user.
-     *
-     * @param Comment $comment Resolved via cuid route key
-     * @param Request $request Incoming HTTP request
-     */
     public function toggleLike(Comment $comment, Request $request): JsonResponse
     {
         $user = $request->user();
@@ -98,12 +69,6 @@ class CommentController extends Controller
         return $this->json(new ToggleLikeResource($dto));
     }
 
-    /**
-     * List all replies for a comment.
-     *
-     * @param Comment $comment Resolved via cuid route key
-     * @param Request $request Incoming HTTP request
-     */
     public function replies(Comment $comment, Request $request): JsonResponse
     {
         $user = $request->user();
@@ -114,8 +79,6 @@ class CommentController extends Controller
 
     /**
      * List all saved versions of a comment, newest first.
-     *
-     * @param Comment $comment Resolved via cuid route key
      */
     public function versions(Comment $comment): JsonResponse
     {

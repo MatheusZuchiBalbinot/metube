@@ -24,13 +24,7 @@ class WhisperClient
     }
 
     /**
-     * Transcribe a video file via Whisper service.
-     *
-     * @param string $filePath Path to the video file (or URL if Whisper accepts remote files)
-     *
-     * @throws WhisperException If the request fails
-     *
-     * @return TranscriptionResult Contains language, text, and VTT captions
+     * @throws WhisperException
      */
     public function transcribe(string $filePath): TranscriptionResult
     {
@@ -38,13 +32,9 @@ class WhisperClient
     }
 
     /**
-     * Translate a video to English captions via Whisper service.
+     * @throws WhisperException
      *
-     * @param string $filePath Path to the video file
-     *
-     * @throws WhisperException If the request fails
-     *
-     * @return TranscriptionResult Contains text and VTT captions (language is always "en")
+     * @return TranscriptionResult language is always "en"
      */
     public function translate(string $filePath): TranscriptionResult
     {
@@ -52,12 +42,9 @@ class WhisperClient
     }
 
     /**
-     * Call Whisper API with the specified task.
+     * @param string $task "transcribe" or "translate"
      *
-     * @param string $filePath Path to the video file
-     * @param string $task The Whisper task: "transcribe" or "translate"
-     *
-     * @throws WhisperException If the request fails
+     * @throws WhisperException
      */
     private function call(string $filePath, string $task): TranscriptionResult
     {

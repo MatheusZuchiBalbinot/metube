@@ -16,8 +16,6 @@ class VideoStatusUpdated implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets;
 
     /**
-     * @param Video $video Video whose status changed
-     * @param VideoStatus $newStatus New video status
      * @param VideoStatus|null $previousStatus Previous status (for transition context)
      */
     public function __construct(

@@ -15,9 +15,6 @@ class VideoTranscriptionCompleted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
-    /**
-     * @param Video $video The video whose transcription completed
-     */
     public function __construct(
         public readonly Video $video,
     ) {}

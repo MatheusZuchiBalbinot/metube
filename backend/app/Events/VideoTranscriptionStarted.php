@@ -16,11 +16,6 @@ class VideoTranscriptionStarted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
-    /**
-     * @param Video $video The video whose transcription is starting
-     * @param Carbon $startedAt When transcription began
-     * @param float|null $estimatedSeconds Expected total seconds to complete
-     */
     public function __construct(
         public readonly Video $video,
         public readonly Carbon $startedAt,

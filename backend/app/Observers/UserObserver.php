@@ -11,9 +11,6 @@ class UserObserver
 {
     public function __construct(private readonly CacheService $cache) {}
 
-    /**
-     * Flush the channel info cache when profile fields visible on channel pages change.
-     */
     public function updated(User $user): void
     {
         $channelFields = ['name', 'avatar', 'bio'];

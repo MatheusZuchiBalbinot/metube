@@ -13,8 +13,6 @@ namespace App\Contracts;
 interface LoggableUserEvent
 {
     /**
-     * Build the analytics row to insert.
-     *
      * Expected keys:
      * - user_id     int       Required. Who triggered the event.
      * - event_type  string    Required. VideoEventType value.

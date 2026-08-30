@@ -27,8 +27,6 @@ final class PlaylistService
     public function __construct(private readonly CacheService $cache) {}
 
     /**
-     * Get all playlists for a user.
-     *
      * @return Collection<int, Playlist>
      */
     public function getUserPlaylists(User $user): Collection
@@ -39,14 +37,6 @@ final class PlaylistService
         );
     }
 
-    /**
-     * Create a new playlist.
-     *
-     * @param User $user Playlist owner
-     * @param CreatePlaylistDTO $data Playlist data
-     *
-     * @return Playlist Created playlist
-     */
     public function createPlaylist(User $user, CreatePlaylistDTO $data): Playlist
     {
         return DB::transaction(function () use ($user, $data) {
@@ -59,11 +49,7 @@ final class PlaylistService
     }
 
     /**
-     * Update a playlist (rename).
-     *
-     * @param UpdatePlaylistDTO $data Playlist data
-     *
-     * @return Playlist Updated playlist
+     * Renames the playlist — currently the only mutable field.
      */
     public function updatePlaylist(Playlist $playlist, UpdatePlaylistDTO $data): Playlist
     {
@@ -78,7 +64,7 @@ final class PlaylistService
     }
 
     /**
-     * Delete a playlist permanently.
+     * Permanent delete — no soft-delete.
      */
     public function deletePlaylist(Playlist $playlist): void
     {
@@ -88,8 +74,6 @@ final class PlaylistService
     }
 
     /**
-     * Get the ordered videos for a playlist, with channel eager-loaded.
-     *
      * @return \Illuminate\Database\Eloquent\Collection<int, Video>
      */
     public function getPlaylistVideos(Playlist $playlist): \Illuminate\Database\Eloquent\Collection
@@ -98,13 +82,9 @@ final class PlaylistService
     }
 
     /**
-     * Add a video to a playlist (idempotent).
-     *
-     * @param string $vuid Video UUID
+     * Idempotent — adding an already-present video is a no-op.
      *
      * @throws ModelNotFoundException
-     *
-     * @return Playlist Updated playlist
      */
     public function addVideoToPlaylist(Playlist $playlist, string $vuid): Playlist
     {
@@ -119,10 +99,6 @@ final class PlaylistService
     }
 
     /**
-     * Remove a video from a playlist.
-     *
-     * @param string $vuid Video UUID
-     *
      * @throws ModelNotFoundException
      */
     public function removeVideoFromPlaylist(Playlist $playlist, string $vuid): void
@@ -136,19 +112,12 @@ final class PlaylistService
     }
 
     /**
-     * Reorder videos in a playlist using drag-and-drop.
-     *
      * The submitted vuids must match the playlist's current video set exactly:
      * every video already in the playlist must be present, with no extra or
      * duplicated vuids. A partial or mismatched list is rejected before the
      * UPDATE so positions never become stale or duplicated.
      *
-     * @param Playlist $playlist Playlist whose videos are being reordered
-     * @param ReorderPlaylistVideosDTO $data Reorder data containing ordered video UUIDs
-     *
      * @throws ModelNotFoundException When a vuid does not exist or does not match the playlist's exact video set
-     *
-     * @return Playlist Reordered playlist
      */
     public function reorderPlaylistVideos(Playlist $playlist, ReorderPlaylistVideosDTO $data): Playlist
     {
@@ -193,11 +162,9 @@ final class PlaylistService
     }
 
     /**
-     * Persist new positions for a playlist's videos in a single CASE-WHEN UPDATE
-     * (instead of N separate updates).
+     * Single CASE-WHEN UPDATE instead of N separate per-row updates.
      *
-     * @param int $playlistId Playlist whose pivot rows are updated
-     * @param array<string, int> $idByVuid Map of vuid → video id
+     * @param array<string, int> $idByVuid Map of vuid => video id
      * @param list<string> $vuids Vuids in their target order
      */
     private function applyPositions(int $playlistId, array $idByVuid, array $vuids): void

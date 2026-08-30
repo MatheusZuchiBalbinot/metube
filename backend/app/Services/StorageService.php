@@ -33,12 +33,7 @@ final class StorageService implements StorageContract
     }
 
     /**
-     * Move a file from an absolute source path to a temp-disk-relative destination.
-     *
      * Uses rename() for an O(1) move when source and destination share the same volume.
-     *
-     * @param string $from Absolute filesystem path of the source file
-     * @param string $to Destination path relative to the temp disk
      *
      * @throws VideoStorageException When the move fails
      */
@@ -52,60 +47,30 @@ final class StorageService implements StorageContract
         }
     }
 
-    /**
-     * Resolve the absolute filesystem path for a temp-disk-relative path.
-     *
-     * @param string $path Path relative to the temp disk
-     *
-     * @return string Absolute filesystem path
-     */
     public function tempPath(string $path): string
     {
         return Storage::disk($this->tempDisk)->path($path);
     }
 
-    /**
-     * Delete a file from the temp disk.
-     *
-     * @param string $path Path relative to the temp disk
-     */
     public function deleteTempFile(string $path): void
     {
         Storage::disk($this->tempDisk)->delete($path);
     }
 
-    /**
-     * Ensure a directory exists on the temp disk, creating it if missing.
-     *
-     * @param string $path Path relative to the temp disk
-     */
     public function ensureDirectoryExists(string $path): void
     {
         Storage::disk($this->tempDisk)->makeDirectory($path);
     }
 
-    /**
-     * Resolve the absolute filesystem path for a public-disk-relative path.
-     *
-     * @param string $path Path relative to the public disk
-     *
-     * @return string Absolute filesystem path
-     */
     public function publicPath(string $path): string
     {
         return Storage::disk($this->publicDisk)->path($path);
     }
 
     /**
-     * Resolve the public URL for a public-disk-relative path.
-     *
      * Absolute URLs are returned untouched so externally-hosted media (e.g. seeded
      * sample videos and thumbnails) resolves correctly instead of being concatenated
      * onto the public disk base URL.
-     *
-     * @param string $path Path relative to the public disk, or an absolute URL
-     *
-     * @return string Full URL
      */
     public function publicUrl(string $path): string
     {
@@ -116,44 +81,21 @@ final class StorageService implements StorageContract
         return Storage::disk($this->publicDisk)->url($path);
     }
 
-    /**
-     * Write content to the public disk.
-     *
-     * @param string $path Path relative to the public disk
-     * @param string $content File contents
-     */
     public function putPublic(string $path, string $content): void
     {
         Storage::disk($this->publicDisk)->put($path, $content);
     }
 
-    /**
-     * Determine whether a file exists on the public disk.
-     *
-     * @param string $path Path relative to the public disk
-     *
-     * @return bool True when the file exists
-     */
     public function existsPublic(string $path): bool
     {
         return Storage::disk($this->publicDisk)->exists($path);
     }
 
-    /**
-     * Delete a file from the public disk.
-     *
-     * @param string $path Path relative to the public disk
-     */
     public function deleteFile(string $path): void
     {
         Storage::disk($this->publicDisk)->delete($path);
     }
 
-    /**
-     * Delete a directory and all of its contents from the public disk.
-     *
-     * @param string $path Path relative to the public disk
-     */
     public function deleteDirectory(string $path): void
     {
         Storage::disk($this->publicDisk)->deleteDirectory($path);

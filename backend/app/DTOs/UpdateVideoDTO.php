@@ -21,8 +21,6 @@ final readonly class UpdateVideoDTO
     ) {}
 
     /**
-     * Build from a validated FormRequest payload.
-     *
      * @param array<string, mixed> $validated
      */
     public static function fromRequest(array $validated): self

@@ -39,8 +39,6 @@ class Transcription extends Model
     }
 
     /**
-     * Get the video this transcription belongs to.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
@@ -48,9 +46,6 @@ class Transcription extends Model
         return $this->belongsTo(Video::class);
     }
 
-    /**
-     * Whether this transcription is complete and has usable content for AI chat.
-     */
     public function isReadyForChat(): bool
     {
         return $this->status === TranscriptionStatus::COMPLETED

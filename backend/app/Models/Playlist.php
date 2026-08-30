@@ -31,7 +31,6 @@ class Playlist extends Model
     }
 
     /**
-     * @param mixed $value
      * @param string|null $field
      */
     public function resolveRouteBinding($value, $field = null): ?self
@@ -51,11 +50,7 @@ class Playlist extends Model
     }
 
     /**
-     * Use the dedicated PlaylistBuilder for typed, chainable queries.
-     *
      * @param QueryBuilder $query
-     *
-     * @return PlaylistBuilder
      */
     public function newEloquentBuilder($query): PlaylistBuilder
     {
@@ -63,8 +58,6 @@ class Playlist extends Model
     }
 
     /**
-     * Get the user who owns this playlist.
-     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -73,8 +66,6 @@ class Playlist extends Model
     }
 
     /**
-     * Get all videos in this playlist, ordered by position.
-     *
      * @return BelongsToMany<Video, $this>
      */
     public function videos(): BelongsToMany

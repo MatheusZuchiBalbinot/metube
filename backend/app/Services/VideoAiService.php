@@ -22,15 +22,9 @@ final class VideoAiService
     public function __construct(private readonly CacheService $cache) {}
 
     /**
-     * Get AI-generated summary for a video.
-     *
      * Caches the summary forever once generated (it is immutable). Does not cache
      * null so the result appears immediately after the AI finishes without waiting
      * for a TTL to expire.
-     *
-     * @param Video $video Video to get summary for
-     *
-     * @return VideoSummaryDTO Summary with keyPoints, chapters, readingMode
      */
     public function getSummary(Video $video): VideoSummaryDTO
     {
@@ -45,13 +39,6 @@ final class VideoAiService
     }
 
     /**
-     * Accept pending AI suggestions and apply them to the video.
-     *
-     * Updates video title, description, and tags with suggested values,
-     * then marks the suggestion as accepted.
-     *
-     * @param Video $video Video to accept suggestions for
-     *
      * @throws ModelNotFoundException When no suggestion exists
      */
     public function acceptAiSuggestion(Video $video): void
@@ -72,12 +59,6 @@ final class VideoAiService
     }
 
     /**
-     * Dismiss pending AI suggestions without applying them.
-     *
-     * Marks the suggestion as dismissed so it is no longer presented to the user.
-     *
-     * @param Video $video Video to dismiss suggestions for
-     *
      * @throws ModelNotFoundException When no suggestion exists
      */
     public function dismissAiSuggestion(Video $video): void
@@ -89,17 +70,12 @@ final class VideoAiService
     }
 
     /**
-     * Build the system prompt for contextual AI chat about a video.
-     *
      * Combines the video's title, description, summary, and transcription into a
      * grounded prompt that instructs the model to answer only from video content.
      * The transcription is truncated to TranscriptionLimit::MAX_CHARS_FOR_CHAT to
      * stay within token budgets.
      *
      * @param Video $video Video whose context to embed (must have summary relation loaded)
-     * @param string $transcriptionContent Full transcription text
-     *
-     * @return string Ready-to-use system prompt
      */
     public function buildVideoSystemPrompt(Video $video, string $transcriptionContent): string
     {

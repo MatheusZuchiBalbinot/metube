@@ -14,11 +14,6 @@ class SendVideoProcessedNotification implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /**
-     * Notify the video owner when their video finishes processing (published or failed).
-     *
-     * Skips intermediate statuses like PROCESSING, SCHEDULED, DRAFT.
-     */
     public function handle(VideoStatusUpdated $event): void
     {
         $isTerminal = $event->newStatus === VideoStatus::PUBLISHED || $event->newStatus === VideoStatus::FAILED;

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\DTOs;
 
-/**
- * VideoListFilterDTO - Typed parameters for video list queries.
- */
 class VideoListFilterDTO
 {
     /**
@@ -20,8 +17,6 @@ class VideoListFilterDTO
     ) {}
 
     /**
-     * Create from a request query array.
-     *
      * @param array<string, mixed> $filters
      */
     public static function fromArray(array $filters): self

@@ -27,92 +27,56 @@ class AnalyticsController extends Controller
         private readonly VideoService $videoService,
     ) {}
 
-    /**
-     * Log a batch of feed impressions.
-     *
-     * @param LogImpressionsRequest $request Validated batch
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function impressions(LogImpressionsRequest $request): Response
     {
         $data = $request->validated();
+        $user = auth()->user();
+        $source = VideoSource::from($data['source']);
+        $sessionId = $data['session_id'] ?? null;
 
-        $this->analyticsService->recordImpressions(
-            auth()->user(),
-            $data['vuids'],
-            VideoSource::from($data['source']),
-            $data['session_id'] ?? null,
-        );
+        $this->analyticsService->recordImpressions($user, $data['vuids'], $source, $sessionId);
 
         return $this->noContent();
     }
 
     /**
-     * Log a click on a feed-rendered video.
-     *
-     * @param LogClickRequest $request Validated click
-     *
      * @throws ModelNotFoundException
-     *
-     * @return Response HTTP 204 No Content
      */
     public function click(LogClickRequest $request): Response
     {
         $data = $request->validated();
         $video = $this->videoService->getVideoByUuid($data['vuid']);
+        $user = auth()->user();
+        $source = VideoSource::from($data['source']);
+        $position = $data['position'] ?? null;
+        $sessionId = $data['session_id'] ?? null;
 
-        $this->analyticsService->recordClick(
-            auth()->user(),
-            $video,
-            VideoSource::from($data['source']),
-            $data['position'] ?? null,
-            $data['session_id'] ?? null,
-        );
+        $this->analyticsService->recordClick($user, $video, $source, $position, $sessionId);
 
         return $this->noContent();
     }
 
-    /**
-     * Log a search query the user just performed.
-     *
-     * @param LogSearchRequest $request Validated search
-     *
-     * @return Response HTTP 204 No Content
-     */
     public function search(LogSearchRequest $request): Response
     {
         $data = $request->validated();
+        $user = auth()->user();
+        $sessionId = $data['session_id'] ?? null;
 
-        $this->analyticsService->recordSearch(
-            auth()->user(),
-            $data['query'],
-            $data['result_count'],
-            $data['session_id'] ?? null,
-        );
+        $this->analyticsService->recordSearch($user, $data['query'], $data['result_count'], $sessionId);
 
         return $this->noContent();
     }
 
     /**
-     * Log a video skip / early abandon.
-     *
-     * @param LogSkipRequest $request Validated skip
-     *
      * @throws ModelNotFoundException
-     *
-     * @return Response HTTP 204 No Content
      */
     public function skip(LogSkipRequest $request): Response
     {
         $data = $request->validated();
         $video = $this->videoService->getVideoByUuid($data['vuid']);
+        $user = auth()->user();
 
-        $this->analyticsService->recordSkip(
-            auth()->user(),
-            $video,
-            $data['percent'],
-        );
+        $this->analyticsService->recordSkip($user, $video, $data['percent']);
 
         return $this->noContent();
     }

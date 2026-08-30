@@ -20,8 +20,6 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Generate AI-powered metadata from video transcription.
- *
  * Stores summary (key_points, chapters, reading_mode). For batch uploads,
  * auto-applies suggested tags/title/description. For single uploads, creates
  * pending suggestions for creator review.
@@ -68,8 +66,6 @@ class GenerateAiMetadata implements ShouldBeUnique, ShouldQueue
     }
 
     /**
-     * Generate AI metadata from transcription and apply to video.
-     *
      * @throws AiException If AI provider returns an error
      */
     public function handle(AiClient $ai, AiMetadataService $service): void
@@ -116,9 +112,6 @@ class GenerateAiMetadata implements ShouldBeUnique, ShouldQueue
         event(new AiSuggestionReady($video));
     }
 
-    /**
-     * Log the error when all retries are exhausted.
-     */
     public function failed(Throwable $e): void
     {
         Log::error('GenerateAiMetadata: all retries exhausted', [

@@ -12,11 +12,7 @@ use Illuminate\Support\Carbon;
 /** @mixin CommentVersion */
 class CommentVersionResource extends JsonResource
 {
-    /**
-     * Transform the comment version into an array.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

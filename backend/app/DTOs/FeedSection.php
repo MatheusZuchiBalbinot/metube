@@ -16,7 +16,7 @@ final readonly class FeedSection
     /**
      * @param FeedSectionKey $key Stable identifier the frontend maps to a label
      * @param string|null $label Dynamic label (e.g. the tag for "because you watched")
-     * @param Collection<int, Video> $videos Videos to display in this shelf
+     * @param Collection<int, Video> $videos
      */
     public function __construct(
         public FeedSectionKey $key,

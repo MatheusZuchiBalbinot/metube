@@ -6,9 +6,6 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
-/**
- * Exception thrown by AI clients when API requests fail.
- */
 class AiException extends RuntimeException
 {
     public function __construct(int $status, string $body)

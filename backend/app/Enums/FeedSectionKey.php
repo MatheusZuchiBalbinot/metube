@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/**
- * FeedSectionKey — Identifies each shelf returned by the home feed endpoint.
- */
 enum FeedSectionKey: string
 {
     case SUBSCRIPTIONS = 'subscriptions';

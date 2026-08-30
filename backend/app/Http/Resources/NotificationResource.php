@@ -11,11 +11,7 @@ use Illuminate\Notifications\DatabaseNotification;
 /** @mixin DatabaseNotification */
 class NotificationResource extends JsonResource
 {
-    /**
-     * Transform the notification into an array.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

@@ -24,24 +24,15 @@ class ViewCounterService
      */
     public function __construct(private readonly ViewCounterStore $store) {}
 
-    /**
-     * Record a view in the buffer. Lock-free for concurrent writers.
-     *
-     * @param int $videoId Internal primary key of the video
-     */
     public function increment(int $videoId): void
     {
         $this->store->increment($videoId);
     }
 
     /**
-     * Flush all pending increments to the videos table.
-     *
      * Drains the buffer atomically and applies one UPDATE per dirty video.
      * Concurrent increments arriving mid-flush are preserved for the next cycle
      * by the store implementation.
-     *
-     * @return int Number of videos updated
      */
     public function flush(): int
     {

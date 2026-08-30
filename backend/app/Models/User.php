@@ -61,8 +61,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all videos published by this user.
-     *
      * @return HasMany<Video, $this>
      */
     public function videos(): HasMany
@@ -71,8 +69,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all playlists created by this user.
-     *
      * @return HasMany<Playlist, $this>
      */
     public function playlists(): HasMany
@@ -81,8 +77,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all watch history entries for this user.
-     *
      * @return HasMany<WatchHistory, $this>
      */
     public function history(): HasMany
@@ -91,8 +85,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all video reactions (likes/dislikes) by this user.
-     *
      * @return BelongsToMany<Video, $this>
      */
     public function reactions(): BelongsToMany
@@ -103,8 +95,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all videos liked by this user.
-     *
      * @return BelongsToMany<Video, $this>
      */
     public function likes(): BelongsToMany
@@ -116,8 +106,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all videos disliked by this user.
-     *
      * @return BelongsToMany<Video, $this>
      */
     public function dislikes(): BelongsToMany
@@ -129,8 +117,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all watch progress entries for this user.
-     *
      * @return HasMany<VideoProgress, $this>
      */
     public function progress(): HasMany
@@ -139,7 +125,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all channels this user is subscribed to.
+     * Channels this user follows. Same pivot table as subscribers(), with user_id/channel_id swapped.
      *
      * @return BelongsToMany<User, $this>
      */
@@ -150,7 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all users subscribed to this channel.
+     * Users following this channel. Same pivot table as subscriptions(), with user_id/channel_id swapped.
      *
      * @return BelongsToMany<User, $this>
      */
@@ -160,18 +146,15 @@ class User extends Authenticatable implements MustVerifyEmail
             ->using(UserSubscription::class);
     }
 
-    /**
-     * Get the Watch Later playlist for this user.
-     */
     public function getWatchLaterPlaylist(): Playlist
     {
         return $this->playlists()->where('name', PlaylistName::WATCH_LATER->value)->firstOrFail();
     }
 
     /**
-     * Override the default reset-password notification to link to the frontend SPA.
+     * Overrides the default notification to link to the frontend SPA instead of a backend route.
      *
-     * @param string $token Password reset token
+     * @param string $token
      */
     public function sendPasswordResetNotification(mixed $token): void
     {
@@ -179,11 +162,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Create a typed Eloquent builder for this model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return UserBuilder
      */
     public function newEloquentBuilder($query): UserBuilder
     {

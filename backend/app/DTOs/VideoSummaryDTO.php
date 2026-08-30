@@ -18,9 +18,6 @@ final readonly class VideoSummaryDTO
         public string $readingMode = '',
     ) {}
 
-    /**
-     * Create from a VideoSummary model.
-     */
     public static function fromModel(VideoSummary $summary): self
     {
         return new self(
@@ -30,9 +27,6 @@ final readonly class VideoSummaryDTO
         );
     }
 
-    /**
-     * Create an empty summary.
-     */
     public static function empty(): self
     {
         return new self();

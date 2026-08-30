@@ -8,23 +8,16 @@ use App\DTOs\ReorderPlaylistVideosDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * ReorderVideosRequest — Validates playlist video reordering.
- *
  * @property list<string> $vuids Ordered list of video UUIDs
  */
 class ReorderVideosRequest extends FormRequest
 {
-    /**
-     * Determine if user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return auth()->check();
     }
 
     /**
-     * Get the validation rules.
-     *
      * @return array<string, string|list<string>>
      */
     public function rules(): array
@@ -36,8 +29,6 @@ class ReorderVideosRequest extends FormRequest
     }
 
     /**
-     * Get custom validation messages.
-     *
      * @return array<string, string>
      */
     public function messages(): array

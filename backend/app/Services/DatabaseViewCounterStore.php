@@ -18,8 +18,6 @@ use App\Models\Video;
 final class DatabaseViewCounterStore implements ViewCounterStore
 {
     /**
-     * Increment the video's view count directly in the database.
-     *
      * @param int $videoId Internal primary key of the video
      */
     public function increment(int $videoId): void
@@ -28,9 +26,7 @@ final class DatabaseViewCounterStore implements ViewCounterStore
     }
 
     /**
-     * No buffer exists, so there is never anything pending to drain.
-     *
-     * @return array<int, int> Always an empty map
+     * @return array<int, int> Always empty — no buffer exists to drain.
      */
     public function pullDirtyCounts(): array
     {

@@ -18,8 +18,6 @@ class TranscriptionStatusUpdated implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets;
 
     /**
-     * @param Video $video The video whose transcription changed
-     * @param TranscriptionStatus $status New transcription status
      * @param Carbon|null $startedAt When transcription began (set on PROCESSING)
      * @param float|null $estimatedSeconds Expected total seconds to complete (set on PROCESSING)
      */

@@ -48,11 +48,7 @@ class UserSubscription extends Pivot
     }
 
     /**
-     * Create a typed Eloquent builder for this model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return UserSubscriptionBuilder
      */
     public function newEloquentBuilder($query): UserSubscriptionBuilder
     {

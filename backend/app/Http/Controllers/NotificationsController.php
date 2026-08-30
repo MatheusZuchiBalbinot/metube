@@ -15,11 +15,6 @@ class NotificationsController extends Controller
 {
     public function __construct(private readonly NotificationService $notifications) {}
 
-    /**
-     * List paginated notifications for the authenticated user.
-     *
-     * @param Request $request Incoming HTTP request
-     */
     public function index(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -28,11 +23,6 @@ class NotificationsController extends Controller
         return $this->json(NotificationResource::collection($this->notifications->list($user)));
     }
 
-    /**
-     * Return the count of unread notifications for the authenticated user.
-     *
-     * @param Request $request Incoming HTTP request
-     */
     public function unreadCount(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -41,12 +31,6 @@ class NotificationsController extends Controller
         return $this->json(['count' => $this->notifications->unreadCount($user)]);
     }
 
-    /**
-     * Mark a single notification as read.
-     *
-     * @param Request $request Incoming HTTP request
-     * @param string $notificationId Notification UUID
-     */
     public function markRead(Request $request, string $notificationId): JsonResponse
     {
         /** @var User $user */
@@ -56,11 +40,6 @@ class NotificationsController extends Controller
         return $this->json(new NotificationResource($notification));
     }
 
-    /**
-     * Mark all notifications as read for the authenticated user.
-     *
-     * @param Request $request Incoming HTTP request
-     */
     public function readAll(Request $request): Response
     {
         /** @var User $user */
@@ -70,12 +49,6 @@ class NotificationsController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Delete a single notification.
-     *
-     * @param Request $request Incoming HTTP request
-     * @param string $notificationId Notification UUID
-     */
     public function destroy(Request $request, string $notificationId): Response
     {
         /** @var User $user */

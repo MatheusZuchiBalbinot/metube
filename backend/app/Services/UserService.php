@@ -31,25 +31,17 @@ final class UserService
 
     public function __construct(private readonly CacheService $cache) {}
 
-    /**
-     * Get all liked videos for a user.
-     */
     public function getUserLikes(User $user): LengthAwarePaginator
     {
         return $user->likes()->with('channel')->paginate(PaginationSize::USER_LIKES);
     }
 
-    /**
-     * Get all saved videos for a user from Watch Later playlist.
-     */
     public function getUserSaved(User $user): LengthAwarePaginator
     {
         return $user->getWatchLaterPlaylist()->videos()->with('channel')->paginate(PaginationSize::USER_SAVED);
     }
 
     /**
-     * Get subscriptions for a user.
-     *
      * Capped at the MAX_SUBSCRIPTIONS most recent channels to avoid loading an
      * unbounded number of rows into memory. The response shape remains an
      * unenveloped list, preserving the existing UserResource contract.
@@ -64,9 +56,6 @@ final class UserService
         );
     }
 
-    /**
-     * Get watch history with optional period filter.
-     */
     public function getUserHistory(User $user, HistoryPeriod $period = HistoryPeriod::ALL): LengthAwarePaginator
     {
         return $user->history()
@@ -75,20 +64,12 @@ final class UserService
             ->paginate(PaginationSize::USER_HISTORY);
     }
 
-    /**
-     * Clear all watch history for a user.
-     */
     public function clearUserHistory(User $user): void
     {
         $user->history()->delete();
         $this->cache->forgetHistoryEvents($user->id);
     }
 
-    /**
-     * Remove a specific video from user's history.
-     *
-     * @param string $vuid Video UUID
-     */
     public function removeFromHistory(User $user, string $vuid): void
     {
         $user->history()
@@ -106,12 +87,8 @@ final class UserService
     private const MAX_PROGRESS_ROWS = 500;
 
     /**
-     * Get watch progress for the videos the user most recently started.
-     *
      * Capped at the MAX_PROGRESS_ROWS most recently updated entries to avoid
      * loading an unbounded number of rows into memory.
-     *
-     * @param User $user Authenticated user
      *
      * @return array<string, int> Map of vuid => percent
      */
@@ -131,8 +108,6 @@ final class UserService
     }
 
     /**
-     * Get watch activity aggregated by day, newest first, limited to 365 days.
-     *
      * Aggregates in SQL to avoid loading all history records into memory.
      * Result is cached for 300 s and invalidated on each new view via VideoViewed event.
      *
@@ -147,8 +122,6 @@ final class UserService
     }
 
     /**
-     * Query daily watch-history event counts for a user.
-     *
      * @return list<array{date: string, count: int}>
      */
     private function queryHistoryEvents(User $user): array

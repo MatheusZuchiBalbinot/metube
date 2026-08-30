@@ -7,8 +7,6 @@ namespace App\Http\Requests\Analytics;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * LogSkipRequest — Validates a video-skip event.
- *
  * @property string $vuid
  * @property int $percent
  */

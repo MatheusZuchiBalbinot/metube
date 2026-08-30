@@ -9,24 +9,17 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * RecordViewRequest — Validates a video view event.
- *
- * @property string $source Optional source of the view
- * @property string|null $session_id Optional session identifier
+ * @property string $source
+ * @property string|null $session_id
  */
 class RecordViewRequest extends FormRequest
 {
-    /**
-     * Determine if user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return auth()->check();
     }
 
     /**
-     * Get the validation rules.
-     *
      * @return array<string, mixed>
      */
     public function rules(): array

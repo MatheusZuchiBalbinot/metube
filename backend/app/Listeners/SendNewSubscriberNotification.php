@@ -13,9 +13,6 @@ class SendNewSubscriberNotification implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /**
-     * Notify the channel owner when someone subscribes.
-     */
     public function handle(ChannelSubscribed $event): void
     {
         if ($this->shouldSkipSelfNotification($event->subscriber, $event->channel)) {

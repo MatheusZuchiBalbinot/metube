@@ -9,25 +9,18 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * HistoryRequest — Validates watch history query parameters.
- *
- * @property string $period Period filter for history
- * @property int|null $page Page number for pagination
- * @property int|null $perPage Items per page
+ * @property string $period
+ * @property int|null $page
+ * @property int|null $perPage
  */
 class HistoryRequest extends FormRequest
 {
-    /**
-     * Determine if user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return auth()->check();
     }
 
     /**
-     * Get the validation rules.
-     *
      * @return array<string, mixed>
      */
     public function rules(): array

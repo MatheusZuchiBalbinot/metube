@@ -18,9 +18,6 @@ enum LanguageLabel: string
     case RU = 'ru';
     case AR = 'ar';
 
-    /**
-     * Human-readable label for this language.
-     */
     public function label(): string
     {
         return match ($this) {

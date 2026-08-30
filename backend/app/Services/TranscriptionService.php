@@ -19,11 +19,7 @@ final class TranscriptionService
     ) {}
 
     /**
-     * Transcribe a video and persist the transcription with original-language captions.
-     *
-     * @param Video $video The video to transcribe
-     *
-     * @throws WhisperException If transcription fails
+     * @throws WhisperException
      */
     public function transcribe(Video $video): void
     {
@@ -36,11 +32,7 @@ final class TranscriptionService
 
         $result = $this->client->transcribe($audioPath);
 
-        $captionPath = $this->storage->publishCaption(
-            $result->vtt,
-            $video->vuid,
-            $result->language,
-        );
+        $captionPath = $this->storage->publishCaption($result->vtt, $video->vuid, $result->language);
 
         $caption = [
             'lang' => $result->language,
@@ -59,25 +51,14 @@ final class TranscriptionService
         $video->transcription()->updateOrCreate([], $transcriptionPayload);
     }
 
-    /**
-     * Get the transcription for a video, if one exists.
-     *
-     * @param Video $video Video to look up
-     *
-     * @return Transcription|null The transcription record, or null when not started yet
-     */
     public function findForVideo(Video $video): ?Transcription
     {
         return $video->transcription()->with('video')->first();
     }
 
     /**
-     * Reset a failed or stuck transcription so it can be re-attempted.
-     *
      * Resets the record to PENDING and clears content and language so the next
      * run starts fresh, then dispatches TranscribeVideo to queue the work.
-     *
-     * @param Video $video Video whose transcription should be retried
      */
     public function resetForRetry(Video $video): void
     {

@@ -45,11 +45,7 @@ class WatchHistory extends Model
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return WatchHistoryBuilder
      */
     public function newEloquentBuilder($query): WatchHistoryBuilder
     {

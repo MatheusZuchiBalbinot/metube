@@ -16,10 +16,6 @@ use Throwable;
  */
 class TranscodeException extends RuntimeException
 {
-    /**
-     * @param string $reason Short description of the failing command
-     * @param Throwable|null $previous The underlying process failure, if any
-     */
     public static function commandFailed(string $reason, ?Throwable $previous = null): self
     {
         return new self("ffmpeg/ffprobe command failed: {$reason}", 0, $previous);

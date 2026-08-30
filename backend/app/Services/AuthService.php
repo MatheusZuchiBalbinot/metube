@@ -15,8 +15,6 @@ use Illuminate\Validation\ValidationException;
 final class AuthService
 {
     /**
-     * Attempt login, regenerate session, and return the authenticated user.
-     *
      * @param array{email: string, password: string} $credentials
      *
      * @throws InvalidCredentialsException
@@ -38,9 +36,6 @@ final class AuthService
         return $user;
     }
 
-    /**
-     * Logout the current user and invalidate the session.
-     */
     public function logout(): void
     {
         Auth::guard('web')->logout();
@@ -53,9 +48,6 @@ final class AuthService
         request()->session()->regenerateToken();
     }
 
-    /**
-     * Return the currently authenticated user.
-     */
     public function me(): User
     {
         $user = Auth::user();
@@ -65,8 +57,6 @@ final class AuthService
     }
 
     /**
-     * Update the authenticated user's profile fields.
-     *
      * @param array<string, mixed> $data Validated: name?, bio?
      */
     public function updateProfile(array $data): User
@@ -79,7 +69,7 @@ final class AuthService
     }
 
     /**
-     * Register a new user, auto-login, and dispatch the Registered event.
+     * Auto-logs in the new user and dispatches the Registered event.
      *
      * @param array{name: string, email: string, password: string} $data
      */
@@ -105,8 +95,6 @@ final class AuthService
     }
 
     /**
-     * Send a password reset link to the given email address.
-     *
      * @throws ValidationException if the email is not found or the request is rate-limited
      */
     public function sendPasswordResetLink(string $email): void
@@ -121,8 +109,6 @@ final class AuthService
     }
 
     /**
-     * Reset the user's password using the given token.
-     *
      * @param array{token: string, email: string, password: string} $data
      *
      * @throws ValidationException if the token is invalid or expired

@@ -4,19 +4,12 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/**
- * PlaylistName — Special playlist names enum.
- *
- * Values:
- * - WATCH_LATER: Watch Later playlist (auto-created for every user)
- */
 enum PlaylistName: string
 {
+    /** Auto-created for every user in User::boot(); a reserved name. */
     case WATCH_LATER = 'Watch Later';
 
     /**
-     * Get all available values as array.
-     *
      * @return array<string>
      */
     public static function values(): array

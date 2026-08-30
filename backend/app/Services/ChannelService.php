@@ -26,13 +26,7 @@ final class ChannelService
     public function __construct(private readonly CacheService $cache) {}
 
     /**
-     * Get a channel (user) by public UUID.
-     *
-     * @param string $uuid User UUID (v4)
-     *
      * @throws ModelNotFoundException
-     *
-     * @return User Channel user
      */
     public function getByUuid(string $uuid): User
     {
@@ -43,15 +37,9 @@ final class ChannelService
     }
 
     /**
-     * Get paginated videos for a channel.
-     *
      * When $includeAllStatuses is true, returns every status (processing, failed, draft, etc.)
      * ordered by recency — used when the channel owner is viewing their own page.
      * Otherwise returns only published videos in newest-published order (cached per page).
-     *
-     * @param User $channel Channel to list videos for
-     * @param bool $includeAllStatuses Whether to include non-published videos (owner view)
-     * @param int $page Page number used as the per-page cache key for published videos
      *
      * @return LengthAwarePaginator<Video>
      */
@@ -74,12 +62,7 @@ final class ChannelService
     }
 
     /**
-     * Toggle subscription to a channel.
-     *
      * Emits ChannelSubscribed / ChannelUnsubscribed for the analytics pipeline.
-     *
-     * @param User $subscriber User subscribing
-     * @param string $uuid Channel UUID
      *
      * @throws ModelNotFoundException
      */

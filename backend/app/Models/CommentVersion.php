@@ -30,8 +30,6 @@ class CommentVersion extends Model
     }
 
     /**
-     * Get the comment this version belongs to.
-     *
      * @return BelongsTo<Comment, $this>
      */
     public function comment(): BelongsTo
@@ -40,11 +38,7 @@ class CommentVersion extends Model
     }
 
     /**
-     * Create a new typed Eloquent query builder for the model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return CommentVersionBuilder
      */
     public function newEloquentBuilder($query): CommentVersionBuilder
     {

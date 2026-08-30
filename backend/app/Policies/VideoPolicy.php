@@ -8,22 +8,14 @@ use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 
-/**
- * VideoPolicy — Authorization rules for videos.
- */
 class VideoPolicy
 {
-    /**
-     * Determine if user can create a video.
-     */
     public function create(User $user): bool
     {
         return true;
     }
 
     /**
-     * Determine if user can view this video.
-     *
      * Guests (null user) may only view published videos.
      */
     public function view(?User $user, Video $video): bool
@@ -32,7 +24,6 @@ class VideoPolicy
             return $video->status === VideoStatus::PUBLISHED;
         }
 
-        // Owner can view any status
         $isOwner = $user->id === $video->channel_id;
 
         if ($isOwner) {
@@ -42,43 +33,29 @@ class VideoPolicy
         return $video->status === VideoStatus::PUBLISHED;
     }
 
-    /**
-     * Determine if user can update this video.
-     */
     public function update(User $user, Video $video): bool
     {
         return $user->id === $video->channel_id;
     }
 
-    /**
-     * Determine if user can delete this video.
-     */
     public function delete(User $user, Video $video): bool
     {
         return $user->id === $video->channel_id;
     }
 
-    /**
-     * Determine if user can retry the transcription for this video.
-     */
     public function retryTranscription(User $user, Video $video): bool
     {
         return $user->id === $video->channel_id;
     }
 
-    /**
-     * Determine if user can accept/dismiss AI suggestions for this video.
-     */
     public function manageSuggestion(User $user, Video $video): bool
     {
         return $user->id === $video->channel_id;
     }
 
     /**
-     * Determine if user can publish this video (ownership check only).
-     *
-     * Status validation (draft-only) is the controller's responsibility
-     * and returns 409 rather than 403.
+     * Ownership check only — status validation (draft-only) is the
+     * controller's responsibility and returns 409 rather than 403.
      */
     public function publish(User $user, Video $video): bool
     {

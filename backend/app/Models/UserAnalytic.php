@@ -56,8 +56,6 @@ class UserAnalytic extends Model
     }
 
     /**
-     * Get the user who triggered the event.
-     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -66,8 +64,6 @@ class UserAnalytic extends Model
     }
 
     /**
-     * Get the video the event is about, if any.
-     *
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo
@@ -76,8 +72,6 @@ class UserAnalytic extends Model
     }
 
     /**
-     * Get the channel the event is about, if any.
-     *
      * @return BelongsTo<User, $this>
      */
     public function channel(): BelongsTo
@@ -86,11 +80,7 @@ class UserAnalytic extends Model
     }
 
     /**
-     * Create a typed Eloquent builder for this model.
-     *
      * @param QueryBuilder $query
-     *
-     * @return UserAnalyticBuilder
      */
     public function newEloquentBuilder($query): UserAnalyticBuilder
     {

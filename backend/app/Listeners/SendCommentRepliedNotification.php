@@ -13,12 +13,6 @@ class SendCommentRepliedNotification implements ShouldQueueAfterCommit
 {
     use SendsQueuedNotifications;
 
-    /**
-     * Notify the parent comment author when their comment receives a reply.
-     *
-     * Skips the notification if there is no parent comment, or if the replier
-     * is the same user as the parent comment's author.
-     */
     public function handle(CommentCreated $event): void
     {
         $reply = $event->comment;
