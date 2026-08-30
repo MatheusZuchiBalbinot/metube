@@ -1,5 +1,5 @@
 import type { Tag } from '@models';
-import { TagColors } from '@utils';
+import { TagColors, isActivationKey } from '@utils';
 import './badge.css';
 
 interface TagBadgeProps {
@@ -19,8 +19,7 @@ export default function TagBadge({ tag, prefix, className, title, onClick }: Tag
         .join(' ');
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLSpanElement>) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey || !onClick) {
+        if (!isActivationKey(e) || !onClick) {
             return;
         }
         e.preventDefault();

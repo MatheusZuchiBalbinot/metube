@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
 import Badge from '@ui/badge/badge';
+import TagBadge from '@components/tag/badge';
+import VideoMeta from './videoMeta';
 import './hero.css';
 import { useVideoUi } from '@hooks';
-import { videoUrl, Format, TagColors, formatRelativeDate } from '@utils';
+import { videoUrl, getVisibleTags, TagColors, isActivationKey } from '@utils';
 import type { Video, Tag } from '@models';
 
 interface VideoHeroProps {
@@ -13,12 +15,11 @@ interface VideoHeroProps {
 
 export default function VideoHero({ video }: VideoHeroProps) {
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { openTagView } = useVideoUi();
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
-    const visibleTags = video.tags.slice(0, 5);
-    const extraTagCount = video.tags.length - 5;
+    const { visible: visibleTags, extra: extraTagCount } = getVisibleTags(video.tags, 5);
     const hasExtraTags = extraTagCount > 0;
 
     const isScheduledAndFuture = domain.video.isScheduledAndFuture(video);
@@ -27,30 +28,18 @@ export default function VideoHero({ video }: VideoHeroProps) {
         navigate(videoUrl(video.id));
     }
 
-    function handleTagClick(e: React.MouseEvent, tag: Tag) {
+    function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
         e.stopPropagation();
         openTagView(tag, video.id);
     }
 
     function handleArticleKeyDown(e: React.KeyboardEvent) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-
-        if (!isActivationKey) {
+        if (!isActivationKey(e)) {
             return;
         }
 
         e.preventDefault();
         handleClick();
-    }
-
-    function handleTagKeyDown(e: React.KeyboardEvent, tag: Tag) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) {
-            return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        openTagView(tag, video.id);
     }
 
     return (
@@ -92,32 +81,17 @@ export default function VideoHero({ video }: VideoHeroProps) {
                     <p className="video-hero__description">{video.description}</p>
                 )}
 
-                <div className="video-hero__meta">
-                    <span className="video-hero__meta-channel">{video.channel}</span>
-                    <div className="video-hero__meta-sub">
-                        <span>{Format.views(video.views)} {t('video.views')}</span>
-                        <span className="video-hero__meta-dot" aria-hidden="true">·</span>
-                        <span>{formatRelativeDate(video.publishedAt, i18n.language)}</span>
-                    </div>
-                </div>
+                <VideoMeta video={video} variant="hero" />
 
                 <div className="video-hero__tags">
-                    {visibleTags.map(tag => {
-                        const tagPalette = TagColors.palette(tag);
-                        return (
-                            <span
-                                key={tag}
-                                className="video-hero__tag"
-                                style={{ background: tagPalette.bg, color: tagPalette.color }}
-                                role="button"
-                                tabIndex={0}
-                                onClick={e => handleTagClick(e, tag)}
-                                onKeyDown={e => handleTagKeyDown(e, tag)}
-                            >
-                                {tag}
-                            </span>
-                        );
-                    })}
+                    {visibleTags.map(tag => (
+                        <TagBadge
+                            key={tag}
+                            tag={tag}
+                            className="video-hero__tag"
+                            onClick={handleTagClick}
+                        />
+                    ))}
                     {hasExtraTags && (
                         <span className="video-hero__tags-more">+{extraTagCount}</span>
                     )}

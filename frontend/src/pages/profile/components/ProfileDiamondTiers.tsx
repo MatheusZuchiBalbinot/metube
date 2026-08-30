@@ -1,4 +1,4 @@
-import { Format } from '@utils';
+import { Format, isActivationKey } from '@utils';
 import type { Video, VideoId } from '@models';
 
 interface ProfileDiamondTiersProps {
@@ -17,9 +17,7 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                     tabIndex={0}
                     onClick={() => onNavigate(videos[0].id)}
                     onKeyDown={e => {
-                        const isActivate = e.key === 'Enter' || e.key === ' ';
-
-                        if (isActivate) {
+                        if (isActivationKey(e)) {
                             e.preventDefault();
                             onNavigate(videos[0].id);
                         }
@@ -45,9 +43,7 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                             tabIndex={0}
                             onClick={() => onNavigate(video.id)}
                             onKeyDown={e => {
-                                const isActivate = e.key === 'Enter' || e.key === ' ';
-
-                                if (isActivate) {
+                                if (isActivationKey(e)) {
                                     e.preventDefault();
                                     onNavigate(video.id);
                                 }
@@ -74,9 +70,7 @@ export default function ProfileDiamondTiers({ videos, onNavigate }: ProfileDiamo
                             tabIndex={0}
                             onClick={() => onNavigate(video.id)}
                             onKeyDown={e => {
-                                const isActivate = e.key === 'Enter' || e.key === ' ';
-
-                                if (isActivate) {
+                                if (isActivationKey(e)) {
                                     e.preventDefault();
                                     onNavigate(video.id);
                                 }

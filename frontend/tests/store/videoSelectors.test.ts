@@ -45,6 +45,16 @@ describe('selectHistoryTags', () => {
 
         expect(selectHistoryTags(state)).toHaveLength(1);
     });
+
+    it('returns tags sorted alphabetically', () => {
+        const v1 = makeVideo({ id: vid('v1'), tags: [tag('zebra'), tag('apple')] });
+        const state = withVideo({
+            videos: [v1],
+            watchHistory: [vid('v1')],
+        });
+
+        expect(selectHistoryTags(state)).toEqual([tag('apple'), tag('zebra')]);
+    });
 });
 
 describe('selectPublishedVideos', () => {

@@ -1,0 +1,51 @@
+/* ─── Video meta (channel · views · date) — shared by card, row and hero ────── */
+
+.video-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--text-sm);
+}
+
+.video-meta__channel {
+    color: var(--text-2);
+    font-weight: var(--font-medium);
+}
+
+.video-meta__sub {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-3);
+}
+
+.video-meta__dot {
+    color: var(--text-3);
+}
+
+/* ─── Card variant — underlined link on hover ───────────────────────────────── */
+
+.video-meta--card .video-meta__channel {
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--duration-default);
+}
+
+.video-meta--card .video-meta__channel:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+/* ─── Row variant — keyboard-operable span ──────────────────────────────────── */
+
+.video-meta--row .video-meta__channel {
+    width: fit-content;
+    cursor: pointer;
+    transition: color var(--duration-slow);
+}
+
+.video-meta--row .video-meta__channel:hover {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}

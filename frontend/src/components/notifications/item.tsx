@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { Avatar } from '@ui';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
-import { formatRelativeDate, cn } from '@utils';
+import { formatRelativeDate, cn, isActivationKey } from '@utils';
 import { getCategory, getActorName, getBadgeMeta, getActionLabelKey, getDestination, isAiSummary } from './meta';
 import './item.css';
 
@@ -74,9 +74,7 @@ function NotificationItem({ notification, onRead, onDismiss }: NotificationItemP
     }
 
     function handleKeyDown(e: React.KeyboardEvent): void {
-        const isActivateKey = e.key === 'Enter' || e.key === ' ';
-
-        if (!isActivateKey) {
+        if (!isActivationKey(e)) {
             return;
         }
 

@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { domain } from '@domain';
+import { collectTags } from '@utils';
 import type { Tag, Video, VideoId } from '@models';
 import { videoAdapter, type VideoState } from './videoSlice';
 
@@ -18,12 +19,7 @@ export const selectAllVideos = adapterSelectors.selectAll;
  */
 export const selectVideoEntities = adapterSelectors.selectEntities;
 
-/**
- * Builds a memoized selector that resolves a single video by id in O(1).
- *
- * @param id - The video id to resolve.
- * @returns A selector returning the matching video, or `undefined`.
- */
+/** Builds a memoized selector that resolves a single video by id in O(1). */
 export function makeSelectVideoById(id: VideoId) {
     return createSelector(
         [selectVideoEntities],
@@ -35,18 +31,8 @@ export const selectHistoryTags = createSelector(
     [(s: WithVideo) => s.video.watchHistory, selectAllVideos],
     (watchHistory, videos) => {
         const watchedIds = new Set(watchHistory);
-        const tagSet = new Set<Tag>();
-
-        for (const video of videos) {
-            const isWatched = watchedIds.has(video.id);
-            if (!isWatched) {
-                continue;
-            }
-            for (const tag of video.tags) {
-                tagSet.add(tag);
-            }
-        }
-        return Array.from(tagSet);
+        const watchedVideos = videos.filter(video => watchedIds.has(video.id));
+        return collectTags(watchedVideos);
     },
 );
 

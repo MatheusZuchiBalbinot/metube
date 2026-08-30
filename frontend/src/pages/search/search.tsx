@@ -8,9 +8,8 @@ import FilterPanel, { type FilterState } from '@components/filter/panel';
 import { Button } from '@ui';
 import EmptyState from '@ui/empty/empty';
 import { analytics, AnalyticsSource } from '@api';
-import type { Tag } from '@models';
 import './search.css';
-import { useVideoData } from '@hooks';
+import { useVideoData, useAllTags } from '@hooks';
 import { VideoFilter, getSessionId } from '@utils';
 
 // Estimated height of a VideoRow (px). The virtualizer uses this as a first
@@ -36,6 +35,8 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     );
 }
 
+// Query/URL sync, virtualized results and the query-vs-no-query / results-vs-empty JSX
+// states all live together here; the branching is inherent to those view states.
 // eslint-disable-next-line complexity
 export default function SearchPage() {
     const { t } = useTranslation();
@@ -71,15 +72,7 @@ export default function SearchPage() {
         });
     }, [publishedVideos, query]);
 
-    const allTags = useMemo(() => {
-        const tagSet = new Set<Tag>();
-        for (const video of baseResults) {
-            for (const tag of video.tags) {
-                tagSet.add(tag);
-            }
-        }
-        return Array.from(tagSet).sort();
-    }, [baseResults]);
+    const allTags = useAllTags(baseResults);
 
     const results = useMemo(
         () => VideoFilter.apply(baseResults, filters),

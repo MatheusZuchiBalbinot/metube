@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAppSelector } from '@store';
 import { selectAllVideos } from '@store/videoSelectors';
 import type { Vuid } from '@api';
 import { UploadMode } from '@enums/uploadMode';
-import { useVideoUi, useVideoActions } from '@hooks';
+import { useVideoUi, useVideoActions, useAllTags } from '@hooks';
 import type { Tag } from '@models';
 import { useSingleUpload, type FormState, type UseSingleUploadReturn } from './useSingleUpload';
 import { useBatchUpload, type BatchItem, type UseBatchUploadReturn } from './useBatchUpload';
@@ -44,17 +44,7 @@ export function useUploadModal(): UseUploadModalReturn {
     const single = useSingleUpload(sharedDeps);
     const batch = useBatchUpload(sharedDeps);
 
-    const existingTags = useMemo(() => {
-        const tagSet = new Set<Tag>();
-
-        for (const video of allVideos) {
-            for (const tag of video.tags) {
-                tagSet.add(tag);
-            }
-        }
-
-        return Array.from(tagSet).sort();
-    }, [allVideos]);
+    const existingTags = useAllTags(allVideos);
 
     const isBusy = single.isUploading || batch.isBatchUploading;
 

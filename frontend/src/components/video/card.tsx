@@ -1,5 +1,5 @@
 import { memo, useRef, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { domain } from '@domain';
@@ -7,15 +7,16 @@ import { useAppDispatch, useAppSelector } from '@store';
 import { videoUiActions } from '@store/videoUiSlice';
 import { playbackActions } from '@store/playbackSlice';
 import { selectWatchLaterIds } from '@store/playlistSelectors';
-import { analytics, toVuid, AnalyticsSource } from '@api';
+import { toVuid, AnalyticsSource } from '@api';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';
 import SavePopover from './savePopover';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
+import VideoMeta from './videoMeta';
 import './card.css';
-import { useMediaQuery, useTrackImpression, useClickOutside } from '@hooks';
-import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatDuration, formatRelativeDate, cn } from '@utils';
+import { useMediaQuery, useTrackImpression, useClickOutside, useVideoClickTracking } from '@hooks';
+import { videoUrl, getVisibleTags, TagColors, formatDuration, isActivationKey, cn } from '@utils';
 import type { Video, Tag, VideoId } from '@models';
 
 interface VideoCardProps {
@@ -35,6 +36,9 @@ function buildVideoCardClass(showActions: boolean, notInteractive: boolean) {
 
 const PREVIEW_DELAY_MS = 500;
 
+// Inherent branching of a rich presentational card (thumbnail/preview, progress, duration,
+// status badges, save/pin/menu actions, tag overflow); interactive logic already lives in
+// the handleX functions and hooks above — same rationale as playlist/card.tsx.
 // eslint-disable-next-line complexity
 const VideoCard = memo(function VideoCard({
     video,
@@ -51,7 +55,8 @@ const VideoCard = memo(function VideoCard({
     const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(cardRef, vuid, source, { enabled: hasValidVuid });
-    const { t, i18n } = useTranslation();
+    const trackClick = useVideoClickTracking(video.id, source);
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const progress = useAppSelector(s => s.video.videoProgress[video.id] ?? 0);
     const isPinned = useAppSelector(s => s.playback.pinnedVideoId === video.id);
@@ -79,18 +84,6 @@ const VideoCard = memo(function VideoCard({
     const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
     useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
-
-    function trackClick() {
-        if (!hasValidVuid) {
-            return;
-        }
-        analytics.click({
-            vuid,
-            source,
-            position: index >= 0 ? index : undefined,
-            sessionId: getSessionId(),
-        }).catch(() => {});
-    }
 
     const isNotInteractive = isVideoProcessing || isVideoFailed;
     const hasPreviewSource = (video.videoUrl ?? '') !== '';
@@ -121,7 +114,7 @@ const VideoCard = memo(function VideoCard({
         if (isNotInteractive) {
             return;
         }
-        trackClick();
+        trackClick(index >= 0 ? index : undefined);
         navigate(videoUrl(video.id));
     }
 
@@ -129,18 +122,14 @@ const VideoCard = memo(function VideoCard({
         if (isNotInteractive) {
             return;
         }
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) {
+
+        if (!isActivationKey(e)) {
             return;
         }
 
         e.preventDefault();
-        trackClick();
+        trackClick(index >= 0 ? index : undefined);
         navigate(videoUrl(video.id));
-    }
-
-    function handleChannelLinkClick(e: React.MouseEvent) {
-        e.stopPropagation();
     }
 
     function handleThumbLoad() {
@@ -229,7 +218,7 @@ const VideoCard = memo(function VideoCard({
                         <Tooltip content={t('video.save')} side="top">
                             <Button
                                 size="icon"
-                                variant="ghost"
+                                variant="overlay"
                                 aria-label={t('video.save')}
                                 aria-pressed={isSaved}
                                 className={cn('video-card__save-btn', isSaved && 'video-card__save-btn--active')}
@@ -301,20 +290,7 @@ const VideoCard = memo(function VideoCard({
             <div className="video-card__body">
                 <p className="video-card__title">{video.title}</p>
 
-                <div className="video-card__meta">
-                    <Link
-                        to={ROUTES.USER.replace(':id', video.channelId)}
-                        className="video-card__meta-channel"
-                        onClick={handleChannelLinkClick}
-                    >
-                        {video.channel}
-                    </Link>
-                    <div className="video-card__meta-sub">
-                        <span className="video-card__meta-views">{Format.views(video.views)} {t('video.views')}</span>
-                        <span className="video-card__meta-dot" aria-hidden="true">·</span>
-                        <span className="video-card__meta-date">{formatRelativeDate(video.publishedAt ?? video.createdAt, i18n.language)}</span>
-                    </div>
-                </div>
+                <VideoMeta video={video} variant="card" />
 
                 <div className="video-card__tags">
                     {visibleTags.map(tag => (

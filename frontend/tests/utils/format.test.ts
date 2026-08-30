@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getVisibleTags, countTagFrequency, Format } from '@utils/format';
+import { getVisibleTags, countTagFrequency, collectTags, Format } from '@utils/format';
 import type { Video } from '@models/video';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -84,6 +84,32 @@ describe('countTagFrequency', () => {
     it('handles videos with no tags', () => {
         const videos = [makeVideo({ tags: [] }), makeVideo({ tags: ['go'] })];
         expect(countTagFrequency(videos)).toEqual(new Map([['go', 1]]));
+    });
+});
+
+// ─── collectTags ──────────────────────────────────────────────────────────────
+
+describe('collectTags', () => {
+    it('returns empty array for no videos', () => {
+        expect(collectTags([])).toEqual([]);
+    });
+
+    it('deduplicates tags across videos', () => {
+        const videos = [
+            makeVideo({ tags: ['react', 'typescript'] }),
+            makeVideo({ tags: ['react', 'css'] }),
+        ];
+        expect(collectTags(videos)).toEqual(['css', 'react', 'typescript']);
+    });
+
+    it('sorts tags alphabetically', () => {
+        const videos = [makeVideo({ tags: ['zebra', 'apple', 'mango'] })];
+        expect(collectTags(videos)).toEqual(['apple', 'mango', 'zebra']);
+    });
+
+    it('handles videos with no tags', () => {
+        const videos = [makeVideo({ tags: [] }), makeVideo({ tags: ['go'] })];
+        expect(collectTags(videos)).toEqual(['go']);
     });
 });
 

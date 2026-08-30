@@ -1,4 +1,5 @@
 import type { Size } from '../types';
+import { isActivationKey } from '@utils';
 import './card.css';
 
 type CardPadding = 'none' | Size;
@@ -30,9 +31,7 @@ export default function Card({
     const isInteractive = onClick !== undefined;
 
     function handleKeyDown(e: React.KeyboardEvent) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-
-        if (!isActivationKey || !onClick) {
+        if (!isActivationKey(e) || !onClick) {
             return;
         }
 

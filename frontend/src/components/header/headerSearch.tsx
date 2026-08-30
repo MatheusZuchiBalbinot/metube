@@ -4,6 +4,7 @@ import { Search, Clock, X, User, Tag as TagIcon } from 'lucide-react';
 import { Button, Input, Tooltip } from '@ui';
 import { useSearch } from '@context/search';
 import { useClickOutside } from '@hooks';
+import { isActivationKey } from '@utils';
 import { SuggestionKind } from '@enums/suggestionKind';
 import type { Suggestion } from './types';
 
@@ -91,9 +92,8 @@ export default function HeaderSearch({
                             onClick={() => onRecentItemClick(term)}
                             onKeyDown={e => {
                                 const isSelf = e.target === e.currentTarget;
-                                const isActivate = e.key === 'Enter' || e.key === ' ';
 
-                                if (isSelf && isActivate) {
+                                if (isSelf && isActivationKey(e)) {
                                     e.preventDefault();
                                     onRecentItemClick(term);
                                 }
@@ -129,9 +129,7 @@ export default function HeaderSearch({
                             tabIndex={0}
                             onClick={() => onSuggestionClick(s)}
                             onKeyDown={e => {
-                                const isActivate = e.key === 'Enter' || e.key === ' ';
-
-                                if (isActivate) {
+                                if (isActivationKey(e)) {
                                     e.preventDefault();
                                     onSuggestionClick(s);
                                 }

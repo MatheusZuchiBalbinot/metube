@@ -7,14 +7,14 @@ import ProfileQuickFilters from './components/ProfileQuickFilters';
 import { domain } from '@domain';
 import { Avatar, Button, Tooltip } from '@ui';
 import './profile.css';
-import { useAuth, useVideo, useProfileVideos, useSubscription } from '@hooks';
+import { useAuth, useVideo, useProfileVideos, useSubscription, useAllTags } from '@hooks';
 import { useAppSelector, useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 import { selectWatchedTagFrequency } from '@store/videoSelectors';
 import { recentChannelsActions } from '@store/recentChannelsSlice';
 import { VideoFilter, videoUrl, cn, ROUTES, type FilterState } from '@utils';
-import type { Video, Tag, VideoId, ChannelId } from '@models';
+import type { VideoId, ChannelId } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
 import { useEditProfileModal } from './hooks/useEditProfileModal';
 import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
@@ -83,10 +83,7 @@ export default function ProfilePage() {
         handleDeleteById, handleDeleteConfirm, handleDeleteCancel,
     } = useDeleteVideoModal();
 
-    const allTags = useMemo(() => {
-        const tagSet = new Set<Tag>(ownVideos.flatMap((v: Video) => v.tags));
-        return Array.from(tagSet).sort();
-    }, [ownVideos]);
+    const allTags = useAllTags(ownVideos);
 
     const pinnedVideo = useMemo(
         () => (isOwnProfile && pinnedVideoId)

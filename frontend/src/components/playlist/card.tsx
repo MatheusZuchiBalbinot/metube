@@ -14,7 +14,7 @@ import './card.css';
 import { ToastType } from '@enums/toastType';
 import { usePlaylist } from '@hooks';
 import { usePlaylistCard } from './usePlaylistCard';
-import { videoUrl, formatDuration, formatDurationCompact, cn } from '@utils';
+import { videoUrl, formatDuration, formatDurationCompact, cn, isActivationKey } from '@utils';
 import type { Video, Playlist, PlaylistId, Seconds } from '@models';
 
 interface PlaylistCardProps {
@@ -40,9 +40,7 @@ function PlaylistVideoRow({ video, playlistId, position }: PlaylistVideoRowProps
     }
 
     function handleRowKeyDown(e: React.KeyboardEvent) {
-        const isActivate = e.key === 'Enter' || e.key === ' ';
-
-        if (!isActivate) {
+        if (!isActivationKey(e)) {
             return;
         }
 

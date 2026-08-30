@@ -1,19 +1,28 @@
 import type { Video, Tag, ViewCount } from '@models';
 
-/** Returns the first `count` tags and the number of remaining extras. */
 export function getVisibleTags(tags: Tag[], count = 3): { visible: Tag[]; extra: number } {
     return { visible: tags.slice(0, count), extra: Math.max(0, tags.length - count) };
 }
 
-/** Counts how many videos each tag appears in. */
-export function countTagFrequency(videos: Video[]): Map<Tag, number> {
-    const freq = new Map<Tag, number>();
+function forEachVideoTag(videos: Video[], fn: (tag: Tag) => void): void {
     for (const video of videos) {
         for (const tag of video.tags) {
-            freq.set(tag, (freq.get(tag) ?? 0) + 1);
+            fn(tag);
         }
     }
+}
+
+export function countTagFrequency(videos: Video[]): Map<Tag, number> {
+    const freq = new Map<Tag, number>();
+    forEachVideoTag(videos, tag => freq.set(tag, (freq.get(tag) ?? 0) + 1));
     return freq;
+}
+
+/** Collects the unique tags across a video list, sorted alphabetically. */
+export function collectTags(videos: Video[]): Tag[] {
+    const tagSet = new Set<Tag>();
+    forEachVideoTag(videos, tag => tagSet.add(tag));
+    return Array.from(tagSet).sort();
 }
 
 export class Format {

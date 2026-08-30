@@ -1,13 +1,13 @@
 import { memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
-import { analytics, toVuid, AnalyticsSource } from '@api';
+import { toVuid, AnalyticsSource } from '@api';
 import TagBadge from '@components/tag/badge';
 import VideoStatusBadges from './statusBadges';
+import VideoMeta from './videoMeta';
 import './row.css';
-import { useVideoData, useVideoUi, useTrackImpression } from '@hooks';
-import { ROUTES, videoUrl, Format, getVisibleTags, TagColors, getSessionId, formatRelativeDate } from '@utils';
+import { useVideoData, useVideoUi, useTrackImpression, useVideoClickTracking } from '@hooks';
+import { videoUrl, getVisibleTags, TagColors, isActivationKey } from '@utils';
 import type { Video, Tag } from '@models';
 
 interface VideoRowProps {
@@ -20,7 +20,6 @@ interface VideoRowProps {
 
 const VideoRow = memo(function VideoRow({ video, highlighted = false, source = AnalyticsSource.SEARCH, position }: VideoRowProps) {
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
     const { openTagView } = useVideoUi();
     const { videoProgress } = useVideoData();
     const rowRef = useRef<HTMLElement>(null);
@@ -28,6 +27,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
     const hasValidVuid = vuid !== undefined && vuid !== '';
 
     useTrackImpression(rowRef, vuid, source, { enabled: hasValidVuid });
+    const trackClick = useVideoClickTracking(video.id, source);
 
     const palette = TagColors.palette(video.tags[0] ?? video.id);
 
@@ -40,46 +40,18 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
         .filter(Boolean)
         .join(' ');
 
-    function trackClick() {
-        if (!hasValidVuid) {
-            return;
-        }
-        analytics.click({
-            vuid,
-            source,
-            position,
-            sessionId: getSessionId(),
-        }).catch(() => {});
-    }
-
     function handleRowClick() {
-        trackClick();
+        trackClick(position);
         navigate(videoUrl(video.id));
     }
 
     function handleRowKeyDown(e: React.KeyboardEvent) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) {
+        if (!isActivationKey(e)) {
             return;
         }
         e.preventDefault();
-        trackClick();
+        trackClick(position);
         navigate(videoUrl(video.id));
-    }
-
-    function handleChannelClick(e: React.MouseEvent) {
-        e.stopPropagation();
-        navigate(ROUTES.USER.replace(':id', video.channelId));
-    }
-
-    function handleChannelKeyDown(e: React.KeyboardEvent) {
-        const isActivationKey = e.key === 'Enter' || e.key === ' ';
-        if (!isActivationKey) {
-            return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        navigate(ROUTES.USER.replace(':id', video.channelId));
     }
 
     function handleTagClick(e: React.MouseEvent | React.KeyboardEvent, tag: Tag) {
@@ -126,22 +98,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
                 <p className="video-row__title">{video.title}</p>
 
 
-                <div className="video-row__meta">
-                    <span
-                        className="video-row__meta-channel"
-                        role="button"
-                        tabIndex={0}
-                        onClick={handleChannelClick}
-                        onKeyDown={handleChannelKeyDown}
-                    >
-                        {video.channel}
-                    </span>
-                    <div className="video-row__meta-sub">
-                        <span className="video-row__meta-views">{Format.views(video.views)} {t('video.views')}</span>
-                        <span className="video-row__meta-dot" aria-hidden="true">·</span>
-                        <span className="video-row__meta-date">{formatRelativeDate(video.publishedAt, i18n.language)}</span>
-                    </div>
-                </div>
+                <VideoMeta video={video} variant="row" />
 
                 <div className="video-row__tags">
                     {visibleTags.map(tag => (

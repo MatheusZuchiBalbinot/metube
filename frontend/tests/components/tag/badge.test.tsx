@@ -1,8 +1,3 @@
-/**
- * Tests for TagBadge component.
- * Simple component that renders a tag with deterministic color.
- */
-
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -57,5 +52,23 @@ describe('TagBadge', () => {
         badge.focus();
         await userEvent.keyboard('{Enter}');
         expect(onClick).toHaveBeenCalled();
+    });
+
+    it('calls onClick on Space key press', async () => {
+        const onClick = vi.fn();
+        renderWithProviders(<TagBadge tag="go" onClick={onClick} />);
+        const badge = screen.getByRole('button', { name: /go/i });
+        badge.focus();
+        await userEvent.keyboard(' ');
+        expect(onClick).toHaveBeenCalled();
+    });
+
+    it('does not call onClick on other key presses', async () => {
+        const onClick = vi.fn();
+        renderWithProviders(<TagBadge tag="rust2" onClick={onClick} />);
+        const badge = screen.getByRole('button', { name: /rust2/i });
+        badge.focus();
+        await userEvent.keyboard('{Escape}');
+        expect(onClick).not.toHaveBeenCalled();
     });
 });

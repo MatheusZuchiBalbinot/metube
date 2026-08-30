@@ -31,4 +31,33 @@ describe('Card', () => {
         await userEvent.click(screen.getByText('Clickable'));
         expect(onClick).toHaveBeenCalled();
     });
+
+    it('calls onClick on Enter key press when interactive', async () => {
+        const onClick = vi.fn();
+        render(<Card onClick={onClick}>Clickable</Card>);
+        screen.getByRole('button').focus();
+        await userEvent.keyboard('{Enter}');
+        expect(onClick).toHaveBeenCalled();
+    });
+
+    it('calls onClick on Space key press when interactive', async () => {
+        const onClick = vi.fn();
+        render(<Card onClick={onClick}>Clickable</Card>);
+        screen.getByRole('button').focus();
+        await userEvent.keyboard(' ');
+        expect(onClick).toHaveBeenCalled();
+    });
+
+    it('does not call onClick on other key presses', async () => {
+        const onClick = vi.fn();
+        render(<Card onClick={onClick}>Clickable</Card>);
+        screen.getByRole('button').focus();
+        await userEvent.keyboard('{Escape}');
+        expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('is not focusable/interactive when no onClick is provided', () => {
+        render(<Card>Static</Card>);
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
 });

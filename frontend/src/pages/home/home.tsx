@@ -9,7 +9,7 @@ import Button from '@ui/button/button';
 import EmptyState from '@ui/empty/empty';
 import Spinner from '@ui/spinner/spinner';
 import './home.css';
-import { useVideoData, useFilterState, useAuth } from '@hooks';
+import { useVideoData, useFilterState, useAuth, useAllTags } from '@hooks';
 import { VideoFilter, ROUTES, videoUrl, greetingPeriod } from '@utils';
 import type { Tag, Video } from '@models';
 import type { FeedSection } from '@api';
@@ -43,6 +43,9 @@ function sectionIcon(key: string): React.ReactNode {
     }
 }
 
+// Feed page with several mutually-exclusive view states (loading / completely-empty /
+// filtered-empty / results, plus the default-view shelves vs. filtered grid); state and
+// data-fetching are already delegated to useFeedSections/useInfiniteRecommendations/useVideoData.
 // eslint-disable-next-line complexity
 export default function HomePage() {
     const { t } = useTranslation();
@@ -82,15 +85,7 @@ export default function HomePage() {
             .map(([tag]) => tag);
     }, [recommendations]);
 
-    const allTags = useMemo(() => {
-        const tagSet = new Set<Tag>();
-        for (const video of recommendations) {
-            for (const tag of video.tags) {
-                tagSet.add(tag);
-            }
-        }
-        return Array.from(tagSet).sort();
-    }, [recommendations]);
+    const allTags = useAllTags(recommendations);
 
     const visibleVideos = useMemo(() => {
         const base = VideoFilter.apply(recommendations, filterState);

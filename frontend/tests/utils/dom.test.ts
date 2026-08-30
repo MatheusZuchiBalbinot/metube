@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { isTypingInInput } from '@utils/dom';
+import type { KeyboardEvent } from 'react';
+import { isTypingInInput, isActivationKey } from '@utils/dom';
+
+function makeKeyboardEvent(key: string): KeyboardEvent {
+    return { key } as KeyboardEvent;
+}
 
 // ─── isTypingInInput ──────────────────────────────────────────────────────────
 
@@ -57,5 +62,23 @@ describe('isTypingInInput', () => {
     it('returns falsy for a SPAN element', () => {
         const span = document.createElement('span');
         expect(isTypingInInput(span)).toBeFalsy();
+    });
+});
+
+// ─── isActivationKey ──────────────────────────────────────────────────────────
+
+describe('isActivationKey', () => {
+    it('returns true for Enter', () => {
+        expect(isActivationKey(makeKeyboardEvent('Enter'))).toBe(true);
+    });
+
+    it('returns true for Space', () => {
+        expect(isActivationKey(makeKeyboardEvent(' '))).toBe(true);
+    });
+
+    it('returns false for other keys', () => {
+        expect(isActivationKey(makeKeyboardEvent('Escape'))).toBe(false);
+        expect(isActivationKey(makeKeyboardEvent('Tab'))).toBe(false);
+        expect(isActivationKey(makeKeyboardEvent('a'))).toBe(false);
     });
 });

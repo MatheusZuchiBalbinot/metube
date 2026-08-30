@@ -1,8 +1,4 @@
 // @vitest-environment jsdom
-/**
- * Tests for VideoCard component.
- */
-
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
