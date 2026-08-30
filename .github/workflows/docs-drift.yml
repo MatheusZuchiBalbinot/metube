@@ -1,0 +1,31 @@
+name: Docs Drift Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'CLAUDE.md'
+      - 'backend/CLAUDE.backend.md'
+      - 'frontend/CLAUDE.frontend.md'
+      - 'scripts/check-docs-drift.sh'
+      - '.github/workflows/docs-drift.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'CLAUDE.md'
+      - 'backend/CLAUDE.backend.md'
+      - 'frontend/CLAUDE.frontend.md'
+      - 'scripts/check-docs-drift.sh'
+      - '.github/workflows/docs-drift.yml'
+
+jobs:
+  check:
+    name: Check mandatory-reading guides for dead paths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run doc-drift check
+        run: |
+          chmod +x scripts/check-docs-drift.sh
+          ./scripts/check-docs-drift.sh

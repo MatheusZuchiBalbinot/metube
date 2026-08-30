@@ -18,6 +18,12 @@ CI rejeita PRs com erros de TypeScript, erros de lint, ou testes falhando.
 
 ## Estrutura de arquivos
 
+**Esta árvore muda com frequência — trate-a como um mapa aproximado do padrão de cada pasta,
+não um inventário exaustivo.** Para o conteúdo atual de qualquer pasta, rode
+`ls frontend/src/<pasta>/`. Um script de CI (`scripts/check-docs-drift.sh`) falha o build se
+um caminho citado entre crases neste guia não existir mais no disco, mas não pega descrições
+desatualizadas de arquivos que ainda existem.
+
 ```
 src/
   App.tsx                     # Roteamento, providers, AppInit (bootstrap + realtime)
@@ -38,9 +44,15 @@ src/
     index.ts                  # barrel: re-exporta instâncias + tipos públicos
 
   components/
-    auth/ comment/ error/ filter/ guard/ header/ layout/ mini/
+    auth/ comment/ error/ filter/ guard/ header/ mini/
     notifications/ player/ playlist/ preferences/ shortcuts/
     sidebar/ tag/ upload/ video/
+    layout/
+      videoGridPage.tsx        # Shell compartilhado para páginas "grid de vídeos filtrável"
+                                # (liked, watch-later, recommended, subscriptions, ...) — título,
+                                # contagem, FilterPanel, skeleton, EmptyState (vazio e sem
+                                # resultados) e grid num único lugar. Ao criar uma página nova
+                                # desse formato, componha VideoGridPage em vez de copiar o shell.
     ui/   # Primitivos reutilizáveis — Button, Input, Modal, Dropdown, Tooltip, Avatar,
           # Checkbox, DatePicker, DragAndDrop, Toast, Empty, Spinner, Skeleton, Badge, Card
           # Verifique aqui antes de criar qualquer elemento interativo
@@ -57,7 +69,10 @@ src/
 
   enums/                      # Enums TypeScript — importe como `import { ReactionType } from '@enums/reactionType'`
 
-  hooks/                      # Custom hooks (ver seção Hooks abaixo)
+  hooks/                      # Custom hooks globais — reutilizados por 2+ páginas (`ls frontend/src/hooks/`
+                               # para a lista atual). Lógica específica de uma única página vai em
+                               # `pages/<página>/hooks/`, não aqui — ver "Padrão de hooks e componentes
+                               # locais de página" mais abaixo.
 
   i18n/
     index.ts                  # Configuração i18next
@@ -68,12 +83,8 @@ src/
     echo.ts                   # Singleton Laravel Echo (Reverb/WebSocket) com authorizer axios
 
   pages/
-    channel/
-      channel.tsx             # Página de canal
-      components/             # Sub-componentes locais da página
-        ChannelCoverStory.tsx  # Capa em destaque com comentários em spotlight
-        ChannelDiamondTiers.tsx # Top vídeos em grade diamante
-        ChannelTopicGrid.tsx   # Grade de tópicos por tag
+    # Não existe pages/channel/ — a rota /channel/:id (ROUTES.CHANNEL) renderiza ProfilePage,
+    # a mesma página usada para /user/:id. Não crie uma ChannelPage separada sem checar App.tsx primeiro.
     forgotPassword/forgotPassword.tsx
     history/history.tsx       # Histórico de vídeos assistidos (com filtro de período)
     home/home.tsx             # Feed principal
@@ -81,6 +92,7 @@ src/
     login/login.tsx           # Login
     notFound/notFound.tsx     # 404
     playlists/playlists.tsx   # Listagem de playlists
+    settings/settings.tsx     # Preferências do usuário
     profile/
       profile.tsx             # Perfil do usuário (próprio ou alheio)
       hooks/                  # Hooks locais da página
@@ -117,6 +129,7 @@ src/
     video/
       video.tsx               # Página de vídeo (/watch?v=vuid)
       hooks/                  # Hooks locais da página
+        usePinnedPlayer.ts
         useSkipAnalytics.ts
         useVideoReactions.ts
         useVideoSave.ts
@@ -179,16 +192,13 @@ src/
     logger.ts                 # Logger com níveis (dev-only)
     mergeProgress.ts          # Mescla progresso local com dados do servidor
     notificationSound.ts      # Som de notificação
-    parse.ts                  # Parsers de resposta da API
     routes.ts                 # ROUTES const + videoUrl() helper
     sessionId.ts              # Gera/persiste session ID de analytics
     storageKeys.ts            # STORAGE_KEYS — todas as chaves de localStorage
     tagColors.ts              # Mapeia tags para cores
-    themeRipple.ts            # Efeito ripple na troca de tema
     themes.ts                 # Definições de temas
     time.ts                   # formatDuration, formatDurationCompact, formatRelativeDate, formatEta, parseTimestamp, secondsToTimestamp, parseChapterTimestamp
     upload.ts                 # UploadProgress interface + buildProgress()
-    validate.ts               # Helpers de validação de formulário
     viewedVideos.ts           # Rastreia vídeos visualizados na sessão
 
   api/
@@ -229,8 +239,6 @@ tests/                        # Vitest — espelha src/
 | `@models/*`     | `src/types/*`                 |
 | `@lib/*`        | `src/lib/*`                   |
 | `@enums/*`      | `src/enums/*`                 |
-| `@validation`   | `src/validation` (barrel)     |
-| `@validation/*` | `src/validation/*`            |
 
 **Exceção crítica**: dentro de `src/components/ui/`, use caminho relativo (`../button/button`). Usar `@ui` dentro de `ui/` cria dependência circular com o barrel.
 
@@ -246,17 +254,22 @@ Definidas em `src/utils/routes.ts` como `ROUTES`. **Nunca use strings literais d
 /forgot-password    → ForgotPasswordPage  (pública)
 /reset-password/:token → ResetPasswordPage (pública)
 /                   → HomePage            (protegida)
+/recommended        → RecommendedPage     (protegida)
+/subscriptions      → SubscriptionsPage   (protegida)
 /shorts             → ShortsPage          (protegida)
 /history            → HistoryPage         (protegida)
 /playlists          → PlaylistsPage       (protegida)
 /watch-later        → WatchLaterPage      (protegida)
 /liked              → LikedPage           (protegida)
 /profile            → ProfilePage         (protegida, próprio usuário)
+/settings           → SettingsPage        (protegida)
 /user/:id           → ProfilePage         (protegida, outro usuário)
 /watch              → VideoPage           (protegida, ?v=vuid)
 /search             → SearchPage          (protegida, ?q=)
-/channel/:id        → ChannelPage         (protegida)
+/channel/:id        → ProfilePage         (protegida, mesma página de /user/:id)
 *                   → NotFoundPage
+
+Fonte de verdade: `ROUTES` em `src/utils/routes.ts` + o array de rotas em `App.tsx`.
 ```
 
 Todas as rotas protegidas são envolvidas por `<Guard><AppLayout />`. `UploadModal` é lazy-loaded globalmente (fora do router) em `App.tsx` — disponível em qualquer rota.
@@ -313,24 +326,37 @@ Cada módulo (`domain/video.ts`, `domain/playlist.ts`, etc.) exporta um objeto d
 
 ## Redux Slices
 
-| Slice                | State key         | Responsabilidade                                                              |
-|----------------------|-------------------|-------------------------------------------------------------------------------|
-| `videoSlice`         | `video`           | lista de vídeos, watchHistory, likes/dislikes/saves, progress, miniPlayer, teatro, shorts, uploadModal |
-| `authSlice`          | `auth`            | usuário autenticado, estado de sessão                                         |
-| `themeSlice`         | `theme`           | modo (dark/light) + cor de acento                                             |
-| `toastSlice`         | `toast`           | notificações temporárias (max 3 simultâneas)                                  |
-| `playlistSlice`      | `playlist`        | playlists com videoIds, drag-and-drop                                         |
-| `subscriptionSlice`  | `subscription`    | inscrições em canais                                                          |
-| `searchSlice`        | `search`          | buscas recentes (max 5, dedup por lowercase)                                  |
-| `commentSlice`       | `comment`         | comentários por vídeo (byId/byVideo), respostas, paginação, loading           |
-| `notificationsSlice` | `notifications`   | itens, unreadCount, hasMore, loading                                          |
+| Slice                 | State key         | Responsabilidade                                                              |
+|-----------------------|-------------------|-------------------------------------------------------------------------------|
+| `videoSlice`          | `video`           | entidades de vídeo (EntityState), watchHistory, likes/dislikes, progress, recomendações |
+| `videoUiSlice`        | `videoUi`         | estado efêmero de UI do vídeo: upload modal, tag view ativa, mini-player, seek pendente |
+| `playbackSlice`       | `playback`        | autoplay, vídeo fixado (pinned), teatro, mute/volume dos shorts               |
+| `authSlice`           | `auth`            | usuário autenticado, estado de sessão                                         |
+| `themeSlice`          | `theme`           | modo (dark/light) + cor de acento                                             |
+| `toastSlice`          | `toast`           | notificações temporárias (max 3 simultâneas)                                  |
+| `playlistSlice`       | `playlist`        | playlists com videoIds, drag-and-drop                                         |
+| `subscriptionSlice`   | `subscription`    | inscrições em canais                                                          |
+| `recentChannelsSlice` | `recentChannels`  | canais visitados recentemente                                                 |
+| `searchSlice`         | `search`          | buscas recentes (max 5, dedup por lowercase)                                  |
+| `commentSlice`        | `comment`         | comentários por vídeo (byId/byVideo), respostas, paginação, loading           |
+| `notificationsSlice`  | `notifications`   | itens, unreadCount, hasMore, loading                                          |
+
+`videoSlice` era um slice maior no passado (mini-player, teatro, shorts e uploadModal viviam
+nele); esse estado de UI puramente efêmero foi extraído para `videoUiSlice`/`playbackSlice`
+para separar dados de domínio (persistidos, sincronizados entre abas) de estado de tela. Se
+este guia e o código divergirem sobre qual slice tem qual campo, confie no arquivo.
 
 ### Persistência e sync
 - `persistMiddleware` — persiste slices selecionados no `localStorage` (chaves em `STORAGE_KEYS`)
 - `crossTabSync.ts` — escuta eventos `storage` para sincronizar estado entre abas
+- `rootReducer` (`store/reducers.ts`) reseta a store inteira para o estado inicial em
+  `signOutThunk.fulfilled` — nenhum slice deve assumir que o próprio estado sobrevive ao
+  logout, mesmo que não esteja na lista de `persistMiddleware`
 - Hooks tipados: `useAppDispatch()`, `useAppSelector()` (importados de `@store`)
 
-### Selectors memoizados (`videoSelectors.ts`)
+### Selectors memoizados
+Cada slice ganhou seu próprio arquivo `*Selectors.ts` (`videoSelectors.ts`, `authSelectors.ts`,
+`commentSelectors.ts`, etc. — `ls frontend/src/store/*Selectors.ts`). Em `videoSelectors.ts`:
 - `selectPublishedVideos` — filtra vídeos publicados (inclui scheduled passado)
 - `selectHistoryTags` — extrai tags dos vídeos assistidos
 - `selectLikedSet` / `selectDislikedSet` — sets para lookup O(1)
@@ -731,29 +757,36 @@ O slice limita 3 toasts simultâneos; toasts mais antigos são descartados autom
 
 ## Formulários e validação
 
-Sem biblioteca de forms. Validação via `src/utils/validate.ts`:
+Sem biblioteca de forms e sem helper de validação compartilhado — cada hook de formulário
+valida os próprios campos inline, com o erro guardado como campo de state ao lado do valor
+(não um `Record<string, string>` de erros separado):
 
 ```ts
-import { validate } from '@utils';
-
-// validate.required(value) → string | null  (null = válido)
-// validate.email(value)    → string | null
-// validate.minLength(value, n) → string | null
+// padrão real: ver src/components/upload/useSingleUpload.ts
+interface FormState {
+    title: string;
+    titleError: string | null;
+    // ...
+}
 
 function handleSubmit() {
-    const titleError = validate.required(title);
+    const isTitleEmpty = form.title.trim() === '';
 
-    if (titleError) {
-        setError(titleError);
+    if (isTitleEmpty) {
+        setForm(prev => ({ ...prev, titleError: t('video.title_required') }));
         return;
     }
 
     submitForm();
 }
+
+// ao digitar, limpe o erro do próprio campo:
+function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm(prev => ({ ...prev, title: e.target.value, titleError: null }));
+}
 ```
 
-Estado de erro: `const [error, setError] = useState<string | null>(null)`.  
-Limpe o erro no `onChange` do campo. Exiba abaixo do input com classe `__error`.
+Limpe o erro do campo no `onChange` correspondente (como no exemplo acima). Exiba abaixo do input com classe `__error`.
 
 ---
 

@@ -49,14 +49,19 @@ npm run stop      # docker compose down
 
 ## Docker Compose
 
-| Serviço    | Imagem            | Porta pública |
-|------------|-------------------|---------------|
-| postgres   | postgres:16        | 5432          |
-| redis      | redis:7-alpine     | 6379          |
-| backend    | FrankenPHP/Octane  | — (interna)   |
-| frontend   | Node/Vite          | 5173          |
-| caddy      | caddy:2-alpine     | 80 / 443      |
-| queue      | FrankenPHP (worker)| —             |
+| Serviço    | Imagem/Build       | Porta pública | Observação                                   |
+|------------|--------------------|---------------|-----------------------------------------------|
+| postgres   | postgres:16         | 5432          |                                                 |
+| redis      | redis:7-alpine      | 6379          |                                                 |
+| backend    | build `./backend` (FrankenPHP/Octane) | — (interna) |                             |
+| horizon    | build `./backend`  | — (interna)   | `php artisan horizon` — workers de fila       |
+| reverb     | build `./backend`  | — (interna)   | `php artisan reverb:start` — WebSockets       |
+| whisper    | build `./whisper`  | — (interna)   | Opcional — atrás do profile `whisper`; omita para usar uma API hospedada via `WHISPER_URL` |
+| frontend   | build `./frontend` (Vite) | 5173    |                                                 |
+| caddy      | caddy:2-alpine      | 80 / 443      | TLS automático em produção                    |
+
+Esta tabela reflete `docker-compose.yml` — confira o arquivo se um serviço novo for
+adicionado (`grep '^  [a-z_-]*:$' docker-compose.yml`).
 
 ---
 
@@ -64,13 +69,21 @@ npm run stop      # docker compose down
 
 ### GitHub Actions
 
-| Workflow          | Trigger                           | Steps                                              |
-|-------------------|-----------------------------------|----------------------------------------------------|
-| `frontend.yml`    | push/PR em `main` com mudanças em `frontend/` | `npm ci` → `tsc --noEmit` → `npm run lint` → `npm test` → `npm audit` |
-| `backend.yml`     | push/PR em `main` com mudanças em `backend/`  | `composer install` → `composer lint` → `composer test` |
+Não hand-mantenha uma tabela de workflows aqui — a pasta ganha workflows novos sem aviso
+(ex.: `whisper.yml` foi adicionado depois deste guia ter sido escrito pela primeira vez). Para
+a lista atual: `ls .github/workflows/`. Como referência, os workflows atuais no momento desta
+revisão:
 
-Todos os quatro checks devem passar antes de mesclar:
-- **Backend Lint** — PHPStan nível 8 + Pint
-- **Backend Unit Tests** — Pest, SQLite in-memory
-- **Frontend Lint & Type Check** — ESLint + `tsc --noEmit`
-- **Frontend Test** — Vitest
+| Workflow                | Escopo                                                        |
+|--------------------------|----------------------------------------------------------------|
+| `backend-lint.yml`       | PHPStan nível 8 + Pint (Backend Lint)                          |
+| `backend-quality.yml`    | PHP Insights (Backend Quality)                                 |
+| `backend-tests.yml`      | Pest, SQLite in-memory (Backend Tests)                         |
+| `frontend.yml`           | ESLint + `tsc --noEmit` (Frontend Lint & Type Check)            |
+| `frontend-test.yml`      | Vitest (Frontend Test)                                          |
+| `frontend-security.yml`  | `npm audit`                                                    |
+| `security-scan.yml`      | Scan de segurança geral do repositório (ex.: Trivy)             |
+| `whisper.yml`            | Testes do serviço `whisper/`                                    |
+| `docs-drift.yml`         | `scripts/check-docs-drift.sh` — falha se um caminho citado entre crases nos guias não existir mais no disco |
+
+Todos os checks relevantes à área alterada devem passar antes de mesclar.
