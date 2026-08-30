@@ -64,6 +64,46 @@ describe('ApiClient.get', () => {
     });
 });
 
+describe('ApiClient.get — pending-request dedup map', () => {
+    it('a stale, late-settling aborted request does not clear a newer request\'s dedup entry', async () => {
+        const signals: AbortSignal[] = [];
+        let rejectA: (e: unknown) => void;
+        let resolveB: (v: unknown) => void;
+        let resolveC: (v: unknown) => void;
+
+        vi.spyOn(axiosInstance, 'get').mockImplementation((_url, config) => {
+            signals.push(config!.signal as AbortSignal);
+            const callIndex = signals.length;
+
+            return new Promise((resolve, reject) => {
+                if (callIndex === 1) rejectA = reject;
+                if (callIndex === 2) resolveB = resolve;
+                if (callIndex === 3) resolveC = resolve;
+            });
+        });
+
+        void apiClient.get('/dedup'); // call #1 (A) — left pending
+        const pB = apiClient.get('/dedup'); // call #2 (B) — aborts A's controller, registers its own
+        resolveB!({ data: 'B', status: 200 });
+        await pB; // B's finally clears its own entry — the dedup map is now empty
+
+        const pC = apiClient.get('/dedup'); // call #3 (C) — registers a fresh controller
+
+        // A real aborted request rejects asynchronously, sometime after abort() was
+        // called — simulate that late settlement here. The old bug unconditionally
+        // deleted the dedup map entry in `finally`, so A settling after C started
+        // would wipe out C's entry even though C is the current request.
+        rejectA!(new AxiosError('canceled', 'ERR_CANCELED'));
+        await Promise.resolve();
+
+        void apiClient.get('/dedup'); // call #4 — should abort C only if C is still tracked
+        expect(signals[2].aborted).toBe(true);
+
+        resolveC!({ data: 'C', status: 200 });
+        await expect(pC).resolves.toEqual({ ok: true, data: 'C' });
+    });
+});
+
 describe('ApiClient.post', () => {
     it('returns ok result with data on successful POST', async () => {
         mockAxiosPost({ created: true });
