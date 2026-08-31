@@ -23,7 +23,9 @@
         "not_found_message": "Esta página não existe.",
         "go_home": "Voltar ao início",
         "dismiss": "Dispensar",
-        "or": "ou"
+        "or": "ou",
+        "show_password": "Mostrar senha",
+        "hide_password": "Ocultar senha"
     },
     "time": {
         "seconds_left_one": "{{count}} segundo restante",
@@ -43,6 +45,7 @@
         "signing_in": "Entrando...",
         "invalid_credentials": "E-mail ou senha inválidos. Tente novamente.",
         "session_expired": "Sua sessão expirou. Por favor, entre novamente.",
+        "session_expired_hint": "Você vai voltar para onde estava.",
         "forgot_password": "Esqueceu a senha?",
         "no_account": "Não tem uma conta?",
         "have_account": "Já tem uma conta?",
@@ -145,7 +148,7 @@
         "no_history_title": "Nenhum histórico ainda",
         "no_own_videos": "Você ainda não enviou nenhum vídeo",
         "draft": "Rascunho",
-        "drafts_section": "Rascunhos ({{count}})",
+        "not_live_section": "Ainda não publicados ({{count}})",
         "scheduled": "Agendado",
         "published": "Publicado",
         "processing_toast": "Seu vídeo está sendo processado…",
@@ -188,6 +191,7 @@
         "videos_count": "{{count}} vídeos",
         "edit": "Editar",
         "delete": "Excluir",
+        "retry_upload": "Tentar novamente",
         "publish": "Publicar",
         "upload_title": "Título do vídeo",
         "upload_description": "Descrição",
@@ -443,9 +447,9 @@
         "removed_from_playlist": "Removido da playlist"
     },
     "profile": {
-        "videos_watched": "Assistidos",
-        "watch_time": "Tempo assistido",
-        "liked_count": "Curtidos",
+        "total_views": "Visualizações",
+        "subscriber_count": "Inscritos",
+        "uploads_this_month": "Envios este mês",
         "saved_count": "Salvos",
         "top_tags": "Tags favoritas",
         "edit_profile": "Editar perfil",

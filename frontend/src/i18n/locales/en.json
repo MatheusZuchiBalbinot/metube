@@ -23,7 +23,9 @@
         "not_found_message": "This page does not exist.",
         "go_home": "Go home",
         "dismiss": "Dismiss",
-        "or": "or"
+        "or": "or",
+        "show_password": "Show password",
+        "hide_password": "Hide password"
     },
     "time": {
         "seconds_left_one": "{{count}} second left",
@@ -43,6 +45,7 @@
         "signing_in": "Signing in...",
         "invalid_credentials": "Invalid email or password. Please try again.",
         "session_expired": "Your session has expired. Please sign in again.",
+        "session_expired_hint": "You'll return to what you were doing.",
         "forgot_password": "Forgot password?",
         "no_account": "Don't have an account?",
         "have_account": "Already have an account?",
@@ -145,7 +148,7 @@
         "no_history_title": "No watch history yet",
         "no_own_videos": "You haven't uploaded any videos yet",
         "draft": "Draft",
-        "drafts_section": "Drafts ({{count}})",
+        "not_live_section": "Not yet live ({{count}})",
         "scheduled": "Scheduled",
         "published": "Published",
         "processing_toast": "Your video is being processed…",
@@ -188,6 +191,7 @@
         "videos_count": "{{count}} videos",
         "edit": "Edit",
         "delete": "Delete",
+        "retry_upload": "Try again",
         "publish": "Publish",
         "upload_title": "Video title",
         "upload_description": "Description",
@@ -443,9 +447,9 @@
         "removed_from_playlist": "Removed from playlist"
     },
     "profile": {
-        "videos_watched": "Watched",
-        "watch_time": "Watch time",
-        "liked_count": "Liked",
+        "total_views": "Views",
+        "subscriber_count": "Subscribers",
+        "uploads_this_month": "Uploads this month",
         "saved_count": "Saved",
         "top_tags": "Top tags",
         "edit_profile": "Edit profile",
