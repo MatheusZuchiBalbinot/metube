@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './videoMeta.css';
+import { domain } from '@domain';
 import { ROUTES, Format, formatRelativeDate, isActivationKey } from '@utils';
 import type { Video } from '@models';
 
@@ -23,6 +24,9 @@ export default function VideoMeta({ video, variant }: VideoMetaProps) {
     // Falls back to createdAt so a video missing publishedAt still shows a date,
     // consistently across all three variants.
     const publishedDate = video.publishedAt ?? video.createdAt;
+    // A draft/scheduled/processing/failed video hasn't accrued real views yet —
+    // showing a count for it would misrepresent what "views" means everywhere else.
+    const showViews = domain.video.isVisible(video);
 
     function handleChannelLinkClick(e: React.MouseEvent) {
         e.stopPropagation();
@@ -71,8 +75,12 @@ export default function VideoMeta({ video, variant }: VideoMetaProps) {
             )}
 
             <div className="video-meta__sub">
-                <span className="video-meta__views">{Format.views(video.views)} {t('video.views')}</span>
-                <span className="video-meta__dot" aria-hidden="true">·</span>
+                {showViews && (
+                    <>
+                        <span className="video-meta__views">{Format.views(video.views)} {t('video.views')}</span>
+                        <span className="video-meta__dot" aria-hidden="true">·</span>
+                    </>
+                )}
                 <span className="video-meta__date">{formatRelativeDate(publishedDate, i18n.language)}</span>
             </div>
         </div>
