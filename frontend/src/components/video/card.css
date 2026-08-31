@@ -1,6 +1,10 @@
 /* ─── VideoCard ───────────────────────────────────────────────────────────── */
 
 .video-card {
+    /* Without this, an unshrinkable descendant (e.g. a long tag) forces this
+       card's intrinsic min-width above its grid track's share, widening
+       .home-page__grid and the whole page past the viewport. */
+    min-width: 0;
     border-radius: var(--radius-lg);
     cursor: pointer;
     position: relative;
@@ -44,19 +48,22 @@
 
 /* Shimmer placeholder shown until the lazy-loaded thumbnail fades in. */
 .video-card__thumb--loading {
-    background-image: linear-gradient(
-        100deg,
-        var(--surface-2) 30%,
-        var(--surface-3) 50%,
-        var(--surface-2) 70%
-    );
+    background-image: linear-gradient(100deg,
+            var(--surface-2) 30%,
+            var(--surface-3) 50%,
+            var(--surface-2) 70%);
     background-size: 200% 100%;
     animation: video-card-shimmer 1.2s ease-in-out infinite;
 }
 
 @keyframes video-card-shimmer {
-    from { background-position: 200% 0; }
-    to   { background-position: -200% 0; }
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -78,8 +85,13 @@
 }
 
 @keyframes video-card-preview-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Pseudo-element shadow: opacity transition is GPU-composited, avoids paint on hover */
@@ -159,7 +171,17 @@
     gap: var(--space-1_5);
 }
 
+/* Title and the (optional) actions menu share a row so the menu trigger never
+   has to float over the thumbnail — see .video-card__menu-wrap below for why. */
+.video-card__title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-1_5);
+}
+
 .video-card__title {
+    flex: 1;
+    min-width: 0;
     font-size: var(--text-base);
     font-weight: var(--font-semibold);
     color: var(--text);
@@ -209,18 +231,19 @@
     color: var(--text-3);
 }
 
-/* ─── Actions overlay menu ────────────────────────────────────────────────── */
+/* ─── Actions menu ────────────────────────────────────────────────────────── */
 
+/* In-flow, not floating on the thumbnail — status badge, watched indicator and
+   this menu can all apply to the same card at once (e.g. your own watched video). */
 .video-card__menu-wrap {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 4;
+    position: relative;
+    flex-shrink: 0;
     opacity: 0;
     transition: opacity 0.15s;
 }
 
 .video-card:hover .video-card__menu-wrap,
+.video-card:focus-within .video-card__menu-wrap,
 .video-card__menu-wrap--open {
     opacity: 1;
 }
@@ -229,27 +252,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: transparent;
     border: none;
-    color: var(--text-on-overlay);
+    color: var(--text-3);
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
+    transition: background 0.15s, color 0.15s;
 }
 
 .video-card__menu-trigger:hover {
-    background: rgba(0, 0, 0, 0.82);
-    transform: scale(1.08);
+    background: var(--surface-3);
+    color: var(--text);
 }
 
 .video-card__menu-popup {
     position: absolute;
     top: calc(100% + 6px);
-    left: 0;
+    right: 0;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);

@@ -1,7 +1,7 @@
 import { memo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2, RotateCw } from 'lucide-react';
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoUiActions } from '@store/videoUiSlice';
@@ -26,6 +26,7 @@ interface VideoCardProps {
     source?: AnalyticsSource
     onEdit?: (video: Video) => void
     onDelete?: (id: VideoId) => void
+    onRetry?: () => void
 }
 
 function buildVideoCardClass(showActions: boolean, notInteractive: boolean) {
@@ -47,6 +48,7 @@ const VideoCard = memo(function VideoCard({
     source = AnalyticsSource.HOME,
     onEdit,
     onDelete,
+    onRetry,
 }: VideoCardProps) {
     const isPriority = index === 0;
     const navigate = useNavigate();
@@ -74,6 +76,7 @@ const VideoCard = memo(function VideoCard({
 
     const isVideoProcessing = domain.video.isProcessing(video);
     const isVideoFailed = domain.video.isFailed(video);
+    const isVideoDraft = domain.video.isDraft(video);
 
     const [thumbLoaded, setThumbLoaded] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -189,6 +192,7 @@ const VideoCard = memo(function VideoCard({
                     </svg>
                 </div>
                 <VideoStatusBadges
+                    isDraft={isVideoDraft}
                     isScheduledAndFuture={isScheduledAndFuture}
                     isWatched={isWatched}
                     isProcessing={isVideoProcessing}
@@ -231,64 +235,81 @@ const VideoCard = memo(function VideoCard({
 
             </div>
 
-            {showActions && (
-                // Wrapper only stops the click from bubbling to the card; the menu items inside are real buttons.
-                // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
-                <div
-                    className={cn('video-card__menu-wrap', menuOpen && 'video-card__menu-wrap--open')}
-                    ref={menuRef}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <button
-                        className="video-card__menu-trigger"
-                        onClick={e => {
-                            e.stopPropagation(); setMenuOpen(v => !v);
-                        }}
-                        aria-label={t('video.actions')}
-                        aria-expanded={menuOpen}
-                    >
-                        <MoreHorizontal size={13} />
-                    </button>
-                    {menuOpen && (
-                        <div className="video-card__menu-popup" role="menu">
+            <div className="video-card__body">
+                <div className="video-card__title-row">
+                    <p className="video-card__title">{video.title}</p>
+
+                    {showActions && (
+                        // Wrapper only stops the click from bubbling to the card; the menu items inside are real buttons.
+                        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+                        <div
+                            className={cn('video-card__menu-wrap', menuOpen && 'video-card__menu-wrap--open')}
+                            ref={menuRef}
+                            onClick={e => e.stopPropagation()}
+                        >
                             <button
-                                className="video-card__menu-item"
-                                role="menuitem"
-                                onClick={() => {
-                                    dispatch(playbackActions.pinVideo(video.id)); setMenuOpen(false);
+                                className="video-card__menu-trigger"
+                                onClick={e => {
+                                    e.stopPropagation(); setMenuOpen(v => !v);
                                 }}
+                                aria-label={t('video.actions')}
+                                aria-expanded={menuOpen}
                             >
-                                {isPinned ? <PinOff size={12} /> : <Pin size={12} />}
-                                <span>{t(isPinned ? 'video.unpin' : 'video.pin')}</span>
+                                <MoreHorizontal size={13} />
                             </button>
-                            <button
-                                className="video-card__menu-item"
-                                role="menuitem"
-                                onClick={() => {
-                                    onEdit?.(video); setMenuOpen(false);
-                                }}
-                            >
-                                <Pencil size={12} />
-                                <span>{t('video.edit')}</span>
-                            </button>
-                            <hr className="video-card__menu-divider" aria-hidden="true" />
-                            <button
-                                className="video-card__menu-item video-card__menu-item--danger"
-                                role="menuitem"
-                                onClick={() => {
-                                    onDelete?.(video.id); setMenuOpen(false);
-                                }}
-                            >
-                                <Trash2 size={12} />
-                                <span>{t('video.delete')}</span>
-                            </button>
+                            {menuOpen && (
+                                <div className="video-card__menu-popup" role="menu">
+                                    {isVideoFailed ? (
+                                        <button
+                                            className="video-card__menu-item"
+                                            role="menuitem"
+                                            onClick={() => {
+                                                onRetry?.(); setMenuOpen(false);
+                                            }}
+                                        >
+                                            <RotateCw size={12} />
+                                            <span>{t('video.retry_upload')}</span>
+                                        </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                className="video-card__menu-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    dispatch(playbackActions.pinVideo(video.id)); setMenuOpen(false);
+                                                }}
+                                            >
+                                                {isPinned ? <PinOff size={12} /> : <Pin size={12} />}
+                                                <span>{t(isPinned ? 'video.unpin' : 'video.pin')}</span>
+                                            </button>
+                                            <button
+                                                className="video-card__menu-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    onEdit?.(video); setMenuOpen(false);
+                                                }}
+                                            >
+                                                <Pencil size={12} />
+                                                <span>{t('video.edit')}</span>
+                                            </button>
+                                        </>
+                                    )}
+                                    <hr className="video-card__menu-divider" aria-hidden="true" />
+                                    <button
+                                        className="video-card__menu-item video-card__menu-item--danger"
+                                        role="menuitem"
+                                        onClick={() => {
+                                            onDelete?.(video.id); setMenuOpen(false);
+                                        }}
+                                    >
+                                        <Trash2 size={12} />
+                                        <span>{t('video.delete')}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
-            )}
-
-            <div className="video-card__body">
-                <p className="video-card__title">{video.title}</p>
 
                 <VideoMeta video={video} variant="card" />
 

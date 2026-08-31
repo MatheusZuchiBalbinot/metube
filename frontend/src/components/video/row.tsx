@@ -86,6 +86,7 @@ const VideoRow = memo(function VideoRow({ video, highlighted = false, source = A
                     </svg>
                 </div>
                 <VideoStatusBadges
+                    isDraft={domain.video.isDraft(video)}
                     isScheduledAndFuture={isScheduledAndFuture}
                     isWatched={isWatched}
                     isProcessing={domain.video.isProcessing(video)}

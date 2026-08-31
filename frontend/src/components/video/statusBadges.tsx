@@ -1,8 +1,9 @@
-import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Badge from '@ui/badge/badge';
 
 interface VideoStatusBadgesProps {
+    isDraft: boolean
     isScheduledAndFuture: boolean
     isWatched: boolean
     isProcessing: boolean
@@ -10,16 +11,21 @@ interface VideoStatusBadgesProps {
     classPrefix: string
 }
 
-type BadgeStatus = 'processing' | 'failed' | 'scheduled' | 'watched' | null;
+type BadgeStatus = 'draft' | 'processing' | 'failed' | 'scheduled' | 'watched' | null;
 
-// Only one badge can show at a time — resolve the priority once instead of
-// repeating "!isProcessing && !isFailed" guards in every branch below.
+// isDraft/isProcessing/isFailed/isScheduledAndFuture all come from one `status` field, so
+// they're mutually exclusive — resolved once here instead of per-branch guards below.
 function resolveBadgeStatus({
+    isDraft,
     isProcessing,
     isFailed,
     isScheduledAndFuture,
     isWatched,
 }: Omit<VideoStatusBadgesProps, 'classPrefix'>): BadgeStatus {
+    if (isDraft) {
+        return 'draft';
+    }
+
     if (isProcessing) {
         return 'processing';
     }
@@ -40,6 +46,7 @@ function resolveBadgeStatus({
 }
 
 export default function VideoStatusBadges({
+    isDraft,
     isScheduledAndFuture,
     isWatched,
     isProcessing,
@@ -47,10 +54,18 @@ export default function VideoStatusBadges({
     classPrefix,
 }: VideoStatusBadgesProps) {
     const { t } = useTranslation();
-    const status = resolveBadgeStatus({ isProcessing, isFailed, isScheduledAndFuture, isWatched });
+    const status = resolveBadgeStatus({ isDraft, isProcessing, isFailed, isScheduledAndFuture, isWatched });
 
     return (
         <>
+            {status === 'draft' && (
+                <div className={`${classPrefix}__badge-overlay`}>
+                    <Badge variant="neutral">
+                        <EyeOff size={10} />
+                        {t('video.draft')}
+                    </Badge>
+                </div>
+            )}
             {status === 'processing' && (
                 <div className={`${classPrefix}__badge-overlay`}>
                     <Badge variant="default">
