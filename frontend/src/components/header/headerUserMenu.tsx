@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut, User as UserIcon, ListVideo, Clock, History, ThumbsUp, Settings, Keyboard, HelpCircle } from 'lucide-react';
+import { LogOut, Settings, Keyboard, HelpCircle } from 'lucide-react';
 import { Avatar, Button, Tooltip } from '@ui';
 import PreferencesPanel from '@components/preferences/preferences';
 import { ROUTES, APP_EVENTS } from '@utils';
@@ -15,14 +15,6 @@ interface Props {
     onLogout: () => void
     onDropdownClose: () => void
 }
-
-const NAV_LINKS = [
-    { to: ROUTES.PROFILE, icon: UserIcon, labelKey: 'nav.your_videos' },
-    { to: ROUTES.PLAYLISTS, icon: ListVideo, labelKey: 'nav.playlists' },
-    { to: ROUTES.WATCH_LATER, icon: Clock, labelKey: 'nav.watch_later' },
-    { to: ROUTES.HISTORY, icon: History, labelKey: 'nav.history' },
-    { to: ROUTES.LIKED, icon: ThumbsUp, labelKey: 'nav.liked_videos' },
-] as const;
 
 export default function HeaderUserMenu({
     user,
@@ -65,17 +57,6 @@ export default function HeaderUserMenu({
                             <span className="app-header__dropdown-email">{user.email}</span>
                         </span>
                     </Link>
-
-                    <div className="app-header__dropdown-sep" />
-
-                    <nav className="app-header__dropdown-nav">
-                        {NAV_LINKS.map(({ to, icon: Icon, labelKey }) => (
-                            <Link key={to} to={to} className="app-header__dropdown-item" onClick={onDropdownClose}>
-                                <Icon size={16} strokeWidth={1.75} />
-                                {t(labelKey)}
-                            </Link>
-                        ))}
-                    </nav>
 
                     <div className="app-header__dropdown-sep" />
 

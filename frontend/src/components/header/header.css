@@ -207,11 +207,6 @@
     min-width: 0;
 }
 
-.app-header__dropdown-nav {
-    display: flex;
-    flex-direction: column;
-}
-
 .app-header__dropdown-item {
     width: 100%;
     display: flex;
