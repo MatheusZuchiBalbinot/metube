@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, LogIn, AlertCircle, UserRound } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { Button, Input, Spinner } from '@ui';
 import { ROUTES } from '@utils';
 import './login.css';
@@ -48,6 +48,9 @@ export default function LoginPage() {
     }
 
     const displayError = sessionError || error;
+    // Autofill can populate this field on mount without firing React's onChange;
+    // "new-password" (unlike autoComplete="off") reliably suppresses that here.
+    const passwordAutoComplete = sessionError ? 'new-password' : 'current-password';
 
     return (
         <div className="login-bg">
@@ -70,9 +73,14 @@ export default function LoginPage() {
                         </div>
                     )}
                     {displayError && (
-                        <div className="login-error">
+                        <div className={`login-error${sessionError ? ' login-error--info' : ''}`}>
                             <AlertCircle size={14} strokeWidth={2} className="login-error__icon" />
-                            {displayError}
+                            <span>
+                                {displayError}
+                                {sessionError && from && (
+                                    <span className="login-error__hint"> {t('auth.session_expired_hint')}</span>
+                                )}
+                            </span>
                         </div>
                     )}
 
@@ -98,7 +106,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            autoComplete="current-password"
+                            autoComplete={passwordAutoComplete}
                         />
                         <Link to={ROUTES.FORGOT_PASSWORD} className="login-forgot-link">
                             {t('auth.forgot_password')}
@@ -124,18 +132,13 @@ export default function LoginPage() {
                             {t('auth.signup.title')}
                         </Link>
                     </p>
-                    <div className="login-divider">{t('common.or')}</div>
-                    <Button
+                    <button
                         type="button"
-                        variant="ghost"
-                        size="md"
-                        fullWidth
                         onClick={() => navigate(ROUTES.HOME)}
-                        leftIcon={<UserRound size={15} strokeWidth={1.75} />}
-                        className="login-guest-btn"
+                        className="login-guest-link"
                     >
                         {t('auth.continue_as_guest')}
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>

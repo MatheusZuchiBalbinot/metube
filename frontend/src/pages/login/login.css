@@ -122,6 +122,10 @@
     margin-top: 1px;
 }
 
+.login-error__hint {
+    opacity: 0.8;
+}
+
 .login-error--success {
     background: var(--color-success-subtle);
     border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
@@ -130,6 +134,18 @@
 
 :root[data-mode='light'] .login-error--success {
     color: var(--color-success);
+}
+
+/* A session timeout isn't an auth failure — calmer warning tone instead of the
+   error red used for a real invalid-credentials rejection. */
+.login-error--info {
+    background: var(--color-warning-subtle);
+    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+    color: var(--color-warning-fg);
+}
+
+:root[data-mode='light'] .login-error--info {
+    color: var(--color-warning);
 }
 
 /* ─── Form ───────────────────────────────────────────────────────────────── */
@@ -210,4 +226,21 @@
 .login-guest-btn {
     width: 100%;
     color: var(--text-2);
+}
+
+/* Deliberately a text link, not a button, so it doesn't compete with Sign In
+   right after a forced re-authentication. Signup keeps `.login-guest-btn`. */
+.login-guest-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--text-sm);
+    color: var(--text-3);
+    cursor: pointer;
+    transition: color var(--duration-default);
+}
+
+.login-guest-link:hover {
+    color: var(--text-2);
+    text-decoration: underline;
 }
