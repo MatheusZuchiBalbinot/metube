@@ -69,7 +69,7 @@ export function SidebarItem({ item }: SidebarItemProps) {
                         </>
                     )}
                     <span className="app-sidebar__icon-chip">
-                        <Icon size={18} strokeWidth={1.75} className="app-sidebar__icon" />
+                        <Icon size={16} strokeWidth={1.75} className="app-sidebar__icon" />
                     </span>
                     <span className="app-sidebar__label">{t(item.labelKey)}</span>
                 </SidebarLink>
