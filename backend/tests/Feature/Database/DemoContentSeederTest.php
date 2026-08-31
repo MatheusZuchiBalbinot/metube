@@ -33,9 +33,18 @@ describe('DemoContentSeeder', function () {
 
         $shorts = Video::all()->filter(fn (Video $v) => in_array('shorts', $v->tags ?? [], true))->count();
 
+        $nonPublishedStatuses = [
+            VideoStatus::SCHEDULED->value,
+            VideoStatus::DRAFT->value,
+            VideoStatus::PROCESSING->value,
+            VideoStatus::FAILED->value,
+        ];
+
         expect($shorts)->toBeGreaterThanOrEqual(1)
             ->and(Video::where('status', VideoStatus::SCHEDULED->value)->count())->toBeGreaterThanOrEqual(1)
             ->and(Video::where('status', VideoStatus::DRAFT->value)->count())->toBeGreaterThanOrEqual(1)
+            // Content that was never public shouldn't appear to have accrued real viewers.
+            ->and(Video::whereIn('status', $nonPublishedStatuses)->where('views', '>', 0)->count())->toBe(0)
             ->and(UserSubscription::count())->toBeGreaterThan(0)
             ->and(UserVideoReaction::count())->toBeGreaterThan(0)
             ->and(WatchHistory::count())->toBeGreaterThan(0)
