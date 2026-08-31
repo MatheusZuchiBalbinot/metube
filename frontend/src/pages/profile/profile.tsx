@@ -8,10 +8,9 @@ import { domain } from '@domain';
 import { Avatar, Button, Tooltip } from '@ui';
 import './profile.css';
 import { useAuth, useVideo, useProfileVideos, useSubscription, useAllTags } from '@hooks';
-import { useAppSelector, useAppDispatch } from '@store';
+import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
-import { selectWatchedTagFrequency } from '@store/videoSelectors';
 import { recentChannelsActions } from '@store/recentChannelsSlice';
 import { VideoFilter, videoUrl, cn, ROUTES, type FilterState } from '@utils';
 import type { VideoId, ChannelId } from '@models';
@@ -35,8 +34,7 @@ export default function ProfilePage() {
     const dispatch = useAppDispatch();
     const { isSubscribed, toggleSubscription } = useSubscription();
     const {
-        videos, watchHistory, likedVideos, videoProgress,
-        pinnedVideoId, editVideo, deleteVideo, openUploadModal,
+        videos, pinnedVideoId, editVideo, deleteVideo, openUploadModal,
     } = useVideo();
 
     // ProfilePage is also a guest route (/channel/:id, /user/:id), so `user` can be
@@ -47,7 +45,6 @@ export default function ProfilePage() {
     const { videosState, setVideos } = useProfileVideos(channelId, isOwnProfile);
     const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
     const isLoadingVideos = videosState.kind === 'loading';
-    const watchedTagFrequency = useAppSelector(selectWatchedTagFrequency);
 
     // Track visits to other users' channels so the sidebar can surface them.
     useEffect(() => {
@@ -106,14 +103,16 @@ export default function ProfilePage() {
             .slice(0, 2);
     }, [isOwnProfile, pinnedVideo, ownVideos]);
 
-    const draftVideos = useMemo(
-        () => isOwnProfile ? ownVideos.filter(v => domain.video.isDraft(v)) : [],
+    // Draft/scheduled/processing/failed are grouped as "not yet live" so the main
+    // grid below only ever holds videos a visitor could actually watch.
+    const nonLiveVideos = useMemo(
+        () => isOwnProfile ? ownVideos.filter(v => !domain.video.isVisible(v)) : [],
         [isOwnProfile, ownVideos],
     );
 
     const filteredVideos = useMemo(
         () => VideoFilter.apply(ownVideos, filterState)
-            .filter(v => v.id !== pinnedVideo?.id && !domain.video.isDraft(v)),
+            .filter(v => v.id !== pinnedVideo?.id && domain.video.isVisible(v)),
         [ownVideos, filterState, pinnedVideo],
     );
 
@@ -124,7 +123,7 @@ export default function ProfilePage() {
     const navigate = useNavigate();
 
     const sections = useProfileSections(ownVideos, filterState, pinnedVideo);
-    const stats = useProfileStats({ isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency });
+    const stats = useProfileStats({ isOwnProfile, videos: ownVideos });
     const spotlightComments = useSpotlightComments(sections?.featured?.id ?? null);
 
     const navigateToVideo = useCallback(
@@ -285,13 +284,14 @@ export default function ProfilePage() {
                     pinnedVideo={pinnedVideo}
                     deckGhostVideos={deckGhostVideos}
                     filteredVideos={filteredVideos}
-                    draftVideos={draftVideos}
+                    nonLiveVideos={nonLiveVideos}
                     pinnedVideoId={pinnedVideoId}
                     isOwnProfile={isOwnProfile}
                     allVideosRef={allVideosRef}
                     hasVideos={hasVideos}
                     onEdit={handleEditOpen}
                     onDelete={handleDelete}
+                    onRetry={() => openUploadModal()}
                 />
 
             </div>{/* .profile-page__container */}

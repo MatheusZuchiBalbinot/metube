@@ -1,11 +1,9 @@
 import { Play, Pin, VideoOff, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import VideoCard from '@components/video/card';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
 import type { Video, VideoId } from '@models';
-import { videoUrl } from '@utils';
 
 interface ProfileVideoGridProps {
     isLoadingVideos: boolean
@@ -13,13 +11,14 @@ interface ProfileVideoGridProps {
     pinnedVideo: Video | null
     deckGhostVideos: Video[]
     filteredVideos: Video[]
-    draftVideos: Video[]
+    nonLiveVideos: Video[]
     pinnedVideoId: VideoId | null | undefined
     isOwnProfile: boolean
     allVideosRef: React.RefObject<HTMLDivElement | null>
     hasVideos: boolean
     onEdit: (video: Video) => void
     onDelete: (id: VideoId) => void
+    onRetry: () => void
 }
 
 export default function ProfileVideoGrid({
@@ -28,47 +27,40 @@ export default function ProfileVideoGrid({
     pinnedVideo,
     deckGhostVideos,
     filteredVideos,
-    draftVideos,
+    nonLiveVideos,
     pinnedVideoId,
     isOwnProfile,
     allVideosRef,
     hasVideos,
     onEdit,
     onDelete,
+    onRetry,
 }: ProfileVideoGridProps) {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const hasDrafts = isOwnProfile && draftVideos.length > 0;
+    const hasNonLiveVideos = isOwnProfile && nonLiveVideos.length > 0;
 
     return (
         <main className="profile-page__main">
-            {hasDrafts && !isLoadingVideos && (
-                <section className="profile-page__drafts">
+            {hasNonLiveVideos && !isLoadingVideos && (
+                <section className="profile-page__nonlive">
                     <div className="profile-page__all-videos-header">
                         <h3 className="profile-page__section-title">
                             <EyeOff size={15} strokeWidth={2} />
-                            {t('video.drafts_section', { count: draftVideos.length })}
+                            {t('video.not_live_section', { count: nonLiveVideos.length })}
                         </h3>
                     </div>
                     <div className="profile-page__grid">
-                        {draftVideos.map(video => (
+                        {nonLiveVideos.map(video => (
                             <div
                                 key={video.id}
-                                className="profile-page__card-wrapper profile-page__card-wrapper--draft"
-                                onClick={() => navigate(videoUrl(video.id))}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={e => e.key === 'Enter' && navigate(videoUrl(video.id))}
+                                className="profile-page__card-wrapper profile-page__card-wrapper--nonlive"
                             >
-                                <div className="profile-page__draft-badge">
-                                    <EyeOff size={10} />
-                                    <span>{t('video.draft')}</span>
-                                </div>
                                 <VideoCard
                                     video={video}
                                     showActions={true}
                                     onEdit={onEdit}
                                     onDelete={onDelete}
+                                    onRetry={onRetry}
                                 />
                             </div>
                         ))}

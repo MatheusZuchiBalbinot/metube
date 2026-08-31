@@ -16,7 +16,9 @@
 /* ─── Banner ────────────────────────────────────────────────────────────────── */
 
 .profile-page__banner {
-    height: 160px;
+    /* Purely decorative — kept short so it doesn't push the video grid, the actual
+       point of this page, further down the fold. */
+    height: 96px;
     background: linear-gradient(135deg,
             color-mix(in srgb, var(--accent) 28%, transparent) 0%,
             color-mix(in srgb, var(--accent) 12%, transparent) 55%,
@@ -317,34 +319,15 @@
     position: relative;
 }
 
-.profile-page__card-wrapper--draft {
-    cursor: pointer;
+/* Covers the whole "not yet live" section (draft/scheduled/processing/failed) —
+   each card's own status badge (VideoStatusBadges) carries the per-item label now. */
+.profile-page__card-wrapper--nonlive {
     opacity: 0.85;
     transition: opacity 0.15s;
 }
 
-.profile-page__card-wrapper--draft:hover {
+.profile-page__card-wrapper--nonlive:hover {
     opacity: 1;
-}
-
-.profile-page__draft-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    background: rgba(251, 191, 36, 0.15);
-    color: var(--color-warning-fg);
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    font-size: var(--text-2xs);
-    font-weight: var(--font-semibold);
-    border-radius: var(--radius-full);
-    padding: 3px var(--space-2);
-    pointer-events: none;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
 }
 
 .profile-page__pinned-badge {
@@ -1031,7 +1014,6 @@
     align-items: center;
     gap: var(--space-2_5);
     padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--border);
     margin-bottom: var(--space-1);
 }
 

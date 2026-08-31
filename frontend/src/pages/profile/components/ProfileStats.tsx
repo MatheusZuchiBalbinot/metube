@@ -1,12 +1,12 @@
-import { Play, Clock, Heart, Tag as TagIcon } from 'lucide-react';
+import { Eye, Upload, Users, Tag as TagIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TagColors } from '@utils';
+import { Format, TagColors } from '@utils';
 import type { Tag } from '@models';
 
 interface ProfileStatsData {
-    videosWatched: number
-    watchTimeStr: string
-    likedCount: number
+    totalViews: number
+    uploadsThisMonth: number
+    subscriberCount: number
     topTags: Tag[]
 }
 
@@ -20,19 +20,19 @@ export default function ProfileStats({ stats }: ProfileStatsProps) {
     return (
         <div className="profile-page__stats-grid">
             <div className="profile-page__stat">
-                <Play size={13} className="profile-page__stat-icon" />
-                <span className="profile-page__stat-value">{stats.videosWatched}</span>
-                <span className="profile-page__stat-label">{t('profile.videos_watched')}</span>
+                <Eye size={13} className="profile-page__stat-icon" />
+                <span className="profile-page__stat-value">{Format.views(stats.totalViews)}</span>
+                <span className="profile-page__stat-label">{t('profile.total_views')}</span>
             </div>
             <div className="profile-page__stat">
-                <Clock size={13} className="profile-page__stat-icon" />
-                <span className="profile-page__stat-value">{stats.watchTimeStr}</span>
-                <span className="profile-page__stat-label">{t('profile.watch_time')}</span>
+                <Users size={13} className="profile-page__stat-icon" />
+                <span className="profile-page__stat-value">{stats.subscriberCount}</span>
+                <span className="profile-page__stat-label">{t('profile.subscriber_count')}</span>
             </div>
             <div className="profile-page__stat">
-                <Heart size={13} className="profile-page__stat-icon" />
-                <span className="profile-page__stat-value">{stats.likedCount}</span>
-                <span className="profile-page__stat-label">{t('profile.liked_count')}</span>
+                <Upload size={13} className="profile-page__stat-icon" />
+                <span className="profile-page__stat-value">{stats.uploadsThisMonth}</span>
+                <span className="profile-page__stat-label">{t('profile.uploads_this_month')}</span>
             </div>
             {stats.topTags.length > 0 && (
                 <div className="profile-page__stat profile-page__stat--tags">

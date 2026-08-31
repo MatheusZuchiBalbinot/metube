@@ -1,66 +1,44 @@
 import { useMemo } from 'react';
-import type { Video, VideoId, Tag } from '@models';
-
-function formatWatchTime(seconds: number): string {
-    const totalMinutes = Math.floor(seconds / 60);
-    const isLessThanHour = totalMinutes < 60;
-
-    if (isLessThanHour) {
-        return `${totalMinutes}m`;
-    }
-
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours}h ${minutes}m`;
-}
+import { domain } from '@domain';
+import { countTagFrequency } from '@utils';
+import type { Video, Tag } from '@models';
 
 export interface ProfileStats {
-    videosWatched: number
-    watchTimeStr: string
-    likedCount: number
+    totalViews: number
+    uploadsThisMonth: number
+    subscriberCount: number
     topTags: Tag[]
 }
 
 interface Params {
     isOwnProfile: boolean
-    watchHistory: VideoId[]
-    videoProgress: Record<VideoId, number>
     videos: Video[]
-    likedVideos: Set<VideoId>
-    watchedTagFrequency: Map<Tag, number>
 }
 
-export function useProfileStats({
-    isOwnProfile,
-    watchHistory,
-    videoProgress,
-    videos,
-    likedVideos,
-    watchedTagFrequency,
-}: Params): ProfileStats | null {
+function isSameMonth(dateStr: string, now: Date): boolean {
+    const date = new Date(dateStr);
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+export function useProfileStats({ isOwnProfile, videos }: Params): ProfileStats | null {
     return useMemo(() => {
         if (!isOwnProfile) {
             return null;
         }
 
-        const videosWatched = watchHistory.length;
+        const publishedVideos = videos.filter(v => domain.video.isVisible(v));
+        const totalViews = publishedVideos.reduce((sum, v) => sum + v.views, 0);
 
-        const totalWatchSeconds = watchHistory.reduce((sum: number, id: VideoId) => {
-            const video = videos.find((v: Video) => v.id === id);
-            const duration = video?.duration ?? 600;
-            const progress = videoProgress[id] ?? 0;
-            return sum + (progress / 100) * duration;
-        }, 0);
+        const now = new Date();
+        const uploadsThisMonth = videos.filter(v => isSameMonth(v.createdAt, now)).length;
 
-        const watchTimeStr = formatWatchTime(totalWatchSeconds);
+        const subscriberCount = videos.find(v => v.channelSubscribers !== undefined)?.channelSubscribers ?? 0;
 
-        const topTags = [...watchedTagFrequency.entries()]
+        const topTags = [...countTagFrequency(publishedVideos).entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3)
-            .map(([tag]) => tag);
+            .map(([videoTag]) => videoTag);
 
-        const likedCount = likedVideos.size;
-
-        return { videosWatched, watchTimeStr, likedCount, topTags };
-    }, [isOwnProfile, watchHistory, videoProgress, videos, likedVideos, watchedTagFrequency]);
+        return { totalViews, uploadsThisMonth, subscriberCount, topTags };
+    }, [isOwnProfile, videos]);
 }
