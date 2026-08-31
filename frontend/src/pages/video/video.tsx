@@ -15,6 +15,7 @@ import {
     useVideoProgress,
     useAutoplay,
     useKeyboardShortcuts,
+    usePlaybackPrefs,
 } from '@hooks';
 import { TagColors, cn } from '@utils';
 import { CirclePause } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function VideoPage() {
 
     const { user: authUser } = useAuth();
     const { isSubscribed, toggleSubscription } = useSubscription();
+    const { theaterMode } = usePlaybackPrefs();
     const [descExpanded, setDescExpanded] = useState(false);
     const [readingMode, setReadingMode] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -140,7 +142,7 @@ export default function VideoPage() {
 
     return (
         <div className="video-page">
-            <div className="video-page__layout">
+            <div className={cn('video-page__layout', theaterMode && 'video-page__layout--theater')}>
                 <main className="video-page__main">
                     {isStaging && <StagingPanel video={video} summary={summary} />}
 

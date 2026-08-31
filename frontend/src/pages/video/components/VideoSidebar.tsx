@@ -119,7 +119,7 @@ export default function VideoSidebar({
             </div>
 
             {sidebarTab === SidebarTab.RELATED && (
-                <div className="video-page__sidebar-list">
+                <div className="video-page__sidebar-list video-page__sidebar-panel">
                     {loadingRelated && Array.from({ length: 5 }).map((_, i) => (
                         <VideoRowSkeleton key={i} />
                     ))}
@@ -137,7 +137,7 @@ export default function VideoSidebar({
             )}
 
             {sidebarTab === SidebarTab.SUMMARY && showSummaryTab && (
-                <div className="video-page__summary">
+                <div className="video-page__summary video-page__sidebar-panel">
                     {isSummaryGenerating && (
                         <div className="video-page__transcription-processing">
                             <div className="video-page__transcription-waveform" aria-hidden="true">

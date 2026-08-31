@@ -24,6 +24,17 @@
     gap: var(--space-4);
 }
 
+/* Theater mode: drop the sidebar below the main column (like YouTube) instead
+   of beside it, so the player's flex-1 width fills the whole row width. */
+.video-page__layout--theater {
+    flex-direction: column;
+}
+
+.video-page__layout--theater .video-page__sidebar {
+    flex: 1 1 auto;
+    max-width: none;
+}
+
 /* ─── Player ───────────────────────────────────────────────────────────────── */
 
 .video-page__player {
@@ -626,6 +637,23 @@
     padding: var(--space-2);
 }
 
+/* ─── Tab-switch transition (Related ↔ Summary) ─────────────────────────────── */
+
+.video-page__sidebar-panel {
+    animation: video-page-sidebar-panel-in 0.18s var(--ease-out) both;
+}
+
+@keyframes video-page-sidebar-panel-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .video-page__sidebar-panel {
+        animation: none;
+    }
+}
+
 /* Compact thumbnail for sidebar rows */
 .video-page__sidebar-list .video-row__thumb {
     width: 120px;
@@ -880,13 +908,13 @@
 }
 
 .video-page__sidebar-tab--active {
-    color: var(--text);
+    color: var(--accent);
     font-weight: var(--font-semibold);
-    background: var(--surface-3);
+    background: var(--accent-subtle);
 }
 
 .video-page__sidebar-tab--active:hover {
-    background: var(--surface-3);
+    background: var(--accent-subtle);
 }
 
 /* ─── Summary panel ─────────────────────────────────────────────────────────── */
