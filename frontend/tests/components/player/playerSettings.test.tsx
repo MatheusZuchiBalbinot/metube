@@ -22,29 +22,49 @@ describe('PlayerSettings', () => {
         expect(screen.queryByRole('listbox', { name: 'Speed' })).not.toBeInTheDocument();
     });
 
-    it('marks the current playback speed as selected', () => {
+    it('shows the current speed on the root row and drills into the speed submenu on click', async () => {
         render(<PlayerSettings {...baseProps()} playbackRate={1.5} />);
+
+        expect(screen.getByRole('button', { name: /speed/i })).toHaveTextContent('1.5×');
+        expect(screen.queryByRole('option', { name: '1.5×' })).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: /speed/i }));
 
         expect(screen.getByRole('option', { name: '1.5×' })).toHaveAttribute('aria-selected', 'true');
         expect(screen.getByRole('option', { name: '1×' })).toHaveAttribute('aria-selected', 'false');
     });
 
-    it('calls onSpeedChange with the clicked rate', async () => {
+    it('calls onSpeedChange with the clicked rate and returns to the root list', async () => {
         const onSpeedChange = vi.fn();
         render(<PlayerSettings {...baseProps()} onSpeedChange={onSpeedChange} />);
 
+        await userEvent.click(screen.getByRole('button', { name: /speed/i }));
         await userEvent.click(screen.getByRole('option', { name: '2×' }));
 
         expect(onSpeedChange).toHaveBeenCalledWith(expect.anything(), 2);
+        expect(screen.queryByRole('option', { name: '2×' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /speed/i })).toBeInTheDocument();
     });
 
-    it('does not render the quality section when there are no levels', () => {
+    it('the back button in a submenu returns to the root list without applying anything', async () => {
+        const onSpeedChange = vi.fn();
+        render(<PlayerSettings {...baseProps()} onSpeedChange={onSpeedChange} />);
+
+        await userEvent.click(screen.getByRole('button', { name: /speed/i }));
+        await userEvent.click(screen.getByRole('button', { name: /^speed$/i }));
+
+        expect(onSpeedChange).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', { name: /speed/i })).toBeInTheDocument();
+        expect(screen.queryByRole('option', { name: '1×' })).not.toBeInTheDocument();
+    });
+
+    it('does not render the quality row when there are no levels', () => {
         render(<PlayerSettings {...baseProps()} levels={[]} />);
 
-        expect(screen.queryByRole('listbox', { name: 'Quality' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /quality/i })).not.toBeInTheDocument();
     });
 
-    it('renders quality options including Auto when levels are given', () => {
+    it('drills into quality and renders its options including Auto', async () => {
         render(
             <PlayerSettings
                 {...baseProps()}
@@ -53,6 +73,8 @@ describe('PlayerSettings', () => {
                 onQualityChange={vi.fn()}
             />,
         );
+
+        await userEvent.click(screen.getByRole('button', { name: /quality/i }));
 
         expect(screen.getByRole('option', { name: 'Auto' })).toBeInTheDocument();
         expect(screen.getByRole('option', { name: '1080p' })).toBeInTheDocument();

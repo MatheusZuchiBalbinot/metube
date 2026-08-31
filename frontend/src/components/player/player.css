@@ -21,8 +21,15 @@
 }
 
 @keyframes vp-speed-hold-in {
-    from { opacity: 0; transform: translate(-50%, -4px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 /* ─── Custom Video Player (.vp) ─────────────────────────────────────────────── */
@@ -36,16 +43,18 @@
     overflow: hidden;
     cursor: pointer;
     user-select: none;
-    box-shadow: 0 0 80px 20px color-mix(in srgb, var(--vp-ambient, transparent) 15%, transparent);
+    box-shadow: 0 0 100px 30px color-mix(in srgb, var(--vp-ambient, transparent) 28%, transparent);
     transition: box-shadow 0.5s ease;
-    /* Query container so the control bar can adapt to the player's own width
-       (not the viewport) — narrow players tuck secondary toggles into settings. */
     container-type: inline-size;
     container-name: vp;
 }
 
 :root[data-mode='light'] .vp {
-    box-shadow: none;
+    box-shadow: 0 0 60px 16px color-mix(in srgb, var(--vp-ambient, transparent) 12%, transparent);
+}
+
+.vp--theater {
+    max-height: 85vh;
 }
 
 /* Hide cursor when controls are not visible (playing, mouse idle) — not in mini mode */
@@ -676,7 +685,7 @@
     position: absolute;
     bottom: calc(100% + 8px);
     right: 0;
-    width: 160px;
+    width: 220px;
     background: rgba(18, 18, 20, 0.96);
     backdrop-filter: var(--glass-blur-sm);
     -webkit-backdrop-filter: var(--glass-blur-sm);
@@ -744,6 +753,115 @@
 
 .vp__settings-option--active:hover {
     background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Drill-down rows (root menu → submenu, YouTube settings-gear style) ────── */
+
+.vp__settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-1_5) var(--space-2_5);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, color 0.1s;
+}
+
+.vp__settings-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-on-overlay);
+}
+
+.vp__settings-row-right {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+}
+
+.vp__settings-row-value {
+    font-size: var(--text-2xs);
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vp__settings-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-1) var(--space-1) var(--space-2_5);
+    margin-bottom: var(--space-1);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: var(--text-on-overlay);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    cursor: pointer;
+    text-align: left;
+}
+
+.vp__settings-header:hover {
+    color: var(--accent);
+}
+
+/* ─── Panel-switch transition (root ↔ submenu) ──────────────────────────────── */
+
+.vp__settings-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3_5);
+}
+
+.vp__settings-view--forward {
+    animation: vp-settings-in-forward 0.18s var(--ease-out) both;
+}
+
+.vp__settings-view--back {
+    animation: vp-settings-in-back 0.18s var(--ease-out) both;
+}
+
+@keyframes vp-settings-in-forward {
+    from {
+        opacity: 0;
+        transform: translateX(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes vp-settings-in-back {
+    from {
+        opacity: 0;
+        transform: translateX(-14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .vp__settings-view--forward,
+    .vp__settings-view--back {
+        animation: none;
+    }
 }
 
 /* ─── Skip indicator (← / → keyboard shortcuts) ─────────────────────────────── */

@@ -26,3 +26,9 @@ export interface ShakaLevel {
     bitrate: number;
     label: string;
 }
+
+/** Which view the settings dropdown is showing: the root list, or a drilled-down submenu. */
+export type SettingsPanel = 'root' | 'speed' | 'quality' | 'captionSize';
+
+/** Which way the settings panel is transitioning: drilling into a submenu, or backing out of one. */
+export type SettingsPanelDirection = 'forward' | 'back';
