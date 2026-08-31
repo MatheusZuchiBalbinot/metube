@@ -174,20 +174,16 @@ A arquitetura atual prioriza simplicidade operacional. Em uma escala maior:
 * PHP + Composer para executar testes e lint localmente
 
 ```bash
-cp backend/.env.example backend/.env
-cp .env.example .env
-cp .env.postgres.example .env.postgres
-
 npm run start
 ```
 
-O primeiro boot executa as migrations automaticamente.
+`npm run start` cria os `.env` a partir dos `.example` automaticamente se ainda não
+existirem (`scripts/bootstrap-env.sh`), e o primeiro boot do backend executa as migrations
+sozinho.
 
-Para popular conteúdo de demonstração:
-
-```bash
-docker compose exec backend php artisan db:seed --class=DemoContentSeeder
-```
+Para subir já com conteúdo de demonstração (~50 vídeos, canais, comentários e playlists),
+defina `SEED_DEMO_CONTENT=true` em `backend/.env` antes de rodar — o seeder é idempotente,
+então fica seguro deixar ligado entre reinícios.
 
 ### IA
 

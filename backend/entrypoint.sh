@@ -9,6 +9,18 @@ if [ "$#" -gt 0 ]; then
         sleep 1
     done
 
+    # `docker compose run --rm backend <cmd>` is always a one-off dev/tooling
+    # invocation (tests, lint, tinker) — never how production traffic is served —
+    # but it shares the real Redis with the long-running backend/horizon
+    # services. Forcing sync queue + array cache keeps ShouldBeUnique locks and
+    # queued jobs in-process instead of leaking into that shared Redis between
+    # runs. Set FORCE_TEST_ENV=false to opt out (e.g. to debug against the real
+    # queue/cache from a one-off command).
+    if [ "${FORCE_TEST_ENV:-true}" = "true" ]; then
+        export QUEUE_CONNECTION=sync
+        export CACHE_STORE=array
+    fi
+
     exec "$@"
 fi
 
@@ -56,6 +68,14 @@ echo "Database ready ✔"
 
 echo "Running migrations..."
 php artisan migrate --force
+
+if [ "$SEED_DEMO_CONTENT" = "true" ]; then
+    # DemoContentSeeder is idempotent (firstOrCreate throughout — see its
+    # docblock), so re-running it on every boot is safe and just a no-op once
+    # the data already exists.
+    echo "Seeding demo content..."
+    php artisan db:seed --class=DemoContentSeeder --force
+fi
 
 # "auto"/"0" → one worker per CPU core.
 WORKERS="${OCTANE_WORKERS:-2}"

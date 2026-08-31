@@ -1,8 +1,8 @@
 {
     "scripts": {
-        "start": "docker compose up --build",
+        "start": "scripts/bootstrap-env.sh && docker compose up --build",
         "stop": "docker compose down",
-        "prod": "npm run build && docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
+        "prod": "npm run build && scripts/bootstrap-env.sh && docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
         "prod:stop": "docker compose -f docker-compose.yml -f docker-compose.prod.yml down",
         "build": "npm --prefix frontend run build",
         "serve": "npm --prefix frontend run preview"
