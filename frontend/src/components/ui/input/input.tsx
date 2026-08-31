@@ -1,4 +1,7 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useState, type InputHTMLAttributes } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Eye, EyeOff } from 'lucide-react';
+import Tooltip from '../tooltip/tooltip';
 import './input.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -8,8 +11,14 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     helper?: string
 }
 
-function buildInputClass(icon: React.ReactNode, error: string | undefined, className: string) {
-    return ['input-field', icon ? 'input-field--icon' : '', error ? 'input-field--error' : '', className]
+function buildInputClass(icon: React.ReactNode, error: string | undefined, isPassword: boolean, className: string) {
+    return [
+        'input-field',
+        icon ? 'input-field--icon' : '',
+        isPassword ? 'input-field--password' : '',
+        error ? 'input-field--error' : '',
+        className,
+    ]
         .filter(Boolean)
         .join(' ');
 }
@@ -28,10 +37,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     helper,
     id,
     className = '',
+    type,
     ...props
 }, ref) {
-    const inputClass = buildInputClass(icon, error, className);
+    const { t } = useTranslation();
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const isPassword = type === 'password';
+    const inputClass = buildInputClass(icon, error, isPassword, className);
     const aria = buildInputAria(id, error);
+    const resolvedType = isPassword && passwordVisible ? 'text' : type;
+
+    function handleTogglePasswordVisibility() {
+        setPasswordVisible((prev) => !prev);
+    }
 
     return (
         <div className="input-field-wrap">
@@ -50,11 +68,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
                 <input
                     ref={ref}
                     id={id}
+                    type={resolvedType}
                     className={inputClass}
                     aria-invalid={aria.invalid}
                     aria-describedby={aria.describedBy}
                     {...props}
                 />
+                {isPassword && (
+                    <Tooltip content={t(passwordVisible ? 'common.hide_password' : 'common.show_password')} side="top">
+                        <button
+                            type="button"
+                            className="input-password-toggle"
+                            onClick={handleTogglePasswordVisibility}
+                            aria-label={t(passwordVisible ? 'common.hide_password' : 'common.show_password')}
+                            aria-pressed={passwordVisible}
+                        >
+                            {passwordVisible ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+                        </button>
+                    </Tooltip>
+                )}
             </div>
 
             {error && <p id={`${id}-error`} className="input-error-msg" role="alert">{error}</p>}
