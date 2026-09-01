@@ -6,7 +6,7 @@
     display: flex;
     gap: 2px;
     background: var(--surface-2);
-    border-radius: var(--radius);
+    border-radius: var(--radius-xl);
     padding: 3px;
     margin-bottom: 18px;
 }
@@ -15,7 +15,7 @@
     flex: 1;
     padding: var(--space-1_5) var(--space-3);
     border: none;
-    border-radius: calc(var(--radius) - 2px);
+    border-radius: calc(var(--radius-xl) - 2px);
     background: transparent;
     color: var(--text-2);
     font-size: var(--text-sm);
@@ -156,7 +156,7 @@
     height: 100%;
     background: var(--accent);
     border-radius: var(--radius-2xs);
-    transition: width 0.2s ease;
+    transition: width var(--duration-slow) ease;
 }
 
 .upload-modal__batch-item-side {
@@ -196,6 +196,24 @@
 
 .upload-modal__batch-error {
     color: var(--color-error);
+}
+
+.upload-modal__batch-retry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: var(--space-1);
+    border-radius: var(--radius-sm, 4px);
+    transition: color var(--duration-default), background var(--duration-default);
+}
+
+.upload-modal__batch-retry:hover {
+    color: var(--accent);
+    background: var(--surface-3);
 }
 
 /* ─── Batch title Input override ─────────────────────────────────────────── */
@@ -362,7 +380,7 @@
     height: 100%;
     background: var(--accent);
     border-radius: var(--radius-xs);
-    transition: width 0.2s ease;
+    transition: width var(--duration-slow) ease;
 }
 
 .upload-modal__progress-info {
@@ -375,6 +393,19 @@
 /* ─── Footer ──────────────────────────────────────────────────────────────── */
 
 .upload-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2_5);
+}
+
+/* ─── Cancel-upload confirmation ─────────────────────────────────────────── */
+
+.upload-modal__cancel-confirm-text {
+    color: var(--text-2);
+    font-size: var(--text-sm);
+}
+
+.upload-modal__cancel-confirm-footer {
     display: flex;
     justify-content: flex-end;
     gap: var(--space-2_5);

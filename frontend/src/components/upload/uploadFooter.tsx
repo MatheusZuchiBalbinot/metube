@@ -29,7 +29,10 @@ export default function UploadFooter({
 
     return (
         <div className="upload-modal__footer">
-            <Button variant="ghost" size="md" onClick={onClose} disabled={isBusy}>
+            {/* Enabled even while an upload is in flight — `onClose` (handleClose) routes
+                through a confirm dialog in that case instead of being a no-op, so the user
+                always has a way out of the modal. */}
+            <Button variant="ghost" size="md" onClick={onClose}>
                 {t('common.cancel')}
             </Button>
 

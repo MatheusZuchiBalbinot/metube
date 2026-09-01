@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { DragAndDrop, Input } from '@ui';
 import { Format, formatEta, IMAGE_MIME_TYPES, VIDEO_MIME_TYPES, THUMBNAIL_MAX_SIZE_MB, VIDEO_MAX_SIZE_MB } from '@utils';
+import { Play, Pause } from '@components/icons/icons';
 import TagInput from '@components/tag/input';
 import type { FormState } from './useUploadModal';
 import type { UploadProgress } from '@utils';
@@ -11,6 +12,7 @@ interface UploadSingleFormProps {
     form: FormState
     titleShakeKey: number
     isUploading: boolean
+    isPaused?: boolean
     hasPreview: boolean
     progress: UploadProgress | null
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>
@@ -21,6 +23,8 @@ interface UploadSingleFormProps {
     onClearThumbnail: () => void
     onVideoFile: (file: File) => void
     onClearVideoFile: () => void
+    onPauseUpload?: () => void
+    onResumeUpload?: () => void
     existingTags: Tag[]
 }
 
@@ -28,6 +32,7 @@ export default function UploadSingleForm({
     form,
     titleShakeKey,
     isUploading,
+    isPaused = false,
     hasPreview,
     progress,
     onSubmit,
@@ -38,9 +43,12 @@ export default function UploadSingleForm({
     onClearThumbnail,
     onVideoFile,
     onClearVideoFile,
+    onPauseUpload,
+    onResumeUpload,
     existingTags,
 }: UploadSingleFormProps) {
     const { t } = useTranslation();
+    const canTogglePause = onPauseUpload !== undefined && onResumeUpload !== undefined;
 
     return (
         <form className="upload-modal__form" onSubmit={onSubmit}>
@@ -124,6 +132,25 @@ export default function UploadSingleForm({
                         />
                     </div>
                     <div className="upload-modal__progress-info">
+                        {canTogglePause && (
+                            <button
+                                type="button"
+                                onClick={isPaused ? onResumeUpload : onPauseUpload}
+                                aria-label={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
+                                title={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: 0,
+                                    border: 'none',
+                                    background: 'none',
+                                    color: 'inherit',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {isPaused ? <Play size={14} /> : <Pause size={14} />}
+                            </button>
+                        )}
                         <span>{Format.percent(progress.percent)}</span>
                         <span>{Format.speed(progress.speed)}</span>
                         <span>{formatEta(progress.remaining)}</span>

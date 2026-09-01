@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
@@ -23,8 +23,21 @@ vi.mock('@hooks/useTusUpload', () => ({
     }),
 }));
 
+const abortMock = vi.fn();
+
+interface FakeTusHandlers {
+    onProgress?: (bytesUploaded: number, bytesTotal: number) => void
+    onError?: () => void
+    onSuccess?: (uploadKey: string | null) => void
+}
+
 vi.mock('@lib/tus', () => ({
-    uploadViaTus: vi.fn().mockResolvedValue('batch-key'),
+    // Never resolves by default — lets tests catch the batch upload mid-flight
+    // (isBatchUploading === true) to exercise the cancel flow.
+    createTusUpload: vi.fn((_file: File, _handlers: FakeTusHandlers) => ({
+        start: () => {},
+        abort: abortMock,
+    })),
 }));
 
 vi.mock('@api/videos', () => ({
@@ -55,6 +68,10 @@ function makeWrapper(store: ReturnType<typeof makeStore>) {
     return function Wrapper({ children }: { children: React.ReactNode }) {
         return React.createElement(Provider, { store }, React.createElement(MemoryRouter, null, children));
     };
+}
+
+function videoFile(name: string) {
+    return new File(['v'], name, { type: 'video/mp4' });
 }
 
 beforeEach(() => {
@@ -113,5 +130,41 @@ describe('useUploadModal', () => {
         expect(result.current.pollingVuids).toEqual([]);
         expect(typeof result.current.runSingleUpload).toBe('function');
         expect(typeof result.current.handleBatchUpload).toBe('function');
+    });
+
+    // Finding: "Upload cannot be cancelled once started" — handleClose used to no-op
+    // silently whenever isBusy was true (X button, Escape, backdrop click, and the
+    // footer Cancel button all route through it). It must now open a confirmation
+    // instead of swallowing the close attempt, and confirming must abort the
+    // in-flight upload and actually close the modal.
+    it('opens a cancel confirmation instead of no-op closing while busy, and aborts on confirm', async () => {
+        const store = makeStore({ videoUi: { uploadModalOpen: true } });
+        const { result } = renderHook(() => useUploadModal(), { wrapper: makeWrapper(store) });
+
+        act(() => {
+            result.current.handleModeToBatch();
+            result.current.addBatchFiles([videoFile('a.mp4')]);
+        });
+
+        act(() => {
+            void result.current.handleBatchUpload();
+        });
+
+        await waitFor(() => expect(result.current.isBusy).toBe(true));
+
+        act(() => {
+            result.current.handleClose();
+        });
+
+        expect(result.current.cancelConfirmOpen).toBe(true);
+        expect(store.getState().videoUi.uploadModalOpen).toBe(true);
+
+        act(() => {
+            result.current.confirmCancelUpload();
+        });
+
+        expect(abortMock).toHaveBeenCalled();
+        expect(result.current.cancelConfirmOpen).toBe(false);
+        expect(store.getState().videoUi.uploadModalOpen).toBe(false);
     });
 });

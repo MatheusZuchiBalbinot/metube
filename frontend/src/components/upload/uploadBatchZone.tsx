@@ -14,6 +14,7 @@ interface UploadBatchZoneProps {
     onZoneClick: () => void
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     onRemoveItem: (id: string) => void
+    onRetryItem: (id: string) => void
     onTitleChange: (id: string, title: string) => void
 }
 
@@ -28,6 +29,7 @@ export default function UploadBatchZone({
     onZoneClick,
     onInputChange,
     onRemoveItem,
+    onRetryItem,
     onTitleChange,
 }: UploadBatchZoneProps) {
     const { t } = useTranslation();
@@ -63,6 +65,7 @@ export default function UploadBatchZone({
                             key={item.id}
                             item={item}
                             onRemove={onRemoveItem}
+                            onRetry={onRetryItem}
                             onTitleChange={onTitleChange}
                         />
                     ))}

@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type * as tus from 'tus-js-client';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { video as videoApi, toVuid } from '@api';
 import type { Vuid } from '@api';
-import { uploadViaTus } from '@lib/tus';
+import { createTusUpload } from '@lib/tus';
 import { ToastType } from '@enums/toastType';
 import { VideoStatus, type Video } from '@models';
+import { VIDEO_MAX_SIZE_MB } from '@utils';
 
 export interface BatchItem {
     id: string
@@ -38,6 +40,8 @@ export interface UseBatchUploadReturn {
     handleBatchZoneClick: () => void
     handleBatchInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleBatchUpload: () => Promise<void>
+    retryBatchItem: (id: string) => void
+    cancelBatchUpload: () => void
     resetBatch: () => void
 }
 
@@ -63,20 +67,52 @@ export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: U
     const [isBatchUploading, setIsBatchUploading] = useState(false);
     const [batchDragging, setBatchDragging] = useState(false);
     const batchInputRef = useRef<HTMLInputElement | null>(null);
+    // Tracks the in-flight tus.Upload instance per batch item id so a cancel/retry
+    // action can abort a specific transfer without touching the others.
+    const uploadRefs = useRef<Map<string, tus.Upload>>(new Map());
 
     const batchPending = batchItems.filter(i => i.status === 'pending');
     const batchHasItems = batchItems.length > 0;
 
+    function isDuplicateOf(file: File, other: File): boolean {
+        return other.name === file.name && other.size === file.size;
+    }
+
     function addBatchFiles(files: FileList | File[]) {
-        const newItems: BatchItem[] = Array.from(files)
+        const accepted: File[] = [];
+
+        Array.from(files)
             .filter(f => f.type.startsWith('video/'))
-            .map(f => ({
-                id: crypto.randomUUID(),
-                file: f,
-                title: titleFromFilename(f),
-                status: 'pending' as const,
-                progress: 0,
-            }));
+            .forEach(f => {
+                const isTooLarge = f.size > VIDEO_MAX_SIZE_MB * 1024 * 1024;
+                if (isTooLarge) {
+                    dispatch(toastActions.addToast({
+                        message: t('toast.batch_file_too_large', { name: f.name, maxSizeMB: VIDEO_MAX_SIZE_MB }),
+                        type: ToastType.ERROR,
+                    }));
+                    return;
+                }
+
+                const isDuplicate = batchItems.some(i => isDuplicateOf(f, i.file)) || accepted.some(a => isDuplicateOf(f, a));
+                if (isDuplicate) {
+                    dispatch(toastActions.addToast({
+                        message: t('toast.batch_file_duplicate', { name: f.name }),
+                        type: ToastType.ERROR,
+                    }));
+                    return;
+                }
+
+                accepted.push(f);
+            });
+
+        const newItems: BatchItem[] = accepted.map(f => ({
+            id: crypto.randomUUID(),
+            file: f,
+            title: titleFromFilename(f),
+            status: 'pending' as const,
+            progress: 0,
+        }));
+
         setBatchItems(prev => [...prev, ...newItems]);
     }
 
@@ -119,6 +155,31 @@ export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: U
         e.target.value = '';
     }
 
+    // Wraps `createTusUpload` (rather than the fire-and-forget `uploadViaTus`) so the
+    // resulting `tus.Upload` instance can be stashed in `uploadRefs` and aborted later
+    // by id — `uploadViaTus` never hands the instance back to its caller.
+    function uploadFileTracked(item: BatchItem, onProgress: (percent: number) => void): Promise<string | null> {
+        return new Promise((resolve) => {
+            const upload = createTusUpload(item.file, {
+                onProgress: (bytesUploaded, bytesTotal) => {
+                    const percent = bytesTotal > 0 ? Math.round((bytesUploaded / bytesTotal) * 100) : 0;
+                    onProgress(percent);
+                },
+                onError: () => {
+                    uploadRefs.current.delete(item.id);
+                    resolve(null);
+                },
+                onSuccess: (uploadKey) => {
+                    uploadRefs.current.delete(item.id);
+                    resolve(uploadKey);
+                },
+            });
+
+            uploadRefs.current.set(item.id, upload);
+            upload.start();
+        });
+    }
+
     async function uploadBatchItem(item: BatchItem): Promise<'done' | 'error'> {
         setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading' } : i));
 
@@ -126,7 +187,7 @@ export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: U
             setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: pct } : i));
         }
 
-        const uploadKey = await uploadViaTus(item.file, onBatchProgress);
+        const uploadKey = await uploadFileTracked(item, onBatchProgress);
         const hasUploadError = uploadKey === null;
 
         if (hasUploadError) {
@@ -195,6 +256,28 @@ export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: U
         }
     }
 
+    function retryBatchItem(id: string) {
+        const item = batchItems.find(i => i.id === id);
+        const canRetry = item !== undefined && item.status === 'error';
+
+        if (!canRetry) {
+            return;
+        }
+
+        void uploadBatchItem({ ...item, status: 'pending', progress: 0 });
+    }
+
+    // Aborts every in-flight tus upload and drops the queue. Aborted transfers never
+    // reach `onError`/`onSuccess`, so their `uploadBatchItem` promises are left to hang
+    // — harmless, since the caller (a full modal close) no longer awaits their outcome
+    // and this deliberately skips the done/error toasts a completed run would show.
+    function cancelBatchUpload() {
+        uploadRefs.current.forEach(upload => upload.abort());
+        uploadRefs.current.clear();
+        setIsBatchUploading(false);
+        setBatchItems([]);
+    }
+
     function resetBatch() {
         setBatchItems([]);
     }
@@ -215,6 +298,8 @@ export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: U
         handleBatchZoneClick,
         handleBatchInputChange,
         handleBatchUpload,
+        retryBatchItem,
+        cancelBatchUpload,
         resetBatch,
     };
 }

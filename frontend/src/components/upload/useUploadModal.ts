@@ -18,6 +18,9 @@ export interface UseUploadModalReturn extends UseSingleUploadReturn, UseBatchUpl
     pollingVuids: Vuid[]
     isBusy: boolean
     handleClose: () => void
+    cancelConfirmOpen: boolean
+    confirmCancelUpload: () => void
+    dismissCancelConfirm: () => void
     existingTags: Tag[]
 }
 
@@ -35,6 +38,7 @@ export function useUploadModal(): UseUploadModalReturn {
 
     const [mode, setMode] = useState<UploadMode>(UploadMode.SINGLE);
     const [pollingVuids, setPollingVuids] = useState<Vuid[]>([]);
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
     const addPollingVuid = useCallback((vuid: Vuid) => {
         setPollingVuids(prev => [...prev, vuid]);
@@ -50,12 +54,28 @@ export function useUploadModal(): UseUploadModalReturn {
 
     function handleClose() {
         if (isBusy) {
+            setCancelConfirmOpen(true);
             return;
         }
 
         closeUploadModal();
         single.resetForm();
         batch.resetBatch();
+    }
+
+    // Called from the cancel-upload confirmation dialog (and reused as the Cancel
+    // button's handler while an upload is in flight) — aborts whatever is uploading
+    // (single via the underlying tus client's abort/reset, batch per-item) before
+    // closing, instead of leaving the upload to finish invisibly in the background.
+    function confirmCancelUpload() {
+        single.resetForm();
+        batch.cancelBatchUpload();
+        setCancelConfirmOpen(false);
+        closeUploadModal();
+    }
+
+    function dismissCancelConfirm() {
+        setCancelConfirmOpen(false);
     }
 
     function handleModeChange(next: UploadMode) {
@@ -86,6 +106,9 @@ export function useUploadModal(): UseUploadModalReturn {
         pollingVuids,
         isBusy,
         handleClose,
+        cancelConfirmOpen,
+        confirmCancelUpload,
+        dismissCancelConfirm,
         existingTags,
     };
 }

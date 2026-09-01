@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, RotateCw, Trash2 } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@ui';
 import type { BatchItem } from './useUploadModal';
@@ -6,10 +6,11 @@ import type { BatchItem } from './useUploadModal';
 interface BatchItemRowProps {
     item: BatchItem
     onRemove: (id: string) => void
+    onRetry: (id: string) => void
     onTitleChange: (id: string, title: string) => void
 }
 
-export default function BatchItemRow({ item, onRemove, onTitleChange }: BatchItemRowProps) {
+export default function BatchItemRow({ item, onRemove, onRetry, onTitleChange }: BatchItemRowProps) {
     const { t } = useTranslation();
 
     return (
@@ -33,7 +34,7 @@ export default function BatchItemRow({ item, onRemove, onTitleChange }: BatchIte
                 )}
             </div>
             <div className="upload-modal__batch-item-side">
-                {item.status === 'pending' && (
+                {(item.status === 'pending' || item.status === 'error') && (
                     <Button
                         variant="ghost"
                         size="icon"
@@ -51,7 +52,18 @@ export default function BatchItemRow({ item, onRemove, onTitleChange }: BatchIte
                     <CheckCircle2 size={16} className="upload-modal__batch-done" />
                 )}
                 {item.status === 'error' && (
-                    <AlertCircle size={16} className="upload-modal__batch-error" />
+                    <>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="upload-modal__batch-retry"
+                            onClick={() => onRetry(item.id)}
+                            aria-label={t('video.retry_upload')}
+                        >
+                            <RotateCw size={13} />
+                        </Button>
+                        <AlertCircle size={16} className="upload-modal__batch-error" />
+                    </>
                 )}
             </div>
         </div>

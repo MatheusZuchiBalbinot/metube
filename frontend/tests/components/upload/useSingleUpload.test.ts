@@ -126,4 +126,24 @@ describe('useSingleUpload', () => {
         expect(deps.addVideo).not.toHaveBeenCalled();
         expect(navigate).not.toHaveBeenCalled();
     });
+
+    it('pauseUpload/resumeUpload toggle isPaused and keep isUploading true while paused', async () => {
+        const deps = makeDeps();
+        const { result } = renderHook(() => useSingleUpload(deps), { wrapper: makeWrapper(makeStore()) });
+
+        expect(result.current.isPaused).toBe(false);
+
+        act(() => {
+            result.current.pauseUpload();
+        });
+
+        expect(result.current.isPaused).toBe(true);
+        expect(result.current.isUploading).toBe(true);
+
+        act(() => {
+            result.current.resumeUpload();
+        });
+
+        expect(result.current.isPaused).toBe(false);
+    });
 });

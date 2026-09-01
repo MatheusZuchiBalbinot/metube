@@ -32,8 +32,11 @@ export interface UseSingleUploadReturn {
     form: FormState
     titleShakeKey: number
     isUploading: boolean
+    isPaused: boolean
     hasPreview: boolean
     progress: ReturnType<typeof useTusUpload>['progress']
+    pauseUpload: () => void
+    resumeUpload: () => void
     handleTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
     handleTagsChange: (tags: Tag[]) => void
@@ -68,16 +71,30 @@ export function useSingleUpload({ addVideo, closeUploadModal, addPollingVuid }: 
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const { progress, status: tusStatus, uploadFile, reset: resetTus } = useTusUpload();
+    const { progress, status: tusStatus, uploadFile, pause: pauseTus, resume: resumeTus, reset: resetTus } = useTusUpload();
 
     const videoPreview = useObjectUrl();
     const thumbnailPreview = useObjectUrl();
 
     const [form, setForm] = useState<FormState>(INITIAL_FORM);
     const [titleShakeKey, setTitleShakeKey] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
 
-    const isUploading = tusStatus === UploadStatus.UPLOADING;
+    // Paused uploads count as "uploading" for form-disabling, footer state and the
+    // progress bar — pause() drops the underlying tus status back to IDLE, but the
+    // upload session (and progress) is still active from the user's point of view.
+    const isUploading = tusStatus === UploadStatus.UPLOADING || isPaused;
     const hasPreview = form.thumbnailPreviewUrl !== null || form.videoObjectUrl !== null;
+
+    function pauseUpload() {
+        pauseTus();
+        setIsPaused(true);
+    }
+
+    function resumeUpload() {
+        resumeTus();
+        setIsPaused(false);
+    }
 
     function handleThumbnailFile(file: File) {
         const previewUrl = thumbnailPreview.set(file);
@@ -103,6 +120,7 @@ export function useSingleUpload({ addVideo, closeUploadModal, addPollingVuid }: 
         videoPreview.clear();
         thumbnailPreview.clear();
         setForm(INITIAL_FORM);
+        setIsPaused(false);
         resetTus();
     }
 
@@ -191,8 +209,11 @@ export function useSingleUpload({ addVideo, closeUploadModal, addPollingVuid }: 
         form,
         titleShakeKey,
         isUploading,
+        isPaused,
         hasPreview,
         progress,
+        pauseUpload,
+        resumeUpload,
         handleTitleChange,
         handleDescriptionChange,
         handleTagsChange,
