@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, X } from 'lucide-react';
+import { Clock, X } from '@components/icons/icons';
 import VideoActionCard from '@components/video/actionCard';
 import type { FilterState } from '@components/filter/panel';
 import VideoGridPage from '@components/layout/videoGridPage';

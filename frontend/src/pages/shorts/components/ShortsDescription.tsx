@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { Avatar } from '@ui';
 import TagBadge from '@components/tag/badge';
 import type { Tag, Video } from '@models';

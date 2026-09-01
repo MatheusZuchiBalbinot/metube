@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@components/icons/icons';
 import { TagColors } from '@utils';
 import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FileQuestion } from 'lucide-react';
+import { FileQuestion } from '@components/icons/icons';
 import { Button } from '@ui';
 import { ROUTES } from '@utils';
 import './notFound.css';

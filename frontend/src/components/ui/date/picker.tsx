@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon, X } from '@components/icons/icons';
 import Calendar from './calendar';
 import './picker.css';
 

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ListVideo } from 'lucide-react';
+import { ListVideo } from '@components/icons/icons';
 import { ROUTES, videoUrl, TagColors, isWithinDays } from '@utils';
 import { Tooltip, Avatar } from '@ui';
 import { useSubscriptions, useSubscription, useVideoData, useVideoUi, usePlaylist, useCollapsibleList } from '@hooks';

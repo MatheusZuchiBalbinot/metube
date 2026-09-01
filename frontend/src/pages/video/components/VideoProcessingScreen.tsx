@@ -1,4 +1,4 @@
-import { Clapperboard } from 'lucide-react';
+import { Clapperboard } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import type { Video } from '@models';
 

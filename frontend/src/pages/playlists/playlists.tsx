@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ListVideo, Plus } from 'lucide-react';
+import { ListVideo, Plus } from '@components/icons/icons';
 import PlaylistCard from '@components/playlist/card';
 import EmptyState from '@ui/empty/empty';
 import Button from '@ui/button/button';

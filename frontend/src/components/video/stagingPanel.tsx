@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EyeOff, Sparkles, Check, X } from 'lucide-react';
+import { EyeOff, Sparkles, Check, X } from '@components/icons/icons';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
 import { toastActions } from '@store/toastSlice';

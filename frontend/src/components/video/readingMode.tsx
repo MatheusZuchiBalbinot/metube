@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Sparkles, RefreshCw } from 'lucide-react';
+import { FileText, Sparkles, RefreshCw } from '@components/icons/icons';
 import DOMPurify from 'dompurify';
 import type { VideoSummary, VideoTranscription } from '@api';
 import { Button, Spinner } from '@ui';

@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '@components/icons/icons';
 
 interface DrillDownRowProps {
     icon: React.ReactNode

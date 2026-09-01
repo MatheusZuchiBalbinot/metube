@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut, Settings, Keyboard, HelpCircle } from 'lucide-react';
+import { LogOut, Settings, Keyboard, HelpCircle } from '@components/icons/icons';
 import { Avatar, Button, Tooltip } from '@ui';
 import PreferencesPanel from '@components/preferences/preferences';
 import { ROUTES, APP_EVENTS } from '@utils';

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, SendHorizontal, X } from 'lucide-react';
+import { Sparkles, SendHorizontal, X } from '@components/icons/icons';
 import type { VideoTranscription, Vuid } from '@api';
 import { chat as chatApi } from '@api';
 import type { ChatMessage } from '@api';

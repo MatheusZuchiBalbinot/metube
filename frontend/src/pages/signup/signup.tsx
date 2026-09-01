@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, User, LogIn, AlertCircle, UserRound } from 'lucide-react';
+import { Mail, Lock, User, LogIn, AlertCircle, UserRound } from '@components/icons/icons';
 import { Button, Input, Spinner } from '@ui';
 import { ROUTES } from '@utils';
 import '../login/login.css';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Check, Captions, Gauge } from 'lucide-react';
+import { Settings, Check, Captions, Gauge } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@utils';
 import { SIZES } from '@ui/types';

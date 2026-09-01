@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clapperboard } from 'lucide-react';
+import { Clapperboard } from '@components/icons/icons';
 import { useAppSelector } from '@store';
 import { selectWatchLaterIds } from '@store/playlistSelectors';
 import './shorts.css';

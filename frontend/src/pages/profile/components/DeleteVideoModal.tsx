@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Trash2 } from 'lucide-react';
+import { Trash2 } from '@components/icons/icons';
 import { Button, Modal } from '@ui';
 import type { Video } from '@models';
 

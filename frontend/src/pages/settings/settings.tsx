@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, Palette, UserCog, Info } from 'lucide-react';
+import { Keyboard, Palette, UserCog, Info } from '@components/icons/icons';
 import { Avatar, Button } from '@ui';
 import PreferencesPanel from '@components/preferences/preferences';
 import { useAuth } from '@hooks';

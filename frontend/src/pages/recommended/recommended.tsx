@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Compass } from 'lucide-react';
+import { Compass } from '@components/icons/icons';
 import VideoCard from '@components/video/card';
 import type { FilterState } from '@components/filter/panel';
 import VideoGridPage from '@components/layout/videoGridPage';

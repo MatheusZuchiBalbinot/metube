@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from '@ui';
 import type { Video } from '@models';

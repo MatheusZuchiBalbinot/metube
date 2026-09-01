@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { History, Search, Trash2 } from 'lucide-react';
+import { History, Search, Trash2 } from '@components/icons/icons';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { videoActions } from '@store/videoSlice';

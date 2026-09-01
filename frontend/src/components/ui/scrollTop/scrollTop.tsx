@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import './scrollTop.css';
 

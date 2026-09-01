@@ -1,5 +1,5 @@
-import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic, Sparkles } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { MessageSquareReply, Heart, UserPlus, Video, Clapperboard, Captions, Mic, Sparkles } from '@components/icons/icons';
+import type { LucideIcon } from '@components/icons/icons';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';
 import { videoUrl } from '@utils';

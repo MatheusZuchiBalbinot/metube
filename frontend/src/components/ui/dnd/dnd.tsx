@@ -1,6 +1,6 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CloudUpload, FileVideo, X } from 'lucide-react';
+import { CloudUpload, FileVideo, X } from '@components/icons/icons';
 import Button from '../button/button';
 import './dnd.css';
 

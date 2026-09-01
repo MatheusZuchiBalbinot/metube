@@ -1,4 +1,4 @@
-import { Captions, CaptionsOff, Check } from 'lucide-react';
+import { Captions, CaptionsOff, Check } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '@ui/tooltip/tooltip';
 import type { VideoCaption } from '@models';

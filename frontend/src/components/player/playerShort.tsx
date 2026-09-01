@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack } from '@components/icons/icons';
 import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import './player.css';
 import { SkipDirection } from '@enums/skipDirection';

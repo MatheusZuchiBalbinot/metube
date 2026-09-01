@@ -1,4 +1,4 @@
-import { RectangleHorizontal, Rows2 } from 'lucide-react';
+import { RectangleHorizontal, Rows2 } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '@ui/tooltip/tooltip';
 

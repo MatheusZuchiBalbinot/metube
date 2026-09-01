@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { STORAGE_KEYS } from '@utils/storageKeys';
-import { Clock, Flame, Hash, LayoutList, Layers } from 'lucide-react';
+import { Clock, Flame, Hash, LayoutList, Layers } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import VideoCard from '@components/video/card';
 import { SortBy, Format, type FilterState } from '@utils';

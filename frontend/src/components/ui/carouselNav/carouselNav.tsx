@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import Button from '../button/button';
 import { cn } from '@utils';

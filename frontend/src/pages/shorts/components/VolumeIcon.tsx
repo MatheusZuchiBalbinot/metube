@@ -1,4 +1,4 @@
-import { Volume1, Volume2, VolumeX } from 'lucide-react';
+import { Volume1, Volume2, VolumeX } from '@components/icons/icons';
 
 interface VolumeIconProps {
     volume: number

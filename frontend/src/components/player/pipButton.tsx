@@ -1,4 +1,4 @@
-import { PictureInPicture2 } from 'lucide-react';
+import { PictureInPicture2 } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '@ui/tooltip/tooltip';
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { X, Maximize2 } from 'lucide-react';
+import { X, Maximize2 } from '@components/icons/icons';
 import { videoUrl, cn } from '@utils';
 import Button from '@ui/button/button';
 import Tooltip from '@ui/tooltip/tooltip';

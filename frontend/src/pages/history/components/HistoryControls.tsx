@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Search, X } from 'lucide-react';
+import { Search, X } from '@components/icons/icons';
 import { cn } from '@utils';
 import { HistoryPeriod } from '@models';
 import type { HistoryPeriod as HistoryPeriodType } from '@models';

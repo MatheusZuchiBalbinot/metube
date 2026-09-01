@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Rss } from 'lucide-react';
+import { Rss } from '@components/icons/icons';
 import VideoCard from '@components/video/card';
 import type { FilterState } from '@components/filter/panel';
 import VideoGridPage from '@components/layout/videoGridPage';

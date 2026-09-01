@@ -1,7 +1,7 @@
 import { Component, Fragment, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { t } from 'i18next';
-import { AlertTriangle, RefreshCw, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, RotateCcw } from '@components/icons/icons';
 import { logger } from '@utils';
 import { BoundaryLevel } from '@enums/boundaryLevel';
 import './boundary.css';

@@ -1,4 +1,4 @@
-import { Link2, Clock, Check, Share2 } from 'lucide-react';
+import { Link2, Clock, Check, Share2 } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import * as Popover from '@radix-ui/react-popover';
 import { Tooltip } from '@ui';

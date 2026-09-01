@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Bookmark, BookOpen, Sparkles, Bell, BellOff, Eye, Clock } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, BookOpen, Sparkles, Bell, BellOff, Eye, Clock } from '@components/icons/icons';
 import ReactionBtn from '@components/video/reactionBtn';
 import ReactionPill from '@components/video/reactionPill';
 import SavePopover from '@components/video/savePopover';

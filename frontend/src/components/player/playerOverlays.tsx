@@ -1,4 +1,4 @@
-import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack } from '@components/icons/icons';
 import type { SkipIndicator, PopIcon } from './playerTypes';
 import { PopIconType } from '@enums/popIconType';
 

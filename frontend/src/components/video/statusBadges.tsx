@@ -1,4 +1,4 @@
-import { CheckCircle2, Loader2, AlertCircle, EyeOff } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle, EyeOff } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import Badge from '@ui/badge/badge';
 

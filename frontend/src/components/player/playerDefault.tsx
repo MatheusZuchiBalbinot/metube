@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Maximize, Minimize } from 'lucide-react';
+import { Maximize, Minimize } from '@components/icons/icons';
 import { cn, parseChapterTimestamp } from '@utils';
 import { useTranslation } from 'react-i18next';
 import PlayerOverlays from './playerOverlays';

@@ -1,6 +1,6 @@
 import { forwardRef, useState, type InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from '@components/icons/icons';
 import Tooltip from '../tooltip/tooltip';
 import './input.css';
 

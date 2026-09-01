@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Lock, CheckCircle, AlertCircle } from '@components/icons/icons';
 import { Button, Input } from '@ui';
 import { auth } from '@api';
 import { ROUTES } from '@utils';

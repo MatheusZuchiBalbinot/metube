@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { History, Check } from 'lucide-react';
+import { History, Check } from '@components/icons/icons';
 import { Spinner } from '@ui';
 import { formatRelativeDate, cn } from '@utils';
 import { comments as commentsApi } from '@api';

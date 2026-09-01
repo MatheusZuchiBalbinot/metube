@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useMatch, type NavLinkProps } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Clapperboard, History, ThumbsUp, User, ListVideo, Clock, Compass, Rss } from 'lucide-react';
+import { Home, Clapperboard, History, ThumbsUp, User, ListVideo, Clock, Compass, Rss } from '@components/icons/icons';
 import { ROUTES } from '@utils';
 import { Tooltip, Avatar } from '@ui';
 import { useAuth } from '@hooks';

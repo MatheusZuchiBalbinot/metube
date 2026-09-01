@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, Send, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Send, AlertCircle, CheckCircle } from '@components/icons/icons';
 import { Button, Input } from '@ui';
 import { auth } from '@api';
 import { ROUTES } from '@utils';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, Volume1, Volume2, VolumeX, Repeat, Repeat1, Sparkles, ListVideo } from 'lucide-react';
+import { Play, Pause, Volume1, Volume2, VolumeX, Repeat, Repeat1, Sparkles, ListVideo } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { formatDuration, cn } from '@utils';
 import Tooltip from '@ui/tooltip/tooltip';

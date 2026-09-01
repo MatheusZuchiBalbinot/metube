@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { useAppDispatch, useAppSelector } from '@store';
 import { toastActions, type Toast } from '@store/toastSlice';
 import { selectToasts } from '@store/toastSelectors';

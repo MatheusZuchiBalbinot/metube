@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SlidersHorizontal, X, Moon, Sun } from 'lucide-react';
+import { SlidersHorizontal, X, Moon, Sun } from '@components/icons/icons';
 import { STORAGE_KEYS, cn } from '@utils';
 import { Button, Tooltip } from '@ui';
 import { THEME_COLORS, THEME_MODES, LANGUAGES } from '@data/themeConfig';

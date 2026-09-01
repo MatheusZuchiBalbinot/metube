@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { Button, Tooltip } from '@ui';
 import type { Tag } from '@models';
 import './input.css';

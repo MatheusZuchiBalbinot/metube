@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { Avatar } from '@ui';
 import type { AppNotification as Notification } from '@api';
 import { NotificationType } from '@enums/notificationType';

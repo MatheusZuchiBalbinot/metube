@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Bookmark, ChevronDown, Info } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, ChevronDown, Info } from '@components/icons/icons';
 import ReactionBtn from '@components/video/reactionBtn';
 import SavePopover from '@components/video/savePopover';
 import ShortPlayer from '@components/player/playerShort';

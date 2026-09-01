@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus } from '@components/icons/icons';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { domain } from '@domain';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Heart, HeartOff } from 'lucide-react';
+import { Heart, HeartOff } from '@components/icons/icons';
 import VideoActionCard from '@components/video/actionCard';
 import type { FilterState } from '@components/filter/panel';
 import VideoGridPage from '@components/layout/videoGridPage';

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import VideoPlayer from '@components/player/player';
 import ReadingMode from '@components/video/readingMode';

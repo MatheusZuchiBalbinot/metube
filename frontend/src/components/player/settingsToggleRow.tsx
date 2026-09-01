@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check } from '@components/icons/icons';
 import { cn } from '@utils';
 
 export interface ToggleRowProps {

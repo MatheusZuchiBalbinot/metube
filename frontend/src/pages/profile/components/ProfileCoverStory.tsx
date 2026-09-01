@@ -1,4 +1,4 @@
-import { Eye, Play } from 'lucide-react';
+import { Eye, Play } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { Format, TagColors, formatRelativeDate } from '@utils';
 import type { Video, VideoId, Comment } from '@models';

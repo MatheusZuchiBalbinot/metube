@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
-import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical, ListVideo, Pencil, Trash2, X, Check } from '@components/icons/icons';
 import { domain } from '@domain';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';

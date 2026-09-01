@@ -1,4 +1,4 @@
-import { Repeat, Repeat1, ListVideo, Sparkles } from 'lucide-react';
+import { Repeat, Repeat1, ListVideo, Sparkles } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import ToggleRow, { type ToggleRowProps } from './settingsToggleRow';
 
