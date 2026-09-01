@@ -109,8 +109,13 @@ export default function AppLayout() {
                 )}
                 <main id="main-content" className={cn('app-layout__content', isFullHeightPage && 'app-layout__content--full')}>
                     <Suspense fallback={<PageSkeleton pathname={pathname} />}>
-                        {activeTagView ? <TagView /> : <Outlet />}
+                        {/* Hidden, not unmounted: keeps the route page's state so switching
+                            back from TagView doesn't force a full remount/refetch. */}
+                        <div className={cn('app-layout__page-slot', activeTagView && 'app-layout__page-slot--hidden')}>
+                            <Outlet />
+                        </div>
                     </Suspense>
+                    {activeTagView && <TagView />}
                 </main>
             </div>
             <NavProgress />

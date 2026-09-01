@@ -24,6 +24,18 @@
     overflow: hidden;
 }
 
+/* Transparent to layout when visible — its child (the routed page) takes part
+   in .app-layout__content's flex context exactly as if this wrapper weren't
+   there. display:none (not unmounting) is what lets the page keep its state
+   and skip a refetch when the tag view closes. */
+.app-layout__page-slot {
+    display: contents;
+}
+
+.app-layout__page-slot--hidden {
+    display: none;
+}
+
 /* ─── Sidebar backdrop ─────────────────────────────────────────────────────── */
 
 .app-layout__sidebar-backdrop {
