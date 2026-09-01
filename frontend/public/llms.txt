@@ -1,0 +1,7 @@
+# MeTube
+
+MeTube is a video platform with AI-generated summaries, transcripts, and chapters, inspired by YouTube.
+
+## Site
+
+- [Home](/)
