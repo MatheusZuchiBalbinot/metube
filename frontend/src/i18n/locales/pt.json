@@ -147,8 +147,8 @@
         "no_recommendations": "Assista alguns vídeos para receber recomendações",
         "no_history_title": "Nenhum histórico ainda",
         "no_own_videos": "Você ainda não enviou nenhum vídeo",
+        "not_live_section": "Ainda não publicados",
         "draft": "Rascunho",
-        "not_live_section": "Ainda não publicados ({{count}})",
         "scheduled": "Agendado",
         "published": "Publicado",
         "processing_toast": "Seu vídeo está sendo processado…",
@@ -186,6 +186,9 @@
         "related_empty_desc": "Nada para sugerir agora.",
         "related_filtered_empty": "Nenhum vídeo corresponde ao filtro atual.",
         "no_video_file": "Nenhum arquivo de vídeo disponível",
+        "processing_failed": "Falha no processamento",
+        "processing_failed_desc": "Algo deu errado ao processar este vídeo.",
+        "delete_and_reupload": "Excluir e reenviar",
         "not_found": "Vídeo não encontrado",
         "results_for_query": "{{count}} resultados para",
         "videos_count": "{{count}} vídeos",
@@ -200,6 +203,8 @@
         "upload_video_file": "Arquivo de vídeo",
         "upload_publish_at": "Data/hora de publicação",
         "upload_submit": "Enviar",
+        "upload_pause": "Pausar envio",
+        "upload_resume": "Retomar envio",
         "uploading": "Enviando...",
         "title_required": "O título é obrigatório",
         "video_file_required": "Selecione um arquivo de vídeo",
@@ -216,6 +221,10 @@
         "batch_drop_sub": "ou clique para selecionar · múltiplos arquivos",
         "batch_upload_submit": "Enviar {{count}} vídeos",
         "batch_remove": "Remover",
+        "cancel_upload_confirm_title": "Cancelar envio?",
+        "cancel_upload_confirm_body": "O envio em andamento será interrompido e perdido.",
+        "cancel_upload_confirm_action": "Descartar envio",
+        "keep_uploading": "Continuar enviando",
         "title": "Título",
         "description": "Descrição",
         "tags": "Tags",
@@ -377,11 +386,7 @@
         "empty_text": "Vídeos dos canais que você segue aparecerão aqui"
     },
     "search": {
-        "try_different": "Tente um termo de busca diferente",
-        "placeholder": "Buscar vídeos, canais, tags...",
-        "go": "Buscar",
-        "label": "Pesquisar",
-        "submit": "Pesquisar"
+        "try_different": "Tente um termo de busca diferente"
     },
     "channel": {
         "not_found": "Canal não encontrado",
@@ -438,13 +443,16 @@
         "upload_error": "Falha no envio, tente novamente",
         "batch_uploaded": "{{count}} vídeos enviados com sucesso",
         "batch_upload_error": "{{count}} vídeos falharam no envio",
+        "batch_file_too_large": "\"{{name}}\" é muito grande. Máximo: {{maxSizeMB}} MB.",
+        "batch_file_duplicate": "\"{{name}}\" já está na fila.",
         "link_copied": "Link copiado!",
         "subscribed": "Inscrito",
         "unsubscribed": "Inscrição cancelada",
         "playlist_created": "Playlist criada",
         "playlist_deleted": "Playlist excluída",
         "added_to_playlist": "Adicionado à \"{{name}}\"",
-        "removed_from_playlist": "Removido da playlist"
+        "removed_from_playlist": "Removido da playlist",
+        "video_status_check_failed": "Não foi possível verificar o status do vídeo"
     },
     "profile": {
         "total_views": "Visualizações",
@@ -453,18 +461,28 @@
         "saved_count": "Salvos",
         "top_tags": "Tags favoritas",
         "edit_profile": "Editar perfil",
+        "preview_as_visitor": "Visualizar como visitante",
+        "exit_preview": "Sair da visualização",
+        "previewing_banner": "Você está vendo seu perfil como um visitante veria.",
         "bio_placeholder": "Uma breve descrição sobre você...",
         "name_label": "Nome",
         "bio_label": "Bio",
         "pinned_video": "Fixado",
         "delete_confirm": "Excluir '{{title}}'? Esta ação não pode ser desfeita.",
-        "filter_all": "Todos",
-        "filter_trending": "Em alta",
-        "filter_recent": "Recentes",
         "filter_shorts": "Shorts",
         "filter_topic": "Por tema",
+        "no_topics": "Nenhum vídeo com tags ainda",
         "view_list": "Ver como lista",
-        "view_diamond": "Ver como diamantes"
+        "view_diamond": "Ver como diamantes",
+        "tab_videos": "Vídeos",
+        "tab_not_published": "Não publicados",
+        "published_count": "Publicados",
+        "stat_all_time": "Todo o período",
+        "stat_pending_note": "{{count}} aguardando publicação",
+        "stat_published_note": "de {{count}} no total",
+        "nonlive_subtitle": "Visível só para você. Nada aqui conta nas suas visualizações.",
+        "published_section": "Publicados",
+        "total_views_summary": "{{views}} visualizações no total"
     },
     "mini_player": {
         "label": "Mini player",
@@ -496,6 +514,7 @@
         "play": "Reproduzir",
         "pause": "Pausar",
         "seek_bar": "Barra de progresso",
+        "mini_seek_bar": "Barra de progresso (mini player)",
         "skip": "Avançar 10 segundos",
         "mute": "Silenciar",
         "unmute": "Ativar som",
@@ -570,7 +589,8 @@
     },
     "notifications": {
         "bell": {
-            "label": "Notificações"
+            "label": "Notificações",
+            "label_with_count": "Notificações, {{count}} não lidas"
         },
         "title": "Atividade",
         "empty": "Tudo em dia",

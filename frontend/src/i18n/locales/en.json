@@ -147,8 +147,8 @@
         "no_recommendations": "Watch some videos to get recommendations",
         "no_history_title": "No watch history yet",
         "no_own_videos": "You haven't uploaded any videos yet",
+        "not_live_section": "Not yet live",
         "draft": "Draft",
-        "not_live_section": "Not yet live ({{count}})",
         "scheduled": "Scheduled",
         "published": "Published",
         "processing_toast": "Your video is being processed…",
@@ -186,6 +186,9 @@
         "related_empty_desc": "Nothing to suggest right now.",
         "related_filtered_empty": "No videos match the current filter.",
         "no_video_file": "No video file available",
+        "processing_failed": "Processing failed",
+        "processing_failed_desc": "Something went wrong while processing this video.",
+        "delete_and_reupload": "Delete and re-upload",
         "not_found": "Video not found",
         "results_for_query": "{{count}} results for",
         "videos_count": "{{count}} videos",
@@ -201,6 +204,8 @@
         "upload_publish_at": "Publish date/time",
         "upload_submit": "Upload",
         "uploading": "Uploading...",
+        "upload_pause": "Pause upload",
+        "upload_resume": "Resume upload",
         "title_required": "Title is required",
         "video_file_required": "Please select a video file",
         "edit_video": "Edit video",
@@ -216,6 +221,10 @@
         "batch_drop_sub": "or click to select · multiple files supported",
         "batch_upload_submit": "Upload {{count}} videos",
         "batch_remove": "Remove",
+        "cancel_upload_confirm_title": "Cancel upload?",
+        "cancel_upload_confirm_body": "The upload in progress will be stopped and lost.",
+        "cancel_upload_confirm_action": "Discard upload",
+        "keep_uploading": "Keep uploading",
         "title": "Title",
         "description": "Description",
         "tags": "Tags",
@@ -377,11 +386,7 @@
         "empty_text": "Videos from channels you follow will appear here"
     },
     "search": {
-        "try_different": "Try a different search term",
-        "placeholder": "Search videos, channels, tags...",
-        "go": "Search",
-        "label": "Search",
-        "submit": "Search"
+        "try_different": "Try a different search term"
     },
     "channel": {
         "not_found": "Channel not found",
@@ -438,13 +443,16 @@
         "upload_error": "Upload failed, please try again",
         "batch_uploaded": "{{count}} videos uploaded successfully",
         "batch_upload_error": "{{count}} videos failed to upload",
+        "batch_file_too_large": "\"{{name}}\" is too large. Maximum: {{maxSizeMB}} MB.",
+        "batch_file_duplicate": "\"{{name}}\" is already in the queue.",
         "link_copied": "Link copied!",
         "subscribed": "Subscribed",
         "unsubscribed": "Unsubscribed",
         "playlist_created": "Playlist created",
         "playlist_deleted": "Playlist deleted",
         "added_to_playlist": "Added to \"{{name}}\"",
-        "removed_from_playlist": "Removed from playlist"
+        "removed_from_playlist": "Removed from playlist",
+        "video_status_check_failed": "Couldn't check video status"
     },
     "profile": {
         "total_views": "Views",
@@ -453,18 +461,28 @@
         "saved_count": "Saved",
         "top_tags": "Top tags",
         "edit_profile": "Edit profile",
+        "preview_as_visitor": "Preview as visitor",
+        "exit_preview": "Exit preview",
+        "previewing_banner": "You're viewing your profile as a visitor would see it.",
         "bio_placeholder": "A short bio about yourself...",
         "name_label": "Name",
         "bio_label": "Bio",
         "pinned_video": "Pinned",
         "delete_confirm": "Delete '{{title}}'? This cannot be undone.",
-        "filter_all": "All",
-        "filter_trending": "Trending",
-        "filter_recent": "Recent",
         "filter_shorts": "Shorts",
         "filter_topic": "By topic",
+        "no_topics": "No tagged videos yet",
         "view_list": "Switch to list view",
-        "view_diamond": "Switch to diamond view"
+        "view_diamond": "Switch to diamond view",
+        "tab_videos": "Videos",
+        "tab_not_published": "Not published",
+        "published_count": "Published",
+        "stat_all_time": "All time",
+        "stat_pending_note": "{{count}} awaiting publish",
+        "stat_published_note": "of {{count}} total",
+        "nonlive_subtitle": "Only visible to you. Nothing here counts toward your views.",
+        "published_section": "Published",
+        "total_views_summary": "{{views}} views total"
     },
     "mini_player": {
         "label": "Mini player",
@@ -496,6 +514,7 @@
         "play": "Play",
         "pause": "Pause",
         "seek_bar": "Seek bar",
+        "mini_seek_bar": "Seek bar (mini player)",
         "skip": "Skip 10 seconds",
         "mute": "Mute",
         "unmute": "Unmute",
@@ -570,7 +589,8 @@
     },
     "notifications": {
         "bell": {
-            "label": "Notifications"
+            "label": "Notifications",
+            "label_with_count": "Notifications, {{count}} unread"
         },
         "title": "Activity",
         "empty": "You're all caught up",
