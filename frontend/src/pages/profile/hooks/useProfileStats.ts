@@ -7,6 +7,8 @@ export interface ProfileStats {
     totalViews: number
     uploadsThisMonth: number
     subscriberCount: number
+    publishedCount: number
+    totalCount: number
     topTags: Tag[]
 }
 
@@ -39,6 +41,10 @@ export function useProfileStats({ isOwnProfile, videos }: Params): ProfileStats 
             .slice(0, 3)
             .map(([videoTag]) => videoTag);
 
-        return { totalViews, uploadsThisMonth, subscriberCount, topTags };
+        return {
+            totalViews, uploadsThisMonth, subscriberCount, topTags,
+            publishedCount: publishedVideos.length,
+            totalCount: videos.length,
+        };
     }, [isOwnProfile, videos]);
 }

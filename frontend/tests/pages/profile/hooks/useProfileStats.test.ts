@@ -32,6 +32,20 @@ describe('useProfileStats', () => {
         expect(result.current?.totalViews).toBe(1500);
     });
 
+    it('counts published videos against the total, including drafts/failed', () => {
+        const videos = [
+            makeVideo({ id: vid('v1'), status: VideoStatus.PUBLISHED }),
+            makeVideo({ id: vid('v2'), status: VideoStatus.PUBLISHED }),
+            makeVideo({ id: vid('v3'), status: VideoStatus.DRAFT }),
+            makeVideo({ id: vid('v4'), status: VideoStatus.FAILED }),
+        ];
+
+        const { result } = renderHook(() => useProfileStats({ isOwnProfile: true, videos }));
+
+        expect(result.current?.publishedCount).toBe(2);
+        expect(result.current?.totalCount).toBe(4);
+    });
+
     it('reads the subscriber count from any video carrying it', () => {
         const videos = [
             makeVideo({ id: vid('v1'), channelSubscribers: undefined }),

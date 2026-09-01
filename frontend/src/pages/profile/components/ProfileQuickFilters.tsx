@@ -1,116 +1,72 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flame, Clock, Clapperboard, LayoutGrid, Hash } from 'lucide-react';
-import { VideoFilter, type FilterState } from '@utils';
-import type { Tag } from '@models';
+import { Hash } from '@components/icons/icons';
+import { SortBy, SORT_OPTIONS, type FilterState } from '@utils';
 import { cn } from '@utils';
 
 interface ProfileQuickFiltersProps {
-    allTags: Tag[]
     value: FilterState
     onChange: (state: FilterState) => void
-    onScrollToTop?: () => void
+    isTopicViewActive?: boolean
     onScrollToTrending?: () => void
     onScrollToRecent?: () => void
-    onScrollToTopic?: () => void
+    onToggleTopicView?: () => void
 }
 
+// View controls — sort order and the "by topic" switch — change how the list is
+// displayed. Narrowing it (tags, year, date range) lives in the shared FilterPanel.
 export default function ProfileQuickFilters({
-    allTags,
     value,
     onChange,
-    onScrollToTop,
+    isTopicViewActive = false,
     onScrollToTrending,
     onScrollToRecent,
-    onScrollToTopic,
+    onToggleTopicView,
 }: ProfileQuickFiltersProps) {
     const { t } = useTranslation();
 
-    const hasShorts = allTags.includes('shorts' as Tag);
-    const topTags = useMemo(
-        () => allTags.filter(tag => tag !== 'shorts').slice(0, 5),
-        [allTags],
-    );
+    // Sort and tag filters are orthogonal — picking a sort option only touches
+    // FilterState.sortBy, so an active tag filter stays applied.
+    function handleSortChange(sortBy: SortBy): void {
+        onChange({ ...value, sortBy });
 
-    const isFilterEmpty = VideoFilter.isEmpty(value);
-    const activeTagSet = new Set(value.tags.map(String));
-
-    function handleNavClick(scrollFn?: () => void): void {
-        onChange(VideoFilter.emptyState());
-        scrollFn?.();
-    }
-
-    function handleTagClick(tag: Tag): void {
-        const isActive = activeTagSet.has(String(tag));
-        onChange(isActive ? VideoFilter.emptyState() : { ...VideoFilter.emptyState(), tags: [tag] });
+        if (sortBy === SortBy.VIEWS) {
+            onScrollToTrending?.();
+        } else if (sortBy === SortBy.RECENT) {
+            onScrollToRecent?.();
+        }
     }
 
     return (
         <div className="profile-quick-filters">
-            <button
-                type="button"
-                className={cn('profile-quick-filters__chip', isFilterEmpty && 'profile-quick-filters__chip--active')}
-                onClick={() => handleNavClick(onScrollToTop)}
-            >
-                <LayoutGrid size={13} />
-                <span>{t('profile.filter_all')}</span>
-            </button>
+            <span className="profile-quick-filters__sort-label">{t('video.filter_sort_by')}</span>
+            <div className="profile-quick-filters__sort" role="group" aria-label={t('video.filter_sort_by')}>
+                {SORT_OPTIONS.map(opt => {
+                    const isActive = !isTopicViewActive && value.sortBy === opt.value;
+
+                    return (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            className={cn('profile-quick-filters__sort-btn', isActive && 'profile-quick-filters__sort-btn--active')}
+                            aria-pressed={isActive}
+                            disabled={isTopicViewActive}
+                            onClick={() => handleSortChange(opt.value)}
+                        >
+                            {t(opt.labelKey)}
+                        </button>
+                    );
+                })}
+            </div>
 
             <button
                 type="button"
-                className="profile-quick-filters__chip"
-                onClick={() => handleNavClick(onScrollToTrending)}
-            >
-                <Flame size={13} />
-                <span>{t('profile.filter_trending')}</span>
-            </button>
-
-            <button
-                type="button"
-                className="profile-quick-filters__chip"
-                onClick={() => handleNavClick(onScrollToRecent)}
-            >
-                <Clock size={13} />
-                <span>{t('profile.filter_recent')}</span>
-            </button>
-
-            <button
-                type="button"
-                className="profile-quick-filters__chip"
-                onClick={() => handleNavClick(onScrollToTopic)}
+                className={cn('profile-quick-filters__topic-toggle', isTopicViewActive && 'profile-quick-filters__topic-toggle--active')}
+                aria-pressed={isTopicViewActive}
+                onClick={onToggleTopicView}
             >
                 <Hash size={13} />
-                <span>{t('profile.filter_topic')}</span>
+                {t('profile.filter_topic')}
             </button>
-
-            {hasShorts && (
-                <button
-                    type="button"
-                    className={cn(
-                        'profile-quick-filters__chip',
-                        activeTagSet.has('shorts') && 'profile-quick-filters__chip--active',
-                    )}
-                    onClick={() => handleTagClick('shorts' as Tag)}
-                >
-                    <Clapperboard size={13} />
-                    <span>{t('profile.filter_shorts')}</span>
-                </button>
-            )}
-
-            {topTags.map(tag => (
-                <button
-                    key={tag}
-                    type="button"
-                    className={cn(
-                        'profile-quick-filters__chip',
-                        activeTagSet.has(String(tag)) && 'profile-quick-filters__chip--active',
-                    )}
-                    onClick={() => handleTagClick(tag)}
-                >
-                    <Hash size={12} />
-                    <span>#{tag}</span>
-                </button>
-            ))}
         </div>
     );
 }

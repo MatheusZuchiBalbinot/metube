@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal } from '@components/icons/icons';
 import type { Tag } from '@models';
 import { Button } from '@ui';
 import { SortBy, type FilterState, cn } from '@utils';
@@ -19,21 +19,26 @@ interface FilterPanelProps {
     value: FilterState
     onChange: (f: FilterState) => void
     iconOnly?: boolean
+    hideSort?: boolean
+    hideTags?: boolean
 }
 
-export default function FilterPanel({ allTags, value, onChange, iconOnly = false }: FilterPanelProps) {
+export default function FilterPanel({
+    allTags, value, onChange, iconOnly = false, hideSort = false, hideTags = false,
+}: FilterPanelProps) {
     const { t } = useTranslation();
     const { open, dropdownPos, wrapRef, triggerRef, dropdownRef, toggle } = useFilterDropdown();
 
+    // Sort order isn't counted here — it's not a narrowing criterion like the others,
+    // and profile's quick-filter chips change it directly without opening this panel.
     const activeCount =
         value.tags.length +
         (value.year !== null ? 1 : 0) +
         (value.dateFrom !== null ? 1 : 0) +
-        (value.dateTo !== null ? 1 : 0) +
-        (value.sortBy !== SortBy.RECENT ? 1 : 0);
+        (value.dateTo !== null ? 1 : 0);
 
     const hasActiveFilters = activeCount > 0;
-    const hasTags = allTags.length > 0;
+    const hasTags = allTags.length > 0 && !hideTags;
 
     function toggleTag(tag: Tag) {
         const isSelected = value.tags.includes(tag);
@@ -49,7 +54,6 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
         <div
             ref={dropdownRef}
             className="filter-panel__dropdown"
-            role="dialog"
             aria-label={t('video.filters')}
             style={{ top: dropdownPos.top, bottom: dropdownPos.bottom, left: dropdownPos.left, maxHeight: dropdownPos.maxHeight }}
         >
@@ -57,7 +61,7 @@ export default function FilterPanel({ allTags, value, onChange, iconOnly = false
                 <FilterTags allTags={allTags} value={value} onToggle={toggleTag} />
             )}
 
-            <FilterSort value={value} onChange={onChange} />
+            {!hideSort && <FilterSort value={value} onChange={onChange} />}
 
             <FilterYear value={value} onChange={onChange} />
 

@@ -1,9 +1,16 @@
-import { Play, Pin, VideoOff, EyeOff } from 'lucide-react';
+import { Play, Pin, VideoOff, Hash } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import VideoCard from '@components/video/card';
 import VideoCardSkeleton from '@components/video/cardSkeleton';
 import EmptyState from '@ui/empty/empty';
-import type { Video, VideoId } from '@models';
+import Badge, { type BadgeVariant } from '@ui/badge/badge';
+import Button from '@ui/button/button';
+import ProfileTopicGrid from './ProfileTopicGrid';
+import { domain } from '@domain';
+import { Format, formatDuration, formatRelativeDate, videoUrl, isActivationKey, cn } from '@utils';
+import type { TagSection } from '../hooks/useProfileSections';
+import type { Video, VideoId, Tag } from '@models';
 
 interface ProfileVideoGridProps {
     isLoadingVideos: boolean
@@ -15,10 +22,114 @@ interface ProfileVideoGridProps {
     pinnedVideoId: VideoId | null | undefined
     isOwnProfile: boolean
     allVideosRef: React.RefObject<HTMLDivElement | null>
+    nonLiveRef: React.RefObject<HTMLDivElement | null>
     hasVideos: boolean
+    showTopicView: boolean
+    topicSections: TagSection[]
+    totalViews: number | null
+    onSelectTopic: (tag: Tag) => void
     onEdit: (video: Video) => void
     onDelete: (id: VideoId) => void
     onRetry: () => void
+}
+
+interface NonLiveStatus {
+    variant: BadgeVariant
+    label: string
+}
+
+function useNonLiveStatus(video: Video): NonLiveStatus {
+    const { t } = useTranslation();
+
+    if (domain.video.isProcessing(video)) {
+        return { variant: 'default', label: t('video.processing') };
+    }
+
+    if (domain.video.isFailed(video)) {
+        return { variant: 'danger', label: t('video.failed') };
+    }
+
+    if (domain.video.isScheduledAndFuture(video)) {
+        return { variant: 'warning', label: t('video.scheduled') };
+    }
+
+    return { variant: 'neutral', label: t('video.draft') };
+}
+
+interface NonLiveRowProps {
+    video: Video
+    onEdit: (video: Video) => void
+    onRetry: () => void
+}
+
+// Denser list-style row instead of the full VideoCard grid. Only processing/failed
+// are inert (nothing to watch yet); draft/scheduled still open normally.
+function NonLiveRow({ video, onEdit, onRetry }: NonLiveRowProps) {
+    const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
+    const status = useNonLiveStatus(video);
+    const isFailed = domain.video.isFailed(video);
+    const isNotInteractive = domain.video.isProcessing(video) || isFailed;
+    const hasTags = video.tags.length > 0;
+
+    function handleRowClick() {
+        if (isNotInteractive) {
+            return;
+        }
+        navigate(videoUrl(video.id));
+    }
+
+    function handleRowKeyDown(e: React.KeyboardEvent) {
+        if (isNotInteractive || !isActivationKey(e)) {
+            return;
+        }
+        e.preventDefault();
+        navigate(videoUrl(video.id));
+    }
+
+    function handleEditClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        onEdit(video);
+    }
+
+    function handleRetryClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        onRetry();
+    }
+
+    return (
+        <div
+            className={cn('profile-nonlive-row', isNotInteractive && 'profile-nonlive-row--not-interactive')}
+            role="button"
+            aria-label={video.title}
+            tabIndex={isNotInteractive ? -1 : 0}
+            onClick={handleRowClick}
+            onKeyDown={handleRowKeyDown}
+        >
+            <div className="profile-nonlive-row__thumb">
+                {video.thumbnail && <img src={video.thumbnail} alt="" />}
+                {video.duration !== undefined && video.duration > 0 && (
+                    <span className="profile-nonlive-row__duration">{formatDuration(video.duration)}</span>
+                )}
+            </div>
+            <div className="profile-nonlive-row__body">
+                <div className="profile-nonlive-row__meta">
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                    <span className="profile-nonlive-row__time">{formatRelativeDate(video.createdAt, i18n.language)}</span>
+                </div>
+                <h4 className="profile-nonlive-row__title">{video.title}</h4>
+                {hasTags && (
+                    <p className="profile-nonlive-row__detail">{video.tags.map(tag => `#${tag}`).join('  ')}</p>
+                )}
+            </div>
+            <div className="profile-nonlive-row__actions">
+                <Button variant="secondary" size="sm" onClick={handleEditClick}>{t('video.edit')}</Button>
+                {isFailed && (
+                    <Button variant="secondary" size="sm" onClick={handleRetryClick}>{t('video.retry_upload')}</Button>
+                )}
+            </div>
+        </div>
+    );
 }
 
 export default function ProfileVideoGrid({
@@ -31,38 +142,34 @@ export default function ProfileVideoGrid({
     pinnedVideoId,
     isOwnProfile,
     allVideosRef,
+    nonLiveRef,
     hasVideos,
+    showTopicView,
+    topicSections,
+    totalViews,
+    onSelectTopic,
     onEdit,
     onDelete,
     onRetry,
 }: ProfileVideoGridProps) {
     const { t } = useTranslation();
     const hasNonLiveVideos = isOwnProfile && nonLiveVideos.length > 0;
+    const hasTopics = topicSections.length > 0;
 
     return (
         <main className="profile-page__main">
             {hasNonLiveVideos && !isLoadingVideos && (
-                <section className="profile-page__nonlive">
-                    <div className="profile-page__all-videos-header">
+                <section className="profile-page__nonlive" ref={nonLiveRef}>
+                    <div className="profile-page__nonlive-header">
                         <h3 className="profile-page__section-title">
-                            <EyeOff size={15} strokeWidth={2} />
-                            {t('video.not_live_section', { count: nonLiveVideos.length })}
+                            {t('video.not_live_section')}
+                            <span className="profile-page__section-count-badge">{nonLiveVideos.length}</span>
                         </h3>
+                        <p className="profile-page__nonlive-subtitle">{t('profile.nonlive_subtitle')}</p>
                     </div>
-                    <div className="profile-page__grid">
+                    <div className="profile-page__nonlive-list">
                         {nonLiveVideos.map(video => (
-                            <div
-                                key={video.id}
-                                className="profile-page__card-wrapper profile-page__card-wrapper--nonlive"
-                            >
-                                <VideoCard
-                                    video={video}
-                                    showActions={true}
-                                    onEdit={onEdit}
-                                    onDelete={onDelete}
-                                    onRetry={onRetry}
-                                />
-                            </div>
+                            <NonLiveRow key={video.id} video={video} onEdit={onEdit} onRetry={onRetry} />
                         ))}
                     </div>
                 </section>
@@ -85,7 +192,21 @@ export default function ProfileVideoGrid({
                 </div>
             )}
 
-            {!hasCuratedSections && !isLoadingVideos && pinnedVideo && (
+            {!hasCuratedSections && !isLoadingVideos && !showTopicView && hasVideos && (
+                <div className="profile-page__all-videos-header">
+                    <h3 className="profile-page__section-title">
+                        {t('profile.published_section')}
+                        <span className="profile-page__section-count-badge">{filteredVideos.length}</span>
+                    </h3>
+                    {totalViews !== null && (
+                        <span className="profile-page__all-videos-total-views">
+                            {t('profile.total_views_summary', { views: Format.views(totalViews) })}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            {!hasCuratedSections && !isLoadingVideos && !showTopicView && pinnedVideo && (
                 <div className="profile-page__pinned">
                     <div className="profile-page__pinned-header">
                         <Pin size={13} />
@@ -118,7 +239,18 @@ export default function ProfileVideoGrid({
                 </div>
             )}
 
-            {!isLoadingVideos && hasVideos && (
+            {!isLoadingVideos && showTopicView && (
+                hasTopics ? (
+                    <ProfileTopicGrid tagSections={topicSections} onSelectTag={onSelectTopic} />
+                ) : (
+                    <EmptyState
+                        icon={<Hash size={36} strokeWidth={1.5} />}
+                        title={t('profile.no_topics')}
+                    />
+                )
+            )}
+
+            {!isLoadingVideos && !showTopicView && hasVideos && (
                 <div className="profile-page__grid">
                     {filteredVideos.map((video, i) => {
                         const isPinned = video.id === pinnedVideoId;
@@ -143,7 +275,7 @@ export default function ProfileVideoGrid({
                 </div>
             )}
 
-            {!isLoadingVideos && !hasVideos && (
+            {!isLoadingVideos && !showTopicView && !hasVideos && (
                 <EmptyState
                     icon={<VideoOff size={36} strokeWidth={1.5} />}
                     title={t('video.no_own_videos')}

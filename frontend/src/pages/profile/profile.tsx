@@ -1,24 +1,24 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pencil, Upload } from 'lucide-react';
+import { Pencil, Upload, Eye, EyeOff } from '@components/icons/icons';
 import FilterPanel from '@components/filter/panel';
 import ProfileQuickFilters from './components/ProfileQuickFilters';
 import { domain } from '@domain';
-import { Avatar, Button, Tooltip } from '@ui';
+import { Avatar, Button } from '@ui';
 import './profile.css';
 import { useAuth, useVideo, useProfileVideos, useSubscription, useAllTags } from '@hooks';
 import { useAppDispatch } from '@store';
 import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 import { recentChannelsActions } from '@store/recentChannelsSlice';
-import { VideoFilter, videoUrl, cn, ROUTES, type FilterState } from '@utils';
-import type { VideoId, ChannelId } from '@models';
+import { VideoFilter, videoUrl, ROUTES, TagColors, type FilterState } from '@utils';
+import type { VideoId, ChannelId, Tag } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
 import { useEditProfileModal } from './hooks/useEditProfileModal';
 import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
 import { useSpotlightComments } from './hooks/useSpotlightComments';
-import { useProfileSections } from './hooks/useProfileSections';
+import { useProfileSections, type TagSection } from './hooks/useProfileSections';
 import { useProfileStats } from './hooks/useProfileStats';
 import EditVideoModal from './components/EditVideoModal';
 import EditProfileModal from './components/EditProfileModal';
@@ -34,13 +34,19 @@ export default function ProfilePage() {
     const dispatch = useAppDispatch();
     const { isSubscribed, toggleSubscription } = useSubscription();
     const {
-        videos, pinnedVideoId, editVideo, deleteVideo, openUploadModal,
+        pinnedVideoId, editVideo, deleteVideo, openUploadModal,
     } = useVideo();
 
     // ProfilePage is also a guest route (/channel/:id, /user/:id), so `user` can be
     // null here — a logged-out visitor is never viewing their own profile.
     const isOwnProfile = user !== null && (!idParam || user.uuid === idParam);
     const channelId = isOwnProfile && user !== null ? String(user.id) : (idParam ?? '');
+
+    // Only swaps what gets *displayed*; data-fetching/routing (channelId, refetch,
+    // own-profile redirect) still keys off the untouched isOwnProfile.
+    const [previewAsVisitor, setPreviewAsVisitor] = useState(false);
+    const isPreviewingAsVisitor = isOwnProfile && previewAsVisitor;
+    const displayIsOwnProfile = isOwnProfile && !previewAsVisitor;
 
     const { videosState, setVideos } = useProfileVideos(channelId, isOwnProfile);
     const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
@@ -64,6 +70,15 @@ export default function ProfilePage() {
 
     const [filterState, setFilterState] = useState<FilterState>(VideoFilter.emptyState);
 
+    // "By topic" swaps the grid for a topic-picker gallery instead of sorting it —
+    // there's no meaningful "sort by topic" order. Any other filter change backs out of it.
+    const [showTopicView, setShowTopicView] = useState(false);
+
+    function handleFilterChange(next: FilterState) {
+        setShowTopicView(false);
+        setFilterState(next);
+    }
+
     const {
         editingVideo, editTitle, editDescription, editTags,
         setEditTitle, setEditDescription, setEditTags,
@@ -82,15 +97,18 @@ export default function ProfilePage() {
 
     const allTags = useAllTags(ownVideos);
 
+    // Reads from ownVideos, not the global `videos` Redux store — that only ever
+    // holds a handful of videos (bootstrap + this session's uploads), so most
+    // channels' pinned video would resolve to null or a stale copy there.
     const pinnedVideo = useMemo(
-        () => (isOwnProfile && pinnedVideoId)
-            ? videos.find(v => v.id === pinnedVideoId) ?? null
+        () => (displayIsOwnProfile && pinnedVideoId)
+            ? ownVideos.find(v => v.id === pinnedVideoId) ?? null
             : null,
-        [isOwnProfile, pinnedVideoId, videos],
+        [displayIsOwnProfile, pinnedVideoId, ownVideos],
     );
 
     const deckGhostVideos = useMemo(() => {
-        const isNotOwn = !isOwnProfile;
+        const isNotOwn = !displayIsOwnProfile;
         const hasNoPinned = pinnedVideo === null;
 
         if (isNotOwn || hasNoPinned) {
@@ -101,14 +119,16 @@ export default function ProfilePage() {
             .filter(v => domain.video.isPublished(v) && v.id !== pinnedVideo.id)
             .sort((a, b) => b.views - a.views)
             .slice(0, 2);
-    }, [isOwnProfile, pinnedVideo, ownVideos]);
+    }, [displayIsOwnProfile, pinnedVideo, ownVideos]);
 
     // Draft/scheduled/processing/failed are grouped as "not yet live" so the main
     // grid below only ever holds videos a visitor could actually watch.
     const nonLiveVideos = useMemo(
-        () => isOwnProfile ? ownVideos.filter(v => !domain.video.isVisible(v)) : [],
-        [isOwnProfile, ownVideos],
+        () => displayIsOwnProfile ? ownVideos.filter(v => !domain.video.isVisible(v)) : [],
+        [displayIsOwnProfile, ownVideos],
     );
+
+    const hasNonLiveVideos = nonLiveVideos.length > 0;
 
     const filteredVideos = useMemo(
         () => VideoFilter.apply(ownVideos, filterState)
@@ -116,14 +136,50 @@ export default function ProfilePage() {
         [ownVideos, filterState, pinnedVideo],
     );
 
+    // Independent of useProfileSections' curated tagSections (which need 5+ published
+    // videos) — this groups every tag on every visible video so the topic gallery
+    // works for any profile size.
+    const topicSections = useMemo<TagSection[]>(() => {
+        const visibleVideos = ownVideos.filter(v => domain.video.isVisible(v));
+        const tagCounts = new Map<Tag, number>();
+
+        for (const video of visibleVideos) {
+            for (const tag of video.tags) {
+                const isShorts = tag === 'shorts';
+                if (isShorts) {
+                    continue;
+                }
+                tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+            }
+        }
+
+        return [...tagCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([tag, count]) => ({
+                tag,
+                count,
+                videos: visibleVideos
+                    .filter(v => v.tags.includes(tag))
+                    .sort((a, b) => b.views - a.views)
+                    .slice(0, 3),
+            }));
+    }, [ownVideos]);
+
+    function handleSelectTopic(tag: Tag) {
+        setShowTopicView(false);
+        setFilterState({ ...VideoFilter.emptyState(), tags: [tag] });
+    }
+
     const allVideosRef = useRef<HTMLDivElement>(null);
+    const nonLiveRef = useRef<HTMLDivElement>(null);
     const latestSectionRef = useRef<HTMLDivElement>(null);
     const mostViewedSectionRef = useRef<HTMLDivElement>(null);
     const topicSectionRef = useRef<HTMLDivElement>(null);
+    const filterPanelRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
     const sections = useProfileSections(ownVideos, filterState, pinnedVideo);
-    const stats = useProfileStats({ isOwnProfile, videos: ownVideos });
+    const stats = useProfileStats({ isOwnProfile: displayIsOwnProfile, videos: ownVideos });
     const spotlightComments = useSpotlightComments(sections?.featured?.id ?? null);
 
     const navigateToVideo = useCallback(
@@ -146,6 +202,29 @@ export default function ProfilePage() {
         }, 50);
     }
 
+    // The curated layout already has its own topic gallery — scroll to it instead of
+    // showing a second, differently-computed one. Everyone else gets topicSections below.
+    function handleShowTopics() {
+        const hasCuratedTopicGallery = topicSectionRef.current !== null;
+
+        if (hasCuratedTopicGallery) {
+            topicSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+
+        setShowTopicView(true);
+        filterPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function handleToggleTopicView() {
+        if (showTopicView) {
+            setShowTopicView(false);
+            return;
+        }
+
+        handleShowTopics();
+    }
+
     function handleCoverWatchClick(e: React.MouseEvent) {
         e.stopPropagation();
         const featuredVideoId = sections?.featured?.id;
@@ -162,6 +241,13 @@ export default function ProfilePage() {
 
     const profileBio = isOwnProfile ? (user?.bio ?? '') : '';
     const hasVideos = filteredVideos.length > 0;
+
+    // A genuine visitor's ownVideos is already scoped server-side to what they can
+    // see — only the previewing-owner case needs a client-side recount, since their
+    // own fetch legitimately includes drafts/scheduled/etc.
+    const videosCount = isPreviewingAsVisitor
+        ? ownVideos.filter(v => domain.video.isVisible(v)).length
+        : ownVideos.length;
 
     const subscriptionChannelId = idParam as ChannelId | undefined;
     const isChannelSubscribed = subscriptionChannelId !== undefined && isSubscribed(subscriptionChannelId);
@@ -186,9 +272,27 @@ export default function ProfilePage() {
 
     return (
         <div className="profile-page">
+            {/* Must stay above the cover: the header's avatar overlaps it with a negative
+                margin, which would otherwise eat this banner if placed any closer. */}
+            {isPreviewingAsVisitor && (
+                <div className="profile-page__preview-banner">
+                    <Eye size={14} />
+                    <span>{t('profile.previewing_banner')}</span>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPreviewAsVisitor(false)}
+                        className="profile-page__preview-exit"
+                    >
+                        {t('profile.exit_preview')}
+                    </Button>
+                </div>
+            )}
+
             <div className="profile-page__banner" aria-hidden="true" />
 
             <div className="profile-page__container">
+
                 <div className="profile-page__header">
                     <div className="profile-page__avatar-section">
                         <Avatar name={channelName} size="lg" />
@@ -196,77 +300,146 @@ export default function ProfilePage() {
                     <div className="profile-page__info">
                         <div className="profile-page__name-row">
                             <h1 className="profile-page__name">{channelName}</h1>
-                            {!isOwnProfile && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    aria-pressed={isChannelSubscribed}
-                                    className={cn('profile-page__subscribe-btn', isChannelSubscribed && 'profile-page__subscribe-btn--subscribed')}
-                                    onClick={handleSubscribeToggle}
-                                >
-                                    {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
-                                </Button>
-                            )}
-                            {isOwnProfile && (
-                                <div className="profile-page__header-actions">
-                                    <Tooltip content={t('video.upload')} side="bottom">
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            aria-label={t('video.upload')}
-                                            onClick={() => openUploadModal()}
-                                        >
-                                            <Upload size={15} />
-                                        </Button>
-                                    </Tooltip>
-                                    <Tooltip content={t('profile.edit_profile')} side="bottom">
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            aria-label={t('profile.edit_profile')}
-                                            onClick={() => handleEditProfileOpen(user?.name ?? '', user?.bio ?? '')}
-                                        >
-                                            <Pencil size={15} />
-                                        </Button>
-                                    </Tooltip>
-                                </div>
-                            )}
                         </div>
 
                         <p className="profile-page__subtitle">
-                            {t('video.videos_count', { count: ownVideos.length })}
+                            {t('video.videos_count', { count: videosCount })}
+                            {displayIsOwnProfile && stats && (
+                                <>
+                                    <span className="profile-page__subtitle-dot" aria-hidden="true">·</span>
+                                    {stats.subscriberCount} {t('channel.subscribers')}
+                                </>
+                            )}
                         </p>
 
                         {profileBio && (
                             <p className="profile-page__bio">{profileBio}</p>
                         )}
-
-                        {stats && <ProfileStats stats={stats} />}
                     </div>
+
+                    {(isOwnProfile || !displayIsOwnProfile) && (
+                        <div className="profile-page__header-actions">
+                            {!displayIsOwnProfile && (
+                                <Button
+                                    variant={isChannelSubscribed ? 'secondary' : 'primary'}
+                                    size="md"
+                                    aria-pressed={isChannelSubscribed}
+                                    className="profile-page__header-btn"
+                                    onClick={handleSubscribeToggle}
+                                >
+                                    {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
+                                </Button>
+                            )}
+                            {isOwnProfile && !previewAsVisitor && (
+                                <>
+                                    <Button
+                                        variant="primary"
+                                        size="md"
+                                        leftIcon={<Upload size={15} />}
+                                        className="profile-page__header-btn"
+                                        onClick={() => openUploadModal()}
+                                    >
+                                        {t('video.upload')}
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="md"
+                                        leftIcon={<Pencil size={15} />}
+                                        className="profile-page__header-btn"
+                                        onClick={() => handleEditProfileOpen(user?.name ?? '', user?.bio ?? '')}
+                                    >
+                                        {t('profile.edit_profile')}
+                                    </Button>
+                                </>
+                            )}
+                            {isOwnProfile && (
+                                <Button
+                                    variant="secondary"
+                                    size="md"
+                                    aria-pressed={previewAsVisitor}
+                                    leftIcon={previewAsVisitor ? <EyeOff size={15} /> : <Eye size={15} />}
+                                    className="profile-page__header-btn"
+                                    onClick={() => setPreviewAsVisitor(v => !v)}
+                                >
+                                    {t(previewAsVisitor ? 'profile.exit_preview' : 'profile.preview_as_visitor')}
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
+
+                {displayIsOwnProfile && stats && <ProfileStats stats={stats} />}
+
+                {displayIsOwnProfile && stats && stats.topTags.length > 0 && (
+                    <div className="profile-page__topics-row">
+                        <span className="profile-page__topics-label">{t('profile.top_tags')}</span>
+                        <div className="profile-page__top-tags">
+                            {stats.topTags.map(tag => {
+                                const palette = TagColors.palette(tag);
+                                return (
+                                    <span
+                                        key={tag}
+                                        className="profile-page__top-tag"
+                                        style={{ background: palette.bg, color: palette.color }}
+                                    >
+                                        {tag}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {hasNonLiveVideos && (
+                    <div className="profile-page__tabs" role="tablist" aria-label={t('profile.tab_videos')}>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={true}
+                            className="profile-page__tab profile-page__tab--active"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        >
+                            <span className="profile-page__tab-label">{t('profile.tab_videos')}</span>
+                            <span className="profile-page__tab-count">{ownVideos.length - nonLiveVideos.length}</span>
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={false}
+                            className="profile-page__tab"
+                            onClick={() => nonLiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        >
+                            <span className="profile-page__tab-label">{t('profile.tab_not_published')}</span>
+                            <span className="profile-page__tab-count">{nonLiveVideos.length}</span>
+                        </button>
+                    </div>
+                )}
 
                 <div className="profile-page__filters">
                     <ProfileQuickFilters
-                        allTags={allTags}
                         value={filterState}
-                        onChange={setFilterState}
-                        onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        onChange={handleFilterChange}
+                        isTopicViewActive={showTopicView}
                         onScrollToTrending={() => mostViewedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                         onScrollToRecent={() => latestSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        onScrollToTopic={() => topicSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        onToggleTopicView={handleToggleTopicView}
                     />
-                    <FilterPanel
-                        allTags={allTags}
-                        value={filterState}
-                        onChange={setFilterState}
-                    />
+
+                    <div ref={filterPanelRef}>
+                        <FilterPanel
+                            allTags={allTags}
+                            value={filterState}
+                            onChange={handleFilterChange}
+                            hideSort
+                        />
+                    </div>
                 </div>
 
                 {sections !== null && !isLoadingVideos && (
                     <ProfileSections
                         sections={sections}
                         spotlightComments={spotlightComments}
-                        isOwnProfile={isOwnProfile}
+                        isOwnProfile={displayIsOwnProfile}
                         onNavigate={navigateToVideo}
                         onWatchClick={handleCoverWatchClick}
                         onScrollToFilter={scrollToAllVideos}
@@ -286,9 +459,14 @@ export default function ProfilePage() {
                     filteredVideos={filteredVideos}
                     nonLiveVideos={nonLiveVideos}
                     pinnedVideoId={pinnedVideoId}
-                    isOwnProfile={isOwnProfile}
+                    isOwnProfile={displayIsOwnProfile}
                     allVideosRef={allVideosRef}
+                    nonLiveRef={nonLiveRef}
                     hasVideos={hasVideos}
+                    showTopicView={showTopicView}
+                    topicSections={topicSections}
+                    totalViews={displayIsOwnProfile && stats ? stats.totalViews : null}
+                    onSelectTopic={handleSelectTopic}
                     onEdit={handleEditOpen}
                     onDelete={handleDelete}
                     onRetry={() => openUploadModal()}
