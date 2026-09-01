@@ -17,7 +17,7 @@ function FilterBarSkeleton() {
     );
 }
 
-function GridSkeleton({ count, className }: { count: number; className: string }) {
+export function GridSkeleton({ count, className }: { count: number; className: string }) {
     return (
         <div className={className} aria-hidden="true">
             {Array.from({ length: count }, (_, i) => (
@@ -27,7 +27,7 @@ function GridSkeleton({ count, className }: { count: number; className: string }
     );
 }
 
-function HomePageSkeleton() {
+export function HomePageSkeleton() {
     return (
         <div className="ps ps--home" aria-hidden="true">
             {/* Trending carousel */}

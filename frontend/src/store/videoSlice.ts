@@ -43,7 +43,10 @@ const initialState: VideoState = videoAdapter.getInitialState({
     error: null,
     lastVideoStatusUpdate: null,
     serverRecommendations: [],
-    recommendationsLoading: false,
+    // Starts true: useInfiniteRecommendations always fetches page 1 on mount, so the
+    // first render should show the loading skeleton rather than flash an empty state
+    // that then gets replaced — that flash was a major CLS source on the home page.
+    recommendationsLoading: true,
 });
 
 /** Moves an id to the front of the entity order, preserving "newest first" semantics. */

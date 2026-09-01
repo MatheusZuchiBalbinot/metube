@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Filter, Flame, PlayCircle, Shuffle, Sparkles, Clapperboard, Rss, History as HistoryIcon } from 'lucide-react';
+import { Filter, Flame, PlayCircle, Shuffle, Sparkles, Clapperboard, Rss, HistoryIcon } from '@components/icons/icons';
 import { domain } from '@domain';
 import VideoCard from '@components/video/card';
 import FilterPanel from '@components/filter/panel';
 import Button from '@ui/button/button';
 import EmptyState from '@ui/empty/empty';
-import Spinner from '@ui/spinner/spinner';
+import { HomePageSkeleton } from '@components/layout/pageSkeleton';
 import './home.css';
 import { useVideoData, useFilterState, useAuth, useAllTags } from '@hooks';
 import { VideoFilter, ROUTES, videoUrl, greetingPeriod } from '@utils';
@@ -56,8 +56,13 @@ export default function HomePage() {
     const [category, setCategory] = useState<Tag | null>(null);
 
     const { loadMore } = useInfiniteRecommendations();
-    const { sections } = useFeedSections();
+    const { sections, isLoading: sectionsLoading } = useFeedSections();
     const sentinelRef = useRef<HTMLDivElement>(null);
+
+    // Both feeds (shelves + recommendations grid) are gated together so the default view
+    // commits once, fully populated, instead of popping in shelf-by-shelf and shoving the
+    // toolbar/grid down the page — that staggered pop-in was the site's biggest CLS source.
+    const isPageLoading = recommendationsLoading || sectionsLoading;
 
     const continueWatching = useMemo(() => {
         const videoMap = new Map<string, Video>(videos.map(v => [v.id, v]));
@@ -142,6 +147,18 @@ export default function HomePage() {
         setCategory(null);
     }
 
+    if (isPageLoading) {
+        return (
+            <div className="home-page">
+                <header className="home-page__greeting">
+                    <h1 className="home-page__greeting-title">{greeting}</h1>
+                </header>
+
+                <HomePageSkeleton />
+            </div>
+        );
+    }
+
     return (
         <div className="home-page">
             <header className="home-page__greeting">
@@ -187,13 +204,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-            {recommendationsLoading && (
-                <div className="home-page__main">
-                    <Spinner />
-                </div>
-            )}
-
-            {!recommendationsLoading && isCompletelyEmpty && (
+            {isCompletelyEmpty && (
                 <div className="home-page__main">
                     <EmptyState
                         icon={<PlayCircle />}

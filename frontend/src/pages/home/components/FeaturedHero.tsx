@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play } from 'lucide-react';
+import { Play } from '@components/icons/icons';
 import { Format, videoUrl } from '@utils';
 import type { Video } from '@models';
 
@@ -18,7 +18,7 @@ export default function FeaturedHero({ video }: FeaturedHeroProps) {
 
     return (
         <button type="button" className="home-hero" onClick={handlePlay}>
-            <img className="home-hero__bg" src={video.thumbnail} alt="" aria-hidden="true" />
+            <img className="home-hero__bg" src={video.thumbnail} alt="" aria-hidden="true" fetchPriority="high" />
             <div className="home-hero__scrim" />
             <div className="home-hero__content">
                 <span className="home-hero__eyebrow">{t('home.featured')}</span>
