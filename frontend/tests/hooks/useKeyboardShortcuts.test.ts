@@ -56,11 +56,15 @@ describe('useKeyboardShortcuts', () => {
         expect(opts.onFocusSearch).toHaveBeenCalledTimes(1);
     });
 
-    it('pressing "f" calls onFocusSearch', () => {
+    // Regression test for the "f" collision: the video watch page also binds "f" to
+    // fullscreen (usePlayerKeyboard), and both handlers used to fire on the same
+    // keypress — stealing focus into the search box while toggling fullscreen. Only
+    // "/" should focus search globally now.
+    it('pressing "f" does not call onFocusSearch', () => {
         const opts = defaultOptions();
         renderHook(() => useKeyboardShortcuts(opts), { wrapper });
         pressKey('f');
-        expect(opts.onFocusSearch).toHaveBeenCalledTimes(1);
+        expect(opts.onFocusSearch).not.toHaveBeenCalled();
     });
 
     it('pressing "?" calls onOpenShortcuts', () => {

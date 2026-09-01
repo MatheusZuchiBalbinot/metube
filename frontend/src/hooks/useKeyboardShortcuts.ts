@@ -97,7 +97,7 @@ export function useKeyboardShortcuts({
                 return;
             }
 
-            if (key === '/' || key === 'f') {
+            if (key === '/') {
                 e.preventDefault();
                 onFocusSearch();
                 return;
