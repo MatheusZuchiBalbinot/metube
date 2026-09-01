@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Bell as BellIcon } from 'lucide-react';
+import { BellIcon } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@store';
 import { selectNotificationsUnreadCount } from '@store/notificationsSelectors';
@@ -23,6 +23,9 @@ export default function NotificationsBell() {
 
     const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
     const hasBadge = unreadCount > 0;
+    const bellLabel = hasBadge
+        ? t('notifications.bell.label_with_count', { count: unreadCount })
+        : t('notifications.bell.label');
 
     return (
         <div className="notifications-bell">
@@ -31,13 +34,13 @@ export default function NotificationsBell() {
                     ref={btnRef}
                     className="notifications-bell__btn"
                     onClick={handleToggle}
-                    aria-label={t('notifications.bell.label')}
+                    aria-label={bellLabel}
                     aria-expanded={open}
                     aria-haspopup="dialog"
                 >
                     <BellIcon size={18} strokeWidth={1.75} />
                     {hasBadge && (
-                        <span className="notifications-bell__badge" aria-label={`${unreadCount} unread`}>
+                        <span className="notifications-bell__badge" aria-hidden="true">
                             {badgeLabel}
                         </span>
                     )}
