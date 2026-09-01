@@ -43,7 +43,7 @@
     justify-content: space-between;
     gap: var(--space-3);
     padding: 5px var(--space-2);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-xl);
     transition: background var(--duration-fast);
 }
 
@@ -100,7 +100,6 @@
     color: var(--text-3);
 }
 
-/* Note below video section */
 .shortcuts-modal__note {
     font-size: var(--text-xs);
     color: var(--text-3);
@@ -108,7 +107,6 @@
     margin-top: var(--space-1);
 }
 
-/* Tip line at the bottom */
 .shortcuts-modal__tip {
     font-size: var(--text-sm);
     color: var(--text-3);
@@ -117,7 +115,6 @@
     line-height: 1.4;
 }
 
-/* Collapse to single column on narrow viewports */
 @media (max-width: 480px) {
     .shortcuts-modal__columns {
         grid-template-columns: 1fr;

@@ -94,6 +94,7 @@
 
 .dp-cal {
     width: 252px;
+    max-width: 100%;
 }
 
 /* ─── Months / Month ──────────────────────────────────────────────────────── */
@@ -274,6 +275,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
     padding: 2px;
 }
 

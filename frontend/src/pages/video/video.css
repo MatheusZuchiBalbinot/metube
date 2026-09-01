@@ -165,7 +165,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1_5);
-    padding: 7px 18px;
+    padding: 7px var(--space-5);
     border-radius: var(--radius-full);
     border: none;
     background: var(--gradient-accent);
@@ -209,7 +209,7 @@
 .video-page__meta-bar {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1_25);
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--text-2);
@@ -489,7 +489,7 @@
     100% { box-shadow: 0 0 0 0px   transparent; }
 }
 
-/* ─── Share dropdown (UX-16) ───────────────────────────────────────────────── */
+/* ─── Share dropdown ─────────────────────────────────────────────────────── */
 
 .video-page__share-chevron {
     opacity: 0.5;
@@ -889,7 +889,7 @@
 .video-page__sidebar-tab {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1_25);
     padding: 5px var(--space-3);
     border: none;
     background: transparent;
@@ -992,7 +992,6 @@
     background: var(--surface-2);
 }
 
-/* VISUAL-08: active chapter highlight */
 .video-page__chapter--active {
     background: color-mix(in srgb, var(--accent) 10%, transparent);
     border-left-color: var(--accent);
@@ -1003,7 +1002,6 @@
     color: var(--text);
 }
 
-/* VISUAL-09: chapter seeking feedback */
 @keyframes vp-chapter-seek-flash {
     0% {
         background: color-mix(in srgb, var(--accent) 25%, transparent);
@@ -1072,7 +1070,7 @@
     content: none;
 }
 
-/* Chapter hover fix: sidebar bg is surface-2, so use surface-3 for hover */
+/* Sidebar bg is surface-2, so hover uses surface-3 for contrast */
 .video-page__sidebar .video-page__chapter:hover {
     background: var(--surface-3);
 }
@@ -1355,6 +1353,13 @@
     background: var(--surface-2);
 }
 
+/* The icon is geometrically centered against the button's own box, but the
+   text's optical center sits a hair lower (font metrics, not extra leading) —
+   without this the icon reads as sitting too high next to the label. */
+.video-page__stop-after svg {
+    margin-top: 1px;
+}
+
 .video-page__stop-after--active {
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 50%, transparent);
@@ -1468,7 +1473,8 @@
         0 0 60px 10px color-mix(in srgb, var(--ambient-color, var(--accent)) 20%, transparent),
         0 24px 64px rgba(0, 0, 0, 0.4);
     pointer-events: none;
-    transition: box-shadow 0.5s ease;
+    /* no matching --duration-* token yet */
+    transition: box-shadow 0.5s var(--ease-out);
     z-index: -1;
 }
 
@@ -1494,7 +1500,8 @@
     background: var(--accent);
     border-radius: 0 2px 2px 0;
     transform-origin: left center;
-    transition: transform 0.1s linear;
+    /* linear kept — tracks a numeric scroll-progress percentage */
+    transition: transform var(--duration-fast) linear;
     margin: -32px -32px var(--space-6);
     z-index: 1;
 }
@@ -1602,7 +1609,7 @@
 .video-page__transcription-waveform {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1_25);
     height: 48px;
 }
 

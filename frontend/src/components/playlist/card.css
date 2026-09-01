@@ -2,7 +2,7 @@
 
 .playlist-card {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     background: var(--surface);
     transition: border-color var(--duration-slow), transform var(--duration-slow), box-shadow var(--duration-slow);

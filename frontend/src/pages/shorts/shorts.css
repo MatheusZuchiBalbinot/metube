@@ -196,6 +196,7 @@
     z-index: 30;
     will-change: transform;
     transform: translateY(100%);
+    /* no matching --duration-* token yet */
     transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
     pointer-events: none;
     max-height: 70%;
@@ -428,6 +429,7 @@
 .shorts-page__volume-slider-wrap {
     max-height: 0;
     overflow: hidden;
+    /* no matching --duration-* token yet */
     transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

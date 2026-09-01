@@ -14,7 +14,7 @@
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    transition: box-shadow var(--duration-slow) ease, border-color var(--duration-slow) ease;
+    transition: box-shadow var(--duration-slow) var(--ease-out), border-color var(--duration-slow) var(--ease-out);
 }
 
 .app-header::after {
@@ -120,6 +120,16 @@
     transition: color var(--duration-fast), background var(--duration-fast);
 }
 
+/* Same coarse-pointer touch-target bump as .btn--icon (button.css) — this class
+   duplicates that sizing rather than composing it, so it needs its own override
+   to actually get the 44px minimum on touch devices. */
+@media (pointer: coarse) {
+    .app-header__icon-btn {
+        width: var(--icon-lg);
+        height: var(--icon-lg);
+    }
+}
+
 .app-header__icon-btn:hover {
     color: var(--text);
     background: var(--surface-2);
@@ -223,12 +233,22 @@
     border-radius: var(--radius-md);
     text-align: left;
     text-decoration: none;
-    transition: color var(--duration-fast), background var(--duration-fast);
+    transition: color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
 }
 
 .app-header__dropdown-item:hover {
     color: var(--text);
     background: var(--surface-3);
+}
+
+.app-header__dropdown-item:active {
+    transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-header__dropdown-item:active {
+        transform: none;
+    }
 }
 
 .app-header__dropdown-name {
@@ -358,7 +378,7 @@
     padding: var(--space-2) var(--space-2_5);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--duration-fast);
 }
 
 .app-header__recent-item:hover {

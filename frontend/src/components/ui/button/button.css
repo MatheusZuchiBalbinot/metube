@@ -171,6 +171,16 @@
     font-size: var(--text-base);
 }
 
+/* Bump icon-button touch target to 44px on coarse pointers only — keeps the
+   denser 24px sizing for mouse/desktop layouts (control bars, overlay actions)
+   that were tuned around it. */
+@media (pointer: coarse) {
+    .btn--icon {
+        width: var(--icon-lg);
+        height: var(--icon-lg);
+    }
+}
+
 .btn--full {
     width: 100%;
 }

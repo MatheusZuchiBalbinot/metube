@@ -61,6 +61,11 @@
     background: var(--surface-3);
 }
 
+.input-field:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: not-allowed;
+}
+
 .input-field--icon {
     padding-left: 40px;
 }
