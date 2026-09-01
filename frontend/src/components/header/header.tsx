@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Square, Plus, Menu, LogIn } from 'lucide-react';
+import { Square, Plus, Menu, LogIn } from '@components/icons/icons';
 import { ROUTES, videoUrl } from '@utils';
 import { useAppDispatch, useAppSelector } from '@store';
 import { searchActions } from '@store/searchSlice';
@@ -25,6 +25,7 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const { t } = useTranslation();
     const { user, signOut } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const dispatch = useAppDispatch();
     const recentSearches = useAppSelector(selectRecentSearches);
@@ -35,6 +36,22 @@ export default function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [recentDropdownOpen, setRecentDropdownOpen] = useState(false);
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+
+    // The search results page has no input of its own — this is the only place
+    // to see or edit the active query, so it must reflect the URL when landing
+    // on /search directly (a link, a back-nav, a shared URL) rather than sitting
+    // empty next to results for a query it never learned about.
+    useEffect(() => {
+        const isOnSearchPage = location.pathname === ROUTES.SEARCH;
+
+        if (!isOnSearchPage) {
+            return;
+        }
+
+        const urlQuery = new URLSearchParams(location.search).get('q') ?? '';
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the header's search box from the URL when landing on /search
+        setSearchQuery(urlQuery);
+    }, [location.pathname, location.search]);
 
     const trimmedQuery = searchQuery.trim();
     const hasQuery = trimmedQuery.length > 0;

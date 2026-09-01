@@ -1,11 +1,10 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
+import { Search } from '@components/icons/icons';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import VideoRow from '@components/video/row';
 import FilterPanel, { type FilterState } from '@components/filter/panel';
-import { Button } from '@ui';
 import EmptyState from '@ui/empty/empty';
 import { analytics, AnalyticsSource } from '@api';
 import './search.css';
@@ -35,26 +34,12 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     );
 }
 
-// Query/URL sync, virtualized results and the query-vs-no-query / results-vs-empty JSX
-// states all live together here; the branching is inherent to those view states.
-// eslint-disable-next-line complexity
 export default function SearchPage() {
     const { t } = useTranslation();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const { publishedVideos } = useVideoData();
     const query = searchParams.get('q') ?? '';
-    const [localQuery, setLocalQuery] = useState(query);
     const [filters, setFilters] = useState<FilterState>(VideoFilter.emptyState());
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync editable input from the URL query param
-        setLocalQuery(query);
-    }, [query]);
-
-    useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
 
     const baseResults = useMemo(() => {
         const isQueryEmpty = query.trim() === '';
@@ -104,55 +89,8 @@ export default function SearchPage() {
     });
     /* eslint-enable react-hooks/refs */
 
-    function handleSearchSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-        e.preventDefault();
-        const trimmed = localQuery.trim();
-        const hasValue = trimmed.length > 0;
-        if (!hasValue) {
-            return;
-        }
-        setSearchParams({ q: trimmed });
-    }
-
     return (
         <div className="search-page">
-            <div className="search-page__hero">
-                <form className="search-page__form" onSubmit={handleSearchSubmit}>
-                    <div className="search-page__input-wrap">
-                        <button
-                            type="submit"
-                            className="search-page__input-icon-btn"
-                            aria-label={t('search.submit', 'Search')}
-                        >
-                            <Search size={20} className="search-page__input-icon" aria-hidden="true" />
-                        </button>
-                        <label htmlFor="search-page-input" className="sr-only">
-                            {t('search.label', 'Search')}
-                        </label>
-                        <input
-                            id="search-page-input"
-                            ref={inputRef}
-                            type="text"
-                            className="search-page__input"
-                            value={localQuery}
-                            onChange={e => setLocalQuery(e.target.value)}
-                            placeholder={t('search.placeholder', 'Search videos, channels, tags...')}
-                            autoComplete="off"
-                        />
-                        {localQuery.length > 0 && (
-                            <Button
-                                type="submit"
-                                variant="ghost"
-                                size="sm"
-                                className="search-page__submit-btn"
-                            >
-                                {t('search.go', 'Search')}
-                            </Button>
-                        )}
-                    </div>
-                </form>
-            </div>
-
             <div className="search-page__header">
                 {hasQuery ? (
                     <>

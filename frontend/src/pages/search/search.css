@@ -10,78 +10,6 @@
     width: 100%;
 }
 
-/* ─── Hero search input ───────────────────────────────────────────────────── */
-
-.search-page__hero {
-    width: 100%;
-}
-
-.search-page__form {
-    width: 100%;
-}
-
-.search-page__input-wrap {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-    background: var(--surface-2);
-    border: 1px solid var(--border-2);
-    border-radius: var(--radius);
-    padding: 0 var(--space-3) 0 var(--space-4);
-    gap: var(--space-2_5);
-    transition: border-color var(--duration-default), box-shadow var(--duration-default);
-}
-
-.search-page__input-wrap:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.search-page__input-icon-btn {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: var(--text-3);
-    transition: color var(--duration-default);
-    border-radius: var(--radius-md);
-}
-
-.search-page__input-wrap:focus-within .search-page__input-icon-btn {
-    color: var(--accent);
-}
-
-.search-page__input-icon {
-    flex-shrink: 0;
-    color: inherit;
-    transition: color var(--duration-default);
-}
-
-.search-page__input {
-    flex: 1;
-    height: 52px;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: 1.0625rem;
-    color: var(--text);
-    font-family: inherit;
-}
-
-.search-page__input::placeholder {
-    color: var(--text-3);
-}
-
-.search-page__submit-btn {
-    flex-shrink: 0;
-}
-
 /* ─── mark highlight ─────────────────────────────────────────────────────── */
 
 .search-page mark {
@@ -100,6 +28,8 @@
     flex-wrap: wrap;
 }
 
+/* Page title — top-level heading, one per page. Distinct from an in-page section
+   title (e.g. .home-page__section-title), which is intentionally a smaller level. */
 .search-page__title {
     font-size: var(--text-xl);
     font-weight: var(--font-bold);
@@ -113,8 +43,11 @@
     margin: 0;
 }
 
+/* Alternate to .search-page__title in the same header slot (shown instead of it when
+   there's an active query) — matches its page-title size so the header reads at one
+   consistent weight regardless of which branch renders. */
 .search-page__query {
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     font-weight: var(--font-bold);
     color: var(--text);
 }
