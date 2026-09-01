@@ -21,6 +21,20 @@ button {
     background: transparent;
     padding: 0;
     text-decoration: none;
+    /* Baseline feel for every plain <button> in the app — components with their
+       own transition/:active (e.g. .btn) override this via specificity. */
+    transition: background var(--duration-fast), color var(--duration-fast),
+        opacity var(--duration-fast), transform var(--duration-fast);
+}
+
+button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    button:active:not(:disabled) {
+        transform: none;
+    }
 }
 
 /* ─── CSS Custom Properties ─────────────────────────────────────────────── */
@@ -251,6 +265,8 @@ button {
     /* ─── Static colors (theme-independent) ─────────────────────────────── */
     /* Light text/icons that must stay light on dark scrims, overlays and video chrome, regardless of mode */
     --text-on-overlay: #ffffff;
+    /* Muted light text over dark scrims/overlays, regardless of mode */
+    --text-on-overlay-muted: rgba(255, 255, 255, 0.75);
     /* Black backdrop for video letterboxing and dark scrims, regardless of mode */
     --scrim: #000000;
     /* Streak / trending "flame" accent (orange), distinct from the warning amber */
@@ -309,6 +325,7 @@ button {
 
     /* ─── Spacing scale ──────────────────────────────────────────────────── */
     --space-1: 4px;
+    --space-1_25: 5px;
     --space-1_5: 6px;
     --space-2: 8px;
     --space-2_5: 10px;
@@ -349,7 +366,9 @@ button {
     --elevation-3: 0 12px 48px var(--shadow-lg);
     --elevation-4: 0 24px 64px var(--shadow-lg);
     --glow-accent: 0 4px 20px var(--accent-glow);
-    --focus-ring: 0 0 0 3px var(--accent-subtle);
+    /* Opaque ring color with a surface-colored gap so it stays visible against
+       any background — --accent-subtle (12% alpha) is too faint on its own. */
+    --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
 
     /* ─── Interactive opacity ────────────────────────────────────────────────── */
     --opacity-disabled: 0.45;
