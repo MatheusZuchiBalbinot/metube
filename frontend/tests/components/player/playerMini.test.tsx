@@ -93,14 +93,34 @@ describe('MiniVideoPlayer', () => {
         expect(videoRef.current!.currentTime).toBe(5);
     });
 
-    it('toggles play when the outer container is clicked', () => {
-        const handleTogglePlay = vi.fn();
-        usePlayerPlaybackMock.mockReturnValue(basePlayback({ handleTogglePlay }));
+    it('exposes the progress bar as a keyboard-accessible slider', () => {
+        usePlayerPlaybackMock.mockReturnValue(basePlayback({ currentTime: 40, duration: 100, progressPct: 40 }));
 
         const { container } = render(<MiniVideoPlayer videoRef={makeVideoRef()} src="video.mp4" />);
+        const progress = container.querySelector('.vp__mini-progress') as HTMLElement;
 
-        fireEvent.click(container.querySelector('.vp--mini') as HTMLElement);
+        expect(progress).toHaveAttribute('role', 'slider');
+        expect(progress).toHaveAttribute('tabindex', '0');
+        expect(progress).toHaveAttribute('aria-valuemin', '0');
+        expect(progress).toHaveAttribute('aria-valuemax', '100');
+        expect(progress).toHaveAttribute('aria-valuenow', '40');
+        expect(progress).not.toHaveAttribute('aria-hidden');
+    });
 
-        expect(handleTogglePlay).toHaveBeenCalled();
+    it('seeks forward and backward with ArrowRight/ArrowLeft on the progress bar', () => {
+        usePlayerPlaybackMock.mockReturnValue(basePlayback({ currentTime: 40, duration: 100, progressPct: 40 }));
+        const videoRef = makeVideoRef();
+
+        const { container } = render(<MiniVideoPlayer videoRef={videoRef} src="video.mp4" />);
+        stubDuration(videoRef.current!, 100);
+        Object.defineProperty(videoRef.current!, 'currentTime', { value: 40, writable: true, configurable: true });
+
+        const progress = container.querySelector('.vp__mini-progress') as HTMLElement;
+
+        fireEvent.keyDown(progress, { key: 'ArrowRight' });
+        expect(videoRef.current!.currentTime).toBe(45);
+
+        fireEvent.keyDown(progress, { key: 'ArrowLeft' });
+        expect(videoRef.current!.currentTime).toBe(35);
     });
 });

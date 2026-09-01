@@ -1,6 +1,7 @@
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause } from '@components/icons/icons';
 import { useTranslation } from 'react-i18next';
 import type { VideoPlayerProps } from './player';
+import { KEYBOARD_SKIP_SECONDS } from './playerTypes';
 import { usePlayerPlayback, useShaka } from '@hooks';
 
 export function MiniVideoPlayer({
@@ -13,7 +14,7 @@ export function MiniVideoPlayer({
     const { t } = useTranslation();
 
     const {
-        isPlaying, progressPct,
+        isPlaying, currentTime, duration, progressPct,
         handleVideoPlay, handleVideoPause, handleVideoTimeUpdate,
         handleVideoLoadedMetadata, handleVideoEnded, handleVideoProgress,
         handleTogglePlay,
@@ -28,6 +29,16 @@ export function MiniVideoPlayer({
         handleTogglePlay();
     }
 
+    function seekTo(time: number) {
+        const el = videoRef.current;
+
+        if (el === null || el.duration === 0) {
+            return;
+        }
+
+        el.currentTime = Math.max(0, Math.min(time, el.duration));
+    }
+
     function handleMiniProgressClick(e: React.MouseEvent<HTMLDivElement>) {
         e.stopPropagation();
         const el = videoRef.current;
@@ -38,11 +49,26 @@ export function MiniVideoPlayer({
             return;
         }
 
-        el.currentTime = pct * el.duration;
+        seekTo(pct * el.duration);
+    }
+
+    function handleMiniProgressKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        e.stopPropagation();
+
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(currentTime + KEYBOARD_SKIP_SECONDS);
+            return;
+        }
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(currentTime - KEYBOARD_SKIP_SECONDS);
+        }
     }
 
     return (
-        <div className="vp vp--mini" onClick={handleTogglePlay}>
+        <div className="vp vp--mini">
             <video
                 ref={videoRef}
                 className="vp__video"
@@ -60,7 +86,17 @@ export function MiniVideoPlayer({
                 </button>
             </div>
 
-            <div className="vp__mini-progress" aria-hidden onClick={handleMiniProgressClick}>
+            <div
+                className="vp__mini-progress"
+                role="slider"
+                tabIndex={0}
+                aria-label={t('player.mini_seek_bar')}
+                aria-valuemin={0}
+                aria-valuemax={Math.round(duration)}
+                aria-valuenow={Math.round(currentTime)}
+                onClick={handleMiniProgressClick}
+                onKeyDown={handleMiniProgressKeyDown}
+            >
                 <div className="vp__mini-progress-fill" style={{ transform: `scaleX(${progressPct / 100})` }} />
             </div>
         </div>

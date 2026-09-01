@@ -44,7 +44,8 @@
     cursor: pointer;
     user-select: none;
     box-shadow: 0 0 100px 30px color-mix(in srgb, var(--vp-ambient, transparent) 28%, transparent);
-    transition: box-shadow 0.5s ease;
+    /* no matching --duration-* token yet */
+    transition: box-shadow 0.5s var(--ease-out);
     container-type: inline-size;
     container-name: vp;
 }
@@ -202,6 +203,7 @@
     opacity: 0;
     pointer-events: none;
     will-change: opacity;
+    /* no matching --duration-* token yet */
     transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 4;
 }
@@ -230,7 +232,7 @@
     position: relative;
     height: 3px;
     background: rgba(255, 255, 255, 0.28);
-    transition: height var(--duration-default) ease;
+    transition: height var(--duration-default) var(--ease-out);
     overflow: hidden;
 }
 
@@ -252,6 +254,7 @@
     z-index: 0;
     transform-origin: left center;
     transform: scaleX(0);
+    /* no matching --duration-* token yet; ease kept — tracks a numeric buffered/progress percentage */
     transition: transform 0.4s ease;
 }
 
@@ -283,7 +286,7 @@
     pointer-events: all;
     cursor: pointer;
     z-index: 2;
-    transition: transform var(--duration-fast), height var(--duration-default) ease;
+    transition: transform var(--duration-fast), height var(--duration-default) var(--ease-out);
 }
 
 .vp__seek:hover .vp__chapter-dot,
@@ -328,7 +331,7 @@
     background: rgba(250, 204, 21, 0.55);
     pointer-events: none;
     z-index: 2;
-    transition: height var(--duration-default) ease;
+    transition: height var(--duration-default) var(--ease-out);
 }
 
 .vp__seek:hover .vp__seek-ab-region,
@@ -373,7 +376,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1_25);
     pointer-events: none;
     z-index: 10;
     animation: vp-preview-in var(--duration-fast) ease forwards;
@@ -588,16 +591,25 @@
     cursor: pointer;
     outline: none;
     opacity: 0;
-    transition: opacity var(--duration-slow) ease;
+    transition: opacity var(--duration-slow) var(--ease-out);
     pointer-events: none;
     margin-left: 0;
 }
 
-.vp__volume:hover .vp__volume-slider {
+.vp__volume:hover .vp__volume-slider,
+.vp__volume:focus-within .vp__volume-slider {
     width: 72px;
     opacity: 1;
     pointer-events: all;
     margin-left: var(--space-1);
+}
+
+/* Keyboard users can Tab onto the slider even while it's collapsed to width:0
+   — without a visible ring here it's revealed (via :focus-within above) but
+   still appears inert. */
+.vp__volume-slider:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
 }
 
 .vp__volume-slider::-webkit-slider-thumb {
@@ -658,7 +670,7 @@
     font-weight: var(--font-medium);
     cursor: pointer;
     text-align: left;
-    transition: background 0.1s, color 0.1s;
+    transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .vp__captions-option:hover {
@@ -738,7 +750,7 @@
     font-weight: var(--font-medium);
     cursor: pointer;
     text-align: left;
-    transition: background 0.1s, color 0.1s;
+    transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .vp__settings-option:hover {
@@ -771,7 +783,7 @@
     font-weight: var(--font-medium);
     cursor: pointer;
     text-align: left;
-    transition: background 0.1s, color 0.1s;
+    transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .vp__settings-row:hover {
@@ -1022,7 +1034,7 @@
     justify-content: center;
     background: rgba(0, 0, 0, 0.35);
     opacity: 0;
-    transition: opacity var(--duration-default) ease;
+    transition: opacity var(--duration-default) var(--ease-out);
     z-index: 4;
     pointer-events: none;
 }
@@ -1043,6 +1055,7 @@
     border: none;
     cursor: pointer;
     color: white;
+    /* no matching --duration-* token yet for the transform leg (0.18s) */
     transition: background var(--duration-default), transform 0.18s var(--ease-bounce);
 }
 
@@ -1075,5 +1088,6 @@
     background: var(--accent);
     transform-origin: left center;
     transform: scaleX(0);
+    /* no matching --duration-* token yet; linear kept — tracks a numeric progress percentage */
     transition: transform 0.3s linear;
 }
