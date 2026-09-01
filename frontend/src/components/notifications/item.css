@@ -118,7 +118,10 @@
 
 .notification-item__badge--subscriber {
     background: var(--color-success-fg);
-    color: #0b3b2c;
+    /* Darkened relative to the current mode's --color-success-fg (which itself
+       varies between dark/light — see base.css) rather than a hardcoded hex, so
+       contrast stays reasonable in both modes instead of only the one it was tuned for. */
+    color: color-mix(in srgb, var(--color-success-fg) 30%, black);
 }
 
 .notification-item__icon--ai,

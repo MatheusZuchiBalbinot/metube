@@ -1,5 +1,6 @@
-import { Spinner } from '@ui';
+import { useTranslation } from 'react-i18next';
 import CommentItem from './item';
+import CommentSkeleton from './commentSkeleton';
 import type { Comment } from '@models';
 import type { Cuid } from '@api';
 import './replies.css';
@@ -31,12 +32,14 @@ export default function CommentReplies({
     onLoadReplies,
     onSeek,
 }: CommentRepliesProps) {
+    const { t } = useTranslation();
     const replies = getReplies(parentCuid);
 
     if (isLoading && replies.length === 0) {
         return (
-            <div className="comment-replies comment-replies--loading">
-                <Spinner size="sm" />
+            <div className="comment-replies" role="status" aria-label={t('common.loading')}>
+                <CommentSkeleton />
+                <CommentSkeleton />
             </div>
         );
     }

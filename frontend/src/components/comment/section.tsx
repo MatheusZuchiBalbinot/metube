@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar, Button, Spinner } from '@ui';
 import CommentForm from './form';
 import CommentItem from './item';
+import CommentSkeleton from './commentSkeleton';
 import type { Vuid } from '@api';
 import './section.css';
 import { useComments, useAuth } from '@hooks';
@@ -60,8 +61,10 @@ export default function CommentSection({ vuid, videoChannelId, onSeek }: Comment
             <div className="comment-section__divider" />
 
             {isInitialLoading && (
-                <div className="comment-section__loading">
-                    <Spinner size="md" />
+                <div className="comment-skeleton-list" role="status" aria-label={t('common.loading')}>
+                    <CommentSkeleton />
+                    <CommentSkeleton />
+                    <CommentSkeleton />
                 </div>
             )}
 

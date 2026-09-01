@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { CheckCheck, X, BellOff } from 'lucide-react';
+import { CheckCheck, X, BellOff } from '@components/icons/icons';
 import { useAppDispatch, useAppSelector } from '@store';
 import { notificationsActions } from '@store/notificationsSlice';
 import { selectNotifications } from '@store/notificationsSelectors';
 import { notifications as notificationsApi } from '@api';
 import type { AppNotification as Notification } from '@api';
-import { EmptyState, Tooltip, Skeleton } from '@ui';
+import { EmptyState, Tooltip } from '@ui';
 import { isWithinDays } from '@utils';
 import NotificationItem from './item';
+import NotificationSkeleton from './notificationSkeleton';
 import { getCategory } from './meta';
 import './drawer.css';
 
@@ -193,15 +194,13 @@ export default function NotificationsDrawer({ onClose, triggerRef }: Notificatio
                 </div>
 
                 <div className="notifications-drawer__list">
-                    {isInitialLoading && SKELETON_ROWS.map(row => (
-                        <div key={row} className="notifications-drawer__skeleton">
-                            <Skeleton width={40} height={40} circle />
-                            <div className="notifications-drawer__skeleton-body">
-                                <Skeleton width="80%" height={12} />
-                                <Skeleton width="50%" height={10} />
-                            </div>
+                    {isInitialLoading && (
+                        <div role="status" aria-label={t('common.loading')}>
+                            {SKELETON_ROWS.map(row => (
+                                <NotificationSkeleton key={row} />
+                            ))}
                         </div>
-                    ))}
+                    )}
 
                     {isEmpty && (
                         <EmptyState

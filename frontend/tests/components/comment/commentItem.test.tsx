@@ -115,6 +115,18 @@ describe('CommentItem', () => {
         expect(screen.getByRole('button', { name: /comments.view_replies/ })).toBeInTheDocument();
     });
 
+    it('reflects expanded state on the replies toggle via aria-expanded', async () => {
+        const user = userEvent.setup();
+        renderItem({ replyCount: 3 });
+
+        const toggle = screen.getByRole('button', { name: /comments.view_replies/ });
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+        await user.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('does not show view replies toggle when no replies', () => {
         renderItem({ replyCount: 0 });
         expect(screen.queryByRole('button', { name: /comments.view_replies/ })).not.toBeInTheDocument();

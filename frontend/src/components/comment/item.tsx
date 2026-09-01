@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from '@components/icons/icons';
 import { Avatar, Button, Modal, Spinner, Tooltip } from '@ui';
 import CommentForm from './form';
 import CommentHistory from './history';
@@ -225,6 +225,7 @@ export default function CommentItem({
                             void handleToggleReplies();
                         }}
                         disabled={isRepliesLoading}
+                        aria-expanded={showReplies}
                     >
                         {getToggleIcon()}
                         {showReplies

@@ -19,7 +19,7 @@
     font-style: italic;
     cursor: pointer;
     border-radius: 999px;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    transition: border-color var(--duration-default), color var(--duration-default), background var(--duration-default);
     white-space: nowrap;
 }
 
@@ -65,7 +65,7 @@
     background: none;
     cursor: pointer;
     text-align: left;
-    transition: background 0.1s;
+    transition: background var(--duration-fast);
     border-bottom: 1px solid var(--border);
 }
 
