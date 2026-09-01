@@ -18,6 +18,8 @@
     gap: var(--space-3);
 }
 
+/* Page title — top-level heading, one per page. Distinct from an in-page section
+   title (e.g. .home-page__section-title), which is intentionally a smaller level. */
 .video-grid-page__title {
     font-size: var(--text-xl);
     font-weight: var(--font-bold);
@@ -39,13 +41,24 @@
 
 /* ─── Grid ────────────────────────────────────────────────────────────────── */
 
+/* Breakpoints below are intentionally shared with .home-page__grid (home.css) and
+   .profile-page__grid (profile.css) — keep the same ladder (1200/1024/480) and the
+   "reaches 1 column at 480px" behavior in sync across all three if you touch this. */
 .video-grid-page__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: var(--space-5);
 }
 
+@media (max-width: 1200px) {
+    .video-grid-page__grid { grid-template-columns: repeat(4, 1fr); }
+}
+
 @media (max-width: 1024px) {
+    .video-grid-page__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
     .video-grid-page__grid { grid-template-columns: repeat(2, 1fr); }
 }
 

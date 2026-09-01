@@ -139,6 +139,9 @@
     gap: var(--space-4);
 }
 
+/* Mirrors the unified real-grid breakpoint ladder (.home-page__grid / .video-grid-page__grid
+   / .profile-page__grid): 5 → 4@1200 → 3@1024 → 2@768 → 1@480 — keep in sync so the
+   skeleton doesn't "pop" into a different column count when content loads. */
 .ps-grid--home {
     grid-template-columns: repeat(5, 1fr);
 }
@@ -160,6 +163,12 @@
     }
 
     .ps-grid--four {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .ps-grid--home {
         grid-template-columns: repeat(2, 1fr);
     }
 }

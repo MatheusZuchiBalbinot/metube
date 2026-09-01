@@ -9,6 +9,7 @@
             color-mix(in srgb, var(--vh-bg, var(--surface-2)) 35%, transparent),
             var(--surface-2) 65%);
     cursor: pointer;
+    /* no matching --duration-* token yet for the box-shadow leg (0.25s) */
     transition: box-shadow 0.25s, transform var(--duration-slow);
 }
 
@@ -34,6 +35,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    /* no matching --duration-* token yet */
     transition: transform 0.35s;
 }
 
@@ -63,6 +65,7 @@
     height: 48px;
     filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.6));
     transform: scale(0.85);
+    /* no matching --duration-* token yet */
     transition: transform 0.25s var(--ease-bounce);
 }
 
@@ -155,7 +158,7 @@
 .video-hero__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: var(--space-1_25);
     align-items: center;
 }
 
@@ -182,4 +185,21 @@
 
 :root[data-mode='light'] .video-hero:hover {
     box-shadow: 0 6px 32px color-mix(in srgb, var(--vh-color, var(--accent)) 14%, transparent);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .video-hero {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .video-hero__thumb {
+        width: 100%;
+    }
+
+    .video-hero__body {
+        justify-content: flex-start;
+    }
 }

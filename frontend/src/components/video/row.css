@@ -171,3 +171,22 @@
     font-size: var(--text-xs);
     color: var(--text-3);
 }
+
+/* ─── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+    .video-row {
+        flex-direction: column;
+    }
+
+    .video-row__thumb {
+        width: 100%;
+    }
+
+    .video-row__title {
+        white-space: normal;
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+    }
+}

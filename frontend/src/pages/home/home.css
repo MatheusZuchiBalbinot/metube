@@ -89,6 +89,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* no matching --duration-* token yet */
     transition: transform 0.4s var(--ease-out);
 }
 
@@ -141,7 +142,7 @@
 
 .home-hero__desc {
     font-size: var(--text-sm);
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-on-overlay-muted);
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -152,13 +153,15 @@
 .home-hero__play {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-2);
     margin-top: var(--space-1_5);
-    padding: 9px 18px;
+    padding: 9px var(--space-5);
+    min-height: 44px;
     width: fit-content;
     border-radius: var(--radius-full);
-    background: #fff;
-    color: #000;
+    background: var(--text-on-overlay);
+    color: var(--scrim);
     font-weight: var(--font-semibold);
     font-size: var(--text-sm);
 }
@@ -213,6 +216,8 @@
     gap: var(--space-1_5);
 }
 
+/* In-page section title (multiple per page, e.g. "Trending") — intentionally a
+   smaller level than a page title (e.g. .video-grid-page__title / .search-page__title). */
 .home-page__section-title {
     font-size: var(--text-md);
     font-weight: var(--font-bold);
@@ -284,6 +289,10 @@
 
 /* ─── Video grid ──────────────────────────────────────────────────────────── */
 
+/* Breakpoints below are intentionally shared with .video-grid-page__grid
+   (layout/videoGridPage.css) and .profile-page__grid (profile.css) — keep the same
+   ladder (1200/1024/768/480) and the "reaches 1 column at 480px" behavior in sync
+   across all three if you touch this. */
 .home-page__grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -296,7 +305,7 @@
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .home-page__grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -306,9 +315,15 @@
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .home-page__grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .home-page__grid {
+        grid-template-columns: 1fr;
     }
 
     .home-page__carousel-item {
