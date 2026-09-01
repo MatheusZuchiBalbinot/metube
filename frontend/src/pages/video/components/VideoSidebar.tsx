@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { List, BookOpen, Tv2 } from 'lucide-react';
+import { List, BookOpen, Tv2 } from '@components/icons/icons';
 import VideoRow from '@components/video/row';
 import VideoRowSkeleton from '@components/video/rowSkeleton';
 import FilterPanel from '@components/filter/panel';
@@ -56,6 +56,16 @@ export default function VideoSidebar({
         }
     }, [showSummaryTab]);
 
+    // getCurrentTime is a new closure every render (it reads through refs in
+    // useVideoProgress, not memoized), so it can't sit in this effect's deps —
+    // during playback the parent re-renders faster than the 1s tick, so the
+    // interval would be torn down and recreated before it ever fired, and
+    // "currentTime" (and every chapter's active state) would never update.
+    const getCurrentTimeRef = useRef(getCurrentTime);
+    useLayoutEffect(() => {
+        getCurrentTimeRef.current = getCurrentTime;
+    });
+
     useEffect(() => {
         const isOnSummaryTab = sidebarTab === SidebarTab.SUMMARY;
 
@@ -64,11 +74,11 @@ export default function VideoSidebar({
         }
 
         const interval = setInterval(() => {
-            setCurrentTime(getCurrentTime());
+            setCurrentTime(getCurrentTimeRef.current());
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [sidebarTab, getCurrentTime]);
+    }, [sidebarTab]);
 
     const allRelatedTags = useAllTags(relatedVideos);
 
@@ -195,7 +205,12 @@ export default function VideoSidebar({
                                             <button
                                                 className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
                                                 disabled={isSeeking}
-                                                onClick={() => seekToIndex(i, () => onSeekToChapter(seconds))}
+                                                onClick={() => seekToIndex(i, () => {
+                                                    onSeekToChapter(seconds);
+                                                    // Don't wait for the next 1s poll — highlight the
+                                                    // clicked chapter the moment the seek is issued.
+                                                    setCurrentTime(seconds);
+                                                })}
                                             >
                                                 {isSeeking
                                                     ? <Spinner size="sm" className="video-page__chapter-spinner" />
