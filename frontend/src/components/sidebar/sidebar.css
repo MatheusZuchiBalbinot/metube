@@ -95,7 +95,8 @@
     overflow: hidden;
     transition:
         color var(--duration-default),
-        background var(--duration-default);
+        background var(--duration-default),
+        transform var(--duration-fast);
 }
 
 /* Hover */
@@ -104,13 +105,20 @@
     background: var(--surface-2);
 }
 
+.app-sidebar__item:active {
+    transform: scale(0.98);
+}
+
 /* Active */
+/* Label uses --text (high-contrast) rather than --accent — --accent alone is
+   too low-contrast against the sidebar background for text. It stays on the
+   icon chip and the active pill below, where it's decorative rather than text. */
 .app-sidebar__item--active {
-    color: var(--accent);
+    color: var(--text);
 }
 
 .app-sidebar__item--active:hover {
-    color: var(--accent);
+    color: var(--text);
 }
 
 .app-sidebar__active-bg {
@@ -252,11 +260,15 @@
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text);
-    transition: background var(--duration-default);
+    transition: background var(--duration-default), transform var(--duration-fast);
 }
 
 .app-sidebar__user:hover {
     background: var(--surface-2);
+}
+
+.app-sidebar__user:active {
+    transform: scale(0.98);
 }
 
 .app-sidebar__user-meta {
@@ -308,12 +320,16 @@
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     cursor: pointer;
-    transition: color var(--duration-default), background var(--duration-default);
+    transition: color var(--duration-default), background var(--duration-default), transform var(--duration-fast);
 }
 
 .app-sidebar__show-more:hover {
     color: var(--text);
     background: var(--surface-2);
+}
+
+.app-sidebar__show-more:active {
+    transform: scale(0.98);
 }
 
 .app-sidebar__show-more-icon {
@@ -345,12 +361,16 @@
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-2);
-    transition: background var(--duration-default), color var(--duration-default);
+    transition: background var(--duration-default), color var(--duration-default), transform var(--duration-fast);
 }
 
 .app-sidebar__continue-item:hover {
     background: var(--surface-2);
     color: var(--text);
+}
+
+.app-sidebar__continue-item:active {
+    transform: scale(0.98);
 }
 
 .app-sidebar__continue-thumb {
@@ -446,12 +466,16 @@
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-2);
-    transition: background var(--duration-default), color var(--duration-default);
+    transition: background var(--duration-default), color var(--duration-default), transform var(--duration-fast);
 }
 
 .app-sidebar__playlist:hover {
     background: var(--surface-2);
     color: var(--text);
+}
+
+.app-sidebar__playlist:active {
+    transform: scale(0.98);
 }
 
 .app-sidebar__playlist-chip {
@@ -500,11 +524,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: filter var(--duration-default);
+    transition: filter var(--duration-default), transform var(--duration-fast);
 }
 
 .app-sidebar__topic:hover {
     filter: brightness(1.15);
+}
+
+.app-sidebar__topic:active {
+    transform: scale(0.94);
 }
 
 /* ─── Empty state ─────────────────────────────────────────────────────────── */
@@ -556,6 +584,15 @@
 @media (prefers-reduced-motion: reduce) {
     .app-sidebar--rail .app-sidebar__inner {
         transition: none;
+    }
+
+    .app-sidebar__item:active,
+    .app-sidebar__user:active,
+    .app-sidebar__show-more:active,
+    .app-sidebar__continue-item:active,
+    .app-sidebar__playlist:active,
+    .app-sidebar__topic:active {
+        transform: none;
     }
 }
 
