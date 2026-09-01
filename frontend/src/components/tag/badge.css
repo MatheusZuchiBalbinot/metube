@@ -14,8 +14,19 @@
 
 .tag-badge--clickable {
     cursor: pointer;
+    transition: opacity var(--duration-fast), transform var(--duration-fast);
 }
 
 .tag-badge--clickable:hover {
     opacity: 0.85;
+}
+
+.tag-badge--clickable:active {
+    transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tag-badge--clickable:active {
+        transform: none;
+    }
 }
