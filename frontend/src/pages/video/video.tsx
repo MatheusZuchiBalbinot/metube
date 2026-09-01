@@ -1,9 +1,8 @@
-import { useRef, useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { lazy, Suspense, useRef, useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
 import { video as videoApi, toVuid } from '@api';
-import CommentSection from '@components/comment/section';
 import './video.css';
 import {
     useAuth,
@@ -17,8 +16,8 @@ import {
     useKeyboardShortcuts,
     usePlaybackPrefs,
 } from '@hooks';
-import { TagColors, cn } from '@utils';
-import { CirclePause } from 'lucide-react';
+import { TagColors, cn, ROUTES } from '@utils';
+import { CirclePause } from '@components/icons/icons';
 import type { Video, VideoId } from '@models';
 import { useViewTracking } from './hooks/useViewTracking';
 import { useSkipAnalytics } from './hooks/useSkipAnalytics';
@@ -27,23 +26,27 @@ import { useVideoShare } from './hooks/useVideoShare';
 import { useVideoSave } from './hooks/useVideoSave';
 import VideoNotFound from './components/VideoNotFound';
 import VideoProcessingScreen from './components/VideoProcessingScreen';
-import StagingPanel from '@components/video/stagingPanel';
+import VideoFallback from './components/VideoFallback';
 import AutoplayBanner from './components/AutoplayBanner';
 import VideoPlayerArea from './components/VideoPlayerArea';
 import VideoInfo from './components/VideoInfo';
 import VideoSidebar from './components/VideoSidebar';
-import ChatSection from '@components/chat/section';
+
+const StagingPanel = lazy(() => import('@components/video/stagingPanel'));
+const ChatSection = lazy(() => import('@components/chat/section'));
+const CommentSection = lazy(() => import('@components/comment/section'));
 
 export default function VideoPage() {
     const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const id = searchParams.get('v') ?? undefined;
 
     const {
         videos, likedVideos, dislikedVideos,
         likeVideo, dislikeVideo, watchVideo,
         updateProgress, videoProgress, autoplay, closeMiniPlayer,
-        consumePendingVideoSeek, openTagView,
+        consumePendingVideoSeek, openTagView, deleteVideo, openUploadModal,
     } = useVideo();
 
     const { user: authUser } = useAuth();
@@ -117,6 +120,33 @@ export default function VideoPage() {
         return <VideoProcessingScreen video={video} />;
     }
 
+    function handleDeleteAndReupload() {
+        if (!video) {
+            return;
+        }
+        deleteVideo(video.id);
+        navigate(ROUTES.HOME);
+        openUploadModal();
+    }
+
+    if (domain.video.isFailed(video)) {
+        return (
+            <div className="video-page">
+                <div className="video-page__layout">
+                    <main className="video-page__main">
+                        <VideoFallback
+                            thumbnail={video.thumbnail}
+                            title={video.title}
+                            isFailed
+                            isOwner={isOwner}
+                            onDeleteAndReupload={isOwner ? handleDeleteAndReupload : undefined}
+                        />
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
     const isStaging = isOwner && domain.video.isDraft(video);
     const isChannelSubscribed = isSubscribed(video.channelId);
     const isAutoplayActive = autoplayCountdown !== null;
@@ -124,6 +154,7 @@ export default function VideoPage() {
     const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
     // Prefer the HLS manifest; fall back to the raw file while transcoding is still in flight.
     const playbackSrc = video.hlsUrl ?? video.videoUrl ?? '';
+    const hasVideoFile = playbackSrc !== '';
 
     function handleRetryTranscription() {
         if (!video) {
@@ -144,7 +175,11 @@ export default function VideoPage() {
         <div className="video-page">
             <div className={cn('video-page__layout', theaterMode && 'video-page__layout--theater')}>
                 <main className="video-page__main">
-                    {isStaging && <StagingPanel video={video} summary={summary} />}
+                    {isStaging && (
+                        <Suspense fallback={null}>
+                            <StagingPanel video={video} summary={summary} />
+                        </Suspense>
+                    )}
 
                     <VideoPlayerArea
                         readingMode={readingMode}
@@ -154,7 +189,7 @@ export default function VideoPage() {
                         onRetryTranscription={handleRetryTranscription}
                         getCurrentTime={getCurrentTime}
                         videoRef={videoRef}
-                        hasVideoFile={playbackSrc !== ''}
+                        hasVideoFile={hasVideoFile}
                         src={playbackSrc}
                         autoPlay={autoplay}
                         captions={video.captions ?? []}
@@ -172,7 +207,7 @@ export default function VideoPage() {
                         <AutoplayBanner countdown={autoplayCountdown} nextVideo={nextVideo} onCancel={cancelAutoplay} />
                     )}
 
-                    {autoplay && nextVideo && !isAutoplayActive && (
+                    {autoplay && nextVideo && !isAutoplayActive && hasVideoFile && (
                         <button
                             type="button"
                             className={cn('video-page__stop-after', stopAfterCurrent && 'video-page__stop-after--active')}
@@ -210,19 +245,23 @@ export default function VideoPage() {
 
                     {authUser !== null && (
                         <div ref={chatRef} className="chat-wrapper">
-                            <ChatSection vuid={toVuid(video.id)} transcription={transcription} />
+                            <Suspense fallback={null}>
+                                <ChatSection vuid={toVuid(video.id)} transcription={transcription} />
+                            </Suspense>
                         </div>
                     )}
 
-                    <CommentSection
-                        vuid={toVuid(video.id)}
-                        videoChannelId={video.channelId}
-                        onSeek={(seconds) => {
-                            if (videoRef.current) {
-                                videoRef.current.currentTime = seconds;
-                            }
-                        }}
-                    />
+                    <Suspense fallback={null}>
+                        <CommentSection
+                            vuid={toVuid(video.id)}
+                            videoChannelId={video.channelId}
+                            onSeek={(seconds) => {
+                                if (videoRef.current) {
+                                    videoRef.current.currentTime = seconds;
+                                }
+                            }}
+                        />
+                    </Suspense>
                 </main>
 
                 <VideoSidebar
