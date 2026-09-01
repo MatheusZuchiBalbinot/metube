@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '@store';
 import { videoActions } from '@store/videoSlice';
+import { toastActions } from '@store/toastSlice';
+import { ToastType } from '@enums/toastType';
 import { video } from '@api';
 import type { Vuid } from '@api';
 import { domain } from '@domain';
@@ -71,6 +73,7 @@ export function useVideoProcessingPoll(vuids: Vuid | Vuid[] | null): void {
             const result = await video.get(vuid);
 
             if (!result.ok) {
+                dispatch(toastActions.addToast({ message: t('toast.video_status_check_failed'), type: ToastType.ERROR }));
                 clearEntry(vuid);
                 return;
             }

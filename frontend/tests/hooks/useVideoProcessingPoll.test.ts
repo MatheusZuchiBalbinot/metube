@@ -124,6 +124,23 @@ describe('useVideoProcessingPoll', () => {
         expect(vi.mocked(videoApi.get).mock.calls.length).toBe(callCount);
     });
 
+    it('dispatches an error toast when the status check itself fails', async () => {
+        vi.mocked(videoApi.get).mockResolvedValue({ ok: false, error: 'Network error' });
+
+        const store = makeStore();
+        renderHook(() => useVideoProcessingPoll('v-err2' as unknown as Vuid), {
+            wrapper: makeWrapper(store),
+        });
+
+        await act(async () => {
+            vi.advanceTimersByTime(3000);
+        });
+
+        const toasts = store.getState().toast.toasts;
+        expect(toasts).toHaveLength(1);
+        expect(toasts[0]).toMatchObject({ message: 'toast.video_status_check_failed', type: 'error' });
+    });
+
     it('does nothing when vuids is null', async () => {
         const store = makeStore();
         renderHook(() => useVideoProcessingPoll(null), {
