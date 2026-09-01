@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@components/icons/icons';
 import Button from '../button/button';
 import type { Size } from '../types';
+import { useMediaQuery } from '@hooks';
+import { cn } from '@utils';
 import './modal.css';
 
 const FOCUSABLE_SELECTORS = 'button, input, select, textarea, a[href]';
@@ -11,7 +13,7 @@ const FOCUSABLE_SELECTORS = 'button, input, select, textarea, a[href]';
 interface ModalProps {
     isOpen: boolean
     onClose: () => void
-    title?: string
+    title: string
     children: React.ReactNode
     footer?: React.ReactNode
     size?: Size
@@ -29,6 +31,47 @@ export default function Modal({
 }: ModalProps) {
     const { t } = useTranslation();
     const boxRef = useRef<HTMLDivElement>(null);
+    const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+
+    // Stay mounted a beat past isOpen going false so the exit animation can play —
+    // otherwise the modal that fades/scales in on open just vanishes on close.
+    const [shouldRender, setShouldRender] = useState(isOpen);
+    const [isClosing, setIsClosing] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local mount/animation state to the isOpen prop is the point of this effect
+            setShouldRender(true);
+            setIsClosing(false);
+            return;
+        }
+
+        if (!shouldRender) {
+            return;
+        }
+
+        if (prefersReducedMotion) {
+            setShouldRender(false);
+            return;
+        }
+
+        setIsClosing(true);
+        // shouldRender is only read to decide whether a close needs animating — it's set by
+        // this same effect and by the animationend handler, so it must stay out of the deps
+        // below or every state flip it causes would immediately re-run this effect.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, prefersReducedMotion]);
+
+    function handleOverlayAnimationEnd(e: React.AnimationEvent) {
+        // Ignore the box's own animation bubbling up — only the overlay's own
+        // exit animation (matched by target, not name) should trigger unmount.
+        const isOwnAnimation = e.target === e.currentTarget;
+
+        if (isClosing && isOwnAnimation) {
+            setShouldRender(false);
+            setIsClosing(false);
+        }
+    }
 
     useEffect(() => {
         if (!isOpen) {
@@ -87,19 +130,24 @@ export default function Modal({
         };
     }, [isOpen]);
 
-    useEffect(() => {
-        const shouldFocusOnOpen = isOpen;
+    useLayoutEffect(() => {
+        const shouldFocusOnOpen = isOpen && shouldRender;
         if (!shouldFocusOnOpen) {
             return;
         }
 
-        const frameId = requestAnimationFrame(() => {
-            const firstFocusable = boxRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTORS);
-            firstFocusable?.focus();
-        });
+        const firstFocusable = boxRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTORS);
+        if (!firstFocusable) {
+            return;
+        }
 
-        return () => cancelAnimationFrame(frameId);
-    }, [isOpen]);
+        // A mouse click already moved focus onto the trigger button before this effect
+        // runs, beating a deferred autofocus and breaking the focus trap's "is
+        // activeElement inside the modal" check. Blur first to make the takeover
+        // deterministic regardless of how the modal was opened.
+        (document.activeElement as HTMLElement | null)?.blur();
+        firstFocusable.focus();
+    }, [isOpen, shouldRender]);
 
     useEffect(() => {
         const hasTrigger = triggerRef !== undefined;
@@ -110,7 +158,7 @@ export default function Modal({
         triggerRef.current?.focus();
     }, [isOpen, triggerRef]);
 
-    if (!isOpen) {
+    if (!shouldRender) {
         return null;
     }
 
@@ -123,28 +171,31 @@ export default function Modal({
     }
 
     return createPortal(
-        <div className="modal-overlay" role="presentation" onClick={handleOverlayClick}>
+        <div
+            className={cn('modal-overlay', isClosing && 'modal-overlay--closing')}
+            role="presentation"
+            onClick={handleOverlayClick}
+            onAnimationEnd={handleOverlayAnimationEnd}
+        >
             <div
                 ref={boxRef}
-                className={`modal-box modal-box--${size}`}
+                className={cn('modal-box', `modal-box--${size}`, isClosing && 'modal-box--closing')}
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby={title ? 'modal-title' : undefined}
+                aria-labelledby="modal-title"
             >
-                {title && (
-                    <div className="modal-header">
-                        <h2 id="modal-title">{title}</h2>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="modal-close"
-                            onClick={onClose}
-                            aria-label={t('common.close')}
-                        >
-                            <X size={13} strokeWidth={2.5} />
-                        </Button>
-                    </div>
-                )}
+                <div className="modal-header">
+                    <h2 id="modal-title">{title}</h2>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label={t('common.close')}
+                    >
+                        <X size={13} strokeWidth={2.5} />
+                    </Button>
+                </div>
 
                 <div className="modal-body">{children}</div>
 

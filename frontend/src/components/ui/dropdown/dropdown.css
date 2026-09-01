@@ -99,6 +99,10 @@
     -webkit-backdrop-filter: var(--glass-blur);
 }
 
+.dropdown-menu--closing {
+    animation: drop-out var(--duration-fast) var(--ease-out) both;
+}
+
 :root[data-mode='light'] .dropdown-menu {
     background: var(--surface);
     backdrop-filter: none;
@@ -113,7 +117,7 @@
     font-size: var(--text-base);
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.1s, color 0.1s;
+    transition: background var(--duration-fast), color var(--duration-fast);
     text-align: left;
     border: none;
     background: transparent;

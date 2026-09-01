@@ -14,6 +14,10 @@
     animation: overlay-in var(--duration-default) ease both;
 }
 
+.modal-overlay--closing {
+    animation: overlay-out var(--duration-default) ease both;
+}
+
 :root[data-mode='light'] .modal-overlay {
     background: var(--overlay-sm);
 }
@@ -29,6 +33,10 @@
     box-shadow: 0 24px 80px var(--shadow-lg);
     overflow: hidden;
     animation: modal-in 0.18s var(--ease-out) both;
+}
+
+.modal-box--closing {
+    animation: modal-out var(--duration-default) ease both;
 }
 
 .modal-box--sm { max-width: min(360px, calc(100vw - 32px)); }
