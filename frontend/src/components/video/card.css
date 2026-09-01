@@ -10,6 +10,7 @@
     position: relative;
     contain: layout style;
     will-change: transform;
+    /* no matching --duration-* token yet */
     transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -46,29 +47,35 @@
     background: var(--surface-2);
 }
 
-/* Shimmer placeholder shown until the lazy-loaded thumbnail fades in. */
-.video-card__thumb--loading {
+/* Shimmer placeholder shown until the lazy-loaded thumbnail fades in.
+   Animates via `transform` (not `background-position`) so it runs on the compositor
+   instead of forcing a main-thread repaint every frame. */
+.video-card__thumb--loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: linear-gradient(100deg,
-            var(--surface-2) 30%,
+            transparent 30%,
             var(--surface-3) 50%,
-            var(--surface-2) 70%);
-    background-size: 200% 100%;
+            transparent 70%);
+    transform: translateX(-100%);
     animation: video-card-shimmer 1.2s ease-in-out infinite;
 }
 
 @keyframes video-card-shimmer {
-    from {
-        background-position: 200% 0;
-    }
-
     to {
-        background-position: -200% 0;
+        transform: translateX(100%);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .video-card__thumb--loading {
+    .video-card__thumb--loading::after {
         animation: none;
+    }
+
+    .video-card__tag.tag-badge--clickable:hover,
+    .video-card__tag.tag-badge--clickable:active {
+        transform: none;
     }
 }
 
@@ -105,6 +112,7 @@
         0 0 0 1px rgba(255, 255, 255, 0.07),
         0 8px 24px color-mix(in srgb, var(--vc-color, transparent) 35%, transparent);
     opacity: 0;
+    /* no matching --duration-* token yet */
     transition: opacity 0.25s;
     pointer-events: none;
 }
@@ -118,6 +126,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    /* no matching --duration-* token yet */
     transition: transform 0.35s;
 }
 
@@ -146,6 +155,7 @@
     width: 44px;
     height: 44px;
     transform: scale(0.85);
+    /* no matching --duration-* token yet */
     transition: transform 0.25s var(--ease-bounce);
 }
 
@@ -204,7 +214,7 @@
 .video-card__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: var(--space-1_25);
     align-items: center;
 }
 
@@ -216,14 +226,16 @@
     letter-spacing: 0.02em;
 }
 
-.video-card__tag--clickable {
-    cursor: pointer;
-    transition: opacity var(--duration-default), transform var(--duration-default);
-}
-
-.video-card__tag--clickable:hover {
+/* .video-card__tag always co-renders with TagBadge's own .tag-badge--clickable —
+   there is no separate "video-card__tag--clickable" class, so this targets the
+   pair directly (a stale selector here silently never matched anything). */
+.video-card__tag.tag-badge--clickable:hover {
     opacity: 0.82;
     transform: scale(1.05);
+}
+
+.video-card__tag.tag-badge--clickable:active {
+    transform: scale(0.95);
 }
 
 .video-card__tags-more {
@@ -239,7 +251,7 @@
     position: relative;
     flex-shrink: 0;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-default);
 }
 
 .video-card:hover .video-card__menu-wrap,
@@ -259,7 +271,7 @@
     border: none;
     color: var(--text-3);
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--duration-default), color var(--duration-default);
 }
 
 .video-card__menu-trigger:hover {
@@ -295,7 +307,7 @@
     cursor: pointer;
     border-radius: var(--radius-md);
     text-align: left;
-    transition: background 0.1s;
+    transition: background var(--duration-fast);
 }
 
 .video-card__menu-item:hover {
@@ -347,6 +359,7 @@
     border-radius: 0 2px 2px 0;
     transform-origin: left center;
     transform: scaleX(0);
+    /* no matching --duration-* token yet; ease kept — tracks a numeric progress percentage */
     transition: transform 0.3s ease;
 }
 

@@ -1,7 +1,7 @@
 import { memo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2, RotateCw } from 'lucide-react';
+import { Pin, PinOff, Bookmark, BookmarkCheck, MoreHorizontal, Pencil, Trash2, RotateCw } from '@components/icons/icons';
 import { domain } from '@domain';
 import { useAppDispatch, useAppSelector } from '@store';
 import { videoUiActions } from '@store/videoUiSlice';
@@ -52,7 +52,7 @@ const VideoCard = memo(function VideoCard({
 }: VideoCardProps) {
     const isPriority = index === 0;
     const navigate = useNavigate();
-    const cardRef = useRef<HTMLElement>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
     const vuid = toVuid(video.id);
     const hasValidVuid = vuid !== undefined && vuid !== '';
 
@@ -82,11 +82,24 @@ const VideoCard = memo(function VideoCard({
     const [menuOpen, setMenuOpen] = useState(false);
     const [previewActive, setPreviewActive] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const menuTriggerRef = useRef<HTMLButtonElement>(null);
+    const menuPopupRef = useRef<HTMLDivElement>(null);
     const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isTouchDevice = useMediaQuery('(hover: none)');
     const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
     useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
+
+    // Moves focus into the menu on open — otherwise the popup's onKeyDown
+    // (arrow-nav/Escape) never fires since focus stays on the trigger.
+    useEffect(() => {
+        if (!menuOpen) {
+            return;
+        }
+
+        const firstItem = menuPopupRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+        firstItem?.focus();
+    }, [menuOpen]);
 
     const isNotInteractive = isVideoProcessing || isVideoFailed;
     const hasPreviewSource = (video.videoUrl ?? '') !== '';
@@ -148,8 +161,53 @@ const VideoCard = memo(function VideoCard({
         dispatch(videoUiActions.openTagView({ tag, fromVideoId: video.id }));
     }
 
+    function focusMenuItemAt(items: HTMLElement[], nextIndex: number) {
+        const wrappedIndex = (nextIndex + items.length) % items.length;
+        items[wrappedIndex]?.focus();
+    }
+
+    function closeMenuAndReturnFocus() {
+        setMenuOpen(false);
+        menuTriggerRef.current?.focus();
+    }
+
+    function moveMenuFocus(isArrowDown: boolean) {
+        const items = Array.from(
+            menuPopupRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [],
+        );
+
+        if (items.length === 0) {
+            return;
+        }
+
+        const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+        const nextIndex = isArrowDown ? currentIndex + 1 : currentIndex - 1;
+
+        focusMenuItemAt(items, nextIndex);
+    }
+
+    function handleMenuKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        const isArrowDown = e.key === 'ArrowDown';
+        const isArrowUp = e.key === 'ArrowUp';
+        const isEscape = e.key === 'Escape';
+
+        if (!isArrowDown && !isArrowUp && !isEscape) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (isEscape) {
+            closeMenuAndReturnFocus();
+            return;
+        }
+
+        moveMenuFocus(isArrowDown);
+    }
+
     return (
-        <article
+        <div
             ref={cardRef}
             className={buildVideoCardClass(showActions, isNotInteractive)}
             role="button"
@@ -248,17 +306,24 @@ const VideoCard = memo(function VideoCard({
                             onClick={e => e.stopPropagation()}
                         >
                             <button
+                                ref={menuTriggerRef}
                                 className="video-card__menu-trigger"
                                 onClick={e => {
                                     e.stopPropagation(); setMenuOpen(v => !v);
                                 }}
                                 aria-label={t('video.actions')}
                                 aria-expanded={menuOpen}
+                                aria-haspopup="menu"
                             >
                                 <MoreHorizontal size={13} />
                             </button>
                             {menuOpen && (
-                                <div className="video-card__menu-popup" role="menu">
+                                <div
+                                    ref={menuPopupRef}
+                                    className="video-card__menu-popup"
+                                    role="menu"
+                                    onKeyDown={handleMenuKeyDown}
+                                >
                                     {isVideoFailed ? (
                                         <button
                                             className="video-card__menu-item"
@@ -329,7 +394,7 @@ const VideoCard = memo(function VideoCard({
                 </div>
 
             </div>
-        </article>
+        </div>
     );
 });
 
