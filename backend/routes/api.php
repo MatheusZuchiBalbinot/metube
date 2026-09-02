@@ -94,7 +94,7 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
     });
 
     Route::prefix('videos')->group(function (): void {
-        Route::post('/', [VideoController::class, 'store']);
+        Route::post('/', [VideoController::class, 'store'])->middleware('throttle:video-upload');
         Route::patch('/{video}', [VideoController::class, 'update'])->can('update', 'video');
         Route::delete('/{video}', [VideoController::class, 'destroy'])->can('delete', 'video');
 
@@ -107,7 +107,9 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{video}/dislike', [VideoController::class, 'toggleDislike'])->can('view', 'video');
         Route::post('/{video}/save', [VideoController::class, 'toggleSave'])->can('view', 'video');
         Route::put('/{video}/progress', [VideoController::class, 'updateProgress'])->can('view', 'video');
-        Route::post('/{video}/publish', [VideoController::class, 'publish'])->can('publish', 'video');
+        Route::post('/{video}/publish', [VideoController::class, 'publish'])
+            ->can('publish', 'video')
+            ->middleware('throttle:video-upload');
         Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
             ->can('retryTranscription', 'video');
         Route::get('/{video}/ai-suggestion', [VideoController::class, 'aiSuggestion'])

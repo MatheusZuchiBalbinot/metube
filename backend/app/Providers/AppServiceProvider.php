@@ -118,6 +118,11 @@ class AppServiceProvider extends ServiceProvider
             // The chat route is behind auth:sanctum, so the user is always present.
             return Limit::perMinute(20)->by((string) $request->user()->id);
         });
+
+        RateLimiter::for('video-upload', function (Request $request) {
+            // Bounds how much work one user can push onto the shared transcription/AI queue.
+            return Limit::perHour(20)->by((string) $request->user()->id);
+        });
     }
 
     private function registerPolicies(): void
