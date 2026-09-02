@@ -1,4 +1,5 @@
 export * from './applyFilters';
+export * from './broadcastStaleness';
 export * from './cn';
 export * from './dom';
 export * from './events';
@@ -8,7 +9,9 @@ export * from './loadFromStorage';
 export * from './logger';
 export * from './markdown';
 export * from './mergeProgress';
+export * from './notificationBroadcast';
 export * from './notificationSound';
+export * from './realtimeReconnect';
 export * from './routes';
 export * from './time';
 export * from './sessionId';
