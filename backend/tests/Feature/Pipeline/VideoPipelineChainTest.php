@@ -38,10 +38,11 @@ uses()->group('pipeline');
  * substitute for "a queue worker picked this job up" and lets the entire downstream
  * chain, which has no such afterCommit gate, run for real from there.
  *
- * Every ShouldBroadcastNow event the chain fires (status/transcription updates,
- * AI-suggestion-ready) is faked — without that this chain would try to reach the
- * real Reverb server, which isn't relevant to what this test verifies (the
- * pipeline's data, not broadcast delivery).
+ * Every broadcasting event the chain fires (status/transcription updates,
+ * AI-suggestion-ready — all ShouldBroadcast, queued rather than sent inline)
+ * is faked — without that this chain would try to reach the real Reverb
+ * server, which isn't relevant to what this test verifies (the pipeline's
+ * data, not broadcast delivery).
  */
 describe('video processing pipeline — chain', function () {
     beforeEach(function () {

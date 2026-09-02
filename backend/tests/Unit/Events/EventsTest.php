@@ -177,6 +177,17 @@ describe('TranscriptionStatusUpdated', function () {
             ->and($payload['estimated_seconds'])->toBeNull();
     });
 
+    test('broadcastWith includes emitted_at_ms so the frontend can drop out-of-order broadcasts', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+        $event = new TranscriptionStatusUpdated($video, TranscriptionStatus::PROCESSING);
+
+        $payload = $event->broadcastWith();
+
+        expect($payload['emitted_at_ms'])->toBe($event->emittedAtMs)
+            ->and($payload['emitted_at_ms'])->toBeInt();
+    });
+
     test('broadcastAs returns TranscriptionStatusUpdated', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
@@ -332,6 +343,17 @@ describe('VideoStatusUpdated', function () {
         $payload = $event->broadcastWith();
 
         expect($payload['previous_status'])->toBe(VideoStatus::PROCESSING->value);
+    });
+
+    test('broadcastWith includes emitted_at_ms so the frontend can drop out-of-order broadcasts', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user, 'channel')->create();
+        $event = new VideoStatusUpdated($video, VideoStatus::PUBLISHED);
+
+        $payload = $event->broadcastWith();
+
+        expect($payload['emitted_at_ms'])->toBe($event->emittedAtMs)
+            ->and($payload['emitted_at_ms'])->toBeInt();
     });
 
     test('broadcastAs returns VideoStatusUpdated', function () {

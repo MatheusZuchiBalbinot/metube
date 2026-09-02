@@ -8,12 +8,20 @@ use App\Enums\VideoStatus;
 use App\Models\Video;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Support\Carbon;
 
-class VideoStatusUpdated implements ShouldBroadcastNow
+/**
+ * Broadcasts via the queue (not ShouldBroadcastNow) so a Reverb outage gets
+ * Horizon's normal retry instead of throwing synchronously into the caller.
+ */
+class VideoStatusUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
+
+    /** @var int Emission order, in milliseconds — see broadcastWith() */
+    public readonly int $emittedAtMs;
 
     /**
      * @param VideoStatus|null $previousStatus Previous status (for transition context)
@@ -22,7 +30,9 @@ class VideoStatusUpdated implements ShouldBroadcastNow
         public readonly Video $video,
         public readonly VideoStatus $newStatus,
         public readonly ?VideoStatus $previousStatus = null,
-    ) {}
+    ) {
+        $this->emittedAtMs = Carbon::now()->valueOf();
+    }
 
     /**
      * @return array<int, PrivateChannel>
@@ -41,6 +51,8 @@ class VideoStatusUpdated implements ShouldBroadcastNow
             'vuid' => $this->video->vuid,
             'status' => $this->newStatus->value,
             'previous_status' => $this->previousStatus?->value,
+            // Lets the frontend drop a broadcast delivered out of order.
+            'emitted_at_ms' => $this->emittedAtMs,
         ];
     }
 

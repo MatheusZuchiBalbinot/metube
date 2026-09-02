@@ -8,11 +8,15 @@ use App\Models\Video;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AiSuggestionReady implements ShouldBroadcastNow
+/**
+ * Broadcasts via the queue (not ShouldBroadcastNow) so a Reverb outage gets
+ * Horizon's normal retry instead of throwing synchronously into the job.
+ */
+class AiSuggestionReady implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
