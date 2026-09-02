@@ -49,13 +49,21 @@ final class VideoUploadService
         return DB::transaction(function () use ($user, $data) {
             $video = Video::create(VideoPayloadBuilder::fromCreateDTO($user, $data));
 
-            $ext = $data->videoFile->getClientOriginalExtension();
+            $ext = $this->fileManager->resolveExtension(
+                $data->videoFile->getClientOriginalName(),
+                'mp4',
+                MimeTypes::VIDEO_EXTENSIONS,
+            );
             $tmpPath = $data->videoFile->storeAs('uploads/tmp', "{$video->vuid}.{$ext}");
 
             $tmpThumbPath = null;
 
             if ($data->thumbnailFile !== null) {
-                $thumbExt = $data->thumbnailFile->getClientOriginalExtension();
+                $thumbExt = $this->fileManager->resolveExtension(
+                    $data->thumbnailFile->getClientOriginalName(),
+                    'jpg',
+                    MimeTypes::IMAGE_EXTENSIONS,
+                );
                 $tmpThumbPath = $data->thumbnailFile->storeAs('uploads/tmp', "thumb_{$video->vuid}.{$thumbExt}");
             }
 

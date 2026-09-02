@@ -70,10 +70,10 @@ final class VideoFileManager
      * Extract a lowercase file extension, falling back to a safe default when
      * the filename has none or its extension is not on the allowlist.
      *
-     * The filename originates from client-supplied tus metadata and must
-     * never be trusted directly — an attacker-chosen extension (e.g. `.html`,
-     * `.svg`) would otherwise let arbitrary content be published under a
-     * dangerous content type on the same origin as the session cookie.
+     * The filename is client-supplied and untrusted — an attacker-chosen
+     * extension (e.g. `.html`) would otherwise let arbitrary content be
+     * published under a dangerous content type. Public so both upload paths
+     * (tus and direct multipart) share this same allowlist logic.
      *
      * @param string $filename Original filename (client-controlled, untrusted)
      * @param string $fallback Extension to use when the filename's extension is missing or not allowed
@@ -81,7 +81,7 @@ final class VideoFileManager
      *
      * @return string The resolved extension (without the dot), guaranteed to be in $allowed or equal to $fallback
      */
-    private function resolveExtension(string $filename, string $fallback, array $allowed): string
+    public function resolveExtension(string $filename, string $fallback, array $allowed): string
     {
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
