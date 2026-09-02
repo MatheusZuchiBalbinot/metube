@@ -12,6 +12,7 @@ use App\DTOs\FinalizeUploadDTO;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
+use App\Services\Tus\TusQuotaService;
 use App\Support\VideoFileManager;
 use App\Support\VideoPayloadBuilder;
 use finfo;
@@ -39,6 +40,7 @@ final class VideoUploadService
         private readonly VideoFileManager $fileManager,
         private readonly TusResolverContract $tusResolver,
         private readonly StorageContract $storage,
+        private readonly TusQuotaService $tusQuota,
     ) {}
 
     /**
@@ -99,6 +101,9 @@ final class VideoUploadService
             throw new ModelNotFoundException('Upload session not found or file is incomplete.');
         }
 
+        // Session claimed — free its quota reservation regardless of outcome below.
+        $this->tusQuota->release($user->id, (int) ($fileMeta['size'] ?? 0));
+
         return DB::transaction(function () use ($user, $data, $fileMeta) {
             $video = Video::create(VideoPayloadBuilder::fromFinalizeDTO($user, $data));
 
@@ -106,7 +111,7 @@ final class VideoUploadService
             $this->assertAllowedMime($tmpPath, MimeTypes::VIDEO_MIME_TYPES, 'video_file');
 
             try {
-                $tmpThumbPath = $this->resolveThumbnail($data, $video->vuid);
+                $tmpThumbPath = $this->resolveThumbnail($data, $video->vuid, $user->id);
             } catch (Throwable $e) {
                 $this->storage->deleteTempFile($tmpPath);
 
@@ -160,7 +165,7 @@ final class VideoUploadService
      *
      * @return string|null Disk-relative thumbnail path, or null when absent or incomplete
      */
-    private function resolveThumbnail(FinalizeUploadDTO $data, string $vuid): ?string
+    private function resolveThumbnail(FinalizeUploadDTO $data, string $vuid, int $userId): ?string
     {
         $thumbnailKey = $data->thumbnailKey;
 
@@ -176,6 +181,8 @@ final class VideoUploadService
         if (!$isThumbReady) {
             return null;
         }
+
+        $this->tusQuota->release($userId, (int) ($thumbMeta['size'] ?? 0));
 
         $tmpThumbPath = $this->fileManager->moveThumbnailFromTus($thumbMeta, $vuid);
         $this->assertAllowedMime($tmpThumbPath, MimeTypes::IMAGE_MIME_TYPES, 'thumbnail_key');

@@ -24,6 +24,7 @@ final class TusHandlerService
     public function __construct(
         private readonly TusResolverContract $resolver,
         private readonly StorageContract $storage,
+        private readonly TusQuotaService $quota,
     ) {}
 
     /**
@@ -38,8 +39,8 @@ final class TusHandlerService
      * The initial "upload.created" request has no key yet (the server mints one
      * during creation), so it is naturally exempt from the check.
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException 403 when the request
-     *                                                               targets an upload session owned by a different user
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException 403 for a session owned
+     *                                                               by another user, or 413 over quota (see TusQuotaService)
      */
     public function handle(int $userId): SymfonyResponse
     {
@@ -66,6 +67,9 @@ final class TusHandlerService
         $server->event()->addListener(
             'tus-server.upload.created',
             function ($event) use ($userId, $ttl): void {
+                // Over quota: aborts before the 201; the cached session self-expires unclaimed.
+                $this->quota->reserve($userId, (int) $event->getFile()->getFileSize());
+
                 $key = $event->getFile()->getKey();
                 $this->resolver->cacheOwner($key, $userId, $ttl);
             },

@@ -30,5 +30,13 @@ final class UploadLimits
     /** Maximum size of a thumbnail upload, in kilobytes — the unit Laravel's `max:` rule expects. */
     public const THUMBNAIL_MAX_KB = self::THUMBNAIL_MAX_BYTES / 1024;
 
+    /**
+     * Maximum total bytes a user may have reserved across concurrent tus
+     * sessions — bounds aggregate disk use, which a single-file cap doesn't.
+     *
+     * @see \App\Services\Tus\TusQuotaService
+     */
+    public const TUS_USER_QUOTA_BYTES = self::VIDEO_MAX_BYTES * 4;
+
     private function __construct() {}
 }
