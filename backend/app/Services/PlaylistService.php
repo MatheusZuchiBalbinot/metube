@@ -13,6 +13,7 @@ use App\Models\Video;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * PlaylistService — Business logic for playlists.
@@ -84,12 +85,21 @@ final class PlaylistService
     /**
      * Idempotent — adding an already-present video is a no-op.
      *
+     * Only videos the playlist owner may view (VideoPolicy::view) can be
+     * added, otherwise a leaked vuid could pin another user's private video
+     * into a playlist and expose its metadata indefinitely. Treated as 404
+     * rather than 403 so this doesn't leak the existence of private videos.
+     *
      * @throws ModelNotFoundException
      */
     public function addVideoToPlaylist(Playlist $playlist, string $vuid): Playlist
     {
         return DB::transaction(function () use ($playlist, $vuid) {
             $video = Video::query()->byVuid($vuid)->firstOrFail();
+
+            if (Gate::forUser($playlist->user()->firstOrFail())->denies('view', $video)) {
+                throw (new ModelNotFoundException())->setModel(Video::class, [$vuid]);
+            }
 
             $playlist->videos()->syncWithoutDetaching($video->id);
             $playlist->touch();

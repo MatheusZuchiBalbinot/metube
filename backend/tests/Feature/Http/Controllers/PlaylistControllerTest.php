@@ -113,7 +113,7 @@ describe('PlaylistController', function () {
     test('add video to playlist', function () {
         $user = User::factory()->create();
         $playlist = Playlist::factory()->for($user)->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($user)->postJson("/api/playlists/{$playlist->puid}/videos", [
             'vuid' => $video->vuid,
@@ -127,13 +127,26 @@ describe('PlaylistController', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $playlist = Playlist::factory()->for($owner)->create();
-        $video = Video::factory()->create();
+        $video = Video::factory()->published()->create();
 
         $response = $this->actingAs($other)->postJson("/api/playlists/{$playlist->puid}/videos", [
             'vuid' => $video->vuid,
         ]);
 
         $response->assertForbidden();
+    });
+
+    test('add video returns 404 when the video is not visible to the playlist owner', function () {
+        $user = User::factory()->create();
+        $playlist = Playlist::factory()->for($user)->create();
+        $draft = Video::factory()->draft()->create();
+
+        $response = $this->actingAs($user)->postJson("/api/playlists/{$playlist->puid}/videos", [
+            'vuid' => $draft->vuid,
+        ]);
+
+        $response->assertNotFound();
+        expect($playlist->videos()->where('video_id', $draft->id)->exists())->toBeFalse();
     });
 
     test('remove video from playlist', function () {

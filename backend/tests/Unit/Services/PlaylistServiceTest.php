@@ -55,7 +55,7 @@ describe('PlaylistService', function () {
     test('add video to playlist', function () use (&$service) {
         $playlist = Playlist::factory()->create();
         $videoCount = rand(1, 5);
-        $videos = Video::factory($videoCount)->create();
+        $videos = Video::factory($videoCount)->published()->create();
 
         $videos->each(fn ($video) => $service->addVideoToPlaylist($playlist, $video->vuid));
 
