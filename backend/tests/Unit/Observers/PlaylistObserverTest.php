@@ -36,4 +36,12 @@ describe('PlaylistObserver', function () {
 
         $observer->deleted($playlist);
     });
+
+    test('registers $afterCommit so the dispatcher defers this observer until the enclosing transaction commits', function () {
+        // See VideoObserverTest's equivalent test for why this only asserts
+        // the flag rather than a real transaction round-trip.
+        $observer = new PlaylistObserver(Mockery::mock(CacheService::class));
+
+        expect($observer->afterCommit)->toBeTrue();
+    });
 });

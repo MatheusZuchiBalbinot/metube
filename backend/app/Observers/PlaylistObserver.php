@@ -9,6 +9,9 @@ use App\Services\CacheService;
 
 class PlaylistObserver
 {
+    /** Defers this observer until commit — see VideoObserver::$afterCommit. */
+    public bool $afterCommit = true;
+
     public function __construct(private readonly CacheService $cache) {}
 
     public function created(Playlist $playlist): void

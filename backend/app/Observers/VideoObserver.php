@@ -9,6 +9,13 @@ use App\Services\CacheService;
 
 class VideoObserver
 {
+    /**
+     * Defers this observer until the enclosing DB transaction commits (a
+     * no-op when there is none) — otherwise a concurrent read between a
+     * save() and its COMMIT could repopulate the cache with pre-commit data.
+     */
+    public bool $afterCommit = true;
+
     public function __construct(private readonly CacheService $cache) {}
 
     public function updated(Video $video): void

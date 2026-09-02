@@ -107,6 +107,15 @@ describe('VideoObserver', function () {
         expect($queries)->toBeEmpty();
     });
 
+    test('registers $afterCommit so the dispatcher defers this observer until the enclosing transaction commits', function () {
+        // RefreshDatabase never truly commits, so a real afterCommit round-trip
+        // can't be observed here — this just asserts the flag is set; the
+        // deferral itself is a framework guarantee.
+        $observer = new VideoObserver(Mockery::mock(CacheService::class));
+
+        expect($observer->afterCommit)->toBeTrue();
+    });
+
     test('deleted skips channel flush when the owning channel is gone', function () {
         $user = User::factory()->create();
         $video = Video::factory()->for($user, 'channel')->create();
