@@ -45,10 +45,8 @@ export interface VideoFinalizePayload {
     is_batch?: boolean
 }
 
-// `status` is deliberately not a field here — the backend's PATCH /videos/{video}
-// endpoint doesn't accept it. Status transitions go through dedicated endpoints
-// (video.publish()) that enforce the actual business rules (draft-only, event
-// dispatch, published_at stamping).
+// `status` is deliberately not a field — PATCH /videos/{video} doesn't accept it;
+// status transitions go through video.publish() instead.
 export interface VideoUpdatePayload {
     title?: string
     description?: string

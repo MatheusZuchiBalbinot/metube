@@ -48,11 +48,7 @@ export function useRealtime(): void {
     useLayoutEffect(() => {
         videosRef.current = videos;
     });
-    // Two BroadcastEvent jobs for the same video can be picked up by
-    // different Horizon workers and delivered to the client out of the
-    // order they were actually generated in — these track the last-applied
-    // emitted_at_ms per vuid so a stale, out-of-order broadcast is dropped
-    // instead of rewinding already-applied state.
+    // Tracks the last-applied emitted_at_ms per vuid so an out-of-order broadcast is dropped.
     const lastVideoStatusEventMs = useRef<Map<string, number>>(new Map());
     const lastTranscriptionStatusEventMs = useRef<Map<string, number>>(new Map());
     // Keep `t` in a ref so changing the translation function (e.g. language
@@ -212,11 +208,8 @@ export function useRealtime(): void {
             });
         }
 
-        // A brief network drop and reconnect delivers no replay of whatever
-        // broadcasts were missed while offline (Reverb/Pusher, unlike a log,
-        // never resends past events to a client that reconnects) — without
-        // this, unreadCount and the currently-open video's state can stay
-        // silently stale until the user manually refreshes the page.
+        // Reverb/Pusher never replays broadcasts missed while offline, so a
+        // reconnect needs to refetch instead of waiting for the next event.
         function reconcileAfterReconnect(): void {
             void fetchInitialCount();
 
@@ -249,12 +242,8 @@ export function useRealtime(): void {
             channel.listen('.TranscriptionStatusUpdated', handleTranscriptionStatus);
             channel.listen('.AiSuggestionReady', handleAiSuggestion);
 
-            // Optional chaining even though the reverb connector type declares
-            // `connector`/`pusher` as always present: test doubles and any
-            // non-Pusher connector Echo might be configured with in the
-            // future won't have this shape, and losing reconnect reconciliation
-            // should never be fatal to the rest of realtime (notifications,
-            // toasts) working.
+            // Optional chaining: losing reconnect reconciliation should never
+            // be fatal to the rest of realtime (notifications, toasts).
             const connection = echo.connector?.pusher?.connection;
 
             if (connection === undefined) {
@@ -298,10 +287,7 @@ export function useRealtime(): void {
     }, [userUuid]);
 }
 
-// Records the emitted_at_ms for `vuid` in `lastByVuid` and returns true when
-// `emittedAtMs` is older than what was already applied for that vuid — an
-// event missing the field (older backend, or a handler that doesn't send it)
-// is always treated as fresh, so absence of the field never blocks updates.
+// Records emittedAtMs for vuid and returns true if it's older than the last applied value.
 function isStaleBroadcast(lastByVuid: Map<string, number>, vuid: string, emittedAtMs: number | undefined): boolean {
     if (emittedAtMs === undefined) {
         return false;
