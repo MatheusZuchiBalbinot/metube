@@ -9,6 +9,8 @@ use App\Contracts\StorageContract;
 use App\Contracts\TusResolverContract;
 use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
+use App\Enums\VideoStatus;
+use App\Events\VideoStatusUpdated;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
@@ -18,6 +20,7 @@ use App\Support\VideoPayloadBuilder;
 use finfo;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -143,6 +146,38 @@ final class VideoUploadService
         }
 
         return $this->createVideo($user, CreateVideoDTO::fromRequest($validated));
+    }
+
+    /**
+     * Marks videos stuck in PROCESSING past a generous grace period as FAILED.
+     *
+     * A video can get stuck forever if ProcessVideoUpload's dispatch never
+     * lands (e.g. Redis unavailable right after the Video row commits) — no
+     * job is left to retry it. The default threshold clears the job's own
+     * worst case (timeout=3600s × up to 3 tries plus backoff).
+     *
+     * @return int Number of videos reconciled
+     */
+    public function reconcileStuckProcessing(int $olderThanMinutes = 240): int
+    {
+        $threshold = now()->subMinutes($olderThanMinutes);
+
+        $stuck = Video::query()
+            ->where('status', VideoStatus::PROCESSING)
+            ->where('created_at', '<', $threshold)
+            ->get();
+
+        foreach ($stuck as $video) {
+            Log::warning('VideoUploadService: reconciling video stuck in PROCESSING', [
+                'vuid' => $video->vuid,
+                'created_at' => $video->created_at->toIso8601String(),
+            ]);
+
+            $video->update(['status' => VideoStatus::FAILED]);
+            event(new VideoStatusUpdated($video, VideoStatus::FAILED));
+        }
+
+        return $stuck->count();
     }
 
     public function deleteVideo(Video $video): void

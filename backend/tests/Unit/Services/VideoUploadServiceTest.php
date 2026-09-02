@@ -135,3 +135,41 @@ describe('VideoUploadService — create & delete', function () {
         $this->assertDatabaseMissing('videos', ['id' => $videoId]);
     });
 });
+
+describe('VideoUploadService::reconcileStuckProcessing', function () {
+    // created_at isn't mass-assignable, so it's backdated via direct assignment + save().
+    function backdateVideo(Video $video, int $minutesAgo): Video
+    {
+        $video->created_at = now()->subMinutes($minutesAgo);
+        $video->save();
+
+        return $video;
+    }
+
+    test('marks a video stuck in PROCESSING past the threshold as FAILED', function () {
+        $stuck = backdateVideo(Video::factory()->create(['status' => VideoStatus::PROCESSING]), 300);
+
+        $count = app(VideoUploadService::class)->reconcileStuckProcessing(240);
+
+        expect($count)->toBe(1)
+            ->and($stuck->fresh()?->status)->toBe(VideoStatus::FAILED);
+    });
+
+    test('does not touch a video still within the grace period', function () {
+        $recent = backdateVideo(Video::factory()->create(['status' => VideoStatus::PROCESSING]), 30);
+
+        $count = app(VideoUploadService::class)->reconcileStuckProcessing(240);
+
+        expect($count)->toBe(0)
+            ->and($recent->fresh()?->status)->toBe(VideoStatus::PROCESSING);
+    });
+
+    test('does not touch videos in other statuses', function () {
+        $draft = backdateVideo(Video::factory()->draft()->create(), 300);
+
+        $count = app(VideoUploadService::class)->reconcileStuckProcessing(240);
+
+        expect($count)->toBe(0)
+            ->and($draft->fresh()?->status)->toBe(VideoStatus::DRAFT);
+    });
+});

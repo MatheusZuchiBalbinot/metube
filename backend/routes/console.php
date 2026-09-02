@@ -13,3 +13,4 @@ Artisan::command('inspire', function () {
 Schedule::command('videos:publish-scheduled')->everyMinute()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('views:flush')->everyMinute()->withoutOverlapping();
+Schedule::command('videos:reconcile-stuck-processing')->hourly()->withoutOverlapping();
