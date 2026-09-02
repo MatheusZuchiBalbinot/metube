@@ -24,7 +24,7 @@ final class MimeTypes
     /**
      * Allowed values for Laravel's `mimes:` rule on the direct multipart upload path.
      */
-    public const VIDEO_MIMES = ['mp4', 'webm', 'ogg', 'quicktime', 'x-msvideo'];
+    public const VIDEO_MIMES = ['mp4', 'webm', 'ogg', 'mov', 'avi'];
 
     /**
      * Allowed values for Laravel's `mimes:` rule on the direct multipart upload path.
