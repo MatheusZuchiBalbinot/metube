@@ -32,22 +32,31 @@ final class VideoPublishingService
      * draft-only business rule is enforced here so every caller — controller,
      * job, artisan command, or seeder — is protected the same way.
      *
+     * Locked in a transaction so two concurrent calls (double-click, a retry)
+     * can't both observe DRAFT and both publish.
+     *
      * @throws VideoNotDraftException When $video is not in DRAFT status
      */
     public function publishVideo(Video $video): void
     {
-        if ($video->status !== VideoStatus::DRAFT) {
-            throw new VideoNotDraftException();
-        }
+        $published = DB::transaction(function () use ($video) {
+            $locked = Video::lockForUpdate()->find($video->id);
 
-        $video->update([
-            'status' => VideoStatus::PUBLISHED,
-            'published_at' => now(),
-        ]);
+            if ($locked === null || $locked->status !== VideoStatus::DRAFT) {
+                throw new VideoNotDraftException();
+            }
 
-        event(new VideoPublished($video));
-        event(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
-        $this->cache->forgetVideo($video->vuid);
+            $locked->update([
+                'status' => VideoStatus::PUBLISHED,
+                'published_at' => now(),
+            ]);
+
+            return $locked;
+        });
+
+        $this->cache->forgetVideo($published->vuid);
+        event(new VideoPublished($published));
+        event(new VideoStatusUpdated($published, VideoStatus::PUBLISHED));
     }
 
     public function updateVideo(Video $video, UpdateVideoDTO $data): Video
@@ -67,23 +76,46 @@ final class VideoPublishingService
      * model/domain events at all, so subscriber notifications, the
      * transcription/AI-suggestion pipeline, and the owner's Reverb broadcast
      * would silently never happen for scheduled publishes.
+     *
+     * The claim below is also atomic (conditional UPDATE ... WHERE status =
+     * SCHEDULED) as defense in depth alongside the scheduler's own
+     * ->withoutOverlapping().
      */
     public function publishDueVideos(): int
     {
-        $videos = Video::query()->scheduledDue()->get();
+        // channel eager-loaded: the atomic claim below bypasses VideoObserver,
+        // so its cache invalidation is replicated manually further down.
+        $videos = Video::query()->scheduledDue()->with('channel')->get();
 
         $count = 0;
 
         foreach ($videos as $video) {
-            $video->update([
-                'status' => VideoStatus::PUBLISHED,
-                'published_at' => $video->scheduled_at,
-            ]);
+            $claimed = Video::query()
+                ->whereKey($video->id)
+                ->where('status', VideoStatus::SCHEDULED)
+                ->update([
+                    'status' => VideoStatus::PUBLISHED,
+                    'published_at' => $video->scheduled_at,
+                ]);
+
+            if ($claimed === 0) {
+                continue;
+            }
+
+            $video->status = VideoStatus::PUBLISHED;
+            $video->published_at = $video->scheduled_at;
+
+            $this->cache->forgetVideo($video->vuid);
+
+            $channelUuid = $video->channel?->uuid;
+
+            if ($channelUuid !== null) {
+                $this->cache->forgetChannel($channelUuid);
+            }
 
             event(new VideoPublished($video));
             event(new VideoStatusUpdated($video, VideoStatus::PUBLISHED));
 
-            $this->cache->forgetVideo($video->vuid);
             $count++;
         }
 

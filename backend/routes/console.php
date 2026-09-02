@@ -10,6 +10,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('videos:publish-scheduled')->everyMinute();
+Schedule::command('videos:publish-scheduled')->everyMinute()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('views:flush')->everyMinute()->withoutOverlapping();
