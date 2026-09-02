@@ -1,6 +1,14 @@
 import { Tooltip } from '@ui';
 import { cn } from '@utils';
 
+function resolveTooltipText(isActive: boolean, activeLabel: string | undefined, label: string) {
+    return isActive && activeLabel ? activeLabel : label;
+}
+
+function resolveButtonClass(className: string, isActive: boolean, activeClass: string) {
+    return cn(className, isActive && activeClass);
+}
+
 interface ReactionBtnProps {
     isActive: boolean
     isAnimating?: boolean
@@ -28,9 +36,9 @@ export default function ReactionBtn({
     showLabel = true,
     onClick,
 }: ReactionBtnProps) {
-    const tooltipText = isActive && activeLabel ? activeLabel : label;
+    const tooltipText = resolveTooltipText(isActive, activeLabel, label);
 
-    const btnClass = cn(className, isActive && activeClass);
+    const btnClass = resolveButtonClass(className, isActive, activeClass);
 
     return (
         <Tooltip content={tooltipText} side={tooltipSide}>

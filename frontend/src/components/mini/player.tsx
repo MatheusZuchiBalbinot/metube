@@ -10,6 +10,29 @@ import type { Video } from '@models';
 import './player.css';
 import { useVideo, useDraggablePosition } from '@hooks';
 
+function resolveMiniPlayerVideo(
+    miniPlayer: ReturnType<typeof useVideo>['miniPlayer'],
+    videos: Video[],
+): Video | null | undefined {
+    return miniPlayer ? videos.find((v: Video) => v.id === miniPlayer.videoId) : null;
+}
+
+function hasPlayableVideoFile(video: Video | null | undefined): boolean {
+    return video?.videoUrl !== undefined && video?.videoUrl !== '';
+}
+
+function resolveMiniPlayerStyle(
+    isDragging: boolean,
+    pos: { x: number; y: number } | null,
+): { outerClass: string; positionStyle: { left: number; top: number } | { right: number; bottom: number } } {
+    const outerClass = cn('mini-player', isDragging && 'mini-player--dragging');
+    const positionStyle = pos !== null
+        ? { left: pos.x, top: pos.y }
+        : { right: 24, bottom: 24 };
+
+    return { outerClass, positionStyle };
+}
+
 export default function MiniPlayer() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -19,8 +42,8 @@ export default function MiniPlayer() {
     const pendingMiniSeekRef = useRef<number | null>(null);
     const { pos, isDragging, startDrag, nudge, resetPos } = useDraggablePosition(playerRef);
 
-    const video = miniPlayer ? videos.find((v: Video) => v.id === miniPlayer.videoId) : null;
-    const hasVideoFile = video?.videoUrl !== undefined && video?.videoUrl !== '';
+    const video = resolveMiniPlayerVideo(miniPlayer, videos);
+    const hasVideoFile = hasPlayableVideoFile(video);
 
     useEffect(() => {
         const el = videoRef.current;
@@ -113,10 +136,7 @@ export default function MiniPlayer() {
         return null;
     }
 
-    const outerClass = cn('mini-player', isDragging && 'mini-player--dragging');
-    const positionStyle = pos !== null
-        ? { left: pos.x, top: pos.y }
-        : { right: 24, bottom: 24 };
+    const { outerClass, positionStyle } = resolveMiniPlayerStyle(isDragging, pos);
 
     return (
         <div

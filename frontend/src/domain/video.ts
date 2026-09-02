@@ -60,7 +60,10 @@ function hasActiveProgress(progress: number): boolean {
     return progress >= PROGRESS_ACTIVE_MIN && progress < PROGRESS_ACTIVE_MAX;
 }
 
-export { isPublished, isProcessing, isFailed, isScheduled, isScheduledAndFuture, isDraft, isScheduledInPast, isVisible, isInteractable, isOwnedBy, isWatched, hasActiveProgress };
+export {
+    isPublished, isProcessing, isFailed, isScheduled, isScheduledAndFuture, isDraft,
+    isScheduledInPast, isVisible, isInteractable, isOwnedBy, isWatched, hasActiveProgress,
+};
 
 export const video = {
     isPublished,

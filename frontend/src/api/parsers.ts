@@ -1,4 +1,7 @@
-import type { Video, VideoId, VideoCaption, Seconds, ViewCount, User, UserId, ChannelId, Comment, Cuid, CommentVersion, Playlist, PlaylistId, Tag, PaginatedResponse } from '@models';
+import type {
+    Video, VideoId, VideoCaption, Seconds, ViewCount, User, UserId, ChannelId, Comment,
+    Cuid, CommentVersion, Playlist, PlaylistId, Tag, PaginatedResponse,
+} from '@models';
 import { VideoStatus } from '@models';
 
 // ─── Shared types ──────────────────────────────────────────────────────────────
@@ -140,6 +143,38 @@ function collectionParser<T>(item: (raw: unknown) => T | null): (raw: unknown) =
 
 // ─── Video ─────────────────────────────────────────────────────────────────────
 
+function resolveVideoDates(rawData: Raw): { createdAt: string; publishedAt: string } {
+    const createdAt = str(rawData['created_at']) || str(rawData['published_at']) || new Date().toISOString();
+    const publishedAt = str(rawData['published_at']) || createdAt;
+
+    return { createdAt, publishedAt };
+}
+
+function resolveVideoStatus(rawData: Raw): VideoStatus {
+    const rawStatus = str(rawData['status']);
+
+    return isVideoStatus(rawStatus) ? rawStatus : VideoStatus.PROCESSING;
+}
+
+function resolveVideoMedia(rawData: Raw, vuid: string): { videoUrl?: string; hlsUrl?: string; thumbnail: string } {
+    return {
+        videoUrl: str(rawData['video_url']) || undefined,
+        hlsUrl: str(rawData['hls_url']) || undefined,
+        thumbnail: str(rawData['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
+    };
+}
+
+function resolveVideoTagsAndCaptions(rawData: Raw): { tags: Tag[]; captions: VideoCaption[] } {
+    return {
+        tags: Array.isArray(rawData['tags']) ? (rawData['tags'] as Tag[]) : [],
+        captions: Array.isArray(rawData['captions']) ? (rawData['captions'] as VideoCaption[]) : [],
+    };
+}
+
+function resolveChannelSubscribers(rawData: Raw): number | undefined {
+    return typeof rawData['channel_subscribers'] === 'number' ? rawData['channel_subscribers'] : undefined;
+}
+
 export function parseVideo(raw: unknown): Video | null {
     const rawData = toRaw(raw);
 
@@ -153,29 +188,25 @@ export function parseVideo(raw: unknown): Video | null {
         return null;
     }
 
-    const createdAt = str(rawData['created_at']) || str(rawData['published_at']) || new Date().toISOString();
-
-    const rawStatus = str(rawData['status']);
-    const status: VideoStatus = isVideoStatus(rawStatus) ? rawStatus : VideoStatus.PROCESSING;
+    const { createdAt, publishedAt } = resolveVideoDates(rawData);
+    const { tags, captions } = resolveVideoTagsAndCaptions(rawData);
 
     return {
         id: brand<VideoId>(vuid),
         title: str(rawData['title']),
         description: str(rawData['description']),
-        status,
+        status: resolveVideoStatus(rawData),
         views: num(rawData['views']) as unknown as ViewCount,
         duration: typeof rawData['duration'] === 'number' ? rawData['duration'] as unknown as Seconds : undefined,
-        videoUrl: str(rawData['video_url']) || undefined,
-        hlsUrl: str(rawData['hls_url']) || undefined,
-        thumbnail: str(rawData['thumbnail_url']) || `https://picsum.photos/seed/${vuid}/320/180`,
-        publishedAt: str(rawData['published_at']) || createdAt,
+        ...resolveVideoMedia(rawData, vuid),
+        publishedAt,
         createdAt,
         scheduledAt: str(rawData['scheduled_at']) || undefined,
-        tags: Array.isArray(rawData['tags']) ? (rawData['tags'] as Tag[]) : [],
-        captions: Array.isArray(rawData['captions']) ? (rawData['captions'] as VideoCaption[]) : [],
+        tags,
+        captions,
         channel: str(rawData['channel']),
         channelId: brand<ChannelId>(str(rawData['channel_id'])),
-        channelSubscribers: typeof rawData['channel_subscribers'] === 'number' ? rawData['channel_subscribers'] : undefined,
+        channelSubscribers: resolveChannelSubscribers(rawData),
     };
 }
 

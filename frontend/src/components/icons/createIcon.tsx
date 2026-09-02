@@ -22,13 +22,23 @@ const defaultAttributes = {
     strokeLinejoin: 'round' as const,
 };
 
+function resolveStrokeWidth(
+    strokeWidth: IconProps['strokeWidth'],
+    absoluteStrokeWidth: boolean | undefined,
+    size: IconProps['size'],
+): number | string {
+    if (absoluteStrokeWidth) {
+        return (Number(strokeWidth ?? defaultAttributes.strokeWidth) * 24) / Number(size ?? defaultAttributes.width);
+    }
+
+    return strokeWidth ?? defaultAttributes.strokeWidth;
+}
+
 export default function createIcon(name: string, iconNode: IconNode): ForwardRefExoticComponent<IconProps & RefAttributes<SVGSVGElement>> {
     const Component = forwardRef<SVGSVGElement, IconProps>(function IconComponent(props, ref) {
         const { color, size, strokeWidth, absoluteStrokeWidth, className = '', children, ...rest } = props;
 
-        const calculatedStrokeWidth = absoluteStrokeWidth
-            ? (Number(strokeWidth ?? defaultAttributes.strokeWidth) * 24) / Number(size ?? defaultAttributes.width)
-            : (strokeWidth ?? defaultAttributes.strokeWidth);
+        const calculatedStrokeWidth = resolveStrokeWidth(strokeWidth, absoluteStrokeWidth, size);
 
         return createElement(
             'svg',

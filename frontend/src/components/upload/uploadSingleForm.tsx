@@ -8,6 +8,61 @@ import type { UploadProgress } from '@utils';
 import type { Tag } from '@models';
 import UploadPreview from './uploadPreview';
 
+// Extracted so the shake-class && + ternary doesn't count toward UploadSingleForm's
+// own complexity — same class string as before.
+function titleWrapperClassName(titleShakeKey: number, titleError: string | null): string {
+    return titleShakeKey > 0 && titleError ? 'animate-shake' : '';
+}
+
+interface UploadProgressBarProps {
+    progress: UploadProgress
+    canTogglePause: boolean
+    isPaused: boolean
+    onPauseUpload?: () => void
+    onResumeUpload?: () => void
+}
+
+// Extracted so the pause/resume toggle's ternaries and the canTogglePause guard don't
+// count toward UploadSingleForm's own complexity.
+function UploadProgressBar({ progress, canTogglePause, isPaused, onPauseUpload, onResumeUpload }: UploadProgressBarProps) {
+    const { t } = useTranslation();
+
+    return (
+        <div className="upload-modal__progress">
+            <div className="upload-modal__progress-bar">
+                <div
+                    className="upload-modal__progress-fill"
+                    style={{ width: `${progress.percent}%` }}
+                />
+            </div>
+            <div className="upload-modal__progress-info">
+                {canTogglePause && (
+                    <button
+                        type="button"
+                        onClick={isPaused ? onResumeUpload : onPauseUpload}
+                        aria-label={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
+                        title={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: 0,
+                            border: 'none',
+                            background: 'none',
+                            color: 'inherit',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {isPaused ? <Play size={14} /> : <Pause size={14} />}
+                    </button>
+                )}
+                <span>{Format.percent(progress.percent)}</span>
+                <span>{Format.speed(progress.speed)}</span>
+                <span>{formatEta(progress.remaining)}</span>
+            </div>
+        </div>
+    );
+}
+
 interface UploadSingleFormProps {
     form: FormState
     titleShakeKey: number
@@ -52,7 +107,7 @@ export default function UploadSingleForm({
 
     return (
         <form className="upload-modal__form" onSubmit={onSubmit}>
-            <div key={titleShakeKey} className={titleShakeKey > 0 && form.titleError ? 'animate-shake' : ''}>
+            <div key={titleShakeKey} className={titleWrapperClassName(titleShakeKey, form.titleError)}>
                 <Input
                     id="um-title"
                     label={t('video.upload_title')}
@@ -124,38 +179,13 @@ export default function UploadSingleForm({
             )}
 
             {isUploading && progress !== null && (
-                <div className="upload-modal__progress">
-                    <div className="upload-modal__progress-bar">
-                        <div
-                            className="upload-modal__progress-fill"
-                            style={{ width: `${progress.percent}%` }}
-                        />
-                    </div>
-                    <div className="upload-modal__progress-info">
-                        {canTogglePause && (
-                            <button
-                                type="button"
-                                onClick={isPaused ? onResumeUpload : onPauseUpload}
-                                aria-label={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
-                                title={isPaused ? t('video.upload_resume') : t('video.upload_pause')}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    padding: 0,
-                                    border: 'none',
-                                    background: 'none',
-                                    color: 'inherit',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                {isPaused ? <Play size={14} /> : <Pause size={14} />}
-                            </button>
-                        )}
-                        <span>{Format.percent(progress.percent)}</span>
-                        <span>{Format.speed(progress.speed)}</span>
-                        <span>{formatEta(progress.remaining)}</span>
-                    </div>
-                </div>
+                <UploadProgressBar
+                    progress={progress}
+                    canTogglePause={canTogglePause}
+                    isPaused={isPaused}
+                    onPauseUpload={onPauseUpload}
+                    onResumeUpload={onResumeUpload}
+                />
             )}
         </form>
     );

@@ -77,6 +77,32 @@ export function useKeyboardShortcuts({
             }, CHORD_WINDOW_MS);
         }
 
+        function hasModifierKey(e: KeyboardEvent): boolean {
+            return e.ctrlKey || e.altKey || e.metaKey;
+        }
+
+        // Runs the single-key shortcuts that apply on every page. Returns whether a
+        // match was found so handleKeyDown knows not to also try the video-page ones.
+        function tryGlobalAction(key: string): boolean {
+            const globalAction = globalActions[key];
+
+            if (!globalAction) {
+                return false;
+            }
+
+            globalAction();
+            return true;
+        }
+
+        // Video-page-only shortcuts (like/save/theater) — no-op when not on a video page.
+        function tryVideoAction(key: string) {
+            if (!videoPageId) {
+                return;
+            }
+
+            videoActions[key]?.();
+        }
+
         function handleKeyDown(e: KeyboardEvent) {
             if (isTypingInInput(e.target)) {
                 return;
@@ -93,7 +119,7 @@ export function useKeyboardShortcuts({
                 return;
             }
 
-            if (e.ctrlKey || e.altKey || e.metaKey) {
+            if (hasModifierKey(e)) {
                 return;
             }
 
@@ -103,16 +129,11 @@ export function useKeyboardShortcuts({
                 return;
             }
 
-            const globalAction = globalActions[key];
-
-            if (globalAction) {
-                globalAction();
+            if (tryGlobalAction(key)) {
                 return;
             }
 
-            if (videoPageId) {
-                videoActions[key]?.();
-            }
+            tryVideoAction(key);
         }
 
         window.addEventListener('keydown', handleKeyDown);

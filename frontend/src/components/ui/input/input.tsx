@@ -30,6 +30,34 @@ function buildInputAria(id: string | undefined, error: string | undefined) {
     };
 }
 
+function renderPasswordToggle(passwordVisible: boolean, toggleLabel: string, onToggle: () => void) {
+    return (
+        <Tooltip content={toggleLabel} side="top">
+            <button
+                type="button"
+                className="input-password-toggle"
+                onClick={onToggle}
+                aria-label={toggleLabel}
+                aria-pressed={passwordVisible}
+            >
+                {passwordVisible ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+            </button>
+        </Tooltip>
+    );
+}
+
+function renderFieldMessage(id: string | undefined, error: string | undefined, helper: string | undefined) {
+    if (error) {
+        return <p id={`${id}-error`} className="input-error-msg" role="alert">{error}</p>;
+    }
+
+    if (helper) {
+        return <p className="input-helper-msg">{helper}</p>;
+    }
+
+    return null;
+}
+
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     label,
     icon,
@@ -46,6 +74,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     const inputClass = buildInputClass(icon, error, isPassword, className);
     const aria = buildInputAria(id, error);
     const resolvedType = isPassword && passwordVisible ? 'text' : type;
+    const passwordToggleLabel = t(passwordVisible ? 'common.hide_password' : 'common.show_password');
 
     function handleTogglePasswordVisibility() {
         setPasswordVisible((prev) => !prev);
@@ -74,23 +103,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
                     aria-describedby={aria.describedBy}
                     {...props}
                 />
-                {isPassword && (
-                    <Tooltip content={t(passwordVisible ? 'common.hide_password' : 'common.show_password')} side="top">
-                        <button
-                            type="button"
-                            className="input-password-toggle"
-                            onClick={handleTogglePasswordVisibility}
-                            aria-label={t(passwordVisible ? 'common.hide_password' : 'common.show_password')}
-                            aria-pressed={passwordVisible}
-                        >
-                            {passwordVisible ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
-                        </button>
-                    </Tooltip>
-                )}
+                {isPassword && renderPasswordToggle(passwordVisible, passwordToggleLabel, handleTogglePasswordVisibility)}
             </div>
 
-            {error && <p id={`${id}-error`} className="input-error-msg" role="alert">{error}</p>}
-            {!error && helper && <p className="input-helper-msg">{helper}</p>}
+            {renderFieldMessage(id, error, helper)}
         </div>
     );
 });

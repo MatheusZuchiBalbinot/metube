@@ -20,6 +20,33 @@ function buildButtonClass(variant: ButtonVariant, size: ButtonSize, fullWidth: b
         .join(' ');
 }
 
+function spawnRipple(btn: HTMLButtonElement, e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    const size = Math.max(rect.width, rect.height) * 2;
+    ripple.className = 'btn__ripple';
+    ripple.style.width = `${size}px`;
+    ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+}
+
+function renderButtonContent(loading: boolean, leftIcon: React.ReactNode, children: React.ReactNode, rightIcon: React.ReactNode) {
+    if (loading) {
+        return <span className="btn__spinner" />;
+    }
+
+    return (
+        <>
+            {leftIcon !== undefined && <span className="btn__icon">{leftIcon}</span>}
+            {children !== undefined && <span className="btn__label">{children}</span>}
+            {rightIcon !== undefined && <span className="btn__icon">{rightIcon}</span>}
+        </>
+    );
+}
+
 export default function Button({
     variant = 'primary',
     size = 'md',
@@ -39,31 +66,14 @@ export default function Button({
     function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
         const btn = btnRef.current;
         if (btn) {
-            const rect = btn.getBoundingClientRect();
-            const ripple = document.createElement('span');
-            const size = Math.max(rect.width, rect.height) * 2;
-            ripple.className = 'btn__ripple';
-            ripple.style.width = `${size}px`;
-            ripple.style.height = `${size}px`;
-            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-            btn.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
+            spawnRipple(btn, e);
         }
         onClick?.(e);
     }
 
     return (
         <button ref={btnRef} className={classes} disabled={disabled || loading} onClick={handleClick} {...props}>
-            {loading ? (
-                <span className="btn__spinner" />
-            ) : (
-                <>
-                    {leftIcon !== undefined && <span className="btn__icon">{leftIcon}</span>}
-                    {children !== undefined && <span className="btn__label">{children}</span>}
-                    {rightIcon !== undefined && <span className="btn__icon">{rightIcon}</span>}
-                </>
-            )}
+            {renderButtonContent(loading, leftIcon, children, rightIcon)}
         </button>
     );
 }

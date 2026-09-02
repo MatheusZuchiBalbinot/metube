@@ -17,6 +17,103 @@ interface CommentFormProps {
 const CHAR_LIMIT = 2000;
 const CHAR_WARN_THRESHOLD = 1800;
 
+interface CommentFormActionsProps {
+    charCount: number
+    hint: string
+    onCancel?: () => void
+    cancelLabel: string
+    isBlank: boolean
+    isLoading: boolean
+    loadingLabel: string
+    submitLabel: string
+}
+
+function CommentFormActions({
+    charCount,
+    hint,
+    onCancel,
+    cancelLabel,
+    isBlank,
+    isLoading,
+    loadingLabel,
+    submitLabel,
+}: CommentFormActionsProps) {
+    const isNearLimit = charCount > CHAR_WARN_THRESHOLD;
+    const charCountClass = cn('comment-form__char-count', isNearLimit && 'comment-form__char-count--warn');
+
+    return (
+        <div className="comment-form__actions">
+            <div className="comment-form__meta">
+                <span className={charCountClass}>{charCount}/{CHAR_LIMIT}</span>
+                <span className="comment-form__hint">{hint}</span>
+            </div>
+            <div className="comment-form__buttons">
+                {onCancel && (
+                    <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
+                        {cancelLabel}
+                    </Button>
+                )}
+                <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    disabled={isBlank || isLoading}
+                >
+                    {isLoading ? loadingLabel : submitLabel}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+interface CommentFormTextareaProps {
+    content: string
+    expanded: boolean
+    isLoading: boolean
+    placeholder?: string
+    defaultPlaceholder: string
+    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+    onFocus: () => void
+    onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
+}
+
+function CommentFormTextarea({
+    content,
+    expanded,
+    isLoading,
+    placeholder,
+    defaultPlaceholder,
+    onChange,
+    onFocus,
+    onKeyDown,
+}: CommentFormTextareaProps) {
+    return (
+        <textarea
+            className="comment-form__textarea"
+            value={content}
+            onChange={onChange}
+            onFocus={onFocus}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder ?? defaultPlaceholder}
+            rows={expanded ? 3 : 1}
+            maxLength={CHAR_LIMIT}
+            disabled={isLoading}
+        />
+    );
+}
+
+function shouldCollapseOnBlur(focusMovedInside: boolean, collapsible: boolean, isBlank: boolean): boolean {
+    return !focusMovedInside && collapsible && isBlank;
+}
+
+function isSubmitBlocked(isBlank: boolean, isLoading: boolean): boolean {
+    return isBlank || isLoading;
+}
+
+function isSubmitShortcut(e: React.KeyboardEvent<HTMLTextAreaElement>): boolean {
+    return (e.ctrlKey || e.metaKey) && e.key === 'Enter';
+}
+
 export default function CommentForm({
     initialValue = '',
     placeholder,
@@ -32,14 +129,11 @@ export default function CommentForm({
 
     const isBlank = content.trim() === '';
     const charCount = content.length;
-    const isNearLimit = charCount > CHAR_WARN_THRESHOLD;
-
-    const charCountClass = cn('comment-form__char-count', isNearLimit && 'comment-form__char-count--warn');
 
     function handleFormBlur(e: React.FocusEvent<HTMLFormElement>) {
         const focusMovedInside = e.currentTarget.contains(e.relatedTarget);
 
-        if (!focusMovedInside && collapsible && isBlank) {
+        if (shouldCollapseOnBlur(focusMovedInside, collapsible, isBlank)) {
             setExpanded(false);
         }
     }
@@ -47,9 +141,7 @@ export default function CommentForm({
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        const isInvalid = isBlank || isLoading;
-
-        if (isInvalid) {
+        if (isSubmitBlocked(isBlank, isLoading)) {
             return;
         }
 
@@ -62,9 +154,7 @@ export default function CommentForm({
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-        const isCtrlEnter = (e.ctrlKey || e.metaKey) && e.key === 'Enter';
-
-        if (isCtrlEnter) {
+        if (isSubmitShortcut(e)) {
             void handleSubmit(e);
         }
     }
@@ -81,39 +171,27 @@ export default function CommentForm({
             }}
             onBlur={handleFormBlur}
         >
-            <textarea
-                className="comment-form__textarea"
-                value={content}
+            <CommentFormTextarea
+                content={content}
+                expanded={expanded}
+                isLoading={isLoading}
+                placeholder={placeholder}
+                defaultPlaceholder={t('comments.placeholder')}
                 onChange={e => setContent(e.target.value)}
                 onFocus={() => setExpanded(true)}
                 onKeyDown={handleKeyDown}
-                placeholder={placeholder ?? t('comments.placeholder')}
-                rows={expanded ? 3 : 1}
-                maxLength={CHAR_LIMIT}
-                disabled={isLoading}
             />
             {expanded && (
-                <div className="comment-form__actions">
-                    <div className="comment-form__meta">
-                        <span className={charCountClass}>{charCount}/{CHAR_LIMIT}</span>
-                        <span className="comment-form__hint">{t('comments.submit_hint')}</span>
-                    </div>
-                    <div className="comment-form__buttons">
-                        {onCancel && (
-                            <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-                                {t('common.cancel')}
-                            </Button>
-                        )}
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            type="submit"
-                            disabled={isBlank || isLoading}
-                        >
-                            {isLoading ? t('common.loading') : (submitLabel ?? t('comments.submit'))}
-                        </Button>
-                    </div>
-                </div>
+                <CommentFormActions
+                    charCount={charCount}
+                    hint={t('comments.submit_hint')}
+                    onCancel={onCancel}
+                    cancelLabel={t('common.cancel')}
+                    isBlank={isBlank}
+                    isLoading={isLoading}
+                    loadingLabel={t('common.loading')}
+                    submitLabel={submitLabel ?? t('comments.submit')}
+                />
             )}
         </form>
     );

@@ -17,6 +17,37 @@ import './layout.css';
 import { useKeyboardShortcuts, useScrollRestoration, useMediaQuery } from '@hooks';
 import { ROUTES, cn, STORAGE_KEYS, APP_EVENTS } from '@utils';
 
+interface LayoutFlags {
+    isFullHeightPage: boolean
+    isSidebarHiddenForTheater: boolean
+    isSidebarCollapsed: boolean
+    showSidebarBackdrop: boolean
+}
+
+function resolveLayoutFlags(
+    pathname: string,
+    theaterMode: boolean,
+    isVideoPage: boolean,
+    isPermanentSidebar: boolean,
+    collapsed: boolean,
+    isMediumScreen: boolean,
+    sidebarOpen: boolean,
+): LayoutFlags {
+    const isFullHeightPage = pathname === ROUTES.SHORTS;
+    // Theater mode is persisted, so only hide the sidebar for it on the watch page.
+    const isSidebarHiddenForTheater = theaterMode && isVideoPage;
+    const isRail = collapsed || isMediumScreen;
+    const isSidebarCollapsed = isPermanentSidebar && isRail;
+    const showSidebarBackdrop = sidebarOpen && !isPermanentSidebar;
+
+    return {
+        isFullHeightPage,
+        isSidebarHiddenForTheater,
+        isSidebarCollapsed,
+        showSidebarBackdrop,
+    };
+}
+
 export default function AppLayout() {
     const { t } = useTranslation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,13 +58,15 @@ export default function AppLayout() {
     const activeTagView = useAppSelector(s => s.videoUi.activeTagView);
     const theaterMode = useAppSelector(s => s.playback.theaterMode);
     const { pathname } = useLocation();
-    const isFullHeightPage = pathname === ROUTES.SHORTS;
     const isVideoPage = pathname === ROUTES.VIDEO;
     const isPermanentSidebar = !isVideoPage;
-    // Theater mode is persisted, so only hide the sidebar for it on the watch page.
-    const isSidebarHiddenForTheater = theaterMode && isVideoPage;
     const isMediumScreen = useMediaQuery('(max-width: 1280px)');
-    const isRail = collapsed || isMediumScreen;
+    const {
+        isFullHeightPage,
+        isSidebarHiddenForTheater,
+        isSidebarCollapsed,
+        showSidebarBackdrop,
+    } = resolveLayoutFlags(pathname, theaterMode, isVideoPage, isPermanentSidebar, collapsed, isMediumScreen, sidebarOpen);
     useScrollRestoration();
 
     const handleToggleSidebar = useCallback(() => {
@@ -95,11 +128,11 @@ export default function AppLayout() {
                 <AppSidebar
                     open={sidebarOpen}
                     permanent={isPermanentSidebar}
-                    collapsed={isPermanentSidebar && isRail}
+                    collapsed={isSidebarCollapsed}
                     hidden={isSidebarHiddenForTheater}
                     onClose={handleCloseSidebar}
                 />
-                {sidebarOpen && !isPermanentSidebar && (
+                {showSidebarBackdrop && (
                     <button
                         type="button"
                         className="app-layout__sidebar-backdrop"

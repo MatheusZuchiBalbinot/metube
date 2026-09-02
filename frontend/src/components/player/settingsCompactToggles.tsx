@@ -23,23 +23,14 @@ export default function CompactToggles({
 }: CompactTogglesProps) {
     const { t } = useTranslation();
 
-    const rows: ToggleRowProps[] = [];
+    const defs: { icon: React.ReactNode; label: string; active: boolean; onClick?: () => void }[] = [
+        { icon: <ListVideo size={13} />, label: t('player.autoplay'), active: isAutoplay ?? false, onClick: onToggleAutoplay },
+        { icon: <Repeat size={13} />, label: t('player.loop'), active: isLoop ?? false, onClick: onToggleLoop },
+        { icon: <Repeat1 size={13} />, label: t('player.ab_title'), active: (abStatus ?? 0) > 0, onClick: onAbRepeat },
+        { icon: <Sparkles size={13} />, label: t('player.ambient'), active: isAmbient ?? false, onClick: onToggleAmbient },
+    ];
 
-    if (onToggleAutoplay) {
-        rows.push({ icon: <ListVideo size={13} />, label: t('player.autoplay'), active: isAutoplay ?? false, onClick: onToggleAutoplay });
-    }
-
-    if (onToggleLoop) {
-        rows.push({ icon: <Repeat size={13} />, label: t('player.loop'), active: isLoop ?? false, onClick: onToggleLoop });
-    }
-
-    if (onAbRepeat) {
-        rows.push({ icon: <Repeat1 size={13} />, label: t('player.ab_title'), active: (abStatus ?? 0) > 0, onClick: onAbRepeat });
-    }
-
-    if (onToggleAmbient) {
-        rows.push({ icon: <Sparkles size={13} />, label: t('player.ambient'), active: isAmbient ?? false, onClick: onToggleAmbient });
-    }
+    const rows = defs.filter((d): d is ToggleRowProps => Boolean(d.onClick));
 
     if (rows.length === 0) {
         return null;

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { domain } from '@domain';
 import { video as videoApi, toVuid } from '@api';
+import type { VideoSummary, VideoTranscription } from '@api';
 import './video.css';
 import {
     useAuth,
@@ -18,7 +19,7 @@ import {
 } from '@hooks';
 import { TagColors, cn, ROUTES } from '@utils';
 import { CirclePause } from '@components/icons/icons';
-import type { Video, VideoId } from '@models';
+import type { Video, VideoId, User } from '@models';
 import { useViewTracking } from './hooks/useViewTracking';
 import { useSkipAnalytics } from './hooks/useSkipAnalytics';
 import { useVideoReactions } from './hooks/useVideoReactions';
@@ -36,11 +37,168 @@ const StagingPanel = lazy(() => import('@components/video/stagingPanel'));
 const ChatSection = lazy(() => import('@components/chat/section'));
 const CommentSection = lazy(() => import('@components/comment/section'));
 
+function resolveIsOwner(authUser: User | null, video: Video | undefined): boolean {
+    return authUser !== null && video !== undefined && domain.video.isOwnedBy(video, authUser);
+}
+
+function resolveCurrentPercent(video: Video | undefined, videoProgress: Record<string, number>): number {
+    return video !== undefined ? (videoProgress[video.id] ?? 0) : 0;
+}
+
+function resolvePlaybackSrc(video: Video): string {
+    // Prefer the HLS manifest; fall back to the raw file while transcoding is still in flight.
+    return video.hlsUrl ?? video.videoUrl ?? '';
+}
+
+function resolveCaptions(video: Video) {
+    return video.captions ?? [];
+}
+
+function resolveChapters(summary: VideoSummary | null) {
+    return summary?.chapters;
+}
+
+function resolveAmbientColor(tagPalette: ReturnType<typeof resolveTagPalette>) {
+    return tagPalette?.color;
+}
+
+function resolveTagPalette(video: Video) {
+    return video.tags[0] ? TagColors.palette(video.tags[0]) : null;
+}
+
+function resolveIsStaging(isOwner: boolean, video: Video): boolean {
+    return isOwner && domain.video.isDraft(video);
+}
+
+function resolveVideoIdParam(searchParams: URLSearchParams): string | undefined {
+    return searchParams.get('v') ?? undefined;
+}
+
+function resolveLayoutClass(theaterMode: boolean): string {
+    return cn('video-page__layout', theaterMode && 'video-page__layout--theater');
+}
+
+interface StagingSectionProps {
+    isStaging: boolean
+    video: Video
+    summary: VideoSummary | null
+}
+
+function StagingSection({ isStaging, video, summary }: StagingSectionProps) {
+    if (!isStaging) {
+        return null;
+    }
+
+    return (
+        <Suspense fallback={null}>
+            <StagingPanel video={video} summary={summary} />
+        </Suspense>
+    );
+}
+
+interface StopAfterButtonProps {
+    stopAfterCurrent: boolean
+    onToggleStopAfterCurrent: () => void
+}
+
+function StopAfterButton({ stopAfterCurrent, onToggleStopAfterCurrent }: StopAfterButtonProps) {
+    const { t } = useTranslation();
+
+    return (
+        <button
+            type="button"
+            className={cn('video-page__stop-after', stopAfterCurrent && 'video-page__stop-after--active')}
+            onClick={onToggleStopAfterCurrent}
+            aria-pressed={stopAfterCurrent}
+        >
+            <CirclePause size={14} strokeWidth={1.75} />
+            {stopAfterCurrent ? t('video.stop_after_on') : t('video.stop_after')}
+        </button>
+    );
+}
+
+interface AutoplayControlsProps {
+    isAutoplayActive: boolean
+    autoplayCountdown: number | null
+    nextVideo: Video | undefined
+    onCancel: () => void
+    autoplay: boolean
+    hasVideoFile: boolean
+    stopAfterCurrent: boolean
+    onToggleStopAfterCurrent: () => void
+}
+
+function AutoplayControls({
+    isAutoplayActive, autoplayCountdown, nextVideo, onCancel,
+    autoplay, hasVideoFile, stopAfterCurrent, onToggleStopAfterCurrent,
+}: AutoplayControlsProps) {
+    if (nextVideo === undefined) {
+        return null;
+    }
+
+    if (isAutoplayActive && autoplayCountdown !== null) {
+        return <AutoplayBanner countdown={autoplayCountdown} nextVideo={nextVideo} onCancel={onCancel} />;
+    }
+
+    const showStopAfterButton = autoplay && !isAutoplayActive && hasVideoFile;
+
+    if (!showStopAfterButton) {
+        return null;
+    }
+
+    return <StopAfterButton stopAfterCurrent={stopAfterCurrent} onToggleStopAfterCurrent={onToggleStopAfterCurrent} />;
+}
+
+interface ChatSectionWrapperProps {
+    authUser: User | null
+    chatRef: React.RefObject<HTMLDivElement | null>
+    video: Video
+    transcription: VideoTranscription | null
+}
+
+function ChatSectionWrapper({ authUser, chatRef, video, transcription }: ChatSectionWrapperProps) {
+    if (authUser === null) {
+        return null;
+    }
+
+    return (
+        <div ref={chatRef} className="chat-wrapper">
+            <Suspense fallback={null}>
+                <ChatSection vuid={toVuid(video.id)} transcription={transcription} />
+            </Suspense>
+        </div>
+    );
+}
+
+interface VideoFailedScreenProps {
+    video: Video
+    isOwner: boolean
+    onDeleteAndReupload: () => void
+}
+
+function VideoFailedScreen({ video, isOwner, onDeleteAndReupload }: VideoFailedScreenProps) {
+    return (
+        <div className="video-page">
+            <div className="video-page__layout">
+                <main className="video-page__main">
+                    <VideoFallback
+                        thumbnail={video.thumbnail}
+                        title={video.title}
+                        isFailed
+                        isOwner={isOwner}
+                        onDeleteAndReupload={isOwner ? onDeleteAndReupload : undefined}
+                    />
+                </main>
+            </div>
+        </div>
+    );
+}
+
 export default function VideoPage() {
-    const { t, i18n } = useTranslation();
+    const { i18n } = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const id = searchParams.get('v') ?? undefined;
+    const id = resolveVideoIdParam(searchParams);
 
     const {
         videos, likedVideos, dislikedVideos,
@@ -68,14 +226,20 @@ export default function VideoPage() {
         el.classList.add('chat-wrapper--flash');
     }
 
+    function handleSeek(seconds: number) {
+        if (videoRef.current) {
+            videoRef.current.currentTime = seconds;
+        }
+    }
+
     const storeVideo = videos.find((v: Video) => v.id === (id as VideoId));
     const { video, fetchFailed } = useVideoFetch(id, storeVideo);
     const { relatedVideos, loadingRelated } = useRelatedVideos(video?.id);
     const { summary, transcription, setTranscription } = useVideoContent(id, video?.status);
 
     const hasVideo = video !== undefined;
-    const isOwner = authUser !== null && video !== undefined && domain.video.isOwnedBy(video, authUser);
-    const currentPercent = video !== undefined ? (videoProgress[video.id] ?? 0) : 0;
+    const isOwner = resolveIsOwner(authUser, video);
+    const currentPercent = resolveCurrentPercent(video, videoProgress);
 
     useViewTracking(id, hasVideo, watchVideo);
     useSkipAnalytics(id, currentPercent);
@@ -130,30 +294,15 @@ export default function VideoPage() {
     }
 
     if (domain.video.isFailed(video)) {
-        return (
-            <div className="video-page">
-                <div className="video-page__layout">
-                    <main className="video-page__main">
-                        <VideoFallback
-                            thumbnail={video.thumbnail}
-                            title={video.title}
-                            isFailed
-                            isOwner={isOwner}
-                            onDeleteAndReupload={isOwner ? handleDeleteAndReupload : undefined}
-                        />
-                    </main>
-                </div>
-            </div>
-        );
+        return <VideoFailedScreen video={video} isOwner={isOwner} onDeleteAndReupload={handleDeleteAndReupload} />;
     }
 
-    const isStaging = isOwner && domain.video.isDraft(video);
+    const isStaging = resolveIsStaging(isOwner, video);
     const isChannelSubscribed = isSubscribed(video.channelId);
     const isAutoplayActive = autoplayCountdown !== null;
     const nextVideo = relatedVideos[0];
-    const tagPalette = video.tags[0] ? TagColors.palette(video.tags[0]) : null;
-    // Prefer the HLS manifest; fall back to the raw file while transcoding is still in flight.
-    const playbackSrc = video.hlsUrl ?? video.videoUrl ?? '';
+    const tagPalette = resolveTagPalette(video);
+    const playbackSrc = resolvePlaybackSrc(video);
     const hasVideoFile = playbackSrc !== '';
 
     function handleRetryTranscription() {
@@ -173,13 +322,9 @@ export default function VideoPage() {
 
     return (
         <div className="video-page">
-            <div className={cn('video-page__layout', theaterMode && 'video-page__layout--theater')}>
+            <div className={resolveLayoutClass(theaterMode)}>
                 <main className="video-page__main">
-                    {isStaging && (
-                        <Suspense fallback={null}>
-                            <StagingPanel video={video} summary={summary} />
-                        </Suspense>
-                    )}
+                    <StagingSection isStaging={isStaging} video={video} summary={summary} />
 
                     <VideoPlayerArea
                         readingMode={readingMode}
@@ -192,32 +337,27 @@ export default function VideoPage() {
                         hasVideoFile={hasVideoFile}
                         src={playbackSrc}
                         autoPlay={autoplay}
-                        captions={video.captions ?? []}
-                        chapters={summary?.chapters}
+                        captions={resolveCaptions(video)}
+                        chapters={resolveChapters(summary)}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={handleVideoEnded}
                         onLoadedMetadata={handleLoadedMetadata}
                         showCompletion={showCompletion}
-                        ambientColor={tagPalette?.color}
+                        ambientColor={resolveAmbientColor(tagPalette)}
                         thumbnail={video.thumbnail}
                         title={video.title}
                     />
 
-                    {isAutoplayActive && nextVideo && (
-                        <AutoplayBanner countdown={autoplayCountdown} nextVideo={nextVideo} onCancel={cancelAutoplay} />
-                    )}
-
-                    {autoplay && nextVideo && !isAutoplayActive && hasVideoFile && (
-                        <button
-                            type="button"
-                            className={cn('video-page__stop-after', stopAfterCurrent && 'video-page__stop-after--active')}
-                            onClick={toggleStopAfterCurrent}
-                            aria-pressed={stopAfterCurrent}
-                        >
-                            <CirclePause size={14} strokeWidth={1.75} />
-                            {stopAfterCurrent ? t('video.stop_after_on') : t('video.stop_after')}
-                        </button>
-                    )}
+                    <AutoplayControls
+                        isAutoplayActive={isAutoplayActive}
+                        autoplayCountdown={autoplayCountdown}
+                        nextVideo={nextVideo}
+                        onCancel={cancelAutoplay}
+                        autoplay={autoplay}
+                        hasVideoFile={hasVideoFile}
+                        stopAfterCurrent={stopAfterCurrent}
+                        onToggleStopAfterCurrent={toggleStopAfterCurrent}
+                    />
 
                     <VideoInfo
                         video={video}
@@ -235,31 +375,17 @@ export default function VideoPage() {
                         onDescExpandToggle={() => setDescExpanded(v => !v)}
                         language={i18n.language}
                         onTagClick={(tag) => openTagView(tag, video?.id ?? null)}
-                        onScrollToChat={authUser !== null ? handleScrollToChat : undefined}
-                        onSeek={(seconds) => {
-                            if (videoRef.current) {
-                                videoRef.current.currentTime = seconds;
-                            }
-                        }}
+                        onScrollToChat={handleScrollToChat}
+                        onSeek={handleSeek}
                     />
 
-                    {authUser !== null && (
-                        <div ref={chatRef} className="chat-wrapper">
-                            <Suspense fallback={null}>
-                                <ChatSection vuid={toVuid(video.id)} transcription={transcription} />
-                            </Suspense>
-                        </div>
-                    )}
+                    <ChatSectionWrapper authUser={authUser} chatRef={chatRef} video={video} transcription={transcription} />
 
                     <Suspense fallback={null}>
                         <CommentSection
                             vuid={toVuid(video.id)}
                             videoChannelId={video.channelId}
-                            onSeek={(seconds) => {
-                                if (videoRef.current) {
-                                    videoRef.current.currentTime = seconds;
-                                }
-                            }}
+                            onSeek={handleSeek}
                         />
                     </Suspense>
                 </main>
@@ -271,11 +397,7 @@ export default function VideoPage() {
                     transcription={transcription}
                     getCurrentTime={getCurrentTime}
                     videoRef={videoRef}
-                    onSeekToChapter={(seconds) => {
-                        if (videoRef.current) {
-                            videoRef.current.currentTime = seconds;
-                        }
-                    }}
+                    onSeekToChapter={handleSeek}
                 />
             </div>
         </div>

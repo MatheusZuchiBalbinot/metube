@@ -8,6 +8,35 @@ import { ROUTES } from '@utils';
 import './login.css';
 import { useAuth } from '@hooks';
 
+function resolveReturnTo(from: Location | undefined) {
+    return from ? `${from.pathname}${from.search}${from.hash}` : '/';
+}
+
+function resolvePasswordAutoComplete(sessionError: string | null | undefined) {
+    return sessionError ? 'new-password' : 'current-password';
+}
+
+interface LoginErrorBannerProps {
+    displayError: string
+    sessionError: string | null | undefined
+    from: Location | undefined
+    sessionExpiredHint: string
+}
+
+function LoginErrorBanner({ displayError, sessionError, from, sessionExpiredHint }: LoginErrorBannerProps) {
+    return (
+        <div className={`login-error${sessionError ? ' login-error--info' : ''}`}>
+            <AlertCircle size={14} strokeWidth={2} className="login-error__icon" />
+            <span>
+                {displayError}
+                {sessionError && from && (
+                    <span className="login-error__hint"> {sessionExpiredHint}</span>
+                )}
+            </span>
+        </div>
+    );
+}
+
 export default function LoginPage() {
     const { t } = useTranslation();
     const { signIn, user, loading: authLoading, sessionError } = useAuth();
@@ -17,7 +46,7 @@ export default function LoginPage() {
     const resetSuccess = searchParams.get('reset') === '1';
 
     const from = (location.state as { from?: Location } | null)?.from;
-    const returnTo = from ? `${from.pathname}${from.search}${from.hash}` : '/';
+    const returnTo = resolveReturnTo(from);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -50,7 +79,7 @@ export default function LoginPage() {
     const displayError = sessionError || error;
     // Autofill can populate this field on mount without firing React's onChange;
     // "new-password" (unlike autoComplete="off") reliably suppresses that here.
-    const passwordAutoComplete = sessionError ? 'new-password' : 'current-password';
+    const passwordAutoComplete = resolvePasswordAutoComplete(sessionError);
 
     return (
         <div className="login-bg">
@@ -73,15 +102,12 @@ export default function LoginPage() {
                         </div>
                     )}
                     {displayError && (
-                        <div className={`login-error${sessionError ? ' login-error--info' : ''}`}>
-                            <AlertCircle size={14} strokeWidth={2} className="login-error__icon" />
-                            <span>
-                                {displayError}
-                                {sessionError && from && (
-                                    <span className="login-error__hint"> {t('auth.session_expired_hint')}</span>
-                                )}
-                            </span>
-                        </div>
+                        <LoginErrorBanner
+                            displayError={displayError}
+                            sessionError={sessionError}
+                            from={from}
+                            sessionExpiredHint={t('auth.session_expired_hint')}
+                        />
                     )}
 
                     <Input

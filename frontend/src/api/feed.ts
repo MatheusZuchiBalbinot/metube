@@ -9,6 +9,26 @@ export interface FeedSection {
     videos: Video[]
 }
 
+function parseFeedSection(item: unknown): FeedSection | null {
+    const isSection = item !== null && typeof item === 'object';
+    if (!isSection) {
+        return null;
+    }
+
+    const obj = item as Record<string, unknown>;
+    const key = typeof obj['key'] === 'string' ? obj['key'] : null;
+    if (key === null) {
+        return null;
+    }
+
+    const label = typeof obj['label'] === 'string' ? obj['label'] : null;
+    const videos = Array.isArray(obj['videos'])
+        ? obj['videos'].map(parseVideo).filter((v): v is Video => v !== null)
+        : [];
+
+    return { key, label, videos };
+}
+
 function parseFeed(raw: unknown): FeedSection[] | null {
     const isObject = raw !== null && typeof raw === 'object';
     if (!isObject) {
@@ -22,23 +42,12 @@ function parseFeed(raw: unknown): FeedSection[] | null {
 
     const sections: FeedSection[] = [];
     for (const item of data) {
-        const isSection = item !== null && typeof item === 'object';
-        if (!isSection) {
+        const section = parseFeedSection(item);
+        if (section === null) {
             continue;
         }
 
-        const obj = item as Record<string, unknown>;
-        const key = typeof obj['key'] === 'string' ? obj['key'] : null;
-        if (key === null) {
-            continue;
-        }
-
-        const label = typeof obj['label'] === 'string' ? obj['label'] : null;
-        const videos = Array.isArray(obj['videos'])
-            ? obj['videos'].map(parseVideo).filter((v): v is Video => v !== null)
-            : [];
-
-        sections.push({ key, label, videos });
+        sections.push(section);
     }
 
     return sections;

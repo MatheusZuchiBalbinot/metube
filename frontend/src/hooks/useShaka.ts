@@ -18,6 +18,53 @@ function getSavedQualityHeight(): number {
     return Number.isFinite(parsed) ? parsed : -1;
 }
 
+function ensurePolyfillsInstalled(shaka: typeof ShakaNamespace) {
+    if (polyfillsInstalled) {
+        return;
+    }
+
+    shaka.polyfill.installAll();
+    polyfillsInstalled = true;
+}
+
+// Native <track> elements do not render when the video src is a MSE blob: URL.
+async function loadCaptionTracks(player: ShakaPlayer, captions: VideoCaption[]) {
+    for (const caption of captions) {
+        try {
+            await player.addTextTrackAsync(
+                caption.url,
+                caption.lang,
+                'subtitles',
+                'text/vtt',
+                undefined,
+                caption.label,
+            );
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('[Shaka Caption]', caption.lang, err);
+        }
+    }
+}
+
+// Disable all text tracks before signalling readiness so the consumer
+// starts from a known clean state and can enable only the selected one.
+function disableAllTextTracks(el: HTMLVideoElement) {
+    for (let i = 0; i < el.textTracks.length; i++) {
+        el.textTracks[i].mode = 'disabled';
+    }
+}
+
+function applySavedQuality(uniqueLevels: ShakaLevel[], setQuality: (levelIndex: number) => void) {
+    const savedHeight = getSavedQualityHeight();
+    const savedLevel = savedHeight > 0
+        ? uniqueLevels.find(level => level.height === savedHeight)
+        : undefined;
+
+    if (savedLevel) {
+        setQuality(savedLevel.index);
+    }
+}
+
 export function useShaka(
     videoRef: React.RefObject<HTMLVideoElement | null>,
     src: string,
@@ -42,10 +89,7 @@ export function useShaka(
             const shakaModule = await import('shaka-player');
             const shaka = shakaModule.default;
 
-            if (!polyfillsInstalled) {
-                shaka.polyfill.installAll();
-                polyfillsInstalled = true;
-            }
+            ensurePolyfillsInstalled(shaka);
 
             if (destroyed) {
                 return;
@@ -93,36 +137,11 @@ export function useShaka(
 
             setLevels(uniqueLevels.sort((a, b) => b.height - a.height));
 
-            const savedHeight = getSavedQualityHeight();
-            const savedLevel = savedHeight > 0
-                ? uniqueLevels.find(level => level.height === savedHeight)
-                : undefined;
-            if (savedLevel) {
-                setQuality(savedLevel.index);
-            }
+            applySavedQuality(uniqueLevels, setQuality);
 
-            // Native <track> elements do not render when the video src is a MSE blob: URL.
-            for (const caption of captions) {
-                try {
-                    await player.addTextTrackAsync(
-                        caption.url,
-                        caption.lang,
-                        'subtitles',
-                        'text/vtt',
-                        undefined,
-                        caption.label,
-                    );
-                } catch (err) {
-                    // eslint-disable-next-line no-console
-                    console.warn('[Shaka Caption]', caption.lang, err);
-                }
-            }
+            await loadCaptionTracks(player, captions);
 
-            // Disable all text tracks before signalling readiness so the consumer
-            // starts from a known clean state and can enable only the selected one.
-            for (let i = 0; i < el.textTracks.length; i++) {
-                el.textTracks[i].mode = 'disabled';
-            }
+            disableAllTextTracks(el);
 
             /* v8 ignore next 3 */
             if (!destroyed) {

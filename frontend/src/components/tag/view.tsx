@@ -6,16 +6,31 @@ import VideoHero from '@components/video/hero';
 import VideoRow from '@components/video/row';
 import { Badge, Button } from '@ui';
 import type { Video } from '@models';
+import type { TagView as TagViewState } from '@store/videoUiSlice';
 import './view.css';
 import { useVideoData, useVideoUi } from '@hooks';
+
+function getTagViewMeta(activeTagView: TagViewState | null) {
+    return {
+        tag: activeTagView?.tag ?? '',
+        fromVideoId: activeTagView?.fromVideoId ?? null,
+    };
+}
+
+function shouldShowHeroSection(hasFromVideo: boolean, heroVideo: Video | null) {
+    return hasFromVideo && heroVideo !== null;
+}
+
+function shouldShowOthersLabel(hasFromVideo: boolean, hasOtherVideos: boolean) {
+    return hasFromVideo && hasOtherVideos;
+}
 
 export default function TagView() {
     const { t } = useTranslation();
     const { videos } = useVideoData();
     const { activeTagView, closeTagView } = useVideoUi();
 
-    const tag = activeTagView?.tag ?? '';
-    const fromVideoId = activeTagView?.fromVideoId ?? null;
+    const { tag, fromVideoId } = getTagViewMeta(activeTagView);
     const lowerTag = tag.toLowerCase();
     const tagPalette = TagColors.palette(tag);
 
@@ -76,14 +91,14 @@ export default function TagView() {
             </div>
 
             <div className="tag-view__list">
-                {hasFromVideo && heroVideo && (
+                {shouldShowHeroSection(hasFromVideo, heroVideo) && (
                     <>
                         <p className="tag-view__section-label">{t('tag.fromThisVideo')}</p>
                         <VideoHero video={heroVideo} />
                     </>
                 )}
 
-                {hasFromVideo && hasOtherVideos && (
+                {shouldShowOthersLabel(hasFromVideo, hasOtherVideos) && (
                     <p className="tag-view__section-label tag-view__section-label--others">
                         {t('tag.otherVideos')} · {listVideos.length}
                     </p>

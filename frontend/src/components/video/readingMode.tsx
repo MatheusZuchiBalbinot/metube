@@ -54,6 +54,130 @@ function ProcessingScreen({ titleKey, subKey }: ProcessingScreenProps) {
     );
 }
 
+function computeSummaryFlags(summary: VideoSummary | null, transcription: VideoTranscription) {
+    const hasSummaryContent = summary !== null && summary.readingMode.trim() !== '';
+    const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
+    const hasChapters = summary !== null && summary.chapters.length > 0;
+    const hasSummary = hasSummaryContent || hasKeyPoints || hasChapters;
+    const isSummaryGenerating = domain.transcription.isCompleted(transcription) && !hasSummary;
+
+    return { hasSummaryContent, hasKeyPoints, hasChapters, hasSummary, isSummaryGenerating };
+}
+
+function buildSummaryHtml(hasSummaryContent: boolean, summary: VideoSummary | null) {
+    if (!hasSummaryContent || summary === null) {
+        return '';
+    }
+
+    return DOMPurify.sanitize(
+        summary.readingMode
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/^/, '<p>')
+            .replace(/$/, '</p>'),
+    );
+}
+
+interface SummarySectionProps {
+    hasSummaryContent: boolean
+    html: string
+    hasKeyPoints: boolean
+    hasChapters: boolean
+    summary: VideoSummary | null
+    currentTime?: number
+    seekingIndex: number | null
+    setSeekingIndex: (index: number | null) => void
+    onSeekToChapter?: (seconds: number) => void
+    videoRef?: React.RefObject<HTMLVideoElement | null>
+}
+
+function SummarySection({
+    hasSummaryContent,
+    html,
+    hasKeyPoints,
+    hasChapters,
+    summary,
+    currentTime,
+    seekingIndex,
+    setSeekingIndex,
+    onSeekToChapter,
+    videoRef,
+}: SummarySectionProps) {
+    const { t } = useTranslation();
+
+    return (
+        <section className="video-page__reading-summary">
+            <header className="video-page__rm-section-header video-page__rm-section-header--ai">
+                <Sparkles size={13} aria-hidden="true" />
+                <span>{t('video.summary')}</span>
+            </header>
+
+            {hasSummaryContent && (
+                <div
+                    className="video-page__reading-content"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                />
+            )}
+
+            {hasKeyPoints && (
+                <div className="video-page__reading-subsection">
+                    <h4 className="video-page__reading-subheading">{t('video.key_points')}</h4>
+                    <ul className="video-page__key-points">
+                        {summary!.keyPoints.map((point, i) => (
+                            <li key={i} className="video-page__key-point">{point}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {hasChapters && (
+                <div className="video-page__reading-subsection">
+                    <h4 className="video-page__reading-subheading">{t('video.chapters')}</h4>
+                    <ol className="video-page__chapters">
+                        {summary!.chapters.map((ch, i) => {
+                            const seconds = parseChapterTimestamp(ch.timestamp);
+                            const nextSeconds = summary!.chapters[i + 1] !== undefined
+                                ? parseChapterTimestamp(summary!.chapters[i + 1].timestamp)
+                                : Infinity;
+                            const isActive = currentTime !== undefined
+                                && currentTime >= seconds
+                                && currentTime < nextSeconds;
+                            const isSeeking = seekingIndex === i;
+
+                            return (
+                                <li key={i}>
+                                    <button
+                                        className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
+                                        disabled={onSeekToChapter === undefined || isSeeking}
+                                        onClick={() => {
+                                            if (!onSeekToChapter) {
+                                                return;
+                                            }
+                                            setSeekingIndex(i);
+                                            onSeekToChapter(seconds);
+                                            videoRef?.current?.addEventListener('seeked', () => {
+                                                setSeekingIndex(null);
+                                            }, { once: true });
+                                        }}
+                                    >
+                                        {isSeeking
+                                            ? <Spinner size="sm" className="video-page__chapter-spinner" />
+                                            : <span className="video-page__chapter-time">{ch.timestamp}</span>
+                                        }
+                                        <span className="video-page__chapter-title">{ch.title}</span>
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                </div>
+            )}
+        </section>
+    );
+}
+
 function TranscriptionBody({ transcription, isOwner, onRetry }: TranscriptionBodyProps) {
     const { t } = useTranslation();
 
@@ -109,23 +233,9 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
 
     const isProcessing = domain.transcription.isProcessing(transcription);
 
-    const hasSummaryContent = summary !== null && summary.readingMode.trim() !== '';
-    const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
-    const hasChapters = summary !== null && summary.chapters.length > 0;
-    const hasSummary = hasSummaryContent || hasKeyPoints || hasChapters;
-    const isSummaryGenerating = domain.transcription.isCompleted(transcription) && !hasSummary;
+    const { hasSummaryContent, hasKeyPoints, hasChapters, hasSummary, isSummaryGenerating } = computeSummaryFlags(summary, transcription);
 
-    const html = hasSummaryContent
-        ? DOMPurify.sanitize(
-            summary.readingMode
-                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/^/, '<p>')
-                .replace(/$/, '</p>'),
-        )
-        : '';
+    const html = buildSummaryHtml(hasSummaryContent, summary);
 
     if (isProcessing) {
         return (
@@ -161,73 +271,18 @@ export default function ReadingMode({ summary, transcription, isOwner, onRetryTr
 
             {/* AI Summary — article + key points + chapters */}
             {hasSummary && (
-                <section className="video-page__reading-summary">
-                    <header className="video-page__rm-section-header video-page__rm-section-header--ai">
-                        <Sparkles size={13} aria-hidden="true" />
-                        <span>{t('video.summary')}</span>
-                    </header>
-
-                    {hasSummaryContent && (
-                        <div
-                            className="video-page__reading-content"
-                            dangerouslySetInnerHTML={{ __html: html }}
-                        />
-                    )}
-
-                    {hasKeyPoints && (
-                        <div className="video-page__reading-subsection">
-                            <h4 className="video-page__reading-subheading">{t('video.key_points')}</h4>
-                            <ul className="video-page__key-points">
-                                {summary!.keyPoints.map((point, i) => (
-                                    <li key={i} className="video-page__key-point">{point}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {hasChapters && (
-                        <div className="video-page__reading-subsection">
-                            <h4 className="video-page__reading-subheading">{t('video.chapters')}</h4>
-                            <ol className="video-page__chapters">
-                                {summary!.chapters.map((ch, i) => {
-                                    const seconds = parseChapterTimestamp(ch.timestamp);
-                                    const nextSeconds = summary!.chapters[i + 1] !== undefined
-                                        ? parseChapterTimestamp(summary!.chapters[i + 1].timestamp)
-                                        : Infinity;
-                                    const isActive = currentTime !== undefined
-                                        && currentTime >= seconds
-                                        && currentTime < nextSeconds;
-                                    const isSeeking = seekingIndex === i;
-
-                                    return (
-                                        <li key={i}>
-                                            <button
-                                                className={cn('video-page__chapter', isActive && 'video-page__chapter--active')}
-                                                disabled={onSeekToChapter === undefined || isSeeking}
-                                                onClick={() => {
-                                                    if (!onSeekToChapter) {
-                                                        return;
-                                                    }
-                                                    setSeekingIndex(i);
-                                                    onSeekToChapter(seconds);
-                                                    videoRef?.current?.addEventListener('seeked', () => {
-                                                        setSeekingIndex(null);
-                                                    }, { once: true });
-                                                }}
-                                            >
-                                                {isSeeking
-                                                    ? <Spinner size="sm" className="video-page__chapter-spinner" />
-                                                    : <span className="video-page__chapter-time">{ch.timestamp}</span>
-                                                }
-                                                <span className="video-page__chapter-title">{ch.title}</span>
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ol>
-                        </div>
-                    )}
-                </section>
+                <SummarySection
+                    hasSummaryContent={hasSummaryContent}
+                    html={html}
+                    hasKeyPoints={hasKeyPoints}
+                    hasChapters={hasChapters}
+                    summary={summary}
+                    currentTime={currentTime}
+                    seekingIndex={seekingIndex}
+                    setSeekingIndex={setSeekingIndex}
+                    onSeekToChapter={onSeekToChapter}
+                    videoRef={videoRef}
+                />
             )}
 
             {/* AI Summary still being generated after transcription completed */}

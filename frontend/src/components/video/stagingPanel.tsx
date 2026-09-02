@@ -22,6 +22,39 @@ interface StagingPanelProps {
     summary: VideoSummary | null
 }
 
+function resolveStagingFlags(suggestion: AiSuggestion | null, summary: VideoSummary | null) {
+    const hasPendingSuggestion = suggestion !== null && domain.aiSuggestion.isPending(suggestion);
+    const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
+
+    return { hasPendingSuggestion, hasKeyPoints };
+}
+
+interface AiSuggestionIndicatorProps {
+    aiLoading: boolean
+    hasPendingSuggestion: boolean
+    onOpenModal: () => void
+    aiAnalyzingLabel: string
+    suggestionLabel: string
+}
+
+function AiSuggestionIndicator({ aiLoading, hasPendingSuggestion, onOpenModal, aiAnalyzingLabel, suggestionLabel }: AiSuggestionIndicatorProps) {
+    if (aiLoading) {
+        return <span className="staging-panel__ai-pulse" aria-label={aiAnalyzingLabel} />;
+    }
+
+    if (!hasPendingSuggestion) {
+        return null;
+    }
+
+    return (
+        <span className="ai-border">
+            <Button variant="ghost" size="sm" className="ai-border__btn" leftIcon={<Sparkles size={14} />} onClick={onOpenModal}>
+                {suggestionLabel}
+            </Button>
+        </span>
+    );
+}
+
 export default function StagingPanel({ video, summary }: StagingPanelProps) {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
@@ -147,9 +180,7 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
         setModalOpen(false);
     }
 
-    const hasPendingSuggestion = suggestion !== null && domain.aiSuggestion.isPending(suggestion);
-
-    const hasKeyPoints = summary !== null && summary.keyPoints.length > 0;
+    const { hasPendingSuggestion, hasKeyPoints } = resolveStagingFlags(suggestion, summary);
 
     return (
         <>
@@ -160,17 +191,13 @@ export default function StagingPanel({ video, summary }: StagingPanelProps) {
                 </div>
 
                 <div className="staging-panel__actions">
-                    {aiLoading && (
-                        <span className="staging-panel__ai-pulse" aria-label={t('video.staging.ai_analyzing')} />
-                    )}
-
-                    {!aiLoading && hasPendingSuggestion && (
-                        <span className="ai-border">
-                            <Button variant="ghost" size="sm" className="ai-border__btn" leftIcon={<Sparkles size={14} />} onClick={openModal}>
-                                {t('ai_suggestion.title')}
-                            </Button>
-                        </span>
-                    )}
+                    <AiSuggestionIndicator
+                        aiLoading={aiLoading}
+                        hasPendingSuggestion={hasPendingSuggestion}
+                        onOpenModal={openModal}
+                        aiAnalyzingLabel={t('video.staging.ai_analyzing')}
+                        suggestionLabel={t('ai_suggestion.title')}
+                    />
 
                     <Button
                         variant="primary"

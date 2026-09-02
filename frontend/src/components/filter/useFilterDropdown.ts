@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 
-interface DropdownPos {
+export interface DropdownPos {
     top?: number
     bottom?: number
     left: number

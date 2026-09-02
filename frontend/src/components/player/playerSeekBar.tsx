@@ -8,6 +8,57 @@ import { useSeekDrag, useSeekPreview } from '@hooks';
 const PREVIEW_W = 160;
 const PREVIEW_HALF_W = PREVIEW_W / 2;
 
+interface AbMarkersProps {
+    abRepeat?: { a: number | null; b: number | null }
+    duration: number
+}
+
+function AbMarkers({ abRepeat, duration }: AbMarkersProps) {
+    const a = abRepeat?.a ?? null;
+
+    if (a === null || duration <= 0) {
+        return null;
+    }
+
+    const b = abRepeat?.b ?? null;
+    const aPct = (a / duration) * 100;
+    const bPct = b === null ? null : (b / duration) * 100;
+
+    return (
+        <>
+            <AbRegion aPct={aPct} bPct={bPct} />
+            <AbMarkerFlag className="vp__seek-ab-marker--a" label="A" pct={aPct} />
+            <AbMarkerFlag className="vp__seek-ab-marker--b" label="B" pct={bPct} />
+        </>
+    );
+}
+
+function AbRegion({ aPct, bPct }: { aPct: number; bPct: number | null }) {
+    if (bPct === null) {
+        return null;
+    }
+
+    return <div className="vp__seek-ab-region" style={{ left: `${aPct}%`, width: `${bPct - aPct}%` }} />;
+}
+
+interface AbMarkerFlagProps {
+    className: string
+    label: string
+    pct: number | null
+}
+
+function AbMarkerFlag({ className, label, pct }: AbMarkerFlagProps) {
+    if (pct === null) {
+        return null;
+    }
+
+    return (
+        <div className={`vp__seek-ab-marker ${className}`} style={{ left: `${pct}%` }}>
+            <span className="vp__seek-ab-flag">{label}</span>
+        </div>
+    );
+}
+
 interface PlayerSeekBarProps {
     videoRef: React.RefObject<HTMLVideoElement | null>
     src: string
@@ -42,7 +93,6 @@ export default function PlayerSeekBar({
     );
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of own state when the source changes
         resetDragState();
         resetPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,37 +134,6 @@ export default function PlayerSeekBar({
                 />
             );
         });
-    }
-
-    function renderAbMarkers() {
-        const a = abRepeat?.a ?? null;
-        const b = abRepeat?.b ?? null;
-
-        if (a === null || duration <= 0) {
-            return null;
-        }
-
-        const aPct = (a / duration) * 100;
-        const bPct = b !== null ? (b / duration) * 100 : null;
-
-        return (
-            <>
-                {bPct !== null && (
-                    <div
-                        className="vp__seek-ab-region"
-                        style={{ left: `${aPct}%`, width: `${bPct - aPct}%` }}
-                    />
-                )}
-                <div className="vp__seek-ab-marker vp__seek-ab-marker--a" style={{ left: `${aPct}%` }}>
-                    <span className="vp__seek-ab-flag">A</span>
-                </div>
-                {bPct !== null && (
-                    <div className="vp__seek-ab-marker vp__seek-ab-marker--b" style={{ left: `${bPct}%` }}>
-                        <span className="vp__seek-ab-flag">B</span>
-                    </div>
-                )}
-            </>
-        );
     }
 
     // ─── Derived values ────────────────────────────────────────────────────────
@@ -190,7 +209,7 @@ export default function PlayerSeekBar({
 
                     {renderChapters()}
 
-                    {renderAbMarkers()}
+                    <AbMarkers abRepeat={abRepeat} duration={duration} />
 
                     <div className="vp__seek-thumb vp__seek-thumb--current" style={{ left: `${displayPct}%` }} />
 

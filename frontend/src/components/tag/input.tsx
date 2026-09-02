@@ -96,39 +96,47 @@ export default function TagInput({
         first?.focus();
     }
 
+    function isCommitKey(e: KeyboardEvent<HTMLInputElement>) {
+        return e.key === 'Enter' || e.key === ',';
+    }
+
+    function isOpenSuggestionsArrowDown(e: KeyboardEvent<HTMLInputElement>) {
+        return e.key === 'ArrowDown' && shouldShowDropdown;
+    }
+
+    function isCloseOnEscape(e: KeyboardEvent<HTMLInputElement>) {
+        return e.key === 'Escape' && isOpen;
+    }
+
+    function isBackspaceRemove(e: KeyboardEvent<HTMLInputElement>, input: HTMLInputElement) {
+        const isBackspace = e.key === 'Backspace';
+        const isInputEmpty = input.value === '';
+        const hasTags = value.length > 0;
+        return isBackspace && isInputEmpty && hasTags;
+    }
+
     function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
         const input = e.currentTarget;
 
-        const isEnter = e.key === 'Enter';
-        const isComma = e.key === ',';
-
-        if (isEnter || isComma) {
+        if (isCommitKey(e)) {
             e.preventDefault();
             commitInput(input);
             return;
         }
 
-        const isArrowDown = e.key === 'ArrowDown';
-
-        if (isArrowDown && shouldShowDropdown) {
+        if (isOpenSuggestionsArrowDown(e)) {
             e.preventDefault();
             focusFirstSuggestion();
             return;
         }
 
-        const isEscape = e.key === 'Escape';
-
-        if (isEscape && isOpen) {
+        if (isCloseOnEscape(e)) {
             e.preventDefault();
             setIsOpen(false);
             return;
         }
 
-        const isBackspace = e.key === 'Backspace';
-        const isInputEmpty = input.value === '';
-        const hasTags = value.length > 0;
-
-        if (isBackspace && isInputEmpty && hasTags) {
+        if (isBackspaceRemove(e, input)) {
             removeTag(value[value.length - 1]);
         }
     }
@@ -150,6 +158,30 @@ export default function TagInput({
         setQuery('');
     }
 
+    function focusNextSuggestion(index: number) {
+        const list = listRef.current;
+        const next = list?.querySelectorAll<HTMLLIElement>('li[role="option"]')[index + 1];
+        next?.focus();
+    }
+
+    function focusPreviousSuggestion(index: number) {
+        const list = listRef.current;
+        const items = list?.querySelectorAll<HTMLLIElement>('li[role="option"]');
+        const isFirst = index === 0;
+
+        if (isFirst) {
+            inputRef.current?.focus();
+            return;
+        }
+
+        items?.[index - 1]?.focus();
+    }
+
+    function closeSuggestionsAndFocusInput() {
+        setIsOpen(false);
+        inputRef.current?.focus();
+    }
+
     function handleSuggestionKeyDown(e: KeyboardEvent<HTMLLIElement>, tag: Tag, index: number) {
         const isEnter = e.key === 'Enter';
 
@@ -163,9 +195,7 @@ export default function TagInput({
 
         if (isArrowDown) {
             e.preventDefault();
-            const list = listRef.current;
-            const next = list?.querySelectorAll<HTMLLIElement>('li[role="option"]')[index + 1];
-            next?.focus();
+            focusNextSuggestion(index);
             return;
         }
 
@@ -173,16 +203,7 @@ export default function TagInput({
 
         if (isArrowUp) {
             e.preventDefault();
-            const list = listRef.current;
-            const items = list?.querySelectorAll<HTMLLIElement>('li[role="option"]');
-            const isFirst = index === 0;
-
-            if (isFirst) {
-                inputRef.current?.focus();
-                return;
-            }
-
-            items?.[index - 1]?.focus();
+            focusPreviousSuggestion(index);
             return;
         }
 
@@ -190,8 +211,7 @@ export default function TagInput({
 
         if (isEscape) {
             e.preventDefault();
-            setIsOpen(false);
-            inputRef.current?.focus();
+            closeSuggestionsAndFocusInput();
         }
     }
 

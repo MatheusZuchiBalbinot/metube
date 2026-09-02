@@ -15,35 +15,93 @@ interface NotificationItemProps {
     onDismiss: (id: string) => void
 }
 
+type Translate = (key: string, vars?: Record<string, unknown>) => string;
+
+function getVideoProcessedText(data: Record<string, unknown>, t: Translate): string {
+    const isFailed = data.failed === true;
+
+    return isFailed
+        ? t('notifications.types.video_processed_failed')
+        : t('notifications.types.video_processed');
+}
+
+const TEXT_RESOLVERS: Record<NotificationType, (data: Record<string, unknown>, t: Translate) => string> = {
+    [NotificationType.COMMENT_REPLIED]: (data, t) => t('notifications.types.comment_replied', { name: data.replier_name }),
+    [NotificationType.COMMENT_LIKED]: (data, t) => t('notifications.types.comment_liked', { name: data.liker_name }),
+    [NotificationType.VIDEO_LIKED]: (data, t) => t('notifications.types.video_liked', { name: data.liker_name }),
+    [NotificationType.NEW_SUBSCRIBER]: (data, t) => t('notifications.types.new_subscriber', { name: data.subscriber_name }),
+    [NotificationType.VIDEO_FROM_SUBSCRIPTION]: (data, t) => t('notifications.types.video_from_subscription', { channel: data.channel_name }),
+    [NotificationType.VIDEO_PROCESSED]: getVideoProcessedText,
+    [NotificationType.VIDEO_TRANSCRIPTION_STARTED]: (_data, t) => t('notifications.types.video_transcription_started'),
+    [NotificationType.VIDEO_TRANSCRIBED]: (_data, t) => t('notifications.types.video_transcribed'),
+    [NotificationType.VIDEO_AI_SUMMARY_READY]: (_data, t) => t('notifications.types.video_ai_summary_ready'),
+};
+
 function getText(
     type: NotificationType,
     data: Record<string, unknown>,
-    t: (key: string, vars?: Record<string, unknown>) => string,
+    t: Translate,
 ): string {
-    switch (type) {
-        case NotificationType.COMMENT_REPLIED:
-            return t('notifications.types.comment_replied', { name: data.replier_name });
-        case NotificationType.COMMENT_LIKED:
-            return t('notifications.types.comment_liked', { name: data.liker_name });
-        case NotificationType.VIDEO_LIKED:
-            return t('notifications.types.video_liked', { name: data.liker_name });
-        case NotificationType.NEW_SUBSCRIBER:
-            return t('notifications.types.new_subscriber', { name: data.subscriber_name });
-        case NotificationType.VIDEO_FROM_SUBSCRIPTION:
-            return t('notifications.types.video_from_subscription', { channel: data.channel_name });
-        case NotificationType.VIDEO_PROCESSED: {
-            const isFailed = data.failed === true;
-            return isFailed
-                ? t('notifications.types.video_processed_failed')
-                : t('notifications.types.video_processed');
-        }
-        case NotificationType.VIDEO_TRANSCRIPTION_STARTED:
-            return t('notifications.types.video_transcription_started');
-        case NotificationType.VIDEO_TRANSCRIBED:
-            return t('notifications.types.video_transcribed');
-        case NotificationType.VIDEO_AI_SUMMARY_READY:
-            return t('notifications.types.video_ai_summary_ready');
-    }
+    return TEXT_RESOLVERS[type](data, t);
+}
+
+function resolveNotificationItemClass(isUnread: boolean, isAi: boolean): string {
+    return cn('notification-item', isUnread && 'notification-item--unread', isAi && 'notification-item--ai');
+}
+
+interface NotificationItemLeadProps {
+    showActor: boolean
+    actorName: string | null
+    variant: string
+    Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>
+}
+
+function NotificationItemLead({ showActor, actorName, variant, Icon }: NotificationItemLeadProps) {
+    return (
+        <span className="notification-item__lead">
+            {showActor && actorName !== null
+                ? <Avatar name={actorName} size="md" />
+                : (
+                    <span className={`notification-item__icon notification-item__icon--${variant}`}>
+                        <Icon size={16} />
+                    </span>
+                )}
+            {showActor && (
+                <span className={`notification-item__badge notification-item__badge--${variant}`} aria-hidden="true">
+                    <Icon size={10} strokeWidth={2.5} />
+                </span>
+            )}
+        </span>
+    );
+}
+
+interface NotificationItemBodyProps {
+    text: string
+    subtitle: string | undefined
+    time: string
+    showAction: boolean
+    actionLabelKey: string | null
+    onAction: (e: React.MouseEvent) => void
+    t: Translate
+}
+
+function NotificationItemBody({ text, subtitle, time, showAction, actionLabelKey, onAction, t }: NotificationItemBodyProps) {
+    return (
+        <span className="notification-item__body">
+            <span className="notification-item__text">{text}</span>
+            {subtitle !== undefined && (
+                <span className="notification-item__subtitle">{subtitle}</span>
+            )}
+            <span className="notification-item__time">
+                {time}
+            </span>
+            {showAction && actionLabelKey !== null && (
+                <button type="button" className="notification-item__action" onClick={onAction}>
+                    {t(actionLabelKey)}
+                </button>
+            )}
+        </span>
+    );
 }
 
 function NotificationItem({ notification, onRead, onDismiss }: NotificationItemProps) {
@@ -94,41 +152,23 @@ function NotificationItem({ notification, onRead, onDismiss }: NotificationItemP
 
     return (
         <div
-            className={cn('notification-item', isUnread && 'notification-item--unread', isAi && 'notification-item--ai')}
+            className={resolveNotificationItemClass(isUnread, isAi)}
             role="button"
             tabIndex={0}
             onClick={activate}
             onKeyDown={handleKeyDown}
         >
-            <span className="notification-item__lead">
-                {showActor && actorName !== null
-                    ? <Avatar name={actorName} size="md" />
-                    : (
-                        <span className={`notification-item__icon notification-item__icon--${variant}`}>
-                            <Icon size={16} />
-                        </span>
-                    )}
-                {showActor && (
-                    <span className={`notification-item__badge notification-item__badge--${variant}`} aria-hidden="true">
-                        <Icon size={10} strokeWidth={2.5} />
-                    </span>
-                )}
-            </span>
+            <NotificationItemLead showActor={showActor} actorName={actorName} variant={variant} Icon={Icon} />
 
-            <span className="notification-item__body">
-                <span className="notification-item__text">{text}</span>
-                {subtitle !== undefined && (
-                    <span className="notification-item__subtitle">{subtitle}</span>
-                )}
-                <span className="notification-item__time">
-                    {formatRelativeDate(notification.created_at, i18n.language)}
-                </span>
-                {showAction && (
-                    <button type="button" className="notification-item__action" onClick={handleAction}>
-                        {t(actionLabelKey)}
-                    </button>
-                )}
-            </span>
+            <NotificationItemBody
+                text={text}
+                subtitle={subtitle}
+                time={formatRelativeDate(notification.created_at, i18n.language)}
+                showAction={showAction}
+                actionLabelKey={actionLabelKey}
+                onAction={handleAction}
+                t={t}
+            />
 
             {thumbnail !== undefined && (
                 <img className="notification-item__thumb" src={thumbnail} alt="" aria-hidden="true" />

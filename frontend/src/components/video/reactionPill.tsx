@@ -2,6 +2,10 @@ import { Tooltip } from '@ui';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@utils';
 
+function resolvePillClass(isState: boolean, stateClass: string) {
+    return cn('video-page__pill-btn', isState && stateClass);
+}
+
 interface ReactionPillProps {
     isLiked: boolean
     isDisliked: boolean
@@ -29,25 +33,20 @@ export default function ReactionPill({
 }: ReactionPillProps) {
     const { t } = useTranslation();
 
-    const likeClass = cn(
-        'video-page__pill-btn',
-        isLiked && 'video-page__pill-btn--liked',
-    );
-
-    const dislikeClass = cn(
-        'video-page__pill-btn',
-        isDisliked && 'video-page__pill-btn--disliked',
-    );
+    const likeClass = resolvePillClass(isLiked, 'video-page__pill-btn--liked');
+    const dislikeClass = resolvePillClass(isDisliked, 'video-page__pill-btn--disliked');
+    const likeLabel = isLiked ? t('video.liked') : t('video.like');
+    const dislikeLabel = isDisliked ? t('video.disliked') : t('video.dislike');
 
     return (
         <div className="video-page__reaction-pill" role="group" aria-label={t('video.reactions')}>
-            <Tooltip content={isLiked ? t('video.liked') : t('video.like')} side="top">
+            <Tooltip content={likeLabel} side="top">
                 <button
                     type="button"
                     className={likeClass}
                     onClick={onLike}
                     aria-pressed={isLiked}
-                    aria-label={isLiked ? t('video.liked') : t('video.like')}
+                    aria-label={likeLabel}
                     data-animating={isLikeAnimating ? 'true' : undefined}
                 >
                     {isLiked ? likeIconActive : likeIcon}
@@ -56,13 +55,13 @@ export default function ReactionPill({
 
             <span className="video-page__pill-sep" aria-hidden="true" />
 
-            <Tooltip content={isDisliked ? t('video.disliked') : t('video.dislike')} side="top">
+            <Tooltip content={dislikeLabel} side="top">
                 <button
                     type="button"
                     className={dislikeClass}
                     onClick={onDislike}
                     aria-pressed={isDisliked}
-                    aria-label={isDisliked ? t('video.disliked') : t('video.dislike')}
+                    aria-label={dislikeLabel}
                     data-animating={isDislikeAnimating ? 'true' : undefined}
                 >
                     {isDisliked ? dislikeIconActive : dislikeIcon}

@@ -13,19 +13,375 @@ import { toastActions } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 import { recentChannelsActions } from '@store/recentChannelsSlice';
 import { VideoFilter, videoUrl, ROUTES, TagColors, type FilterState } from '@utils';
-import type { VideoId, ChannelId, Tag } from '@models';
+import type { VideoId, ChannelId, Tag, User, Video } from '@models';
 import { useEditVideoModal } from './hooks/useEditVideoModal';
 import { useEditProfileModal } from './hooks/useEditProfileModal';
 import { useDeleteVideoModal } from './hooks/useDeleteVideoModal';
 import { useSpotlightComments } from './hooks/useSpotlightComments';
-import { useProfileSections, type TagSection } from './hooks/useProfileSections';
-import { useProfileStats } from './hooks/useProfileStats';
+import { useProfileSections, type TagSection, type ProfileSectionsData } from './hooks/useProfileSections';
+import { useProfileStats, type ProfileStats as ProfileStatsData } from './hooks/useProfileStats';
 import EditVideoModal from './components/EditVideoModal';
 import EditProfileModal from './components/EditProfileModal';
 import DeleteVideoModal from './components/DeleteVideoModal';
 import ProfileStats from './components/ProfileStats';
 import ProfileSections from './components/ProfileSections';
 import ProfileVideoGrid from './components/ProfileVideoGrid';
+
+// Extracted so the ownership-check branches don't count toward ProfilePage's own
+// complexity. ProfilePage is also a guest route (/channel/:id, /user/:id), so `user`
+// can be null here — a logged-out visitor is never viewing their own profile.
+function resolveIsOwnProfile(user: User | null, idParam: string | undefined): boolean {
+    return user !== null && (!idParam || user.uuid === idParam);
+}
+
+function resolveChannelId(isOwnProfile: boolean, user: User | null, idParam: string | undefined): string {
+    return isOwnProfile && user !== null ? String(user.id) : (idParam ?? '');
+}
+
+function resolveChannelName(
+    isOwnProfile: boolean,
+    user: User | null,
+    ownVideos: Video[],
+    idParam: string | undefined,
+): string {
+    return isOwnProfile ? (user?.name ?? '') : (ownVideos[0]?.channel ?? idParam ?? '');
+}
+
+function resolveProfileBio(isOwnProfile: boolean, user: User | null): string {
+    return isOwnProfile ? (user?.bio ?? '') : '';
+}
+
+// A genuine visitor's ownVideos is already scoped server-side to what they can
+// see — only the previewing-owner case needs a client-side recount, since their
+// own fetch legitimately includes drafts/scheduled/etc.
+function resolveVideosCount(isPreviewingAsVisitor: boolean, ownVideos: Video[]): number {
+    return isPreviewingAsVisitor
+        ? ownVideos.filter(v => domain.video.isVisible(v)).length
+        : ownVideos.length;
+}
+
+function resolveTotalViews(displayIsOwnProfile: boolean, stats: ProfileStatsData | null): number | null {
+    return displayIsOwnProfile && stats ? stats.totalViews : null;
+}
+
+function resolveIsChannelSubscribed(
+    subscriptionChannelId: ChannelId | undefined,
+    isSubscribed: (id: ChannelId) => boolean,
+): boolean {
+    return subscriptionChannelId !== undefined && isSubscribed(subscriptionChannelId);
+}
+
+function shouldRedirectToOwnProfile(idParam: string | undefined, isOwnProfile: boolean): boolean {
+    return idParam !== undefined && isOwnProfile;
+}
+
+interface ProfilePreviewBannerProps {
+    show: boolean
+    onExit: () => void
+}
+
+// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
+function ProfilePreviewBanner({ show, onExit }: ProfilePreviewBannerProps) {
+    const { t } = useTranslation();
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        // Must stay above the cover: the header's avatar overlaps it with a negative
+        // margin, which would otherwise eat this banner if placed any closer.
+        <div className="profile-page__preview-banner">
+            <Eye size={14} />
+            <span>{t('profile.previewing_banner')}</span>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={onExit}
+                className="profile-page__preview-exit"
+            >
+                {t('profile.exit_preview')}
+            </Button>
+        </div>
+    );
+}
+
+interface ProfileSubtitleProps {
+    videosCount: number
+    displayIsOwnProfile: boolean
+    stats: ProfileStatsData | null
+}
+
+// Extracted so the stats guard doesn't count toward ProfilePage's own complexity.
+function ProfileSubtitle({ videosCount, displayIsOwnProfile, stats }: ProfileSubtitleProps) {
+    const { t } = useTranslation();
+
+    return (
+        <p className="profile-page__subtitle">
+            {t('video.videos_count', { count: videosCount })}
+            {displayIsOwnProfile && stats && (
+                <>
+                    <span className="profile-page__subtitle-dot" aria-hidden="true">·</span>
+                    {stats.subscriberCount} {t('channel.subscribers')}
+                </>
+            )}
+        </p>
+    );
+}
+
+interface ProfileHeaderActionsProps {
+    isOwnProfile: boolean
+    displayIsOwnProfile: boolean
+    previewAsVisitor: boolean
+    isChannelSubscribed: boolean
+    user: User | null
+    onSubscribeToggle: () => void
+    onOpenUpload: () => void
+    onEditProfileOpen: (name: string, bio: string) => void
+    onTogglePreview: () => void
+}
+
+interface SubscribeButtonProps {
+    show: boolean
+    isChannelSubscribed: boolean
+    onSubscribeToggle: () => void
+}
+
+// Extracted so the show guard and the subscribed-state ternaries don't count toward
+// ProfileHeaderActions' own complexity.
+function SubscribeButton({ show, isChannelSubscribed, onSubscribeToggle }: SubscribeButtonProps) {
+    const { t } = useTranslation();
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        <Button
+            variant={isChannelSubscribed ? 'secondary' : 'primary'}
+            size="md"
+            aria-pressed={isChannelSubscribed}
+            className="profile-page__header-btn"
+            onClick={onSubscribeToggle}
+        >
+            {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
+        </Button>
+    );
+}
+
+interface OwnerUploadEditButtonsProps {
+    show: boolean
+    user: User | null
+    onOpenUpload: () => void
+    onEditProfileOpen: (name: string, bio: string) => void
+}
+
+// Extracted so the show guard doesn't count toward ProfileHeaderActions' own complexity.
+function OwnerUploadEditButtons({ show, user, onOpenUpload, onEditProfileOpen }: OwnerUploadEditButtonsProps) {
+    const { t } = useTranslation();
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        <>
+            <Button
+                variant="primary"
+                size="md"
+                leftIcon={<Upload size={15} />}
+                className="profile-page__header-btn"
+                onClick={onOpenUpload}
+            >
+                {t('video.upload')}
+            </Button>
+            <Button
+                variant="secondary"
+                size="md"
+                leftIcon={<Pencil size={15} />}
+                className="profile-page__header-btn"
+                onClick={() => onEditProfileOpen(user?.name ?? '', user?.bio ?? '')}
+            >
+                {t('profile.edit_profile')}
+            </Button>
+        </>
+    );
+}
+
+interface PreviewToggleButtonProps {
+    show: boolean
+    previewAsVisitor: boolean
+    onTogglePreview: () => void
+}
+
+// Extracted so the show guard and the preview-state ternaries don't count toward
+// ProfileHeaderActions' own complexity.
+function PreviewToggleButton({ show, previewAsVisitor, onTogglePreview }: PreviewToggleButtonProps) {
+    const { t } = useTranslation();
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        <Button
+            variant="secondary"
+            size="md"
+            aria-pressed={previewAsVisitor}
+            leftIcon={previewAsVisitor ? <EyeOff size={15} /> : <Eye size={15} />}
+            className="profile-page__header-btn"
+            onClick={onTogglePreview}
+        >
+            {t(previewAsVisitor ? 'profile.exit_preview' : 'profile.preview_as_visitor')}
+        </Button>
+    );
+}
+
+// Extracted so the header-actions guard doesn't count toward ProfilePage's own complexity.
+function ProfileHeaderActions({
+    isOwnProfile, displayIsOwnProfile, previewAsVisitor, isChannelSubscribed, user,
+    onSubscribeToggle, onOpenUpload, onEditProfileOpen, onTogglePreview,
+}: ProfileHeaderActionsProps) {
+    const show = isOwnProfile || !displayIsOwnProfile;
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        <div className="profile-page__header-actions">
+            <SubscribeButton
+                show={!displayIsOwnProfile}
+                isChannelSubscribed={isChannelSubscribed}
+                onSubscribeToggle={onSubscribeToggle}
+            />
+            <OwnerUploadEditButtons
+                show={isOwnProfile && !previewAsVisitor}
+                user={user}
+                onOpenUpload={onOpenUpload}
+                onEditProfileOpen={onEditProfileOpen}
+            />
+            <PreviewToggleButton
+                show={isOwnProfile}
+                previewAsVisitor={previewAsVisitor}
+                onTogglePreview={onTogglePreview}
+            />
+        </div>
+    );
+}
+
+interface ProfileTopTagsRowProps {
+    displayIsOwnProfile: boolean
+    stats: ProfileStatsData | null
+}
+
+// Extracted so the stats/topTags guards don't count toward ProfilePage's own complexity.
+function ProfileTopTagsRow({ displayIsOwnProfile, stats }: ProfileTopTagsRowProps) {
+    const { t } = useTranslation();
+
+    if (!displayIsOwnProfile || !stats || stats.topTags.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="profile-page__topics-row">
+            <span className="profile-page__topics-label">{t('profile.top_tags')}</span>
+            <div className="profile-page__top-tags">
+                {stats.topTags.map(tag => {
+                    const palette = TagColors.palette(tag);
+                    return (
+                        <span
+                            key={tag}
+                            className="profile-page__top-tag"
+                            style={{ background: palette.bg, color: palette.color }}
+                        >
+                            {tag}
+                        </span>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+interface ProfileTabsBarProps {
+    show: boolean
+    ownVideosCount: number
+    nonLiveVideos: Video[]
+    nonLiveRef: React.RefObject<HTMLDivElement | null>
+}
+
+// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
+function ProfileTabsBar({ show, ownVideosCount, nonLiveVideos, nonLiveRef }: ProfileTabsBarProps) {
+    const { t } = useTranslation();
+
+    if (!show) {
+        return null;
+    }
+
+    return (
+        <div className="profile-page__tabs" role="tablist" aria-label={t('profile.tab_videos')}>
+            <button
+                type="button"
+                role="tab"
+                aria-selected={true}
+                className="profile-page__tab profile-page__tab--active"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+                <span className="profile-page__tab-label">{t('profile.tab_videos')}</span>
+                <span className="profile-page__tab-count">{ownVideosCount - nonLiveVideos.length}</span>
+            </button>
+            <button
+                type="button"
+                role="tab"
+                aria-selected={false}
+                className="profile-page__tab"
+                onClick={() => nonLiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            >
+                <span className="profile-page__tab-label">{t('profile.tab_not_published')}</span>
+                <span className="profile-page__tab-count">{nonLiveVideos.length}</span>
+            </button>
+        </div>
+    );
+}
+
+interface ProfileCuratedSectionsProps {
+    show: boolean
+    sections: ProfileSectionsData | null
+    spotlightComments: ReturnType<typeof useSpotlightComments>
+    isOwnProfile: boolean
+    onNavigate: (id: VideoId) => void
+    onWatchClick: (e: React.MouseEvent) => void
+    onScrollToFilter: (newFilter?: Partial<FilterState>) => void
+    onEdit: (video: Video) => void
+    onDelete: (id: VideoId) => void
+    latestRef: React.RefObject<HTMLDivElement | null>
+    mostViewedRef: React.RefObject<HTMLDivElement | null>
+    topicRef: React.RefObject<HTMLDivElement | null>
+}
+
+// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
+function ProfileCuratedSections({ show, sections, ...rest }: ProfileCuratedSectionsProps) {
+    if (!show || sections === null) {
+        return null;
+    }
+
+    return <ProfileSections sections={sections} {...rest} />;
+}
+
+interface ProfileStatsSectionProps {
+    displayIsOwnProfile: boolean
+    stats: ProfileStatsData | null
+}
+
+// Extracted so the stats guard doesn't count toward ProfilePage's own complexity.
+function ProfileStatsSection({ displayIsOwnProfile, stats }: ProfileStatsSectionProps) {
+    if (!displayIsOwnProfile || !stats) {
+        return null;
+    }
+
+    return <ProfileStats stats={stats} />;
+}
 
 export default function ProfilePage() {
     const { t } = useTranslation();
@@ -37,10 +393,8 @@ export default function ProfilePage() {
         pinnedVideoId, editVideo, deleteVideo, openUploadModal,
     } = useVideo();
 
-    // ProfilePage is also a guest route (/channel/:id, /user/:id), so `user` can be
-    // null here — a logged-out visitor is never viewing their own profile.
-    const isOwnProfile = user !== null && (!idParam || user.uuid === idParam);
-    const channelId = isOwnProfile && user !== null ? String(user.id) : (idParam ?? '');
+    const isOwnProfile = resolveIsOwnProfile(user, idParam);
+    const channelId = resolveChannelId(isOwnProfile, user, idParam);
 
     // Only swaps what gets *displayed*; data-fetching/routing (channelId, refetch,
     // own-profile redirect) still keys off the untouched isOwnProfile.
@@ -49,7 +403,10 @@ export default function ProfilePage() {
     const displayIsOwnProfile = isOwnProfile && !previewAsVisitor;
 
     const { videosState, setVideos } = useProfileVideos(channelId, isOwnProfile);
-    const ownVideos = videosState.kind === 'ok' ? videosState.data : [];
+    const ownVideos = useMemo(
+        () => videosState.kind === 'ok' ? videosState.data : [],
+        [videosState],
+    );
     const isLoadingVideos = videosState.kind === 'loading';
 
     // Track visits to other users' channels so the sidebar can surface them.
@@ -235,22 +592,13 @@ export default function ProfilePage() {
         }
     }
 
-    const channelName = isOwnProfile
-        ? (user?.name ?? '')
-        : (ownVideos[0]?.channel ?? idParam ?? '');
-
-    const profileBio = isOwnProfile ? (user?.bio ?? '') : '';
+    const channelName = resolveChannelName(isOwnProfile, user, ownVideos, idParam);
+    const profileBio = resolveProfileBio(isOwnProfile, user);
     const hasVideos = filteredVideos.length > 0;
-
-    // A genuine visitor's ownVideos is already scoped server-side to what they can
-    // see — only the previewing-owner case needs a client-side recount, since their
-    // own fetch legitimately includes drafts/scheduled/etc.
-    const videosCount = isPreviewingAsVisitor
-        ? ownVideos.filter(v => domain.video.isVisible(v)).length
-        : ownVideos.length;
+    const videosCount = resolveVideosCount(isPreviewingAsVisitor, ownVideos);
 
     const subscriptionChannelId = idParam as ChannelId | undefined;
-    const isChannelSubscribed = subscriptionChannelId !== undefined && isSubscribed(subscriptionChannelId);
+    const isChannelSubscribed = resolveIsChannelSubscribed(subscriptionChannelId, isSubscribed);
 
     function handleSubscribeToggle() {
         if (subscriptionChannelId === undefined) {
@@ -264,30 +612,13 @@ export default function ProfilePage() {
         }));
     }
 
-    const shouldRedirectToOwnProfile = idParam !== undefined && isOwnProfile;
-
-    if (shouldRedirectToOwnProfile) {
+    if (shouldRedirectToOwnProfile(idParam, isOwnProfile)) {
         return <Navigate to={ROUTES.PROFILE} replace />;
     }
 
     return (
         <div className="profile-page">
-            {/* Must stay above the cover: the header's avatar overlaps it with a negative
-                margin, which would otherwise eat this banner if placed any closer. */}
-            {isPreviewingAsVisitor && (
-                <div className="profile-page__preview-banner">
-                    <Eye size={14} />
-                    <span>{t('profile.previewing_banner')}</span>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPreviewAsVisitor(false)}
-                        className="profile-page__preview-exit"
-                    >
-                        {t('profile.exit_preview')}
-                    </Button>
-                </div>
-            )}
+            <ProfilePreviewBanner show={isPreviewingAsVisitor} onExit={() => setPreviewAsVisitor(false)} />
 
             <div className="profile-page__banner" aria-hidden="true" />
 
@@ -302,118 +633,36 @@ export default function ProfilePage() {
                             <h1 className="profile-page__name">{channelName}</h1>
                         </div>
 
-                        <p className="profile-page__subtitle">
-                            {t('video.videos_count', { count: videosCount })}
-                            {displayIsOwnProfile && stats && (
-                                <>
-                                    <span className="profile-page__subtitle-dot" aria-hidden="true">·</span>
-                                    {stats.subscriberCount} {t('channel.subscribers')}
-                                </>
-                            )}
-                        </p>
+                        <ProfileSubtitle videosCount={videosCount} displayIsOwnProfile={displayIsOwnProfile} stats={stats} />
 
                         {profileBio && (
                             <p className="profile-page__bio">{profileBio}</p>
                         )}
                     </div>
 
-                    {(isOwnProfile || !displayIsOwnProfile) && (
-                        <div className="profile-page__header-actions">
-                            {!displayIsOwnProfile && (
-                                <Button
-                                    variant={isChannelSubscribed ? 'secondary' : 'primary'}
-                                    size="md"
-                                    aria-pressed={isChannelSubscribed}
-                                    className="profile-page__header-btn"
-                                    onClick={handleSubscribeToggle}
-                                >
-                                    {isChannelSubscribed ? t('channel.subscribed') : t('channel.subscribe')}
-                                </Button>
-                            )}
-                            {isOwnProfile && !previewAsVisitor && (
-                                <>
-                                    <Button
-                                        variant="primary"
-                                        size="md"
-                                        leftIcon={<Upload size={15} />}
-                                        className="profile-page__header-btn"
-                                        onClick={() => openUploadModal()}
-                                    >
-                                        {t('video.upload')}
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="md"
-                                        leftIcon={<Pencil size={15} />}
-                                        className="profile-page__header-btn"
-                                        onClick={() => handleEditProfileOpen(user?.name ?? '', user?.bio ?? '')}
-                                    >
-                                        {t('profile.edit_profile')}
-                                    </Button>
-                                </>
-                            )}
-                            {isOwnProfile && (
-                                <Button
-                                    variant="secondary"
-                                    size="md"
-                                    aria-pressed={previewAsVisitor}
-                                    leftIcon={previewAsVisitor ? <EyeOff size={15} /> : <Eye size={15} />}
-                                    className="profile-page__header-btn"
-                                    onClick={() => setPreviewAsVisitor(v => !v)}
-                                >
-                                    {t(previewAsVisitor ? 'profile.exit_preview' : 'profile.preview_as_visitor')}
-                                </Button>
-                            )}
-                        </div>
-                    )}
+                    <ProfileHeaderActions
+                        isOwnProfile={isOwnProfile}
+                        displayIsOwnProfile={displayIsOwnProfile}
+                        previewAsVisitor={previewAsVisitor}
+                        isChannelSubscribed={isChannelSubscribed}
+                        user={user}
+                        onSubscribeToggle={handleSubscribeToggle}
+                        onOpenUpload={() => openUploadModal()}
+                        onEditProfileOpen={handleEditProfileOpen}
+                        onTogglePreview={() => setPreviewAsVisitor(v => !v)}
+                    />
                 </div>
 
-                {displayIsOwnProfile && stats && <ProfileStats stats={stats} />}
+                <ProfileStatsSection displayIsOwnProfile={displayIsOwnProfile} stats={stats} />
 
-                {displayIsOwnProfile && stats && stats.topTags.length > 0 && (
-                    <div className="profile-page__topics-row">
-                        <span className="profile-page__topics-label">{t('profile.top_tags')}</span>
-                        <div className="profile-page__top-tags">
-                            {stats.topTags.map(tag => {
-                                const palette = TagColors.palette(tag);
-                                return (
-                                    <span
-                                        key={tag}
-                                        className="profile-page__top-tag"
-                                        style={{ background: palette.bg, color: palette.color }}
-                                    >
-                                        {tag}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+                <ProfileTopTagsRow displayIsOwnProfile={displayIsOwnProfile} stats={stats} />
 
-                {hasNonLiveVideos && (
-                    <div className="profile-page__tabs" role="tablist" aria-label={t('profile.tab_videos')}>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={true}
-                            className="profile-page__tab profile-page__tab--active"
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        >
-                            <span className="profile-page__tab-label">{t('profile.tab_videos')}</span>
-                            <span className="profile-page__tab-count">{ownVideos.length - nonLiveVideos.length}</span>
-                        </button>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={false}
-                            className="profile-page__tab"
-                            onClick={() => nonLiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        >
-                            <span className="profile-page__tab-label">{t('profile.tab_not_published')}</span>
-                            <span className="profile-page__tab-count">{nonLiveVideos.length}</span>
-                        </button>
-                    </div>
-                )}
+                <ProfileTabsBar
+                    show={hasNonLiveVideos}
+                    ownVideosCount={ownVideos.length}
+                    nonLiveVideos={nonLiveVideos}
+                    nonLiveRef={nonLiveRef}
+                />
 
                 <div className="profile-page__filters">
                     <ProfileQuickFilters
@@ -435,21 +684,20 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {sections !== null && !isLoadingVideos && (
-                    <ProfileSections
-                        sections={sections}
-                        spotlightComments={spotlightComments}
-                        isOwnProfile={displayIsOwnProfile}
-                        onNavigate={navigateToVideo}
-                        onWatchClick={handleCoverWatchClick}
-                        onScrollToFilter={scrollToAllVideos}
-                        onEdit={handleEditOpen}
-                        onDelete={handleDelete}
-                        latestRef={latestSectionRef}
-                        mostViewedRef={mostViewedSectionRef}
-                        topicRef={topicSectionRef}
-                    />
-                )}
+                <ProfileCuratedSections
+                    show={!isLoadingVideos}
+                    sections={sections}
+                    spotlightComments={spotlightComments}
+                    isOwnProfile={displayIsOwnProfile}
+                    onNavigate={navigateToVideo}
+                    onWatchClick={handleCoverWatchClick}
+                    onScrollToFilter={scrollToAllVideos}
+                    onEdit={handleEditOpen}
+                    onDelete={handleDelete}
+                    latestRef={latestSectionRef}
+                    mostViewedRef={mostViewedSectionRef}
+                    topicRef={topicSectionRef}
+                />
 
                 <ProfileVideoGrid
                     isLoadingVideos={isLoadingVideos}
@@ -465,7 +713,7 @@ export default function ProfilePage() {
                     hasVideos={hasVideos}
                     showTopicView={showTopicView}
                     topicSections={topicSections}
-                    totalViews={displayIsOwnProfile && stats ? stats.totalViews : null}
+                    totalViews={resolveTotalViews(displayIsOwnProfile, stats)}
                     onSelectTopic={handleSelectTopic}
                     onEdit={handleEditOpen}
                     onDelete={handleDelete}

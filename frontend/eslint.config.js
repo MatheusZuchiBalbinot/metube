@@ -226,4 +226,13 @@ export default defineConfig([
             'jsx-a11y/click-events-have-key-events': 'off',
         },
     },
+
+    {
+        // Generated icon data (one line per icon, mirroring lucide-react's own source
+        // layout) — wrapping these to 170 chars would make the file harder to scan, not easier.
+        files: ['src/components/icons/icons.tsx'],
+        rules: {
+            '@stylistic/max-len': 'off',
+        },
+    },
 ]);

@@ -14,6 +14,29 @@ function clampToViewport(x: number, y: number, el: HTMLElement | null): { x: num
     };
 }
 
+// Resolves the first defined value, falling back to a hard default — used to
+// pick between a freshly-measured DOMRect coordinate and the last known state position.
+function resolvePreferred(a: number | undefined, b: number | undefined, fallback: number) {
+    return a ?? b ?? fallback;
+}
+
+// Prefers the freshly-measured DOMRect (source of truth right after a layout),
+// falling back to the last known state position, then a hard default.
+function resolveDragStart(rect: DOMRect | undefined, pos: { x: number; y: number } | null) {
+    return {
+        x: resolvePreferred(rect?.left, pos?.x, 0),
+        y: resolvePreferred(rect?.top, pos?.y, 0),
+    };
+}
+
+// Prefers the last known state position, falling back to the DOMRect, then a hard default.
+function resolveNudgeBase(pos: { x: number; y: number } | null, rect: DOMRect | undefined) {
+    return {
+        x: resolvePreferred(pos?.x, rect?.left, 0),
+        y: resolvePreferred(pos?.y, rect?.top, 0),
+    };
+}
+
 /**
  * Free-floating draggable position for an element pinned with `position: fixed`.
  * Supports both mouse drag and arrow-key nudging, clamped to the viewport
@@ -53,8 +76,7 @@ export function useDraggablePosition(playerRef: React.RefObject<HTMLElement | nu
 
     function startDrag(e: React.MouseEvent) {
         const rect = playerRef.current?.getBoundingClientRect();
-        const currentX = rect?.left ?? pos?.x ?? 0;
-        const currentY = rect?.top ?? pos?.y ?? 0;
+        const { x: currentX, y: currentY } = resolveDragStart(rect, pos);
 
         if (pos === null) {
             setPos({ x: currentX, y: currentY });
@@ -70,8 +92,7 @@ export function useDraggablePosition(playerRef: React.RefObject<HTMLElement | nu
     function nudge(deltaX: number, deltaY: number) {
         const el = playerRef.current;
         const rect = el?.getBoundingClientRect();
-        const baseX = pos?.x ?? rect?.left ?? 0;
-        const baseY = pos?.y ?? rect?.top ?? 0;
+        const { x: baseX, y: baseY } = resolveNudgeBase(pos, rect);
 
         setPos(clampToViewport(baseX + deltaX, baseY + deltaY, el));
     }

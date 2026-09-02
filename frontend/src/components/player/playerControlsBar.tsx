@@ -74,6 +74,61 @@ interface PlayerControlsBarProps {
     menus: PlayerControlsMenus
 }
 
+function resolveAbHintKey(abStatus: number): typeof AB_HINT_KEYS[number] {
+    return AB_HINT_KEYS[abStatus] ?? AB_HINT_KEYS[0];
+}
+
+function resolveTimeLabel(showRemaining: boolean, currentTime: number, duration: number): string {
+    return showRemaining
+        ? `-${formatDuration(Math.max(duration - currentTime, 0) as Seconds)} / ${formatDuration(duration as Seconds)}`
+        : `${formatDuration(currentTime as Seconds)} / ${formatDuration(duration as Seconds)}`;
+}
+
+interface VolumeSliderProps {
+    isMuted: boolean
+    volume: number
+    onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    ariaLabel: string
+}
+
+function VolumeSlider({ isMuted, volume, onVolumeChange, ariaLabel }: VolumeSliderProps) {
+    return (
+        <input
+            type="range"
+            className="vp__volume-slider"
+            min="0" max="1" step="0.05"
+            value={isMuted ? 0 : volume}
+            onChange={onVolumeChange}
+            aria-label={ariaLabel}
+            style={{ '--vol': isMuted ? '0%' : `${volume * 100}%` } as React.CSSProperties}
+        />
+    );
+}
+
+interface ToggleIconButtonProps {
+    tooltipTitle: string
+    tooltipContent: string
+    isActive: boolean
+    onClick: () => void
+    ariaLabel: string
+    icon: React.ReactNode
+}
+
+function ToggleIconButton({ tooltipTitle, tooltipContent, isActive, onClick, ariaLabel, icon }: ToggleIconButtonProps) {
+    return (
+        <Tooltip title={tooltipTitle} content={tooltipContent} side="top">
+            <button
+                className={cn('vp__btn', isActive && 'vp__btn--active')}
+                onClick={onClick}
+                aria-label={ariaLabel}
+                aria-pressed={isActive}
+            >
+                {icon}
+            </button>
+        </Tooltip>
+    );
+}
+
 export default function PlayerControlsBar({ playback, audio, display, menus }: PlayerControlsBarProps) {
     const {
         isPlaying, currentTime, duration, playbackRate, onTogglePlay, onSpeedChange,
@@ -113,14 +168,18 @@ export default function PlayerControlsBar({ playback, audio, display, menus }: P
         return <Volume2 size={16} />;
     }
 
+    const playPauseLabel = isPlaying ? t('player.pause') : t('player.play');
+    const muteLabel = isMuted ? t('player.unmute') : t('player.mute');
+    const fullscreenLabel = isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen');
+
     return (
         <div className="vp__bar" onClick={onBarClick}>
             <div className="vp__bar-left">
                 <button
                     className="vp__btn"
                     onClick={onTogglePlay}
-                    title={isPlaying ? t('player.pause') : t('player.play')}
-                    aria-label={isPlaying ? t('player.pause') : t('player.play')}
+                    title={playPauseLabel}
+                    aria-label={playPauseLabel}
                 >
                     {isPlaying
                         ? <Pause size={18} fill="white" strokeWidth={0} />
@@ -132,19 +191,16 @@ export default function PlayerControlsBar({ playback, audio, display, menus }: P
                     <button
                         className="vp__btn"
                         onClick={onToggleMute}
-                        title={isMuted ? t('player.unmute') : t('player.mute')}
-                        aria-label={isMuted ? t('player.unmute') : t('player.mute')}
+                        title={muteLabel}
+                        aria-label={muteLabel}
                     >
                         {getVolumeIcon()}
                     </button>
-                    <input
-                        type="range"
-                        className="vp__volume-slider"
-                        min="0" max="1" step="0.05"
-                        value={isMuted ? 0 : volume}
-                        onChange={onVolumeChange}
-                        aria-label={t('player.volume')}
-                        style={{ '--vol': isMuted ? '0%' : `${volume * 100}%` } as React.CSSProperties}
+                    <VolumeSlider
+                        isMuted={isMuted}
+                        volume={volume}
+                        onVolumeChange={onVolumeChange}
+                        ariaLabel={t('player.volume')}
                     />
                 </div>
 
@@ -154,9 +210,7 @@ export default function PlayerControlsBar({ playback, audio, display, menus }: P
                     onClick={handleToggleTimeDisplay}
                     title={t('player.toggle_time')}
                 >
-                    {showRemaining
-                        ? `-${formatDuration(Math.max(duration - currentTime, 0) as Seconds)} / ${formatDuration(duration as Seconds)}`
-                        : `${formatDuration(currentTime as Seconds)} / ${formatDuration(duration as Seconds)}`}
+                    {resolveTimeLabel(showRemaining, currentTime, duration)}
                 </button>
 
                 {chapterTitle !== null && (
@@ -171,49 +225,41 @@ export default function PlayerControlsBar({ playback, audio, display, menus }: P
                 {/* Secondary toggles — shown inline on wide players; collapse into the
                     settings menu on narrow ones (see .vp__bar-toggles container query). */}
                 <div className="vp__bar-toggles">
-                    <Tooltip title={t('player.autoplay')} content={t('player.autoplay_hint')} side="top">
-                        <button
-                            className={cn('vp__btn', isAutoplay && 'vp__btn--active')}
-                            onClick={onToggleAutoplay}
-                            aria-label={t('player.autoplay')}
-                            aria-pressed={isAutoplay}
-                        >
-                            <ListVideo size={16} />
-                        </button>
-                    </Tooltip>
+                    <ToggleIconButton
+                        tooltipTitle={t('player.autoplay')}
+                        tooltipContent={t('player.autoplay_hint')}
+                        isActive={isAutoplay}
+                        onClick={onToggleAutoplay}
+                        ariaLabel={t('player.autoplay')}
+                        icon={<ListVideo size={16} />}
+                    />
 
-                    <Tooltip title={t('player.loop')} content={t('player.loop_hint')} side="top">
-                        <button
-                            className={cn('vp__btn', isLoop && 'vp__btn--active')}
-                            onClick={onToggleLoop}
-                            aria-label={t('player.loop')}
-                            aria-pressed={isLoop}
-                        >
-                            <Repeat size={16} />
-                        </button>
-                    </Tooltip>
+                    <ToggleIconButton
+                        tooltipTitle={t('player.loop')}
+                        tooltipContent={t('player.loop_hint')}
+                        isActive={isLoop}
+                        onClick={onToggleLoop}
+                        ariaLabel={t('player.loop')}
+                        icon={<Repeat size={16} />}
+                    />
 
-                    <Tooltip title={t('player.ab_title')} content={t(AB_HINT_KEYS[abStatus] ?? AB_HINT_KEYS[0])} side="top">
-                        <button
-                            className={cn('vp__btn', abStatus > 0 && 'vp__btn--active')}
-                            onClick={onAbRepeat}
-                            aria-label={t('player.ab_title')}
-                            aria-pressed={abStatus > 0}
-                        >
-                            <Repeat1 size={16} />
-                        </button>
-                    </Tooltip>
+                    <ToggleIconButton
+                        tooltipTitle={t('player.ab_title')}
+                        tooltipContent={t(resolveAbHintKey(abStatus))}
+                        isActive={abStatus > 0}
+                        onClick={onAbRepeat}
+                        ariaLabel={t('player.ab_title')}
+                        icon={<Repeat1 size={16} />}
+                    />
 
-                    <Tooltip title={t('player.ambient')} content={t('player.ambient_hint')} side="top">
-                        <button
-                            className={cn('vp__btn', isAmbient && 'vp__btn--active')}
-                            onClick={onToggleAmbient}
-                            aria-label={t('player.ambient')}
-                            aria-pressed={isAmbient}
-                        >
-                            <Sparkles size={16} />
-                        </button>
-                    </Tooltip>
+                    <ToggleIconButton
+                        tooltipTitle={t('player.ambient')}
+                        tooltipContent={t('player.ambient_hint')}
+                        isActive={isAmbient}
+                        onClick={onToggleAmbient}
+                        ariaLabel={t('player.ambient')}
+                        icon={<Sparkles size={16} />}
+                    />
                 </div>
 
                 <CaptionsButton
@@ -262,8 +308,8 @@ export default function PlayerControlsBar({ playback, audio, display, menus }: P
                 <button
                     className="vp__btn"
                     onClick={onFullscreen}
-                    title={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
-                    aria-label={isFullscreen ? t('player.exit_fullscreen') : t('player.fullscreen')}
+                    title={fullscreenLabel}
+                    aria-label={fullscreenLabel}
                     aria-pressed={isFullscreen}
                 >
                     {fullscreenIcon}

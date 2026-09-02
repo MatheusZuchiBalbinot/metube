@@ -48,18 +48,18 @@ export function formatDurationCompact(seconds: Seconds): string {
     return '<1m';
 }
 
-export function formatRelativeDate(isoDate: string | null | undefined, locale = 'en'): string {
-    const dateToUse = isoDate ?? new Date().toISOString();
-    const diffMs = Date.now() - new Date(dateToUse).getTime();
-    const diffSec = Math.round(diffMs / 1_000);
-    const diffMin = Math.round(diffSec / 60);
-    const diffH = Math.round(diffMin / 60);
-    const diffD = Math.round(diffH / 24);
-    const diffW = Math.round(diffD / 7);
-    const diffMo = Math.round(diffD / 30);
-    const diffY = Math.round(diffD / 365);
+interface RelativeDateDiffs {
+    diffSec: number
+    diffMin: number
+    diffH: number
+    diffD: number
+    diffW: number
+    diffMo: number
+    diffY: number
+}
 
-    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+function formatRelativeDateFromDiffs(rtf: Intl.RelativeTimeFormat, diffs: RelativeDateDiffs): string {
+    const { diffSec, diffMin, diffH, diffD, diffW, diffMo, diffY } = diffs;
 
     if (diffSec < 60) {
         return rtf.format(-diffSec, 'second');
@@ -86,6 +86,22 @@ export function formatRelativeDate(isoDate: string | null | undefined, locale = 
     }
 
     return rtf.format(-diffY, 'year');
+}
+
+export function formatRelativeDate(isoDate: string | null | undefined, locale = 'en'): string {
+    const dateToUse = isoDate ?? new Date().toISOString();
+    const diffMs = Date.now() - new Date(dateToUse).getTime();
+    const diffSec = Math.round(diffMs / 1_000);
+    const diffMin = Math.round(diffSec / 60);
+    const diffH = Math.round(diffMin / 60);
+    const diffD = Math.round(diffH / 24);
+    const diffW = Math.round(diffD / 7);
+    const diffMo = Math.round(diffD / 30);
+    const diffY = Math.round(diffD / 365);
+
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+    return formatRelativeDateFromDiffs(rtf, { diffSec, diffMin, diffH, diffD, diffW, diffMo, diffY });
 }
 
 export function formatEta(seconds: number): string {

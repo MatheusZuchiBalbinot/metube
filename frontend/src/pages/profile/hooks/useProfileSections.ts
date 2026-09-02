@@ -19,6 +19,40 @@ export interface ProfileSectionsData {
     tagSections: TagSection[]
 }
 
+// Counts every tag across the published videos, excluding "shorts" (not a real topic).
+function countPublishedTags(published: Video[]): Map<Tag, number> {
+    const tagCounts = new Map<Tag, number>();
+
+    for (const video of published) {
+        for (const tag of video.tags) {
+            const isShorts = tag === 'shorts';
+            if (!isShorts) {
+                tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+            }
+        }
+    }
+
+    return tagCounts;
+}
+
+// Top 4 tags with at least 2 videos each, with their 3 most-viewed videos.
+function buildTagSections(published: Video[]): TagSection[] {
+    const tagCounts = countPublishedTags(published);
+
+    return [...tagCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .filter(([, count]) => count >= 2)
+        .map(([tag, count]) => ({
+            tag,
+            count,
+            videos: published
+                .filter(v => v.tags.includes(tag))
+                .sort((a, b) => b.views - a.views)
+                .slice(0, 3),
+        }));
+}
+
 export function useProfileSections(
     ownVideos: Video[],
     filterState: FilterState,
@@ -47,28 +81,7 @@ export function useProfileSections(
             .filter(v => v.id !== featured?.id)
             .slice(0, 6);
 
-        const tagCounts = new Map<Tag, number>();
-        for (const video of published) {
-            for (const tag of video.tags) {
-                const isShorts = tag === 'shorts';
-                if (!isShorts) {
-                    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-                }
-            }
-        }
-
-        const tagSections = [...tagCounts.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 4)
-            .filter(([, count]) => count >= 2)
-            .map(([tag, count]) => ({
-                tag,
-                count,
-                videos: published
-                    .filter(v => v.tags.includes(tag))
-                    .sort((a, b) => b.views - a.views)
-                    .slice(0, 3),
-            }));
+        const tagSections = buildTagSections(published);
 
         return { featured, latest, mostViewed, tagSections };
     }, [ownVideos, filterState, pinnedVideo]);

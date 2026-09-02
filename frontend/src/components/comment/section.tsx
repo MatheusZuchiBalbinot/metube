@@ -7,11 +7,42 @@ import CommentSkeleton from './commentSkeleton';
 import type { Vuid } from '@api';
 import './section.css';
 import { useComments, useAuth } from '@hooks';
+import type { Comment } from '@models';
 
 interface CommentSectionProps {
     vuid: Vuid
     videoChannelId?: string
     onSeek?: (seconds: number) => void
+}
+
+interface CommentSectionPagination {
+    currentPage: number
+    lastPage: number
+    total: number
+}
+
+interface CommentSectionState {
+    hasLoaded: boolean
+    hasMore: boolean
+    total: number
+    isInitialLoading: boolean
+    isEmpty: boolean
+    showList: boolean
+}
+
+function resolveCommentSectionState(
+    comments: Comment[],
+    isLoading: boolean,
+    pagination: CommentSectionPagination | undefined,
+): CommentSectionState {
+    const hasLoaded = pagination !== undefined;
+    const hasMore = hasLoaded && pagination.currentPage < pagination.lastPage;
+    const total = pagination?.total ?? 0;
+    const isInitialLoading = isLoading || !hasLoaded;
+    const isEmpty = hasLoaded && !isLoading && comments.length === 0;
+    const showList = !isInitialLoading && comments.length > 0;
+
+    return { hasLoaded, hasMore, total, isInitialLoading, isEmpty, showList };
 }
 
 export default function CommentSection({ vuid, videoChannelId, onSeek }: CommentSectionProps) {
@@ -36,11 +67,7 @@ export default function CommentSection({ vuid, videoChannelId, onSeek }: Comment
         void load(1);
     }, [load]);
 
-    const hasLoaded = pagination !== undefined;
-    const hasMore = hasLoaded && pagination.currentPage < pagination.lastPage;
-    const total = pagination?.total ?? 0;
-    const isInitialLoading = isLoading || !hasLoaded;
-    const isEmpty = hasLoaded && !isLoading && comments.length === 0;
+    const { hasMore, total, isInitialLoading, isEmpty, showList } = resolveCommentSectionState(comments, isLoading, pagination);
 
     return (
         <section className="comment-section">
@@ -72,7 +99,7 @@ export default function CommentSection({ vuid, videoChannelId, onSeek }: Comment
                 <p className="comment-section__empty">{t('comments.empty')}</p>
             )}
 
-            {!isInitialLoading && comments.length > 0 && (
+            {showList && (
                 <div className="comment-section__list">
                     {comments.map(comment => (
                         <CommentItem

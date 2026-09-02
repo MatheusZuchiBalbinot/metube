@@ -3,6 +3,14 @@ import { KEYBOARD_SKIP_SECONDS } from '@components/player/playerTypes';
 import { isTypingInInput } from '@utils';
 import { SkipDirection } from '@enums/skipDirection';
 
+function isDigitJumpKey(key: string) {
+    return key.length === 1 && key >= '0' && key <= '9';
+}
+
+function jumpToTenth(el: HTMLVideoElement, key: string) {
+    el.currentTime = el.duration * (Number(key) / 10);
+}
+
 interface PlayerKeyboardOptions {
     videoRef: React.RefObject<HTMLVideoElement | null>
     isDefault: boolean
@@ -53,10 +61,9 @@ export function usePlayerKeyboard({
             const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
 
             // Number keys 0–9 jump to that tenth of the video (0 = start, 5 = 50%).
-            const isDigit = key.length === 1 && key >= '0' && key <= '9';
-            if (isDigit && Number.isFinite(el.duration)) {
+            if (isDigitJumpKey(key) && Number.isFinite(el.duration)) {
                 e.preventDefault();
-                el.currentTime = el.duration * (Number(key) / 10);
+                jumpToTenth(el, key);
                 return;
             }
 
