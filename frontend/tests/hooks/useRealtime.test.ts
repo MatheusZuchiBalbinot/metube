@@ -17,11 +17,16 @@ const echoMocks = vi.hoisted(() => {
         notification: vi.fn(),
         listen: vi.fn(),
     };
+    const connection = {
+        bind: vi.fn(),
+        unbind: vi.fn(),
+    };
     const echo = {
         private: vi.fn().mockReturnValue(channel),
         leave: vi.fn(),
+        connector: { pusher: { connection } },
     };
-    return { channel, echo };
+    return { channel, connection, echo };
 });
 
 vi.mock('@lib/echo', () => ({
@@ -414,5 +419,84 @@ describe('useRealtime', () => {
         });
 
         expect(store.getState().toast.toasts.length).toBe(0);
+    });
+
+    it('VideoStatusUpdated listener drops a stale broadcast delivered out of order', async () => {
+        const { video: videoApi } = await import('@api/videos');
+        vi.mocked(videoApi.get).mockResolvedValue({ ok: true, data: { id: 'v-1', status: 'published' } as never });
+
+        const store = makeStore();
+        renderHook(() => useRealtime(), { wrapper: makeWrapper(store) });
+
+        await waitFor(() => {
+            expect(echoMocks.channel.listen).toHaveBeenCalledWith('.VideoStatusUpdated', expect.any(Function));
+        });
+
+        const call = echoMocks.channel.listen.mock.calls.find(c => c[0] === '.VideoStatusUpdated');
+        const handler = call?.[1] as (d: { vuid: string; status: string; emitted_at_ms?: number }) => void;
+
+        handler({ vuid: 'v-1', status: 'published', emitted_at_ms: 2000 });
+
+        await waitFor(() => {
+            expect(store.getState().video.lastVideoStatusUpdate).toEqual({ vuid: 'v-1', status: 'published' });
+        });
+
+        handler({ vuid: 'v-1', status: 'processing', emitted_at_ms: 1000 });
+
+        // The second (older) event never reaches the reducer/toast dispatch —
+        // the last applied status stays 'published', and no processing toast fires.
+        expect(store.getState().video.lastVideoStatusUpdate).toEqual({ vuid: 'v-1', status: 'published' });
+        expect(store.getState().toast.toasts.length).toBe(0);
+    });
+
+    it('binds a connection state_change listener and unbinds it on unmount', async () => {
+        const store = makeStore();
+        const { unmount } = renderHook(() => useRealtime(), { wrapper: makeWrapper(store) });
+
+        await waitFor(() => {
+            expect(echoMocks.connection.bind).toHaveBeenCalledWith('state_change', expect.any(Function));
+        });
+
+        unmount();
+
+        expect(echoMocks.connection.unbind).toHaveBeenCalledWith('state_change', expect.any(Function));
+    });
+
+    it('reconciles unread count and the current video after a reconnect (not the initial connect)', async () => {
+        const { video: videoApi } = await import('@api/videos');
+        vi.mocked(videoApi.get).mockResolvedValue({ ok: true, data: { id: 'v-1', status: 'published' } as never });
+
+        const store = makeStore();
+        renderHook(() => useRealtime(), {
+            wrapper: function Wrapper({ children }: { children: React.ReactNode }) {
+                return React.createElement(
+                    Provider,
+                    { store },
+                    React.createElement(MemoryRouter, { initialEntries: ['/watch?v=v-1'] }, children),
+                );
+            },
+        });
+
+        await waitFor(() => {
+            expect(echoMocks.connection.bind).toHaveBeenCalledWith('state_change', expect.any(Function));
+        });
+
+        const handleStateChange = echoMocks.connection.bind.mock.calls
+            .find(c => c[0] === 'state_change')?.[1] as (s: { previous: string; current: string }) => void;
+
+        vi.mocked(notificationsApi.unreadCount).mockClear();
+        vi.mocked(videoApi.get).mockClear();
+
+        // Initial connect must not trigger reconciliation — only a reconnect.
+        handleStateChange({ previous: 'connecting', current: 'connected' });
+        expect(notificationsApi.unreadCount).not.toHaveBeenCalled();
+
+        handleStateChange({ previous: 'connecting', current: 'unavailable' });
+        handleStateChange({ previous: 'unavailable', current: 'connected' });
+
+        await waitFor(() => {
+            expect(notificationsApi.unreadCount).toHaveBeenCalled();
+            expect(videoApi.get).toHaveBeenCalledWith('v-1');
+        });
     });
 });

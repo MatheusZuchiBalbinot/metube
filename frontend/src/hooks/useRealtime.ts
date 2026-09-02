@@ -20,11 +20,13 @@ import type { Toast } from '@store/toastSlice';
 interface VideoStatusEvent {
     vuid: string
     status: string
+    emitted_at_ms?: number
 }
 
 interface TranscriptionStatusEvent {
     vuid: string
     status: string
+    emitted_at_ms?: number
 }
 
 interface AiSuggestionEvent {
@@ -46,6 +48,13 @@ export function useRealtime(): void {
     useLayoutEffect(() => {
         videosRef.current = videos;
     });
+    // Two BroadcastEvent jobs for the same video can be picked up by
+    // different Horizon workers and delivered to the client out of the
+    // order they were actually generated in — these track the last-applied
+    // emitted_at_ms per vuid so a stale, out-of-order broadcast is dropped
+    // instead of rewinding already-applied state.
+    const lastVideoStatusEventMs = useRef<Map<string, number>>(new Map());
+    const lastTranscriptionStatusEventMs = useRef<Map<string, number>>(new Map());
     // Keep `t` in a ref so changing the translation function (e.g. language
     // switch, re-renders) never tears down and rebuilds the Echo subscription.
     const tRef = useRef(t);
@@ -139,6 +148,10 @@ export function useRealtime(): void {
         }
 
         function handleVideoStatus(data: VideoStatusEvent): void {
+            if (isStaleBroadcast(lastVideoStatusEventMs.current, data.vuid, data.emitted_at_ms)) {
+                return;
+            }
+
             dispatch(videoActions.updateVideoStatus({ vuid: data.vuid as Vuid, status: data.status as VideoStatus }));
 
             const isTerminalStatus = data.status !== VideoStatus.PROCESSING;
@@ -168,6 +181,10 @@ export function useRealtime(): void {
         }
 
         function handleTranscriptionStatus(data: TranscriptionStatusEvent): void {
+            if (isStaleBroadcast(lastTranscriptionStatusEventMs.current, data.vuid, data.emitted_at_ms)) {
+                return;
+            }
+
             const toastConfig = TRANSCRIPTION_TOAST[data.status];
 
             if (toastConfig === undefined) {
@@ -195,6 +212,29 @@ export function useRealtime(): void {
             });
         }
 
+        // A brief network drop and reconnect delivers no replay of whatever
+        // broadcasts were missed while offline (Reverb/Pusher, unlike a log,
+        // never resends past events to a client that reconnects) — without
+        // this, unreadCount and the currently-open video's state can stay
+        // silently stale until the user manually refreshes the page.
+        function reconcileAfterReconnect(): void {
+            void fetchInitialCount();
+
+            const currentVuid = new URLSearchParams(locationRef.current.search).get('v');
+
+            if (currentVuid === null) {
+                return;
+            }
+
+            void videoApi.get(currentVuid as Vuid).then(result => {
+                if (result.ok) {
+                    dispatch(videoActions.updateVideo(result.data));
+                }
+            });
+        }
+
+        let unbindConnectionStateChange: (() => void) | null = null;
+
         void getEcho().then(echo => {
             if (isCancelled || echo === null) {
                 return;
@@ -208,10 +248,38 @@ export function useRealtime(): void {
             channel.listen('.VideoStatusUpdated', handleVideoStatus);
             channel.listen('.TranscriptionStatusUpdated', handleTranscriptionStatus);
             channel.listen('.AiSuggestionReady', handleAiSuggestion);
+
+            // Optional chaining even though the reverb connector type declares
+            // `connector`/`pusher` as always present: test doubles and any
+            // non-Pusher connector Echo might be configured with in the
+            // future won't have this shape, and losing reconnect reconciliation
+            // should never be fatal to the rest of realtime (notifications,
+            // toasts) working.
+            const connection = echo.connector?.pusher?.connection;
+
+            if (connection === undefined) {
+                return;
+            }
+
+            let hasConnectedBefore = false;
+
+            function handleConnectionStateChange(states: { previous: string; current: string }): void {
+                const isReconnect = states.current === 'connected' && hasConnectedBefore;
+
+                if (isReconnect) {
+                    reconcileAfterReconnect();
+                }
+
+                hasConnectedBefore = hasConnectedBefore || states.current === 'connected';
+            }
+
+            connection.bind('state_change', handleConnectionStateChange);
+            unbindConnectionStateChange = () => connection.unbind('state_change', handleConnectionStateChange);
         });
 
         return () => {
             isCancelled = true;
+            unbindConnectionStateChange?.();
             // Leave only this user's channel; never destroy the singleton here —
             // the logout effect below owns teardown. Switching users would
             // otherwise leak the previous private subscription.
@@ -228,6 +296,27 @@ export function useRealtime(): void {
             destroyEcho();
         };
     }, [userUuid]);
+}
+
+// Records the emitted_at_ms for `vuid` in `lastByVuid` and returns true when
+// `emittedAtMs` is older than what was already applied for that vuid — an
+// event missing the field (older backend, or a handler that doesn't send it)
+// is always treated as fresh, so absence of the field never blocks updates.
+function isStaleBroadcast(lastByVuid: Map<string, number>, vuid: string, emittedAtMs: number | undefined): boolean {
+    if (emittedAtMs === undefined) {
+        return false;
+    }
+
+    const lastAppliedMs = lastByVuid.get(vuid);
+    const isStale = lastAppliedMs !== undefined && emittedAtMs < lastAppliedMs;
+
+    if (isStale) {
+        return true;
+    }
+
+    lastByVuid.set(vuid, emittedAtMs);
+
+    return false;
 }
 
 const BROADCAST_HANDLED_TYPES = new Set<NotificationType>([
@@ -275,27 +364,36 @@ function normalizeBroadcastNotification(payload: Record<string, unknown>): Notif
     };
 }
 
+type NotificationFormatterFn = (data: Record<string, unknown>, t: (key: string, vars?: Record<string, unknown>) => string) => string;
+
+function formatVideoProcessedMessage(data: Record<string, unknown>, t: (key: string, vars?: Record<string, unknown>) => string): string {
+    const isFailed = data.failed === true;
+    return isFailed
+        ? t('notifications.types.video_processed_failed')
+        : t('notifications.types.video_processed');
+}
+
+const NOTIFICATION_MESSAGE_FORMATTERS: Partial<Record<NotificationType, NotificationFormatterFn>> = {
+    [NotificationType.COMMENT_REPLIED]: (data, t) => t('notifications.types.comment_replied', { name: data.replier_name }),
+    [NotificationType.COMMENT_LIKED]: (data, t) => t('notifications.types.comment_liked', { name: data.liker_name }),
+    [NotificationType.VIDEO_LIKED]: (data, t) => t('notifications.types.video_liked', { name: data.liker_name }),
+    [NotificationType.NEW_SUBSCRIBER]: (data, t) => t('notifications.types.new_subscriber', { name: data.subscriber_name }),
+    [NotificationType.VIDEO_FROM_SUBSCRIPTION]: (data, t) => t('notifications.types.video_from_subscription', { channel: data.channel_name }),
+    [NotificationType.VIDEO_PROCESSED]: formatVideoProcessedMessage,
+    /* v8 ignore next 2 */
+    [NotificationType.VIDEO_TRANSCRIBED]: (_data, t) => t('notifications.types.video_transcribed'),
+    [NotificationType.VIDEO_TRANSCRIPTION_STARTED]: (_data, t) => t('notifications.types.video_transcription_started'),
+};
+
 function formatNotificationMessage(
     notification: Notification,
     t: (key: string, vars?: Record<string, unknown>) => string,
 ): string {
-    const data = notification.data;
+    const formatter = NOTIFICATION_MESSAGE_FORMATTERS[notification.type];
 
-    switch (notification.type) {
-        case NotificationType.COMMENT_REPLIED: return t('notifications.types.comment_replied', { name: data.replier_name });
-        case NotificationType.COMMENT_LIKED: return t('notifications.types.comment_liked', { name: data.liker_name });
-        case NotificationType.VIDEO_LIKED: return t('notifications.types.video_liked', { name: data.liker_name });
-        case NotificationType.NEW_SUBSCRIBER: return t('notifications.types.new_subscriber', { name: data.subscriber_name });
-        case NotificationType.VIDEO_FROM_SUBSCRIPTION: return t('notifications.types.video_from_subscription', { channel: data.channel_name });
-        case NotificationType.VIDEO_PROCESSED: {
-            const isFailed = data.failed === true;
-            return isFailed
-                ? t('notifications.types.video_processed_failed')
-                : t('notifications.types.video_processed');
-        }
-        /* v8 ignore next 2 */
-        case NotificationType.VIDEO_TRANSCRIBED: return t('notifications.types.video_transcribed');
-        case NotificationType.VIDEO_TRANSCRIPTION_STARTED: return t('notifications.types.video_transcription_started');
-        default: return '';
+    if (formatter === undefined) {
+        return '';
     }
+
+    return formatter(notification.data, t);
 }
