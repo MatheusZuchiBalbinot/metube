@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\DTOs\UpdateVideoDTO;
-use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;
 
 describe('UpdateVideoDTO', function () {
@@ -12,14 +11,12 @@ describe('UpdateVideoDTO', function () {
             title: null,
             description: null,
             tags: null,
-            status: null,
             scheduledAt: null,
         );
 
         expect($data->title)->toBeNull()
             ->and($data->description)->toBeNull()
             ->and($data->tags)->toBeNull()
-            ->and($data->status)->toBeNull()
             ->and($data->scheduledAt)->toBeNull();
     });
 
@@ -28,7 +25,6 @@ describe('UpdateVideoDTO', function () {
             'title' => 'New Title',
             'description' => 'New Desc',
             'tags' => ['php'],
-            'status' => 'published',
         ];
 
         $data = UpdateVideoDTO::fromRequest($validated);
@@ -36,13 +32,23 @@ describe('UpdateVideoDTO', function () {
         expect($data->title)->toBe('New Title')
             ->and($data->description)->toBe('New Desc')
             ->and($data->tags)->toBe(['php'])
-            ->and($data->status)->toBe(VideoStatus::PUBLISHED)
             ->and($data->scheduledAt)->toBeNull();
+    });
+
+    test('fromRequest ignores a status key even if present in the array', function () {
+        // fromRequest must not resurrect `status` even if present in the raw array.
+        $validated = [
+            'title' => 'New Title',
+            'status' => 'published',
+        ];
+
+        $data = UpdateVideoDTO::fromRequest($validated);
+
+        expect($data->title)->toBe('New Title');
     });
 
     test('fromRequest parses scheduledAt', function () {
         $validated = [
-            'status' => 'scheduled',
             'scheduled_at' => '2025-12-01T00:00:00Z',
         ];
 
@@ -57,7 +63,6 @@ describe('UpdateVideoDTO', function () {
             title: null,
             description: null,
             tags: null,
-            status: null,
             scheduledAt: null,
         );
 
@@ -69,7 +74,6 @@ describe('UpdateVideoDTO', function () {
             title: 'Updated Title',
             description: null,
             tags: null,
-            status: null,
             scheduledAt: null,
         );
 
@@ -86,7 +90,6 @@ describe('UpdateVideoDTO', function () {
             title: 'Title',
             description: 'Desc',
             tags: ['a', 'b'],
-            status: VideoStatus::DRAFT,
             scheduledAt: $scheduledAt,
         );
 
@@ -95,14 +98,13 @@ describe('UpdateVideoDTO', function () {
         expect($array)->toHaveKey('title')
             ->and($array)->toHaveKey('description')
             ->and($array)->toHaveKey('tags')
-            ->and($array)->toHaveKey('status')
             ->and($array)->toHaveKey('scheduled_at')
-            ->and($array['tags'])->toBe(['a', 'b'])
-            ->and($array['status'])->toBe(VideoStatus::DRAFT);
+            ->and($array)->not->toHaveKey('status')
+            ->and($array['tags'])->toBe(['a', 'b']);
     });
 
     test('all fields are null when constructed with nulls', function () {
-        $data = new UpdateVideoDTO(null, null, null, null, null);
+        $data = new UpdateVideoDTO(null, null, null, null);
 
         expect($data->toUpdateArray())->toBeArray()
             ->and($data->toUpdateArray())->toHaveCount(0);

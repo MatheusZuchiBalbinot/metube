@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\DTOs;
 
-use App\Enums\VideoStatus;
 use Illuminate\Support\Carbon;
 
 final readonly class UpdateVideoDTO
@@ -16,7 +15,6 @@ final readonly class UpdateVideoDTO
         public ?string $title,
         public ?string $description,
         public ?array $tags,
-        public ?VideoStatus $status,
         public ?Carbon $scheduledAt,
     ) {}
 
@@ -29,7 +27,6 @@ final readonly class UpdateVideoDTO
             title: $validated['title'] ?? null,
             description: $validated['description'] ?? null,
             tags: $validated['tags'] ?? null,
-            status: isset($validated['status']) ? VideoStatus::from($validated['status']) : null,
             scheduledAt: isset($validated['scheduled_at'])
                 ? Carbon::parse($validated['scheduled_at'])
                 : null,
@@ -55,10 +52,6 @@ final readonly class UpdateVideoDTO
 
         if ($this->tags !== null) {
             $data['tags'] = $this->tags;
-        }
-
-        if ($this->status !== null) {
-            $data['status'] = $this->status;
         }
 
         if ($this->scheduledAt !== null) {

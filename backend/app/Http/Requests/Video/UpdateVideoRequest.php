@@ -10,10 +10,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 /**
+ * `status` is deliberately not a field here — see
+ * ValidatesVideoMetadata::videoMetadataRules() for why. Status transitions
+ * go through dedicated endpoints (POST /videos/{video}/publish, the
+ * scheduler) that enforce the actual business rules.
+ *
  * @property string|null $title
  * @property string|null $description
  * @property list<string>|null $tags
- * @property string|null $status
  * @property string|null $scheduled_at
  */
 class UpdateVideoRequest extends FormRequest
@@ -30,7 +34,7 @@ class UpdateVideoRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->videoMetadataRules(required: false);
+        return $this->videoMetadataRules(required: false, includeStatus: false);
     }
 
     /**
@@ -42,7 +46,6 @@ class UpdateVideoRequest extends FormRequest
             'title.max' => 'Title cannot exceed 255 characters.',
             'description.max' => 'Description cannot exceed 5000 characters.',
             'tags.max' => 'A maximum of 20 tags is allowed.',
-            'status.in' => 'Invalid status value.',
         ];
     }
 

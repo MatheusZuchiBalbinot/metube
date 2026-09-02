@@ -45,22 +45,13 @@ describe('UpdateVideoRequest', function () {
             ->and($validator->errors()->has('tags'))->toBeTrue();
     });
 
-    test('status must be a valid VideoStatus value', function () {
-        $validator = Validator::make(
-            ['status' => 'invalid-status'],
-            (new UpdateVideoRequest())->rules(),
-        );
-
-        expect($validator->fails())->toBeTrue()
-            ->and($validator->errors()->has('status'))->toBeTrue();
-    });
-
-    test('valid published status passes', function () {
+    test('status is not a validated field — status transitions go through /publish', function () {
         $validator = Validator::make(
             ['status' => 'published'],
             (new UpdateVideoRequest())->rules(),
         );
 
-        expect($validator->fails())->toBeFalse();
+        expect($validator->fails())->toBeFalse()
+            ->and($validator->validated())->not->toHaveKey('status');
     });
 });

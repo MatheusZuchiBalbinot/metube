@@ -23,21 +23,31 @@ trait ValidatesVideoMetadata
     /**
      * @param bool $required Whether title/status are required (Store) or
      *                       optional for a partial update (Update)
+     * @param bool $includeStatus Whether `status` is settable at all.
+     *                       UpdateVideoRequest passes false — status
+     *                       transitions have dedicated business rules (see
+     *                       VideoPublishingService::publishVideo()) that a
+     *                       bare field on a metadata PATCH would bypass.
      *
      * @return array<string, list<mixed>>
      */
-    protected function videoMetadataRules(bool $required): array
+    protected function videoMetadataRules(bool $required, bool $includeStatus = true): array
     {
         $presence = $required ? 'required' : 'nullable';
 
-        return [
+        $rules = [
             'title' => [$presence, 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
-            'status' => [$presence, 'string', Rule::enum(VideoStatus::class)],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i:sP'],
         ];
+
+        if ($includeStatus) {
+            $rules['status'] = [$presence, 'string', Rule::enum(VideoStatus::class)];
+        }
+
+        return $rules;
     }
 
     /**
