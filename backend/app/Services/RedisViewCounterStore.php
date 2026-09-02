@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Contracts\ViewCounterStore;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Support\Facades\Log;
+use RedisException;
 
 /**
  * Redis-backed buffered implementation of {@see ViewCounterStore}.
@@ -24,20 +26,43 @@ final class RedisViewCounterStore implements ViewCounterStore
 
     private const DIRTY_SET = 'metube:views:dirty';
 
+    /**
+     * Atomically reads, clears, and un-flags one counter in a single EVAL —
+     * a separate GETDEL + SREM leaves a gap where a concurrent INCR/SADD can
+     * get silently dropped by the SREM, undercounting that view.
+     */
+    private const LUA_DRAIN_COUNTER = <<<'LUA'
+        local val = redis.call('GET', KEYS[1])
+        if val then
+            redis.call('DEL', KEYS[1])
+        end
+        redis.call('SREM', KEYS[2], ARGV[1])
+        return val
+        LUA;
+
     public function __construct(private readonly RedisFactory $redis) {}
 
+    /**
+     * Fails soft on a Redis outage: a view not being counted is not worth
+     * turning into a 500 for the request that's actually watching the video
+     * (e.g. VideoController::recordView) — log it and move on.
+     */
     public function increment(int $videoId): void
     {
-        $conn = $this->redis->connection();
-        $conn->command('INCR', [self::COUNTER_KEY . $videoId]);
-        $conn->command('SADD', [self::DIRTY_SET, $videoId]);
+        try {
+            $conn = $this->redis->connection();
+            $conn->command('INCR', [self::COUNTER_KEY . $videoId]);
+            $conn->command('SADD', [self::DIRTY_SET, $videoId]);
+        } catch (RedisException $e) {
+            Log::warning('RedisViewCounterStore: increment failed, view not counted', [
+                'video_id' => $videoId,
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
-     * Atomically read and reset every pending counter.
-     *
-     * Each id is drained with GETDEL so a concurrent INCR after the read either
-     * landed before (counted now) or after (re-flagged for the next cycle).
+     * Atomically read and reset every pending counter (see LUA_DRAIN_COUNTER).
      *
      * @return array<int, int>
      */
@@ -57,8 +82,8 @@ final class RedisViewCounterStore implements ViewCounterStore
             $videoId = (int) $rawId;
             $key = self::COUNTER_KEY . $videoId;
 
-            $delta = $conn->command('GETDEL', [$key]);
-            $conn->command('SREM', [self::DIRTY_SET, $videoId]);
+            // phpredis takes EVAL as (script, args, numberOfKeys); args holds keys then ARGV.
+            $delta = $conn->command('eval', [self::LUA_DRAIN_COUNTER, [$key, self::DIRTY_SET, $videoId], 2]);
 
             $count = (int) $delta;
 

@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Predis\Connection\ConnectionException as PredisConnectionException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withEvents(discover: false)
@@ -34,6 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (VideoNotDraftException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 409);
+            }
+        });
+
+        // Sessions, cache, and queues all depend on Redis — without this, a
+        // Redis outage surfaces as a raw 500 on every authenticated route
+        // instead of a clear "temporarily unavailable" response.
+        $exceptions->render(function (RedisException|PredisConnectionException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Service temporarily unavailable.'], 503);
             }
         });
     })->create();
