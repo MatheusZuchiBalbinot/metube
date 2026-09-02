@@ -46,7 +46,11 @@ class TranscodeVideoToHls implements ShouldBeUnique, ShouldQueue
     /**
      * @param Video $video Published video whose source file is ready at video_url
      */
-    public function __construct(private readonly Video $video) {}
+    public function __construct(private readonly Video $video)
+    {
+        // Dedicated queue, same as ProcessVideoUpload.
+        $this->onQueue('video-processing');
+    }
 
     /**
      * Ensure at most one transcode job per video is queued/running at a time.

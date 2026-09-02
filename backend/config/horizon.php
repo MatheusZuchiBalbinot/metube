@@ -26,6 +26,7 @@ return [
         'redis:notifications' => 60,
         'redis:transcription' => 60,
         'redis:analytics' => 60,
+        'redis:video-processing' => 60,
     ],
 
     'trim' => [
@@ -79,6 +80,20 @@ return [
             'timeout' => 3600,
             'nice' => 0,
         ],
+        // Isolated from 'default' so long uploads can't starve short jobs.
+        'supervisor-video-processing' => [
+            'connection' => 'redis',
+            'queue' => ['video-processing'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 3,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 3600,
+            'nice' => 0,
+        ],
         'supervisor-transcription' => [
             'connection' => 'redis',
             'queue' => ['transcription'],
@@ -117,6 +132,11 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+            'supervisor-video-processing' => [
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
             'supervisor-transcription' => [
                 'minProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
                 'maxProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
@@ -134,6 +154,10 @@ return [
                 'maxProcesses' => 2,
             ],
             'supervisor-default' => [
+                'minProcesses' => 1,
+                'maxProcesses' => 2,
+            ],
+            'supervisor-video-processing' => [
                 'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],

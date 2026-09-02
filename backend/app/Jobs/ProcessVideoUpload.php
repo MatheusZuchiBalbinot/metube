@@ -8,13 +8,15 @@ use App\Enums\VideoStatus;
 use App\Events\VideoStatusUpdated;
 use App\Models\Video;
 use App\Services\VideoStorageService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class ProcessVideoUpload implements ShouldQueue
+class ProcessVideoUpload implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
@@ -23,6 +25,9 @@ class ProcessVideoUpload implements ShouldQueue
 
     /** @var int Attempts before marking as failed */
     public int $tries = 3;
+
+    /** @var int Seconds the uniqueness lock is held — covers the full timeout plus retry margin */
+    public int $uniqueFor = 3660;
 
     /**
      * @param Video $video Freshly created video record (status=PROCESSING)
@@ -33,7 +38,16 @@ class ProcessVideoUpload implements ShouldQueue
         private readonly Video $video,
         private readonly string $tmpPath,
         private readonly ?string $tmpThumbnailPath = null,
-    ) {}
+    ) {
+        // Dedicated queue — isolates long uploads from short 'default' jobs.
+        $this->onQueue('video-processing');
+    }
+
+    /** Prevents two deliveries of the same upload from racing (see {@see ShouldBeUnique}). */
+    public function uniqueId(): string
+    {
+        return (string) $this->video->id;
+    }
 
     /**
      * Move files from temp storage to public storage and update the video record.
@@ -41,6 +55,9 @@ class ProcessVideoUpload implements ShouldQueue
      * Both batch and single uploads land in DRAFT so the creator can review
      * AI suggestions before publishing — VideoPublished fires only later,
      * when the creator explicitly publishes from the staging page.
+     *
+     * Idempotent: a no-op if the video already left PROCESSING (redelivery
+     * after a prior success).
      */
     public function handle(VideoStorageService $storage): void
     {
@@ -48,6 +65,17 @@ class ProcessVideoUpload implements ShouldQueue
 
         if ($video === null) {
             $storage->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
+
+            return;
+        }
+
+        $isAlreadyProcessed = $video->status !== VideoStatus::PROCESSING;
+
+        if ($isAlreadyProcessed) {
+            Log::info('ProcessVideoUpload: video already left PROCESSING, skipping redelivery', [
+                'vuid' => $video->vuid,
+                'status' => $video->status->value,
+            ]);
 
             return;
         }
@@ -84,13 +112,16 @@ class ProcessVideoUpload implements ShouldQueue
 
     /**
      * Clean up temporary files and mark the video as failed.
+     *
+     * Only reverts to FAILED when still PROCESSING — a prior successful
+     * delivery must not be undone.
      */
     public function failed(Throwable $_): void
     {
         app(VideoStorageService::class)->cleanupTmp($this->tmpPath, $this->tmpThumbnailPath);
         $video = Video::find($this->video->id);
 
-        if ($video === null) {
+        if ($video === null || $video->status !== VideoStatus::PROCESSING) {
             return;
         }
 

@@ -32,6 +32,41 @@ describe('ProcessVideoUpload', function () {
         Queue::fake();
     });
 
+    test('uniqueId returns the video id so concurrent runs are deduplicated', function () {
+        $video = Video::factory()->processing()->create();
+
+        expect((new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->uniqueId())->toBe((string) $video->id);
+    });
+
+    describe('handle — idempotency', function () {
+        test('is a no-op when the video already left PROCESSING (redelivered after a prior success)', function () {
+            $video = Video::factory()->create(['status' => VideoStatus::DRAFT]);
+
+            $storage = Mockery::mock(VideoStorageService::class);
+            $storage->shouldNotReceive('publishVideo');
+            $storage->shouldNotReceive('publishThumbnail');
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))->handle($storage);
+
+            Queue::assertNotPushed(TranscodeVideoToHls::class);
+        });
+    });
+
+    describe('failed — idempotency', function () {
+        test('does not revert an already-DRAFT video to FAILED (redelivered after a prior success)', function () {
+            $video = Video::factory()->create(['status' => VideoStatus::DRAFT]);
+
+            $storage = Mockery::mock(VideoStorageService::class);
+            $storage->shouldReceive('cleanupTmp')->once();
+            app()->instance(VideoStorageService::class, $storage);
+
+            (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))
+                ->failed(new RuntimeException('redelivered after success'));
+
+            expect($video->fresh()->status)->toBe(VideoStatus::DRAFT);
+        });
+    });
+
     describe('handle — batch happy path', function () {
         test('sets batch video to DRAFT for creator review', function () {
             $video = Video::factory()->processing()->create(['scheduled_at' => null, 'is_batch' => true]);
