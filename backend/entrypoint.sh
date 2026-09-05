@@ -66,6 +66,24 @@ done
 
 echo "Database ready ✔"
 
+echo "Checking pending migrations..."
+PENDING=$(php artisan migrate --pretend --force 2>&1) || {
+    echo "Error: could not inspect pending migrations."
+    echo "$PENDING"
+    exit 1
+}
+
+if echo "$PENDING" | grep -qiE 'drop (table|column)|truncate'; then
+    echo "$PENDING"
+    if [ "${ALLOW_DESTRUCTIVE_MIGRATIONS:-false}" != "true" ]; then
+        echo ""
+        echo "Error: pending migrations include a destructive operation (drop table/column or truncate)."
+        echo "Review the SQL above. If it is expected, redeploy with ALLOW_DESTRUCTIVE_MIGRATIONS=true."
+        exit 1
+    fi
+    echo "ALLOW_DESTRUCTIVE_MIGRATIONS=true — proceeding despite destructive migration."
+fi
+
 echo "Running migrations..."
 php artisan migrate --force
 
