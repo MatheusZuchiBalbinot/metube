@@ -37,7 +37,7 @@ Route::prefix('videos')->group(function (): void {
     Route::get('/{video}/summary', [VideoController::class, 'summary'])->can('view', 'video');
     Route::get('/{video}/transcription', [VideoController::class, 'transcription'])->can('view', 'video');
     Route::prefix('{video}/comments')->group(function (): void {
-        Route::get('/', [CommentController::class, 'index']);
+        Route::get('/', [CommentController::class, 'index'])->can('view', 'video');
     });
 });
 
@@ -109,9 +109,10 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::put('/{video}/progress', [VideoController::class, 'updateProgress'])->can('view', 'video');
         Route::post('/{video}/publish', [VideoController::class, 'publish'])
             ->can('publish', 'video')
-            ->middleware('throttle:video-upload');
+            ->middleware('throttle:video-publish');
         Route::post('/{video}/transcription/retry', [VideoController::class, 'retryTranscription'])
-            ->can('retryTranscription', 'video');
+            ->can('retryTranscription', 'video')
+            ->middleware('throttle:transcription-retry');
         Route::get('/{video}/ai-suggestion', [VideoController::class, 'aiSuggestion'])
             ->can('manageSuggestion', 'video');
         Route::post('/{video}/ai-suggestion/accept', [VideoController::class, 'acceptSuggestion'])
@@ -119,15 +120,12 @@ Route::middleware(['auth:sanctum', 'session.version'])->group(function (): void 
         Route::post('/{video}/ai-suggestion/dismiss', [VideoController::class, 'dismissSuggestion'])
             ->can('manageSuggestion', 'video');
 
-        // Authorization for chat is enforced inside VideoChatController because the
-        // route binds {video} to a string vuid (not a Video model), so the
-        // route-level ->can('view','video') cannot resolve the policy.
         Route::post('/{video}/chat', VideoChatController::class)
+            ->can('view', 'video')
             ->middleware('throttle:video-chat');
 
         Route::prefix('{video}/comments')->group(function (): void {
-            // Authorization enforced inside CommentController (string vuid, see above).
-            Route::post('/', [CommentController::class, 'store']);
+            Route::post('/', [CommentController::class, 'store'])->can('view', 'video');
         });
     });
 

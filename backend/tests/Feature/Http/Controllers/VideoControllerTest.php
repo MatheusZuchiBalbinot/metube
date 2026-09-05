@@ -311,7 +311,7 @@ describe('VideoController', function () {
         Queue::assertNothingPushed();
     });
 
-    test('retry transcription creates transcription record if none exists', function () {
+    test('retry transcription returns 403 when no transcription has failed yet', function () {
         Queue::fake();
 
         $user = User::factory()->create();
@@ -319,11 +319,8 @@ describe('VideoController', function () {
 
         $response = $this->actingAs($user)->postJson("/api/videos/{$video->vuid}/transcription/retry");
 
-        $response->assertNoContent();
-        $this->assertDatabaseHas('transcriptions', [
-            'video_id' => $video->id,
-            'status' => TranscriptionStatus::PENDING->value,
-        ]);
+        $response->assertForbidden();
+        Queue::assertNothingPushed();
     });
 
     test('index is accessible to guests', function () {

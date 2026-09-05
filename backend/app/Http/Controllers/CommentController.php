@@ -19,25 +19,23 @@ use Illuminate\Http\Response;
 
 class CommentController extends Controller
 {
-    public function __construct(private readonly CommentService $commentService) {}
+    public function __construct(
+        private readonly CommentService $commentService,
+    ) {}
 
-    public function index(string $vuid, Request $request): JsonResponse
+    public function index(Video $video, Request $request): JsonResponse
     {
-        $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
-
         $page = (int) $request->query('page', '1');
         $user = $request->user();
-        $comments = $this->commentService->list($vuid, $user, $page);
+        $comments = $this->commentService->list($video, $user, $page);
 
         return $this->json(CommentResource::collection($comments));
     }
 
-    public function store(string $vuid, StoreCommentRequest $request): JsonResponse
+    public function store(Video $video, StoreCommentRequest $request): JsonResponse
     {
-        $this->authorize('view', Video::query()->byVuid($vuid)->firstOrFail());
-
         $user = $request->user();
-        $comment = $this->commentService->store($vuid, $request->getDTO(), $user);
+        $comment = $this->commentService->store($video, $request->getDTO(), $user);
 
         return $this->json(new CommentResource($comment), 201);
     }
@@ -51,13 +49,15 @@ class CommentController extends Controller
 
     public function destroy(Comment $comment): Response
     {
-        $this->commentService->destroy($comment);
+        $this->commentService->deleteComment($comment);
 
         return $this->noContent();
     }
 
     public function toggleLike(Comment $comment, Request $request): JsonResponse
     {
+        $this->authorize('view', $comment->loadMissing('video')->video);
+
         $user = $request->user();
         $result = $this->commentService->toggleLike($comment, $user);
 
@@ -71,6 +71,8 @@ class CommentController extends Controller
 
     public function replies(Comment $comment, Request $request): JsonResponse
     {
+        $this->authorize('view', $comment->loadMissing('video')->video);
+
         $user = $request->user();
         $replies = $this->commentService->replies($comment, $user);
 

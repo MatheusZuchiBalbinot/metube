@@ -10,6 +10,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\JsonResponse;
@@ -51,7 +52,8 @@ class AuthController extends Controller
      */
     public function updateProfile(string $uuid, UpdateProfileRequest $request): JsonResponse
     {
-        abort_unless(auth()->user()->uuid === $uuid, 403);
+        $target = User::where('uuid', $uuid)->firstOrFail();
+        $this->authorize('update', $target);
 
         $user = $this->authService->updateProfile($request->validated());
 

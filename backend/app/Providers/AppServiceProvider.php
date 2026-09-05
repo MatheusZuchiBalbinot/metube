@@ -14,6 +14,7 @@ use App\Events\ChannelUnsubscribed;
 use App\Events\CommentCreated;
 use App\Events\CommentLiked;
 use App\Events\SearchPerformed;
+use App\Events\TranscriptionStatusUpdated;
 use App\Events\VideoClickedFromFeed;
 use App\Events\VideoFinished;
 use App\Events\VideoImpressionsBatch;
@@ -39,6 +40,7 @@ use App\Listeners\SendVideoLikedNotification;
 use App\Listeners\SendVideoProcessedNotification;
 use App\Listeners\SendVideoPublishedNotifications;
 use App\Listeners\SendVideoTranscriptionCompletedListener;
+use App\Listeners\SendVideoTranscriptionFailedNotification;
 use App\Listeners\SendVideoTranscriptionStartedListener;
 use App\Listeners\TranscribeVideoListener;
 use App\Models\Comment;
@@ -50,17 +52,20 @@ use App\Observers\UserObserver;
 use App\Observers\VideoObserver;
 use App\Policies\CommentPolicy;
 use App\Policies\PlaylistPolicy;
+use App\Policies\UserPolicy;
 use App\Policies\VideoPolicy;
 use App\Services\DatabaseViewCounterStore;
 use App\Services\RedisViewCounterStore;
 use App\Services\StorageService;
 use App\Services\Tus\TusUploadResolver;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Horizon\Horizon;
 
 class AppServiceProvider extends ServiceProvider
@@ -90,6 +95,10 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerObservers();
 
+        Password::defaults(fn () => Password::min(8));
+
+        Model::preventLazyLoading(!app()->isProduction());
+
         Horizon::auth(function (Request $request): bool {
             return app()->isLocal();
         });
@@ -116,12 +125,24 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('video-chat', function (Request $request) {
             // The chat route is behind auth:sanctum, so the user is always present.
-            return Limit::perMinute(20)->by((string) $request->user()->id);
+            return [
+                Limit::perMinute(20)->by((string) $request->user()->id),
+                Limit::perDay(500)->by((string) $request->user()->id),
+            ];
         });
 
         RateLimiter::for('video-upload', function (Request $request) {
             // Bounds how much work one user can push onto the shared transcription/AI queue.
             return Limit::perHour(20)->by((string) $request->user()->id);
+        });
+
+        RateLimiter::for('video-publish', function (Request $request) {
+            return Limit::perHour(60)->by((string) $request->user()->id);
+        });
+
+        RateLimiter::for('transcription-retry', function (Request $request) {
+            // Each retry dispatches a real, paid call to the Whisper service.
+            return Limit::perHour(5)->by((string) $request->user()->id);
         });
     }
 
@@ -130,6 +151,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Video::class, VideoPolicy::class);
         Gate::policy(Playlist::class, PlaylistPolicy::class);
         Gate::policy(Comment::class, CommentPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
     }
 
     private function registerObservers(): void
@@ -171,12 +193,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
 
         // Transcription events — split to handle STARTED and COMPLETED separately.
-        // TranscriptionStatusUpdated(FAILED) — dispatched by TranscribeVideo::failed() —
-        // currently has no notification listener; see SendVideoTranscribedNotification's
-        // removal (it only ever handled PROCESSING/COMPLETED, which STARTED/COMPLETED
-        // above already cover, so it was dead code with a misleading passing test).
         Event::listen(VideoTranscriptionStarted::class, SendVideoTranscriptionStartedListener::class);
         Event::listen(VideoTranscriptionCompleted::class, SendVideoTranscriptionCompletedListener::class);
+
+        Event::listen(TranscriptionStatusUpdated::class, SendVideoTranscriptionFailedNotification::class);
 
         Event::subscribe(InvalidateCacheSubscriber::class);
     }

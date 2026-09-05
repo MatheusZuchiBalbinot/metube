@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Enums\VideoStatus;
+use App\Enums\TranscriptionStatus;
 use App\Models\User;
 use App\Models\Video;
 
@@ -21,7 +21,7 @@ class VideoPolicy
     public function view(?User $user, Video $video): bool
     {
         if ($user === null) {
-            return $video->status === VideoStatus::PUBLISHED;
+            return $video->status->isPublic();
         }
 
         $isOwner = $user->id === $video->channel_id;
@@ -30,7 +30,7 @@ class VideoPolicy
             return true;
         }
 
-        return $video->status === VideoStatus::PUBLISHED;
+        return $video->status->isPublic();
     }
 
     public function update(User $user, Video $video): bool
@@ -45,7 +45,11 @@ class VideoPolicy
 
     public function retryTranscription(User $user, Video $video): bool
     {
-        return $user->id === $video->channel_id;
+        if ($user->id !== $video->channel_id) {
+            return false;
+        }
+
+        return $video->loadMissing('transcription')->transcription?->status === TranscriptionStatus::FAILED;
     }
 
     public function manageSuggestion(User $user, Video $video): bool

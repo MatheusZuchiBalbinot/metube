@@ -8,8 +8,8 @@ use App\AI\Contracts\AiClient;
 use App\DTOs\ChatAnswerDTO;
 use App\Http\Requests\Video\VideoChatRequest;
 use App\Http\Resources\VideoChatAnswerResource;
+use App\Models\Video;
 use App\Services\VideoAiService;
-use App\Services\VideoService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 
@@ -22,15 +22,12 @@ use Throwable;
 class VideoChatController extends Controller
 {
     public function __construct(
-        private readonly VideoService $videoService,
         private readonly VideoAiService $videoAiService,
         private readonly AiClient $aiClient,
     ) {}
 
-    public function __invoke(VideoChatRequest $request, string $vuid): JsonResponse
+    public function __invoke(VideoChatRequest $request, Video $video): JsonResponse
     {
-        $video = $this->videoService->getVideoByUuid($vuid);
-        $this->authorize('view', $video);
         $video->loadMissing(['transcription', 'summary']);
 
         $transcription = $video->transcription;

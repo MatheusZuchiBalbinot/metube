@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\TranscriptionStatus;
 use App\Enums\VideoStatus;
+use App\Models\Transcription;
 use App\Models\User;
 use App\Models\Video;
 use App\Policies\VideoPolicy;
@@ -112,9 +114,10 @@ describe('VideoPolicy', function () {
         expect($result)->toBeTrue();
     });
 
-    test('retryTranscription allows owner', function () {
+    test('retryTranscription allows owner when transcription failed', function () {
         $owner = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
+        Transcription::factory()->for($video)->create(['status' => TranscriptionStatus::FAILED]);
         $policy = new VideoPolicy();
 
         $result = $policy->retryTranscription($owner, $video);
@@ -122,10 +125,22 @@ describe('VideoPolicy', function () {
         expect($result)->toBeTrue();
     });
 
+    test('retryTranscription denies owner when transcription did not fail', function () {
+        $owner = User::factory()->create();
+        $video = Video::factory()->for($owner, 'channel')->create();
+        Transcription::factory()->for($video)->create(['status' => TranscriptionStatus::COMPLETED]);
+        $policy = new VideoPolicy();
+
+        $result = $policy->retryTranscription($owner, $video);
+
+        expect($result)->toBeFalse();
+    });
+
     test('retryTranscription denies non-owner', function () {
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $video = Video::factory()->for($owner, 'channel')->create();
+        Transcription::factory()->for($video)->create(['status' => TranscriptionStatus::FAILED]);
         $policy = new VideoPolicy();
 
         $result = $policy->retryTranscription($other, $video);

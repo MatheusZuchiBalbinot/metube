@@ -6,12 +6,12 @@ namespace App\Http\Requests\Video;
 
 use App\Config\MimeTypes;
 use App\Config\UploadLimits;
+use App\Contracts\TusResolverContract;
 use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
 use App\Http\Requests\Concerns\ValidatesVideoMetadata;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Validator;
 
 /**
@@ -109,8 +109,8 @@ class StoreVideoRequest extends FormRequest
      */
     private function assertKeyOwnership(Validator $v, string $key, string $field): void
     {
-        $ownerId = Cache::get("tus:owner:{$key}");
-        $isOwner = $ownerId !== null && (int) $ownerId === (int) auth()->id();
+        $ownerId = app(TusResolverContract::class)->getOwner($key);
+        $isOwner = $ownerId !== null && $ownerId === (int) auth()->id();
 
         if ($isOwner) {
             return;
