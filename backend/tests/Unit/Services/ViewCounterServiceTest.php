@@ -110,10 +110,12 @@ describe('RedisViewCounterStore', function () {
     test('pullDirtyCounts drains each dirty counter atomically', function () {
         $conn = Mockery::mock(RedisConnection::class);
         $conn->shouldReceive('command')->once()->with('SMEMBERS', ['metube:views:dirty'])->andReturn(['7', '9']);
-        $conn->shouldReceive('command')->once()->with('GETDEL', ['metube:views:pending:7'])->andReturn('3');
-        $conn->shouldReceive('command')->once()->with('SREM', ['metube:views:dirty', 7]);
-        $conn->shouldReceive('command')->once()->with('GETDEL', ['metube:views:pending:9'])->andReturn('5');
-        $conn->shouldReceive('command')->once()->with('SREM', ['metube:views:dirty', 9]);
+        $conn->shouldReceive('command')->once()
+            ->with('eval', Mockery::on(fn (array $a) => is_string($a[0]) && $a[1] === ['metube:views:pending:7', 'metube:views:dirty', 7] && $a[2] === 2))
+            ->andReturn('3');
+        $conn->shouldReceive('command')->once()
+            ->with('eval', Mockery::on(fn (array $a) => is_string($a[0]) && $a[1] === ['metube:views:pending:9', 'metube:views:dirty', 9] && $a[2] === 2))
+            ->andReturn('5');
 
         $factory = Mockery::mock(RedisFactory::class);
         $factory->shouldReceive('connection')->andReturn($conn);
@@ -138,8 +140,9 @@ describe('RedisViewCounterStore', function () {
     test('pullDirtyCounts skips ids with no positive counter', function () {
         $conn = Mockery::mock(RedisConnection::class);
         $conn->shouldReceive('command')->once()->with('SMEMBERS', ['metube:views:dirty'])->andReturn(['7']);
-        $conn->shouldReceive('command')->once()->with('GETDEL', ['metube:views:pending:7'])->andReturn(null);
-        $conn->shouldReceive('command')->once()->with('SREM', ['metube:views:dirty', 7]);
+        $conn->shouldReceive('command')->once()
+            ->with('eval', Mockery::on(fn (array $a) => is_string($a[0]) && $a[1] === ['metube:views:pending:7', 'metube:views:dirty', 7] && $a[2] === 2))
+            ->andReturn(null);
 
         $factory = Mockery::mock(RedisFactory::class);
         $factory->shouldReceive('connection')->andReturn($conn);
