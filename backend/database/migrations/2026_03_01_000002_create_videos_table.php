@@ -31,6 +31,10 @@ return new class() extends Migration
             $table->index('status');
             $table->index('published_at');
             $table->index(['status', 'published_at']);
+            // Channel pages: status filter + recency sort.
+            $table->index(['channel_id', 'status', 'published_at'], 'videos_channel_status_pub_idx');
+            // Recommendations/related/popular order by views with only a status filter.
+            $table->index(['status', 'views'], 'videos_status_views_idx');
         });
 
         if (DB::connection()->getDriverName() === 'pgsql') {

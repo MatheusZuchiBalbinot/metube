@@ -43,6 +43,14 @@ return new class() extends Migration
                 $table->unique(['user_id', 'video_id', 'watched_hour'], 'watch_histories_dedup');
             });
         }
+
+        // History events: GROUP BY DATE(watched_at) needs a functional index to skip seq scan.
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('
+                CREATE INDEX watch_histories_user_date_idx
+                ON watch_histories (user_id, (DATE(watched_at)))
+            ');
+        }
     }
 
     public function down(): void
