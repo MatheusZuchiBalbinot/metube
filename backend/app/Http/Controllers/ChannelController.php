@@ -38,7 +38,7 @@ class ChannelController extends Controller
         $channel = $this->channelService->getByUuid($uuid);
         $isOwner = auth()->id() === $channel->id;
         $page = (int) $request->query('page', '1');
-        $videos = $this->channelService->listVideos($channel, $isOwner, $page);
+        $videos = $this->channelService->listVideos($channel, includeAllStatuses: $isOwner, page: $page);
 
         return $this->json(VideoResource::collection($videos));
     }

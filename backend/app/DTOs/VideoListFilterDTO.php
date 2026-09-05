@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\DTOs;
 
-class VideoListFilterDTO
+final readonly class VideoListFilterDTO
 {
     /**
      * @param list<string>|null $tags
      */
     public function __construct(
-        public readonly int $page = 1,
-        public readonly ?string $search = null,
-        public readonly ?array $tags = null,
-        public readonly ?string $status = null,
+        public int $page = 1,
+        public ?string $search = null,
+        public ?array $tags = null,
+        public ?string $status = null,
     ) {}
 
     /**

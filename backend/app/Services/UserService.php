@@ -99,9 +99,9 @@ final class UserService
             ->latest('updated_at')
             ->limit(self::MAX_PROGRESS_ROWS)
             ->get()
-            ->mapWithKeys(function ($p) {
+            ->mapWithKeys(function ($progress) {
                 return [
-                    $p->video->vuid => $p->percent,
+                    $progress->video->vuid => $progress->percent,
                 ];
             })
             ->toArray();

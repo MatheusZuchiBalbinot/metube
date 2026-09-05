@@ -20,6 +20,12 @@ use Illuminate\Support\Facades\DB;
  */
 final class VideoProgressService
 {
+    /** Watch percentage at or above which a video counts as "finished". */
+    private const FINISH_THRESHOLD_PERCENT = 90;
+
+    /** Minimum backward jump in percent to count as the user skipping ahead. */
+    private const SKIP_BACK_TOLERANCE_PERCENT = 5;
+
     public function updateProgress(User $user, Video $video, int $percent): void
     {
         DB::transaction(function () use ($user, $video, $percent) {
@@ -39,7 +45,8 @@ final class VideoProgressService
                 $updateData,
             );
 
-            $isFinished = $percent >= 90 && $previousPercent < 90;
+            $isFinished = $percent >= self::FINISH_THRESHOLD_PERCENT
+                && $previousPercent < self::FINISH_THRESHOLD_PERCENT;
 
             if ($isFinished) {
                 event(new VideoFinished($user, $video));
@@ -47,7 +54,8 @@ final class VideoProgressService
                 return;
             }
 
-            $isSkipped = $previousPercent > 0 && $percent < $previousPercent - 5;
+            $isSkipped = $previousPercent > 0
+                && $percent < $previousPercent - self::SKIP_BACK_TOLERANCE_PERCENT;
 
             if (!$isSkipped) {
                 return;

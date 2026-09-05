@@ -7,7 +7,7 @@ namespace App\DTOs;
 /**
  * AI-generated metadata for a video, returned after analyzing its transcription.
  */
-readonly class VideoMetadataResult
+final readonly class VideoMetadataResult
 {
     /**
      * @param list<string> $keyPoints 3-7 concise takeaways
