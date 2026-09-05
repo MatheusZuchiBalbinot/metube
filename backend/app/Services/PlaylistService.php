@@ -40,13 +40,7 @@ final class PlaylistService
 
     public function createPlaylist(User $user, CreatePlaylistDTO $data): Playlist
     {
-        return DB::transaction(function () use ($user, $data) {
-            $payload = [
-                'name' => $data->name,
-            ];
-
-            return $user->playlists()->create($payload);
-        });
+        return $user->playlists()->create(['name' => $data->name]);
     }
 
     /**
@@ -54,14 +48,9 @@ final class PlaylistService
      */
     public function updatePlaylist(Playlist $playlist, UpdatePlaylistDTO $data): Playlist
     {
-        return DB::transaction(function () use ($playlist, $data) {
-            $updateData = [
-                'name' => $data->name,
-            ];
-            $playlist->update($updateData);
+        $playlist->update(['name' => $data->name]);
 
-            return $playlist;
-        });
+        return $playlist;
     }
 
     /**
@@ -69,9 +58,7 @@ final class PlaylistService
      */
     public function deletePlaylist(Playlist $playlist): void
     {
-        DB::transaction(function () use ($playlist) {
-            $playlist->delete();
-        });
+        $playlist->delete();
     }
 
     /**

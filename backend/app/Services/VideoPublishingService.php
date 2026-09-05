@@ -61,11 +61,9 @@ final class VideoPublishingService
 
     public function updateVideo(Video $video, UpdateVideoDTO $data): Video
     {
-        return DB::transaction(function () use ($video, $data) {
-            $video->update($data->toUpdateArray());
+        $video->update($data->toUpdateArray());
 
-            return $video;
-        });
+        return $video;
     }
 
     /**

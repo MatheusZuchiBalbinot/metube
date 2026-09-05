@@ -116,7 +116,7 @@ final class AuthService
     public function resetPassword(array $data): void
     {
         $status = Password::broker()->reset($data, function (User $user, string $password): void {
-            $user->forceFill(['password' => Hash::make($password)])->save();
+            $user->update(['password' => Hash::make($password)]);
         });
 
         $isReset = $status === Password::PASSWORD_RESET;
