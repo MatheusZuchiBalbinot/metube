@@ -10,6 +10,8 @@ use App\Events\ChannelUnsubscribed;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\Video;
+use App\Support\ToggleGuard;
+use App\Support\ToggleOutcome;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -71,27 +73,23 @@ final class ChannelService
         $channel = User::query()->byUuid($uuid)->firstOrFail();
 
         DB::transaction(function () use ($subscriber, $channel) {
-            $unsubscribed = UserSubscription::query()
-                ->fromUserToChannel($subscriber->id, $channel->id)
-                ->delete();
+            $outcome = ToggleGuard::run(
+                delete: fn (): int => UserSubscription::query()
+                    ->fromUserToChannel($subscriber->id, $channel->id)
+                    ->delete(),
+                insert: fn (): int => UserSubscription::query()->insertOrIgnore([
+                    'user_id' => $subscriber->id,
+                    'channel_id' => $channel->id,
+                ]),
+            );
 
-            if ($unsubscribed > 0) {
+            if ($outcome === ToggleOutcome::Removed) {
                 event(new ChannelUnsubscribed($subscriber, $channel));
-
-                return;
             }
 
-            $subscriptionData = [
-                'user_id' => $subscriber->id,
-                'channel_id' => $channel->id,
-            ];
-            $inserted = UserSubscription::query()->insertOrIgnore($subscriptionData);
-
-            if ($inserted === 0) {
-                return;
+            if ($outcome === ToggleOutcome::Applied) {
+                event(new ChannelSubscribed($subscriber, $channel));
             }
-
-            event(new ChannelSubscribed($subscriber, $channel));
         });
     }
 }

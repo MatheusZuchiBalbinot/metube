@@ -19,6 +19,10 @@ use App\Models\User;
 use App\Models\UserVideoReaction;
 use App\Models\Video;
 use App\Models\VideoView;
+use App\Models\WatchHistory;
+use App\Support\CacheKeys;
+use App\Support\ToggleGuard;
+use App\Support\ToggleOutcome;
 use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Facades\DB;
@@ -76,36 +80,39 @@ final class VideoReactionService
     private function toggleReaction(User $user, Video $video, ReactionType $type, ?Closure $onApplied = null): void
     {
         DB::transaction(function () use ($user, $video, $type, $onApplied): void {
-            $unset = UserVideoReaction::query()->byUser($user->id)
-                ->forVideo($video->id)
-                ->ofType($type->value)
-                ->delete();
+            $oppositeType = $type->opposite();
 
-            if ($unset > 0) {
+            $outcome = ToggleGuard::run(
+                delete: fn (): int => UserVideoReaction::query()->byUser($user->id)
+                    ->forVideo($video->id)
+                    ->ofType($type->value)
+                    ->delete(),
+                insert: function () use ($user, $video, $type, $oppositeType): int {
+                    $oppositeRemoved = UserVideoReaction::query()->byUser($user->id)
+                        ->forVideo($video->id)
+                        ->ofType($oppositeType->value)
+                        ->delete();
+
+                    if ($oppositeRemoved > 0) {
+                        event($this->unReactedEvent($oppositeType, $user, $video));
+                    }
+
+                    return UserVideoReaction::insertOrIgnore([
+                        'user_id' => $user->id,
+                        'video_id' => $video->id,
+                        'type' => $type->value,
+                    ]);
+                },
+            );
+
+            if ($outcome === ToggleOutcome::Removed) {
                 event($this->unReactedEvent($type, $user, $video));
 
                 return;
             }
 
-            $oppositeType = $type->opposite();
-
-            $oppositeRemoved = UserVideoReaction::query()->byUser($user->id)
-                ->forVideo($video->id)
-                ->ofType($oppositeType->value)
-                ->delete();
-
-            if ($oppositeRemoved > 0) {
-                event($this->unReactedEvent($oppositeType, $user, $video));
-            }
-
-            $payload = [
-                'user_id' => $user->id,
-                'video_id' => $video->id,
-                'type' => $type->value,
-            ];
-            $inserted = UserVideoReaction::insertOrIgnore($payload);
-
-            if ($inserted === 0) {
+            // NoOp: a concurrent request already applied this reaction — skip the side effects.
+            if ($outcome === ToggleOutcome::NoOp) {
                 return;
             }
 
@@ -179,7 +186,7 @@ final class VideoReactionService
      */
     public function recordView(User $user, Video $video, ?VideoSource $source = null, ?string $sessionId = null): void
     {
-        $throttleKey = "views:throttle:{$video->id}:{$user->id}";
+        $throttleKey = CacheKeys::viewThrottle($video->id, $user->id);
         $isThrottled = !$this->cache->throttle($throttleKey, 60);
 
         if ($isThrottled) {
@@ -218,7 +225,7 @@ final class VideoReactionService
                 'watched_at' => $watchedAt,
             ], $watchedHour, $isNotPgsql);
 
-            DB::table('watch_histories')->insertOrIgnore($historyRow);
+            WatchHistory::insertOrIgnore($historyRow);
 
             DB::afterCommit(fn () => $this->viewCounter->increment($video->id));
 
