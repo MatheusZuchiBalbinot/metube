@@ -66,7 +66,11 @@ describe('useSubscriptions', () => {
         expect(result.current.channels.map(c => c.name)).toEqual(['Alpha', 'Beta']);
     });
 
-    it('hides channels missing from the local subscribed set (optimistic unsubscribe)', async () => {
+    it('trusts the server list even when it differs from the local subscribed set', async () => {
+        // The server is the source of truth: a channel present in the local
+        // set (persisted client-side) but missing from GET /users/me/subscriptions
+        // — e.g. a different session, or storage that drifted — must not hide
+        // channels the server actually returns.
         vi.spyOn(channel, 'subscriptions').mockResolvedValue({
             ok: true,
             data: [makeUser('c1', 'Alpha'), makeUser('c2', 'Beta')],
@@ -75,8 +79,8 @@ describe('useSubscriptions', () => {
 
         const { result } = renderHook(() => useSubscriptions(), { wrapper: wrapper(store) });
 
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-        expect(result.current.channels.map(c => c.uuid)).toEqual(['c1']);
+        await waitFor(() => expect(result.current.channels).toHaveLength(2));
+        expect(result.current.channels.map(c => c.uuid)).toEqual(['c1', 'c2']);
     });
 
     it('returns no channels when the request fails', async () => {

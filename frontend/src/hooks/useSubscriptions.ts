@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
 import { channel } from '@api';
 import { useAppSelector } from '@store';
-import { selectSubscribedChannelIds, selectSubscribedSet } from '@store/subscriptionSelectors';
-import type { ChannelId, User } from '@models';
+import { selectSubscribedChannelIds } from '@store/subscriptionSelectors';
+import type { User } from '@models';
 
 /**
  * Fetches the authenticated user's subscribed channels (full `User` objects) so
  * the sidebar can render avatars and names — unlike `useSubscription`, which only
  * exposes the locally-tracked set of subscribed channel ids.
  *
- * Refetches when the subscription count changes and filters the result by the
- * local `subscribedSet` so optimistic unsubscribes disappear immediately, before
- * the server list is reloaded.
+ * The server list (GET /users/me/subscriptions) is the source of truth — it is
+ * not filtered against the locally-persisted `subscribedSet`, which can drift
+ * out of sync with the backend (different session, cleared storage, etc.) and
+ * previously caused this list to show empty even with real subscriptions.
+ * Refetches whenever the local subscription count changes, which fires right
+ * after a subscribe/unsubscribe action.
  */
 export function useSubscriptions() {
     const user = useAppSelector(s => s.auth.user);
     const subscribedIds = useAppSelector(selectSubscribedChannelIds);
-    const subscribedSet = useAppSelector(selectSubscribedSet);
     const [channels, setChannels] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -57,7 +59,5 @@ export function useSubscriptions() {
         };
     }, [isAuthenticated, subscriptionCount]);
 
-    const visibleChannels = channels.filter(c => subscribedSet.has(c.uuid as ChannelId));
-
-    return { channels: visibleChannels, isLoading };
+    return { channels, isLoading };
 }
