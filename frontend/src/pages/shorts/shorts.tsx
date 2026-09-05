@@ -14,7 +14,7 @@ export default function ShortsPage() {
     const { t } = useTranslation();
     const watchLaterIds = useAppSelector(selectWatchLaterIds);
     const { shorts, muted, volume, setMuted, setVolume } = useShortsData();
-    const { itemRefs, videoMap, videoRefs, mountVideo } = useShortsRefs(shorts.length);
+    const { itemRefs, videoMap, getVideoRef, mountVideo } = useShortsRefs();
     const { renderedIndex, activateIndex, scrollToIndex } = useShortsNavigation(shorts, videoMap, itemRefs);
     const feedRef = useRef<HTMLDivElement>(null);
     useShortsFeedObserver(feedRef, itemRefs, activateIndex, shorts.length);
@@ -54,7 +54,7 @@ export default function ShortsPage() {
                                     index={index}
                                     total={shorts.length}
                                     isActive={index === renderedIndex}
-                                    videoRef={videoRefs.current[index]}
+                                    videoRef={getVideoRef(index)}
                                     onVideoMounted={el => mountVideo(index, el)}
                                     onEnded={() => scrollToIndex(index + 1)}
                                     onScrollNext={() => scrollToIndex(index + 1)}
