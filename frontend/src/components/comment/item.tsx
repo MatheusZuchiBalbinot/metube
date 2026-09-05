@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ThumbsUp, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from '@components/icons/icons';
@@ -195,7 +195,7 @@ function CommentItemRepliesToggle({
     );
 }
 
-export default function CommentItem({
+const CommentItem = memo(function CommentItem({
     comment,
     videoChannelId,
     loadingReplies,
@@ -382,4 +382,6 @@ export default function CommentItem({
             </Modal>
         </div>
     );
-}
+});
+
+export default CommentItem;

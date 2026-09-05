@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Button, Spinner } from '@ui';
 import CommentForm from './form';
 import CommentItem from './item';
 import CommentSkeleton from './commentSkeleton';
-import type { Vuid } from '@api';
+import type { Vuid, Cuid } from '@api';
 import './section.css';
 import { useComments, useAuth } from '@hooks';
 import type { Comment } from '@models';
@@ -69,6 +69,8 @@ export default function CommentSection({ vuid, videoChannelId, onSeek }: Comment
 
     const { hasMore, total, isInitialLoading, isEmpty, showList } = resolveCommentSectionState(comments, isLoading, pagination);
 
+    const handleAddReply = useCallback((content: string, parentCuid: Cuid) => add(content, parentCuid), [add]);
+
     return (
         <section className="comment-section">
             <h3 className="comment-section__title">
@@ -110,7 +112,7 @@ export default function CommentSection({ vuid, videoChannelId, onSeek }: Comment
                             onToggleLike={toggleLike}
                             onEdit={edit}
                             onDelete={remove}
-                            onAddReply={(content, parentCuid) => add(content, parentCuid)}
+                            onAddReply={handleAddReply}
                             getReplies={getReplies}
                             onLoadReplies={loadReplies}
                             onSeek={onSeek}
