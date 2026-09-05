@@ -11,14 +11,17 @@ use App\DTOs\CreateVideoDTO;
 use App\DTOs\FinalizeUploadDTO;
 use App\Enums\VideoStatus;
 use App\Events\VideoStatusUpdated;
+use App\Exceptions\UploadAlreadyFinalizingException;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\Tus\TusQuotaService;
+use App\Support\CacheKeys;
 use App\Support\VideoFileManager;
 use App\Support\VideoPayloadBuilder;
 use finfo;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -88,12 +91,38 @@ final class VideoUploadService
      * createVideo() does for the legacy single-POST path.
      *
      * @throws ModelNotFoundException When the upload_key is not found in tus cache
+     * @throws UploadAlreadyFinalizingException When a concurrent request is already finalizing the same upload_key
      * @throws \App\Exceptions\VideoStorageException When the assembled file cannot be moved
      * @throws ValidationException When the assembled file's real content type is not an allowed video/image MIME type
      *
      * @return Video Freshly created Video (status=PROCESSING)
      */
     public function finalizeUpload(User $user, FinalizeUploadDTO $data): Video
+    {
+        // Prevents two concurrent requests for the same upload_key from
+        // racing to move the same source file.
+        $lock = Cache::lock(CacheKeys::tusFinalizeLock($data->uploadKey), 10);
+        $acquired = (bool) $lock->block(5);
+
+        if (!$acquired) {
+            throw new UploadAlreadyFinalizingException();
+        }
+
+        try {
+            return $this->finalizeUploadLocked($user, $data);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * @throws ModelNotFoundException When the upload_key is not found in tus cache
+     * @throws \App\Exceptions\VideoStorageException When the assembled file cannot be moved
+     * @throws ValidationException When the assembled file's real content type is not an allowed video/image MIME type
+     *
+     * @return Video Freshly created Video (status=PROCESSING)
+     */
+    private function finalizeUploadLocked(User $user, FinalizeUploadDTO $data): Video
     {
         $fileMeta = $this->tusResolver->get($data->uploadKey);
         $isFileReady = $fileMeta !== null
@@ -186,9 +215,7 @@ final class VideoUploadService
         $thumbnailPath = $video->thumbnail_url;
         $hlsDirectory = $video->hlsDirectory();
 
-        DB::transaction(function () use ($video) {
-            $video->delete();
-        });
+        $video->delete();
 
         $this->deleteVideoFiles($videoPath, $thumbnailPath);
         $this->storage->deleteDirectory($hlsDirectory);

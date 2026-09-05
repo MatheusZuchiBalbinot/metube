@@ -24,19 +24,20 @@ describe('TusQuotaService::reserve', function () {
     test('allows a reservation under quota and increments with a TTL', function () {
         [$service, $connection] = makeTusQuotaService();
 
-        $connection->shouldReceive('command')->once()->with('get', ['tus:quota:7'])->andReturn('0');
-        $connection->shouldReceive('command')->once()->with('incrby', ['tus:quota:7', 1024]);
+        $connection->shouldReceive('command')->once()->with('incrby', ['tus:quota:7', 1024])->andReturn('1024');
         $connection->shouldReceive('command')->once()->with('expire', Mockery::on(fn ($args) => $args[0] === 'tus:quota:7'));
 
-        $service->reserve(7, 1024);
-    })->throwsNoExceptions();
+        expect(fn () => $service->reserve(7, 1024))->not->toThrow(Throwable::class);
+    });
 
-    test('rejects a reservation that would exceed the quota', function () {
+    test('rejects a reservation that would exceed the quota and reverts the increment', function () {
         [$service, $connection] = makeTusQuotaService();
 
         $almostFull = UploadLimits::TUS_USER_QUOTA_BYTES - 100;
-        $connection->shouldReceive('command')->once()->with('get', ['tus:quota:7'])->andReturn((string) $almostFull);
-        $connection->shouldNotReceive('command')->with('incrby', Mockery::any());
+        $overQuota = $almostFull + 200;
+        $connection->shouldReceive('command')->once()->with('incrby', ['tus:quota:7', 200])->andReturn((string) $overQuota);
+        $connection->shouldReceive('command')->once()->with('decrby', ['tus:quota:7', 200]);
+        $connection->shouldNotReceive('command')->with('expire', Mockery::any());
 
         expect(fn () => $service->reserve(7, 200))
             ->toThrow(HttpException::class);
@@ -45,10 +46,10 @@ describe('TusQuotaService::reserve', function () {
     test('fails open (does not throw) when Redis is unreachable', function () {
         [$service, $connection] = makeTusQuotaService();
 
-        $connection->shouldReceive('command')->once()->with('get', ['tus:quota:7'])->andThrow(new RedisException('connection refused'));
+        $connection->shouldReceive('command')->once()->with('incrby', ['tus:quota:7', 1024])->andThrow(new RedisException('connection refused'));
 
-        $service->reserve(7, 1024);
-    })->throwsNoExceptions();
+        expect(fn () => $service->reserve(7, 1024))->not->toThrow(Throwable::class);
+    });
 });
 
 describe('TusQuotaService::release', function () {
@@ -58,8 +59,8 @@ describe('TusQuotaService::release', function () {
         $connection->shouldReceive('command')->once()->with('decrby', ['tus:quota:7', 1024])->andReturn('4096');
         $connection->shouldNotReceive('command')->with('del', Mockery::any());
 
-        $service->release(7, 1024);
-    })->throwsNoExceptions();
+        expect(fn () => $service->release(7, 1024))->not->toThrow(Throwable::class);
+    });
 
     test('deletes the key once the reservation is fully drained', function () {
         [$service, $connection] = makeTusQuotaService();
@@ -84,6 +85,6 @@ describe('TusQuotaService::release', function () {
 
         $connection->shouldReceive('command')->once()->with('decrby', ['tus:quota:7', 1024])->andThrow(new RedisException('connection refused'));
 
-        $service->release(7, 1024);
-    })->throwsNoExceptions();
+        expect(fn () => $service->release(7, 1024))->not->toThrow(Throwable::class);
+    });
 });

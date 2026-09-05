@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Exceptions\InvalidCredentialsException;
+use App\Exceptions\UploadAlreadyFinalizingException;
 use App\Exceptions\VideoNotDraftException;
+use App\Exceptions\VideoStorageException;
 use App\Http\Middleware\CheckSessionVersion;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -35,6 +37,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (VideoNotDraftException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 409);
+            }
+        });
+
+        $exceptions->render(function (UploadAlreadyFinalizingException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], 409);
+            }
+        });
+
+        $exceptions->render(function (VideoStorageException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'The uploaded file could not be processed.'], 422);
             }
         });
 

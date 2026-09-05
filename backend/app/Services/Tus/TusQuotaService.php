@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Tus;
 
 use App\Config\UploadLimits;
+use App\Support\CacheKeys;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
 use Illuminate\Support\Facades\Log;
 use RedisException;
@@ -16,13 +17,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * {@see UploadLimits::TUS_USER_QUOTA_BYTES} — a per-file cap alone doesn't
  * bound aggregate disk use from many abandoned sessions.
  *
- * The reservation is a Redis counter (`tus:quota:{userId}`) sharing the tus
- * session TTL, so an abandoned one self-expires with no separate cleanup job.
+ * The reservation is a Redis counter ({@see CacheKeys::tusQuota()}) sharing
+ * the tus session TTL, so an abandoned one self-expires with no separate
+ * cleanup job.
  */
 final class TusQuotaService
 {
-    private const QUOTA_KEY_PREFIX = 'tus:quota:';
-
     public function __construct(private readonly RedisFactory $redis) {}
 
     /**
@@ -35,16 +35,20 @@ final class TusQuotaService
     {
         try {
             $conn = $this->redis->connection();
-            $key = self::QUOTA_KEY_PREFIX . $userId;
+            $key = CacheKeys::tusQuota($userId);
 
-            $current = (int) $conn->command('get', [$key]);
-            $wouldExceedQuota = $current + $bytes > UploadLimits::TUS_USER_QUOTA_BYTES;
+            // INCRBY first and check the result, instead of GET-then-compare-
+            // then-INCRBY — otherwise two concurrent reservations could both
+            // read the same pre-increment value and both pass the check.
+            $total = (int) $conn->command('incrby', [$key, $bytes]);
+            $wouldExceedQuota = $total > UploadLimits::TUS_USER_QUOTA_BYTES;
 
             if ($wouldExceedQuota) {
+                $conn->command('decrby', [$key, $bytes]);
+
                 throw new HttpException(413, 'Upload quota exceeded — finish or cancel an in-progress upload first.');
             }
 
-            $conn->command('incrby', [$key, $bytes]);
             $conn->command('expire', [$key, (int) config('tus.ttl')]);
         } catch (RedisException $e) {
             Log::warning('TusQuotaService: reserve failed, proceeding unmetered', [
@@ -59,7 +63,7 @@ final class TusQuotaService
     {
         try {
             $conn = $this->redis->connection();
-            $key = self::QUOTA_KEY_PREFIX . $userId;
+            $key = CacheKeys::tusQuota($userId);
 
             $remaining = (int) $conn->command('decrby', [$key, $bytes]);
 
