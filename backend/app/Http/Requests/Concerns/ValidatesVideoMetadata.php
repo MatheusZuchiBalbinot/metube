@@ -24,10 +24,10 @@ trait ValidatesVideoMetadata
      * @param bool $required Whether title/status are required (Store) or
      *                       optional for a partial update (Update)
      * @param bool $includeStatus Whether `status` is settable at all.
-     *                       UpdateVideoRequest passes false — status
-     *                       transitions have dedicated business rules (see
-     *                       VideoPublishingService::publishVideo()) that a
-     *                       bare field on a metadata PATCH would bypass.
+     *                            UpdateVideoRequest passes false — status
+     *                            transitions have dedicated business rules (see
+     *                            VideoPublishingService::publishVideo()) that a
+     *                            bare field on a metadata PATCH would bypass.
      *
      * @return array<string, list<mixed>>
      */
