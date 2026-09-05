@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\DTOs\UpdateVideoDTO;
 use App\DTOs\VideoListFilterDTO;
 use App\Enums\VideoSource;
-use App\Enums\VideoStatus;
 use App\Http\Requests\Video\IndexVideoRequest;
 use App\Http\Requests\Video\RecordViewRequest;
 use App\Http\Requests\Video\StoreVideoRequest;
@@ -75,11 +74,12 @@ class VideoController extends Controller
 
     /**
      * Get a specific video with subscriber count.
+     *
+     * subscribers_count is now baked into Video::channel() itself (see its
+     * docblock), so it is already present on $video from route binding.
      */
     public function show(Video $video): JsonResponse
     {
-        $video->channel->loadCount('subscribers');
-
         return $this->json(new VideoResource($video));
     }
 
@@ -199,12 +199,6 @@ class VideoController extends Controller
 
     public function publish(Video $video): JsonResponse
     {
-        $isNotDraft = $video->status !== VideoStatus::DRAFT;
-
-        if ($isNotDraft) {
-            abort(409, 'Video is not in draft status.');
-        }
-
         $this->publishingService->publishVideo($video);
 
         return $this->json(new VideoResource($video->fresh('channel')));

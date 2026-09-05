@@ -89,6 +89,19 @@ class VideoBuilder extends Builder
     }
 
     /**
+     * Published videos ordered by popularity (views desc) with channel
+     * eager-loaded — the candidate-pool shape RecommendationService reuses
+     * for its base pool, related-video fallback, and plain popular listing.
+     * Callers add any extra `where`/`limit` before terminating the chain.
+     */
+    public function popularPool(): self
+    {
+        return $this->published()
+            ->orderByDesc('views')
+            ->with('channel');
+    }
+
+    /**
      * Exclude videos carrying the given tag.
      *
      * Used to keep shorts out of shelves (e.g. trending) that rank a broader

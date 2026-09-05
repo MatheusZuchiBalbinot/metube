@@ -37,6 +37,13 @@ final class RecommendationService
 
     private const RELATED_CANDIDATE_LIMIT = 300;
 
+    /**
+     * How far back user analytic events are considered when scoring
+     * tag/channel affinity — bounds the query and keeps scoring reactive to
+     * recent behavior rather than a user's entire history.
+     */
+    private const USER_EVENT_WINDOW_DAYS = 30;
+
     public function __construct(private readonly CacheService $cache) {}
 
     /**
@@ -72,10 +79,10 @@ final class RecommendationService
                 $maxChannelAffinity = $channelAffinity !== [] ? max($channelAffinity) : 0.0;
 
                 $scored = $candidates
-                    ->map(fn (Video $v) => [
-                        'video' => $v,
+                    ->map(fn (Video $video) => [
+                        'video' => $video,
                         'score' => $this->score(
-                            $v,
+                            $video,
                             $tagAffinity,
                             $channelAffinity,
                             $subscribedChannelIds,
@@ -149,7 +156,7 @@ final class RecommendationService
     private function getUserEventScores(int $userId): Collection
     {
         $events = UserAnalytic::query()->forUser($userId)
-            ->recentDays(30)
+            ->recentDays(self::USER_EVENT_WINDOW_DAYS)
             ->get();
 
         return $events
@@ -305,10 +312,8 @@ final class RecommendationService
      */
     private function basePool(array $excludeIds): VideoBuilder
     {
-        return Video::query()->published()
+        return Video::query()->popularPool()
             ->whereNotIn('id', $excludeIds)
-            ->with('channel')
-            ->orderByDesc('views')
             ->limit(self::CANDIDATE_LIMIT);
     }
 
@@ -349,11 +354,9 @@ final class RecommendationService
      */
     private function relatedBaseQuery(Video $video, array $excludeIds = []): VideoBuilder
     {
-        return Video::query()->published()
+        return Video::query()->popularPool()
             ->where('id', '!=', $video->id)
             ->whereNotIn('id', $excludeIds)
-            ->orderByDesc('views')
-            ->with('channel')
             ->limit(self::RELATED_CANDIDATE_LIMIT);
     }
 
@@ -430,9 +433,7 @@ final class RecommendationService
     {
         $perPage = PaginationSize::RECOMMENDATIONS;
 
-        return Video::query()->published()
-            ->orderByDesc('views')
-            ->with('channel')
+        return Video::query()->popularPool()
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
             ->get();

@@ -6,8 +6,11 @@ namespace App\Models;
 
 use App\Enums\VideoStatus;
 use App\Models\Builders\VideoBuilder;
+use App\Models\Concerns\HasPublicId;
+use App\Services\CacheService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -33,6 +36,8 @@ use Illuminate\Support\Str;
  * @property Carbon|null $published_at
  * @property Carbon|null $scheduled_at
  * @property bool $is_batch
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property VideoSummary|null $summary
  * @property Transcription|null $transcription
  * @property VideoAiSuggestion|null $aiSuggestion
@@ -40,7 +45,7 @@ use Illuminate\Support\Str;
  */
 class Video extends Model
 {
-    use HasFactory;
+    use HasFactory, HasPublicId;
 
     /** @var list<string> */
     protected $fillable = [
@@ -82,30 +87,49 @@ class Video extends Model
     }
 
     /**
-     * @param string|null $field
+     * Routed through the video.meta cache (see CacheService::rememberVideoMeta)
+     * so the most-hit read path (opening a video, every like/save/progress
+     * update) doesn't hit Postgres on every request — that cache existed but
+     * was previously only reached via VideoService::getVideoByUuid(), never
+     * from route-model-bound controller actions.
      */
     public function resolveRouteBinding($value, $field = null): ?self
     {
-        return $this->where('vuid', $value)->with('channel')->first();
+        try {
+            return app(CacheService::class)->rememberVideoMeta(
+                (string) $value,
+                fn () => $this->where('vuid', $value)->with('channel')->firstOrFail(),
+            );
+        } catch (ModelNotFoundException) {
+            return null;
+        }
     }
 
-    protected static function boot(): void
+    protected function publicIdField(): string
     {
-        parent::boot();
+        return 'vuid';
+    }
 
-        static::creating(function (Video $video): void {
-            $video->vuid ??= Str::random(11);
-        });
+    protected function generatePublicId(): string
+    {
+        return Str::random(11);
     }
 
     /**
      * A "channel" is a User — there's no separate Channel model.
      *
+     * withCount('subscribers') lives on the relation itself so every load of
+     * `channel` carries subscribers_count for VideoResource, not just call
+     * sites that remember to ask for it.
+     *
      * @return BelongsTo<User, $this>
      */
     public function channel(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'channel_id');
+        $relation = $this->belongsTo(User::class, 'channel_id');
+        $relation->withCount('subscribers');
+
+        return $relation;
     }
 
     /**
