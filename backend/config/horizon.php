@@ -27,6 +27,7 @@ return [
         'redis:transcription' => 60,
         'redis:analytics' => 60,
         'redis:video-processing' => 60,
+        'redis:ai-metadata' => 60,
     ],
 
     'trim' => [
@@ -118,6 +119,21 @@ return [
             'timeout' => 120,
             'nice' => 0,
         ],
+        // Isolated from 'default' so latency/rate-limits from the LLM provider
+        // can't starve unrelated jobs sharing that queue.
+        'supervisor-ai-metadata' => [
+            'connection' => 'redis',
+            'queue' => ['ai-metadata'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 3,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 5,
+            'timeout' => 120,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -146,6 +162,11 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+            'supervisor-ai-metadata' => [
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
         ],
 
         'local' => [
@@ -166,6 +187,10 @@ return [
                 'maxProcesses' => env('TRANSCRIPTION_MAX_PROCESSES', 1),
             ],
             'supervisor-analytics' => [
+                'minProcesses' => 1,
+                'maxProcesses' => 2,
+            ],
+            'supervisor-ai-metadata' => [
                 'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],

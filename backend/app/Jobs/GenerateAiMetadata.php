@@ -62,7 +62,7 @@ class GenerateAiMetadata implements ShouldBeUnique, ShouldQueue
      */
     public function __construct(private readonly Video $video)
     {
-        $this->onQueue('default');
+        $this->onQueue('ai-metadata');
     }
 
     /**

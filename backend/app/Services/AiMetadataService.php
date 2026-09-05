@@ -6,9 +6,12 @@ namespace App\Services;
 
 use App\DTOs\VideoMetadataResult;
 use App\Enums\AiSuggestionStatus;
+use App\Enums\TranscriptionStatus;
+use App\Jobs\GenerateAiMetadata;
 use App\Models\Video;
 use App\Models\VideoAiSuggestion;
 use App\Models\VideoSummary;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service for applying AI-generated metadata to videos.
@@ -18,6 +21,37 @@ use App\Models\VideoSummary;
  */
 final class AiMetadataService
 {
+    /**
+     * Redispatches GenerateAiMetadata for videos whose transcription
+     * completed a while ago but never got a VideoSummary — recovers the
+     * pipeline if the worker died between TranscribeVideo marking COMPLETED
+     * and dispatching GenerateAiMetadata (see TranscribeVideo::handle()).
+     *
+     * @return int Number of videos reconciled
+     */
+    public function reconcileStuckMetadata(int $olderThanMinutes = 60): int
+    {
+        $threshold = now()->subMinutes($olderThanMinutes);
+
+        $stuck = Video::query()
+            ->whereHas('transcription', function ($query) use ($threshold): void {
+                $query->where('status', TranscriptionStatus::COMPLETED)
+                    ->where('updated_at', '<', $threshold);
+            })
+            ->whereDoesntHave('summary')
+            ->get();
+
+        foreach ($stuck as $video) {
+            Log::warning('AiMetadataService: reconciling video with completed transcription but no AI metadata', [
+                'vuid' => $video->vuid,
+            ]);
+
+            GenerateAiMetadata::dispatch($video);
+        }
+
+        return $stuck->count();
+    }
+
     /**
      * - Always stores summary (key_points, chapters, reading_mode)
      * - For batch uploads: auto-applies tags/title/description when empty
