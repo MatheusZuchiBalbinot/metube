@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Video, VideoId, Tag } from '@models';
 
 interface EditVideoPayload {
@@ -29,21 +29,21 @@ export function useEditVideoModal(): UseEditVideoModalResult {
     const [editDescription, setEditDescription] = useState('');
     const [editTags, setEditTags] = useState<Tag[]>([]);
 
-    function handleEditOpen(video: Video) {
+    const handleEditOpen = useCallback((video: Video) => {
         setEditingVideo(video);
         setEditTitle(video.title);
         setEditDescription(video.description);
         setEditTags(video.tags);
-    }
+    }, []);
 
-    function handleEditClose() {
+    const handleEditClose = useCallback(() => {
         setEditingVideo(null);
-    }
+    }, []);
 
-    function handleEditSubmit(
+    const handleEditSubmit = useCallback((
         e: React.FormEvent,
         onSave: (id: VideoId, payload: EditVideoPayload) => void,
-    ) {
+    ) => {
         e.preventDefault();
         const isTitleEmpty = editTitle.trim() === '';
         if (isTitleEmpty || editingVideo === null) {
@@ -56,7 +56,7 @@ export function useEditVideoModal(): UseEditVideoModalResult {
         };
         onSave(editingVideo.id, payload);
         handleEditClose();
-    }
+    }, [editTitle, editingVideo, editDescription, editTags, handleEditClose]);
 
     return {
         editingVideo, editTitle, editDescription, editTags,
