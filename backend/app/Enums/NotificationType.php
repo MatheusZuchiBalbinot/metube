@@ -14,5 +14,6 @@ enum NotificationType: string
     case VIDEO_PROCESSED = 'video_processed';
     case VIDEO_TRANSCRIPTION_STARTED = 'video_transcription_started';
     case VIDEO_TRANSCRIBED = 'video_transcribed';
+    case VIDEO_TRANSCRIPTION_FAILED = 'video_transcription_failed';
     case VIDEO_AI_SUMMARY_READY = 'video_ai_summary_ready';
 }
