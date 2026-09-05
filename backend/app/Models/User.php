@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\PlaylistName;
 use App\Enums\ReactionType;
 use App\Models\Builders\UserBuilder;
+use App\Models\Concerns\HasPublicId;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,7 +32,7 @@ use Illuminate\Support\Str;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasPublicId, Notifiable;
 
     /** @var list<string> */
     protected $fillable = ['name', 'email', 'password', 'session_version', 'uuid', 'bio', 'avatar'];
@@ -51,13 +52,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         parent::boot();
 
-        static::creating(function (User $user): void {
-            $user->uuid ??= (string) Str::ulid();
-        });
-
         static::created(function (User $user): void {
             $user->playlists()->firstOrCreate(['name' => PlaylistName::WATCH_LATER->value]);
         });
+    }
+
+    protected function publicIdField(): string
+    {
+        return 'uuid';
+    }
+
+    protected function generatePublicId(): string
+    {
+        return (string) Str::ulid();
     }
 
     /**

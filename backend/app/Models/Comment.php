@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\CommentBuilder;
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,7 +37,7 @@ use Illuminate\Support\Str;
  */
 class Comment extends Model
 {
-    use HasFactory;
+    use HasFactory, HasPublicId;
 
     /** @var list<string> */
     protected $fillable = [
@@ -74,13 +75,14 @@ class Comment extends Model
         return new CommentBuilder($query);
     }
 
-    protected static function boot(): void
+    protected function publicIdField(): string
     {
-        parent::boot();
+        return 'cuid';
+    }
 
-        static::creating(function (Comment $comment): void {
-            $comment->cuid ??= Str::random(11);
-        });
+    protected function generatePublicId(): string
+    {
+        return Str::random(11);
     }
 
     /**

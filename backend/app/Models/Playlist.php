@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Builders\PlaylistBuilder;
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,7 @@ use Illuminate\Support\Str;
  */
 class Playlist extends Model
 {
-    use HasFactory;
+    use HasFactory, HasPublicId;
 
     /** @var list<string> */
     protected $fillable = ['user_id', 'name'];
@@ -40,13 +41,14 @@ class Playlist extends Model
             ->first();
     }
 
-    protected static function boot(): void
+    protected function publicIdField(): string
     {
-        parent::boot();
+        return 'puid';
+    }
 
-        static::creating(function (Playlist $playlist): void {
-            $playlist->puid ??= (string) Str::ulid();
-        });
+    protected function generatePublicId(): string
+    {
+        return (string) Str::ulid();
     }
 
     /**
