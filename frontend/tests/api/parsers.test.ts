@@ -404,8 +404,8 @@ describe('parseUser', () => {
 });
 
 describe('parseUserArray', () => {
-    it('returns array of Users from valid input', () => {
-        const result = parseUserArray([makeRawUser(), makeRawUser({ uuid: 'user-uuid-002', name: 'Bob' })]);
+    it('returns array of Users from a Laravel resource-collection envelope', () => {
+        const result = parseUserArray({ data: [makeRawUser(), makeRawUser({ uuid: 'user-uuid-002', name: 'Bob' })] });
 
         expect(result).not.toBeNull();
         expect(result).toHaveLength(2);
@@ -414,7 +414,7 @@ describe('parseUserArray', () => {
     });
 
     it('filters out invalid users', () => {
-        const result = parseUserArray([makeRawUser(), { invalid: true }, makeRawUser({ uuid: 'user-uuid-003' })]);
+        const result = parseUserArray({ data: [makeRawUser(), { invalid: true }, makeRawUser({ uuid: 'user-uuid-003' })] });
 
         expect(result).not.toBeNull();
         expect(result).toHaveLength(2);
@@ -428,16 +428,16 @@ describe('parseUserArray', () => {
         expect(parseUserArray(undefined)).toBeNull();
     });
 
-    it('returns null for a non-array object', () => {
-        expect(parseUserArray(makeRawUser())).toBeNull();
+    it('returns null for a bare array (missing the `data` envelope)', () => {
+        expect(parseUserArray([makeRawUser()])).toBeNull();
     });
 
     it('returns null for a string', () => {
         expect(parseUserArray('string')).toBeNull();
     });
 
-    it('returns an empty array for an empty array input', () => {
-        const result = parseUserArray([]);
+    it('returns an empty array when `data` is an empty array', () => {
+        const result = parseUserArray({ data: [] });
 
         expect(result).not.toBeNull();
         expect(result).toEqual([]);

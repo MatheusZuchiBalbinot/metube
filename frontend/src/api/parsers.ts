@@ -244,13 +244,7 @@ export function parseUser(raw: unknown): User | null {
     };
 }
 
-export function parseUserArray(raw: unknown): User[] | null {
-    if (!Array.isArray(raw)) {
-        return null;
-    }
-
-    return raw.map(parseUser).filter((user): user is User => user !== null);
-}
+export const parseUserArray = collectionParser<User>(parseUser);
 
 export function parseLoginResponse(raw: unknown): LoginApiResponse | null {
     const rawData = toRaw(raw);
