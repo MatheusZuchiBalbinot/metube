@@ -51,7 +51,7 @@ class IndexVideoRequest extends FormRequest
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
             'status' => ['nullable', 'string', Rule::enum(VideoStatus::class)],
-            'page' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:1000'],
         ];
     }
 }
