@@ -14,6 +14,8 @@ use App\Models\CommentLike;
 use App\Models\CommentVersion;
 use App\Models\User;
 use App\Models\Video;
+use App\Support\ToggleGuard;
+use App\Support\ToggleOutcome;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +33,8 @@ final class CommentService
     /**
      * Attaches is_liked as a virtual attribute resolved in bulk.
      */
-    public function list(string $vuid, ?User $user, int $page = 1): LengthAwarePaginator
+    public function list(Video $video, ?User $user, int $page = 1): LengthAwarePaginator
     {
-        $video = Video::query()->byVuid($vuid)->firstOrFail();
-
         $paginator = Comment::with('user')
             ->forVideo($video->id)
             ->topLevel()
@@ -49,10 +49,8 @@ final class CommentService
     /**
      * @return Comment Newly created comment with the user relation loaded
      */
-    public function store(string $vuid, StoreCommentDTO $data, User $user): Comment
+    public function store(Video $video, StoreCommentDTO $data, User $user): Comment
     {
-        $video = Video::query()->byVuid($vuid)->firstOrFail();
-
         $parentId = null;
 
         if ($data->parentCuid !== null) {
@@ -159,7 +157,7 @@ final class CommentService
      * either's DELETE commits; without this guard the second call would still
      * see itself as "1 + replies" and decrement again for a row already gone.
      */
-    public function destroy(Comment $comment): void
+    public function deleteComment(Comment $comment): void
     {
         DB::transaction(function () use ($comment): void {
             $isRoot = $comment->parent_id === null;
@@ -177,7 +175,10 @@ final class CommentService
 
             $deletedCount = $isRoot ? 1 + $replyCount : 1;
 
-            Video::where('id', $comment->video_id)->decrement('comments_count', $deletedCount);
+            // Decrement through a loaded instance so it fires VideoObserver
+            // and invalidates the video's cache, symmetric with store()'s increment.
+            $video = Video::find($comment->video_id);
+            $video?->decrement('comments_count', $deletedCount);
         });
     }
 
@@ -194,29 +195,26 @@ final class CommentService
     public function toggleLike(Comment $comment, User $user): array
     {
         return DB::transaction(function () use ($comment, $user): array {
-            $unliked = CommentLike::query()->byUser($user->id)
-                ->forComment($comment->id)
-                ->delete();
+            $outcome = ToggleGuard::run(
+                delete: fn (): int => CommentLike::query()->byUser($user->id)
+                    ->forComment($comment->id)
+                    ->delete(),
+                insert: fn (): int => CommentLike::insertOrIgnore([
+                    'user_id' => $user->id,
+                    'comment_id' => $comment->id,
+                    'created_at' => now(),
+                ]),
+            );
 
-            if ($unliked > 0) {
+            if ($outcome === ToggleOutcome::Removed) {
                 Comment::where('id', $comment->id)->decrement('likes_count');
                 $comment->refresh();
 
                 return ['liked' => false, 'likes_count' => $comment->likes_count];
             }
 
-            $inserted = CommentLike::insertOrIgnore([
-                'user_id' => $user->id,
-                'comment_id' => $comment->id,
-                'created_at' => now(),
-            ]);
-
-            // Two concurrent clicks can both reach here after both DELETEs above
-            // found nothing to remove; the unique constraint on (user_id,
-            // comment_id) lets only one INSERT win. Skipping the increment when
-            // insertOrIgnore reports 0 rows keeps likes_count from inflating
-            // permanently — unlike decrements, an extra increment never self-corrects.
-            if ($inserted === 0) {
+            // NoOp: a concurrent request already inserted this row — don't double-increment.
+            if ($outcome === ToggleOutcome::NoOp) {
                 return ['liked' => true, 'likes_count' => $comment->likes_count];
             }
 

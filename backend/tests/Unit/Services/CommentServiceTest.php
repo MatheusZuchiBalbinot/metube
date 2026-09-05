@@ -26,7 +26,7 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         Comment::factory(3)->create(['video_id' => $video->id, 'parent_id' => null]);
 
-        $paginator = $service->list($video->vuid, $user);
+        $paginator = $service->list($video, $user);
 
         expect($paginator->total())->toBe(3);
     });
@@ -36,7 +36,7 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         Comment::factory()->create(['video_id' => $video->id, 'parent_id' => null]);
 
-        $paginator = $service->list($video->vuid, $user);
+        $paginator = $service->list($video, $user);
         $comment = $paginator->getCollection()->first();
 
         expect($comment->is_liked)->toBeFalse();
@@ -48,7 +48,7 @@ describe('CommentService', function () {
 
         $dto = new StoreCommentDTO(content: 'Hello world');
 
-        $comment = $service->store($video->vuid, $dto, $user);
+        $comment = $service->store($video, $dto, $user);
 
         expect($comment->content)->toBe('Hello world')
             ->and($comment->video_id)->toBe($video->id)
@@ -62,7 +62,7 @@ describe('CommentService', function () {
 
         $dto = new StoreCommentDTO(content: 'A comment');
 
-        $service->store($video->vuid, $dto, $user);
+        $service->store($video, $dto, $user);
 
         $this->assertDatabaseHas('videos', ['id' => $video->id, 'comments_count' => 1]);
     });
@@ -74,7 +74,7 @@ describe('CommentService', function () {
 
         $dto = new StoreCommentDTO(content: 'A reply', parentCuid: $parent->cuid);
 
-        $reply = $service->store($video->vuid, $dto, $user);
+        $reply = $service->store($video, $dto, $user);
 
         expect($reply->parent_id)->toBe($parent->id);
         $parent->refresh();
@@ -99,7 +99,7 @@ describe('CommentService', function () {
         $video = Video::factory()->for($user, 'channel')->create();
         $comment = Comment::factory()->create(['video_id' => $video->id]);
 
-        $service->destroy($comment);
+        $service->deleteComment($comment);
 
         $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
     });
@@ -113,7 +113,7 @@ describe('CommentService', function () {
         $root = Comment::factory()->create(['video_id' => $video->id, 'parent_id' => null]);
         Comment::factory(2)->create(['video_id' => $video->id, 'parent_id' => $root->id]);
 
-        simulateRace(fn () => $service->destroy($root));
+        simulateRace(fn () => $service->deleteComment($root));
 
         expect($video->refresh()->comments_count)->toBe(0); // 3 - (1 root + 2 replies), not decremented twice
     });
@@ -124,7 +124,7 @@ describe('CommentService', function () {
         $parent = Comment::factory()->create(['video_id' => $video->id, 'replies_count' => 1]);
         $reply = Comment::factory()->create(['video_id' => $video->id, 'parent_id' => $parent->id]);
 
-        $service->destroy($reply);
+        $service->deleteComment($reply);
 
         $parent->refresh();
         expect($parent->replies_count)->toBe(0);

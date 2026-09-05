@@ -24,5 +24,8 @@ class UserObserver
         }
 
         $this->cache->forgetChannel($user->uuid);
+
+        // video.meta embeds the channel relation, so it must be invalidated too.
+        $user->videos()->pluck('vuid')->each(fn (string $vuid) => $this->cache->forgetVideo($vuid));
     }
 }
