@@ -76,9 +76,17 @@ describe('ApiClient.get — pending-request dedup map', () => {
             const callIndex = signals.length;
 
             return new Promise((resolve, reject) => {
-                if (callIndex === 1) rejectA = reject;
-                if (callIndex === 2) resolveB = resolve;
-                if (callIndex === 3) resolveC = resolve;
+                if (callIndex === 1) {
+                    rejectA = reject;
+                }
+
+                if (callIndex === 2) {
+                    resolveB = resolve;
+                }
+
+                if (callIndex === 3) {
+                    resolveC = resolve;
+                }
             });
         });
 

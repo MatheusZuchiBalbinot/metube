@@ -10,7 +10,7 @@ import ProfileTopicGrid from './ProfileTopicGrid';
 import { domain } from '@domain';
 import { Format, formatDuration, formatRelativeDate, videoUrl, isActivationKey, cn } from '@utils';
 import type { TagSection } from '../hooks/useProfileSections';
-import type { Video, VideoId, Tag } from '@models';
+import type { Video, VideoId, Tag, ViewCount } from '@models';
 
 interface ProfileVideoGridProps {
     isLoadingVideos: boolean
@@ -69,12 +69,10 @@ interface NonLiveThumbProps {
 // Extracted so the thumbnail/duration conditionals don't count toward NonLiveRow's
 // own complexity — same markup as before.
 function NonLiveThumb({ video }: NonLiveThumbProps) {
-    const hasDuration = video.duration !== undefined && video.duration > 0;
-
     return (
         <div className="profile-nonlive-row__thumb">
             {video.thumbnail && <img src={video.thumbnail} alt="" />}
-            {hasDuration && (
+            {video.duration !== undefined && video.duration > 0 && (
                 <span className="profile-nonlive-row__duration">{formatDuration(video.duration)}</span>
             )}
         </div>
@@ -261,7 +259,7 @@ function PublishedAllVideosHeader({
             </h3>
             {totalViews !== null && (
                 <span className="profile-page__all-videos-total-views">
-                    {t('profile.total_views_summary', { views: Format.views(totalViews) })}
+                    {t('profile.total_views_summary', { views: Format.views(totalViews as unknown as ViewCount) })}
                 </span>
             )}
         </div>

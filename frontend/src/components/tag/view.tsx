@@ -17,7 +17,7 @@ function getTagViewMeta(activeTagView: TagViewState | null) {
     };
 }
 
-function shouldShowHeroSection(hasFromVideo: boolean, heroVideo: Video | null) {
+function shouldShowHeroSection(hasFromVideo: boolean, heroVideo: Video | null): heroVideo is Video {
     return hasFromVideo && heroVideo !== null;
 }
 

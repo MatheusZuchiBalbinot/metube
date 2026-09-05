@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Format } from '@utils';
+import type { ViewCount } from '@models';
 
 interface ProfileStatsData {
     totalViews: number
@@ -37,7 +38,7 @@ export default function ProfileStats({ stats }: ProfileStatsProps) {
         <div className="profile-page__stats-grid">
             <StatCell
                 label={t('profile.total_views')}
-                value={Format.views(stats.totalViews)}
+                value={Format.views(stats.totalViews as unknown as ViewCount)}
                 note={t('profile.stat_all_time')}
             />
             <StatCell
