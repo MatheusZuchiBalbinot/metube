@@ -113,6 +113,15 @@ services:
     networks:
       - app_net
     mem_limit: 512m
+    # Overrides the FrankenPHP base image's inherited healthcheck (curl
+    # localhost:2019/metrics), which never exists here since this container
+    # runs `php artisan horizon`, not the Octane/FrankenPHP server.
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan horizon:status | grep -q running"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   reverb:
     build: ./backend
@@ -134,6 +143,15 @@ services:
     networks:
       - app_net
     mem_limit: 128m
+    # Overrides the FrankenPHP base image's inherited healthcheck (curl
+    # localhost:2019/metrics) — this container only runs the Reverb WebSocket
+    # server on 8080, so just confirm that port accepts connections.
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   frontend:
     build: ./frontend
