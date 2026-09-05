@@ -4,7 +4,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useLayoutEffect, useRef } from 'react';
 import { useInView } from '@hooks/useInView';
 
-// ─── IntersectionObserver mock ─────────────────────────────────────────────────
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
 
@@ -58,8 +57,6 @@ function installObserverMock() {
     });
 }
 
-// ─── Helper: wrap useInView attaching a real DOM element to the ref ────────────
-
 function useInViewWithElement(options?: Parameters<typeof useInView>[0]) {
     const result = useInView(options);
     const elRef = useRef<HTMLElement | null>(null);
@@ -77,8 +74,6 @@ function useInViewWithElement(options?: Parameters<typeof useInView>[0]) {
 
     return result;
 }
-
-// ─── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('useInView — initial state', () => {
     beforeEach(() => {

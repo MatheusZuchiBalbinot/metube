@@ -15,7 +15,6 @@ vi.mock('@api/auth', () => ({
     },
 }));
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = authSlice.reducer;
 
@@ -39,8 +38,6 @@ function makeState(overrides: object = {}) {
     };
 }
 
-// ─── sessionExpired ───────────────────────────────────────────────────────────
-
 describe('authSlice — sessionExpired', () => {
     it('sets user to null', () => {
         const state = makeState({ user: makeUser() });
@@ -54,8 +51,6 @@ describe('authSlice — sessionExpired', () => {
         expect(next.sessionError).toBe('Token expired');
     });
 });
-
-// ─── updateProfile ────────────────────────────────────────────────────────────
 
 describe('authSlice — updateProfile', () => {
     it('updates name when provided', () => {
@@ -90,8 +85,6 @@ describe('authSlice — updateProfile', () => {
     });
 });
 
-// ─── fetchMe ──────────────────────────────────────────────────────────────────
-
 describe('authSlice — fetchMe', () => {
     it('sets user and clears loading on fulfilled', () => {
         const user = makeUser();
@@ -109,8 +102,6 @@ describe('authSlice — fetchMe', () => {
     });
 });
 
-// ─── signInThunk ──────────────────────────────────────────────────────────────
-
 describe('authSlice — signInThunk', () => {
     it('sets user on fulfilled', () => {
         const user = makeUser();
@@ -126,8 +117,6 @@ describe('authSlice — signInThunk', () => {
     });
 });
 
-// ─── signOutThunk ─────────────────────────────────────────────────────────────
-
 describe('authSlice — signOutThunk', () => {
     it('sets user to null on fulfilled', () => {
         const state = makeState({ user: makeUser() });
@@ -135,8 +124,6 @@ describe('authSlice — signOutThunk', () => {
         expect(next.user).toBeNull();
     });
 });
-
-// ─── signOutThunk — localStorage cleanup ───────────────────────────────────
 
 describe('authSlice — signOutThunk clears persisted localStorage', () => {
     beforeEach(() => {
@@ -187,7 +174,6 @@ describe('authSlice — signOutThunk clears persisted localStorage', () => {
     });
 });
 
-// ─── signUpThunk ──────────────────────────────────────────────────────────────
 
 import { signUpThunk } from '@store/authSlice';
 import { auth } from '@api/auth';

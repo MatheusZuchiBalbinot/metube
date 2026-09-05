@@ -41,8 +41,6 @@ interface FilterTriggerButtonProps {
     onToggle: () => void
 }
 
-// Extracted so the icon-only/open/active cn() branches and the icon-only text/chevron
-// checks don't count toward FilterPanel's own complexity.
 function FilterTriggerButton({ triggerRef, iconOnly, open, hasActiveFilters, activeCount, onToggle }: FilterTriggerButtonProps) {
     const { t } = useTranslation();
 

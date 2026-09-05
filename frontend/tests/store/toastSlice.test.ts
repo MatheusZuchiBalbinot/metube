@@ -4,7 +4,6 @@ import toastSlice, { toastActions } from '@store/toastSlice';
 import type { Toast } from '@store/toastSlice';
 import { ToastType } from '@enums/toastType';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = toastSlice.reducer;
 
@@ -35,16 +34,12 @@ beforeEach(() => {
     });
 });
 
-// ─── Initial state ────────────────────────────────────────────────────────────
-
 describe('toastSlice — initial state', () => {
     it('has an empty toasts array', () => {
         const state = reducer(undefined, { type: '@@INIT' });
         expect(state.toasts).toEqual([]);
     });
 });
-
-// ─── addToast ─────────────────────────────────────────────────────────────────
 
 describe('toastSlice — addToast', () => {
     it('adds a toast with a generated id', () => {
@@ -122,8 +117,6 @@ describe('toastSlice — addToast', () => {
         }
     });
 });
-
-// ─── removeToast ──────────────────────────────────────────────────────────────
 
 describe('toastSlice — removeToast', () => {
     it('removes the toast with the matching id', () => {

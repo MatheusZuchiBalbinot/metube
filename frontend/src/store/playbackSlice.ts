@@ -3,7 +3,6 @@ import { STORAGE_KEYS, loadFromStorage, isNumberInRange } from '@utils';
 import type { VideoId } from '@models';
 import { videoObservableActions } from './videoSlice';
 
-/** A stored pinned video is either a video id string or null. */
 function isPinnedVideo(value: unknown): boolean {
     return value === null || typeof value === 'string';
 }

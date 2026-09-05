@@ -63,9 +63,6 @@ const INITIAL_FORM: FormState = {
 /**
  * Owns the single-video upload flow: form state, object-URL previews, client
  * validation and the tus upload + finalize sequence.
- *
- * @param deps - Shared callbacks owned by the parent orchestrator.
- * @returns Single-mode form state and handlers consumed by `UploadSingleForm`.
  */
 export function useSingleUpload({ addVideo, closeUploadModal, addPollingVuid }: UseSingleUploadDeps): UseSingleUploadReturn {
     const { t } = useTranslation();

@@ -4,7 +4,6 @@ import notificationsSlice, { notificationsActions } from '@store/notificationsSl
 import type { Notification } from '@api/notifications';
 import { NotificationType } from '@enums/notificationType';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = notificationsSlice.reducer;
 
@@ -34,8 +33,6 @@ function makeState(overrides: Partial<{
     };
 }
 
-// ─── Initial state ────────────────────────────────────────────────────────────
-
 describe('notificationsSlice — initial state', () => {
     it('has empty items array', () => {
         const state = reducer(undefined, { type: '@@INIT' });
@@ -58,8 +55,6 @@ describe('notificationsSlice — initial state', () => {
     });
 });
 
-// ─── setLoading ───────────────────────────────────────────────────────────────
-
 describe('notificationsSlice — setLoading', () => {
     it('sets loading to true', () => {
         const state = makeState({ loading: false });
@@ -73,8 +68,6 @@ describe('notificationsSlice — setLoading', () => {
         expect(next.loading).toBe(false);
     });
 });
-
-// ─── setNotifications ─────────────────────────────────────────────────────────
 
 describe('notificationsSlice — setNotifications', () => {
     it('replaces items with the provided list', () => {
@@ -104,8 +97,6 @@ describe('notificationsSlice — setNotifications', () => {
     });
 });
 
-// ─── addNotification ──────────────────────────────────────────────────────────
-
 describe('notificationsSlice — addNotification', () => {
     it('prepends the notification to items', () => {
         const existing = makeNotification({ id: 'old' });
@@ -129,8 +120,6 @@ describe('notificationsSlice — addNotification', () => {
     });
 });
 
-// ─── setUnreadCount ───────────────────────────────────────────────────────────
-
 describe('notificationsSlice — setUnreadCount', () => {
     it('sets unreadCount to the provided value', () => {
         const state = makeState({ unreadCount: 0 });
@@ -144,8 +133,6 @@ describe('notificationsSlice — setUnreadCount', () => {
         expect(next.unreadCount).toBe(0);
     });
 });
-
-// ─── markRead ─────────────────────────────────────────────────────────────────
 
 describe('notificationsSlice — markRead', () => {
     it('sets read_at on the matched notification', () => {
@@ -185,8 +172,6 @@ describe('notificationsSlice — markRead', () => {
     });
 });
 
-// ─── markAllRead ──────────────────────────────────────────────────────────────
-
 describe('notificationsSlice — markAllRead', () => {
     it('sets read_at on all unread notifications', () => {
         const items = [
@@ -225,8 +210,6 @@ describe('notificationsSlice — markAllRead', () => {
         expect(next.unreadCount).toBe(0);
     });
 });
-
-// ─── removeNotification ───────────────────────────────────────────────────────
 
 describe('notificationsSlice — removeNotification', () => {
     it('removes the notification with the given id', () => {
@@ -269,8 +252,6 @@ describe('notificationsSlice — removeNotification', () => {
         expect(next.unreadCount).toBe(1);
     });
 });
-
-// ─── reset ────────────────────────────────────────────────────────────────────
 
 describe('notificationsSlice — reset', () => {
     it('restores all fields to initial values', () => {

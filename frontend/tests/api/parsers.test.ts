@@ -19,8 +19,6 @@ import {
     parseAiSuggestion,
 } from '@api/parsers';
 
-// ─── Fixtures ──────────────────────────────────────────────────────────────────
-
 function makeRawVideo(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
         vuid: 'abc12345678',
@@ -93,8 +91,6 @@ function makePaginatedMeta(overrides: Record<string, unknown> = {}): Record<stri
         ...overrides,
     };
 }
-
-// ─── parseVideo ────────────────────────────────────────────────────────────────
 
 describe('parseVideo', () => {
     it('returns a correct Video from valid snake_case input', () => {
@@ -243,8 +239,6 @@ describe('parseVideo', () => {
     });
 });
 
-// ─── parseVideoList ────────────────────────────────────────────────────────────
-
 describe('parseVideoList', () => {
     it('returns correct paginated envelope from valid input', () => {
         const raw = {
@@ -336,8 +330,6 @@ describe('parseVideoList', () => {
     });
 });
 
-// ─── parseUser ─────────────────────────────────────────────────────────────────
-
 describe('parseUser', () => {
     it('returns correct User from valid snake_case input', () => {
         const result = parseUser(makeRawUser());
@@ -411,8 +403,6 @@ describe('parseUser', () => {
     });
 });
 
-// ─── parseUserArray ────────────────────────────────────────────────────────────
-
 describe('parseUserArray', () => {
     it('returns array of Users from valid input', () => {
         const result = parseUserArray([makeRawUser(), makeRawUser({ uuid: 'user-uuid-002', name: 'Bob' })]);
@@ -454,8 +444,6 @@ describe('parseUserArray', () => {
     });
 });
 
-// ─── parseLoginResponse ────────────────────────────────────────────────────────
-
 describe('parseLoginResponse', () => {
     it('returns LoginApiResponse with user from valid input', () => {
         const raw = { user: makeRawUser() };
@@ -487,8 +475,6 @@ describe('parseLoginResponse', () => {
         expect(parseLoginResponse({ user: { invalid: true } })).toBeNull();
     });
 });
-
-// ─── parseComment ──────────────────────────────────────────────────────────────
 
 describe('parseComment', () => {
     it('returns correct Comment from valid snake_case input', () => {
@@ -589,8 +575,6 @@ describe('parseComment', () => {
     });
 });
 
-// ─── parseCommentList ──────────────────────────────────────────────────────────
-
 describe('parseCommentList', () => {
     it('returns correct paginated comment list from valid input', () => {
         const raw = {
@@ -646,8 +630,6 @@ describe('parseCommentList', () => {
     });
 });
 
-// ─── parseCommentReplies ───────────────────────────────────────────────────────
-
 describe('parseCommentReplies', () => {
     it('returns array of Comments from valid input', () => {
         const raw = {
@@ -694,8 +676,6 @@ describe('parseCommentReplies', () => {
         expect(parseCommentReplies(123)).toBeNull();
     });
 });
-
-// ─── parseCommentVersions ─────────────────────────────────────────────────────
 
 describe('parseCommentVersions', () => {
     it('returns array of CommentVersions from valid input', () => {
@@ -761,8 +741,6 @@ describe('parseCommentVersions', () => {
     });
 });
 
-// ─── parsePlaylist ─────────────────────────────────────────────────────────────
-
 describe('parsePlaylist', () => {
     it('returns correct Playlist from valid snake_case input', () => {
         const result = parsePlaylist(makeRawPlaylist());
@@ -815,8 +793,6 @@ describe('parsePlaylist', () => {
     });
 });
 
-// ─── parsePlaylistList ─────────────────────────────────────────────────────────
-
 describe('parsePlaylistList', () => {
     it('returns array of Playlists from valid input', () => {
         const raw = {
@@ -863,8 +839,6 @@ describe('parsePlaylistList', () => {
         expect(parsePlaylistList(123)).toBeNull();
     });
 });
-
-// ─── parseVideoSummary ─────────────────────────────────────────────────────────
 
 describe('parseVideoSummary', () => {
     it('returns correct VideoSummary from valid snake_case input', () => {
@@ -934,8 +908,6 @@ describe('parseVideoSummary', () => {
     });
 });
 
-// ─── parseVideoTranscription ───────────────────────────────────────────────────
-
 describe('parseVideoTranscription', () => {
     it('returns correct VideoTranscription from valid input', () => {
         const raw = {
@@ -1000,8 +972,6 @@ describe('parseVideoTranscription', () => {
     });
 });
 
-// ─── parseToggleLike ──────────────────────────────────────────────────────────
-
 describe('parseToggleLike', () => {
     it('returns correct ToggleLikeApiResponse from valid snake_case input', () => {
         const raw = { liked: true, likes_count: 42 };
@@ -1053,8 +1023,6 @@ describe('parseToggleLike', () => {
         expect(parseToggleLike(42)).toBeNull();
     });
 });
-
-// ─── parseAiSuggestion ─────────────────────────────────────────────────────────
 
 describe('parseAiSuggestion', () => {
     it('returns a correct AiSuggestion from valid snake_case input', () => {

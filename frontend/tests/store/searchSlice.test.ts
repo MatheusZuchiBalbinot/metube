@@ -2,7 +2,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import searchSlice, { searchActions } from '@store/searchSlice';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = searchSlice.reducer;
 
@@ -13,8 +12,6 @@ function makeState(recentSearches: string[] = []) {
 beforeEach(() => {
     localStorage.clear();
 });
-
-// ─── Initial state ────────────────────────────────────────────────────────────
 
 describe('searchSlice — initial state', () => {
     it('has an empty recentSearches array when localStorage is empty', () => {
@@ -34,8 +31,6 @@ describe('searchSlice — initial state', () => {
         expect(state.recentSearches).toEqual([]);
     });
 });
-
-// ─── addRecentSearch ──────────────────────────────────────────────────────────
 
 describe('searchSlice — addRecentSearch', () => {
     it('adds a new search term to the front', () => {
@@ -108,8 +103,6 @@ describe('searchSlice — addRecentSearch', () => {
     });
 });
 
-// ─── removeRecentSearch ───────────────────────────────────────────────────────
-
 describe('searchSlice — removeRecentSearch', () => {
     it('removes the matching search term', () => {
         const state = makeState(['react', 'typescript', 'redux']);
@@ -135,8 +128,6 @@ describe('searchSlice — removeRecentSearch', () => {
         expect(next.recentSearches).toEqual([]);
     });
 });
-
-// ─── clearRecentSearches ──────────────────────────────────────────────────────
 
 describe('searchSlice — clearRecentSearches', () => {
     it('empties the recentSearches array', () => {

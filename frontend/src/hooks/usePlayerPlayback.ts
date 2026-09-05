@@ -78,8 +78,6 @@ export function usePlayerPlayback(
         }
     }, [controlledVolume, videoRef]);
 
-    // ─── Video event handlers ─────────────────────────────────────────────────
-
     const handleVideoPlay = useCallback(() => {
         setIsPlaying(true);
         setIsBuffering(false);
@@ -132,8 +130,6 @@ export function usePlayerPlayback(
         const bufferedEnd = el.buffered.end(el.buffered.length - 1);
         setBufferedPct((bufferedEnd / el.duration) * 100);
     }, [videoRef]);
-
-    // ─── Actions ──────────────────────────────────────────────────────────────
 
     const handleTogglePlay = useCallback(() => {
         const el = videoRef.current;

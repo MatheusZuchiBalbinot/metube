@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ROUTES, videoUrl } from '@utils/routes';
 
-// ─── ROUTES ───────────────────────────────────────────────────────────────────
-
 describe('ROUTES', () => {
     it('has a LOGIN route', () => {
         expect(ROUTES.LOGIN).toBe('/login');
@@ -76,8 +74,6 @@ describe('ROUTES', () => {
         expect(ROUTES.CHANNEL).toBe('/channel/:id');
     });
 });
-
-// ─── videoUrl ─────────────────────────────────────────────────────────────────
 
 describe('videoUrl', () => {
     it('returns the correct watch URL for a given vuid', () => {

@@ -136,8 +136,6 @@ export default function PlayerSeekBar({
         });
     }
 
-    // ─── Derived values ────────────────────────────────────────────────────────
-
     const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
     const displayPct = isDragging && dragPct !== null ? dragPct * 100 : progressPct;
     const activePct = hoverSeekPct !== null ? hoverSeekPct * 100 : displayPct;

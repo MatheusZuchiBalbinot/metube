@@ -81,8 +81,6 @@ export function DefaultVideoPlayer({
 
     const { autoplay, setAutoplay } = usePlaybackPrefs();
 
-    // ─── Hooks ────────────────────────────────────────────────────────────────
-
     const {
         showControls, setShowControls,
         scheduleHideControls, revealControls, forceShow,
@@ -180,8 +178,6 @@ export function DefaultVideoPlayer({
         },
     });
 
-    // ─── Effects ──────────────────────────────────────────────────────────────
-
     // Sync activeTrack → native TextTrack.mode once Shaka has loaded the tracks.
     // Use 'hidden' (not 'showing') so the browser's native renderer stays silent while
     // Shaka's SimpleTextDisplayer still reads the cues and renders its own <div> overlay.
@@ -231,8 +227,6 @@ export function DefaultVideoPlayer({
         setAutoplay(!autoplay);
     }
 
-    // ─── Event handlers ───────────────────────────────────────────────────────
-
     // stop() is a plain (non-hook) factory: the compiler can't prove it defers
     // calling its argument, so it conservatively flags any ref read reachable
     // through it — but stop() only stores fn and calls it from the returned
@@ -269,8 +263,6 @@ export function DefaultVideoPlayer({
         setActiveTrack(lang);
         setShowCaptionsMenu(false);
     }
-
-    // ─── Render ───────────────────────────────────────────────────────────────
 
     const wrapClass = cn(
         'vp',

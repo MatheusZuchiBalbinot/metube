@@ -28,8 +28,6 @@ export interface UseUploadModalReturn extends UseSingleUploadReturn, UseBatchUpl
  * Thin orchestrator for the upload modal. Owns the active mode and the polling
  * queue, derives existing tags, and composes the single- and batch-upload hooks
  * — sharing `addVideo`, `closeUploadModal` and the polling callback between them.
- *
- * @returns The combined state and handlers consumed by `UploadModal`.
  */
 export function useUploadModal(): UseUploadModalReturn {
     const { uploadModalOpen, closeUploadModal } = useVideoUi();

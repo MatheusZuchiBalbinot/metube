@@ -55,9 +55,6 @@ function titleFromFilename(file: File): string {
 /**
  * Owns the batch upload flow: queue of files, drag-and-drop intake and the
  * parallel tus upload + finalize sequence with success/error counters.
- *
- * @param deps - Shared callbacks owned by the parent orchestrator.
- * @returns Batch-mode state and handlers consumed by `UploadBatchZone`.
  */
 export function useBatchUpload({ addVideo, closeUploadModal, addPollingVuid }: UseBatchUploadDeps): UseBatchUploadReturn {
     const { t } = useTranslation();

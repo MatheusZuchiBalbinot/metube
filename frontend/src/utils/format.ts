@@ -18,7 +18,6 @@ export function countTagFrequency(videos: Video[]): Map<Tag, number> {
     return freq;
 }
 
-/** Collects the unique tags across a video list, sorted alphabetically. */
 export function collectTags(videos: Video[]): Tag[] {
     const tagSet = new Set<Tag>();
     forEachVideoTag(videos, tag => tagSet.add(tag));

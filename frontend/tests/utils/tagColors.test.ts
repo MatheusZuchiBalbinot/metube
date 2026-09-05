@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TagColors } from '@utils/tagColors';
 
-// ─── palette — determinism ─────────────────────────────────────────────────────
-
 describe('TagColors.palette — determinism', () => {
     it('returns the same palette for the same tag called twice', () => {
         const a = TagColors.palette('react');
@@ -15,8 +13,6 @@ describe('TagColors.palette — determinism', () => {
         expect(TagColors.palette(tag)).toBe(TagColors.palette(tag));
     });
 });
-
-// ─── palette — valid shape ─────────────────────────────────────────────────────
 
 describe('TagColors.palette — valid shape', () => {
     it('returns an object with a bg string', () => {
@@ -31,8 +27,6 @@ describe('TagColors.palette — valid shape', () => {
         expect(palette.color.length).toBeGreaterThan(0);
     });
 });
-
-// ─── palette — edge cases ─────────────────────────────────────────────────────
 
 describe('TagColors.palette — edge cases', () => {
     it('does not throw for an empty string', () => {

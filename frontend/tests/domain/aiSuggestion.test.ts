@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { domain } from '@domain';
 import type { AiSuggestion } from '@api/videos';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function makeSuggestion(status: AiSuggestion['status']): AiSuggestion {
     return {
         status,
@@ -12,8 +10,6 @@ function makeSuggestion(status: AiSuggestion['status']): AiSuggestion {
         suggestedTags: [],
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.aiSuggestion.isPending', () => {
     it('returns true for pending status', () => {

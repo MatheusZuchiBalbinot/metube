@@ -1,7 +1,4 @@
-/**
- * Factory functions for creating test data.
- * Used in both component and Redux slice tests.
- */
+// Test data factories, shared by component and slice tests.
 
 import type { Video, VideoId } from '@models/video';
 import type { ChannelId } from '@models/channel';
@@ -12,21 +9,10 @@ import type { RootState } from '@store';
 import { videoAdapter } from '@store/videoSlice';
 import type { Comment, Cuid } from '@models/comment';
 
-// ─── Brand cast helpers ────────────────────────────────────────────────────
-
-/** Create a branded VideoId from a string. */
 export const vid = (s: string): VideoId => s as unknown as VideoId;
-
-/** Create a branded ChannelId from a string. */
 export const chId = (s: string): ChannelId => s as unknown as ChannelId;
-
-/** Create a branded Tag from a string. */
 export const tag = (s: string): Tag => s as unknown as Tag;
-
-/** Create a branded Cuid from a string. */
 export const cuid = (s: string): Cuid => s as unknown as Cuid;
-
-// ─── Video factory ────────────────────────────────────────────────────────
 
 export function makeVideo(overrides: Partial<Video> = {}): Video {
     return {
@@ -46,8 +32,6 @@ export function makeVideo(overrides: Partial<Video> = {}): Video {
     };
 }
 
-// ─── User factory ──────────────────────────────────────────────────────────
-
 export function makeUser(overrides: Partial<User> = {}): User {
     return {
         id: '1',
@@ -58,8 +42,6 @@ export function makeUser(overrides: Partial<User> = {}): User {
         ...overrides,
     };
 }
-
-// ─── Comment factory ──────────────────────────────────────────────────────
 
 export function makeComment(overrides: Partial<Comment> = {}): Comment {
     return {
@@ -74,8 +56,6 @@ export function makeComment(overrides: Partial<Comment> = {}): Comment {
         ...overrides,
     };
 }
-
-// ─── Redux State factories ─────────────────────────────────────────────────
 
 export function makeVideoState(overrides: Record<string, unknown> = {}) {
     const { videos: videosOverride, ...rest } = overrides as { videos?: Video[] } & Record<string, unknown>;

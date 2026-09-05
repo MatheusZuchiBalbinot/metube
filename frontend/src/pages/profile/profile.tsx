@@ -80,7 +80,6 @@ interface ProfilePreviewBannerProps {
     onExit: () => void
 }
 
-// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
 function ProfilePreviewBanner({ show, onExit }: ProfilePreviewBannerProps) {
     const { t } = useTranslation();
 
@@ -112,7 +111,6 @@ interface ProfileSubtitleProps {
     stats: ProfileStatsData | null
 }
 
-// Extracted so the stats guard doesn't count toward ProfilePage's own complexity.
 function ProfileSubtitle({ videosCount, displayIsOwnProfile, stats }: ProfileSubtitleProps) {
     const { t } = useTranslation();
 
@@ -147,8 +145,6 @@ interface SubscribeButtonProps {
     onSubscribeToggle: () => void
 }
 
-// Extracted so the show guard and the subscribed-state ternaries don't count toward
-// ProfileHeaderActions' own complexity.
 function SubscribeButton({ show, isChannelSubscribed, onSubscribeToggle }: SubscribeButtonProps) {
     const { t } = useTranslation();
 
@@ -176,7 +172,6 @@ interface OwnerUploadEditButtonsProps {
     onEditProfileOpen: (name: string, bio: string) => void
 }
 
-// Extracted so the show guard doesn't count toward ProfileHeaderActions' own complexity.
 function OwnerUploadEditButtons({ show, user, onOpenUpload, onEditProfileOpen }: OwnerUploadEditButtonsProps) {
     const { t } = useTranslation();
 
@@ -214,8 +209,6 @@ interface PreviewToggleButtonProps {
     onTogglePreview: () => void
 }
 
-// Extracted so the show guard and the preview-state ternaries don't count toward
-// ProfileHeaderActions' own complexity.
 function PreviewToggleButton({ show, previewAsVisitor, onTogglePreview }: PreviewToggleButtonProps) {
     const { t } = useTranslation();
 
@@ -237,7 +230,6 @@ function PreviewToggleButton({ show, previewAsVisitor, onTogglePreview }: Previe
     );
 }
 
-// Extracted so the header-actions guard doesn't count toward ProfilePage's own complexity.
 function ProfileHeaderActions({
     isOwnProfile, displayIsOwnProfile, previewAsVisitor, isChannelSubscribed, user,
     onSubscribeToggle, onOpenUpload, onEditProfileOpen, onTogglePreview,
@@ -275,7 +267,6 @@ interface ProfileTopTagsRowProps {
     stats: ProfileStatsData | null
 }
 
-// Extracted so the stats/topTags guards don't count toward ProfilePage's own complexity.
 function ProfileTopTagsRow({ displayIsOwnProfile, stats }: ProfileTopTagsRowProps) {
     const { t } = useTranslation();
 
@@ -311,7 +302,6 @@ interface ProfileTabsBarProps {
     nonLiveRef: React.RefObject<HTMLDivElement | null>
 }
 
-// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
 function ProfileTabsBar({ show, ownVideosCount, nonLiveVideos, nonLiveRef }: ProfileTabsBarProps) {
     const { t } = useTranslation();
 
@@ -360,7 +350,6 @@ interface ProfileCuratedSectionsProps {
     topicRef: React.RefObject<HTMLDivElement | null>
 }
 
-// Extracted so the show guard doesn't count toward ProfilePage's own complexity.
 function ProfileCuratedSections({ show, sections, ...rest }: ProfileCuratedSectionsProps) {
     if (!show || sections === null) {
         return null;
@@ -374,7 +363,6 @@ interface ProfileStatsSectionProps {
     stats: ProfileStatsData | null
 }
 
-// Extracted so the stats guard doesn't count toward ProfilePage's own complexity.
 function ProfileStatsSection({ displayIsOwnProfile, stats }: ProfileStatsSectionProps) {
     if (!displayIsOwnProfile || !stats) {
         return null;

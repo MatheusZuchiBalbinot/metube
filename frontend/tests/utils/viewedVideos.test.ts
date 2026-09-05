@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-// ─── viewedVideos ─────────────────────────────────────────────────────────────
 // The module uses a module-level Set, so we must reset it between tests by
 // re-importing with a fresh module via the native ESM cache bypass approach.
 // Because Vitest isolates modules per test file by default, the Set starts

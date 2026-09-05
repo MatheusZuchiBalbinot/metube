@@ -6,8 +6,6 @@ beforeEach(() => {
     localStorage.clear();
 });
 
-// ─── loadFromStorage ───────────────────────────────────────────────────────────
-
 describe('loadFromStorage — missing key', () => {
     it('returns the seed when key does not exist', () => {
         const result = loadFromStorage('test-key', [1, 2, 3]);
@@ -54,7 +52,6 @@ describe('loadFromStorage — corrupted JSON', () => {
     });
 });
 
-// ─── loadFromStorage — storage unavailable ──────────────────────────────────
 //
 // getItem throwing (quota exceeded / storage blocked, e.g. Safari private mode)
 // used to fall into a catch block that called the very same throwing setItem API,
@@ -95,8 +92,6 @@ describe('loadFromStorage — storage unavailable', () => {
     });
 });
 
-// ─── isObject ─────────────────────────────────────────────────────────────────
-
 describe('isObject', () => {
     it('returns true for a plain object', () => {
         expect(isObject({ a: 1 })).toBe(true);
@@ -119,8 +114,6 @@ describe('isObject', () => {
     });
 });
 
-// ─── isArray ──────────────────────────────────────────────────────────────────
-
 describe('isArray', () => {
     it('returns true for an array', () => {
         expect(isArray([1, 2, 3])).toBe(true);
@@ -138,8 +131,6 @@ describe('isArray', () => {
         expect(isArray(null)).toBe(false);
     });
 });
-
-// ─── isNumberInRange ──────────────────────────────────────────────────────────
 
 describe('isNumberInRange', () => {
     it('returns true for a number inside the range', () => {

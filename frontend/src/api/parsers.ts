@@ -4,8 +4,6 @@ import type {
 } from '@models';
 import { VideoStatus } from '@models';
 
-// ─── Shared types ──────────────────────────────────────────────────────────────
-
 export type KeyPoint = string & { readonly _brand: 'KeyPoint' };
 
 export interface VideoSummary {
@@ -38,8 +36,6 @@ export interface ToggleLikeApiResponse {
 
 export type VideoListApiResponse = PaginatedResponse<Video>;
 export type CommentListApiResponse = PaginatedResponse<Comment>;
-
-// ─── Primitives ────────────────────────────────────────────────────────────────
 
 type Raw = Record<string, unknown>;
 
@@ -141,8 +137,6 @@ function collectionParser<T>(item: (raw: unknown) => T | null): (raw: unknown) =
     };
 }
 
-// ─── Video ─────────────────────────────────────────────────────────────────────
-
 function resolveVideoDates(rawData: Raw): { createdAt: string; publishedAt: string } {
     const createdAt = str(rawData['created_at']) || str(rawData['published_at']) || new Date().toISOString();
     const publishedAt = str(rawData['published_at']) || createdAt;
@@ -225,8 +219,6 @@ export function parseVideoCollection(raw: unknown): Video[] | null {
     return collectionParser<Video>(parseVideo)(raw);
 }
 
-// ─── User ──────────────────────────────────────────────────────────────────────
-
 export function parseUser(raw: unknown): User | null {
     const rawData = toRaw(raw);
 
@@ -275,8 +267,6 @@ export function parseLoginResponse(raw: unknown): LoginApiResponse | null {
 
     return { user };
 }
-
-// ─── Comment ───────────────────────────────────────────────────────────────────
 
 function parseCommentAuthor(raw: unknown): Comment['author'] {
     const rawData = toRaw(raw) ?? {};
@@ -349,8 +339,6 @@ export function parseCommentVersion(raw: unknown): CommentVersion | null {
 
 export const parseCommentVersions = collectionParser<CommentVersion>(parseCommentVersion);
 
-// ─── Playlist ──────────────────────────────────────────────────────────────────
-
 export function parsePlaylist(raw: unknown): Playlist | null {
     const rawData = toRaw(raw);
 
@@ -374,8 +362,6 @@ export function parsePlaylist(raw: unknown): Playlist | null {
 
 export const parsePlaylistList = collectionParser<Playlist>(parsePlaylist);
 
-// ─── Video Summary ─────────────────────────────────────────────────────────────
-
 export function parseVideoSummary(raw: unknown): VideoSummary | null {
     const rawData = toRaw(raw);
 
@@ -398,8 +384,6 @@ export function parseVideoSummary(raw: unknown): VideoSummary | null {
     return { keyPoints, chapters, readingMode };
 }
 
-// ─── Transcription ─────────────────────────────────────────────────────────────
-
 export function parseVideoTranscription(raw: unknown): VideoTranscription | null {
     const rawData = toRaw(raw);
 
@@ -415,8 +399,6 @@ export function parseVideoTranscription(raw: unknown): VideoTranscription | null
         content: typeof rawData['content'] === 'string' ? rawData['content'] : null,
     };
 }
-
-// ─── AI Suggestion ─────────────────────────────────────────────────────────────
 
 export function parseAiSuggestion(raw: unknown): AiSuggestion | null {
     const rawData = toRaw(raw);

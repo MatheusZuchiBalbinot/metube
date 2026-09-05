@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { STORAGE_KEYS } from '@utils/storageKeys';
 
-// ─── STORAGE_KEYS ─────────────────────────────────────────────────────────────
-
 describe('STORAGE_KEYS', () => {
     it('has the WATCH_HISTORY key', () => {
         expect(STORAGE_KEYS.WATCH_HISTORY).toBe('metube:watch-history');

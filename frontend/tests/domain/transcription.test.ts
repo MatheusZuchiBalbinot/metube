@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { domain } from '@domain';
 import type { VideoTranscription } from '@api/videos';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function makeTranscription(overrides: Partial<VideoTranscription> = {}): VideoTranscription {
     return {
         status: 'completed',
@@ -12,8 +10,6 @@ function makeTranscription(overrides: Partial<VideoTranscription> = {}): VideoTr
         ...overrides,
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.transcription.isProcessing', () => {
     it('returns true for pending status', () => {

@@ -2,8 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildProgress } from '@utils/upload';
 import type { AxiosProgressEvent } from 'axios';
 
-// ─── buildProgress ────────────────────────────────────────────────────────────
-
 function makeEvent(loaded: number, total?: number): AxiosProgressEvent {
     return { loaded, total, bytes: loaded } as AxiosProgressEvent;
 }

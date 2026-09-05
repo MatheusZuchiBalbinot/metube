@@ -5,7 +5,6 @@ import type { CommentState } from '@store/commentSlice';
 import type { Comment, Cuid } from '@models/comment';
 import type { Vuid } from '@api/videos';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = commentSlice.reducer;
 
@@ -45,8 +44,6 @@ function makeState(overrides: Partial<CommentState> = {}): CommentState {
 
 const pagination = { currentPage: 1, lastPage: 1, total: 2 };
 
-// ─── setLoading ───────────────────────────────────────────────────────────────
-
 describe('commentSlice — setLoading', () => {
     it('sets loading true for a vuid', () => {
         const state = makeState();
@@ -61,8 +58,6 @@ describe('commentSlice — setLoading', () => {
     });
 });
 
-// ─── setLoadingReplies ────────────────────────────────────────────────────────
-
 describe('commentSlice — setLoadingReplies', () => {
     it('sets loading true for a cuid', () => {
         const state = makeState();
@@ -70,8 +65,6 @@ describe('commentSlice — setLoadingReplies', () => {
         expect(next.loadingReplies['c-1']).toBe(true);
     });
 });
-
-// ─── setComments ─────────────────────────────────────────────────────────────
 
 describe('commentSlice — setComments', () => {
     it('stores comments in byId', () => {
@@ -105,8 +98,6 @@ describe('commentSlice — setComments', () => {
     });
 });
 
-// ─── appendComments ───────────────────────────────────────────────────────────
-
 describe('commentSlice — appendComments', () => {
     it('appends new comments to existing list', () => {
         const c1 = makeComment({ id: cuid('c-1') });
@@ -123,8 +114,6 @@ describe('commentSlice — appendComments', () => {
         expect(next.byVideo['v-1']).toEqual(['c-1']);
     });
 });
-
-// ─── addComment ───────────────────────────────────────────────────────────────
 
 describe('commentSlice — addComment', () => {
     it('prepends the new comment to byVideo', () => {
@@ -151,8 +140,6 @@ describe('commentSlice — addComment', () => {
     });
 });
 
-// ─── addReply ─────────────────────────────────────────────────────────────────
-
 describe('commentSlice — addReply', () => {
     it('appends reply id to repliesById', () => {
         const parent = makeComment({ id: cuid('c-parent'), replyCount: 0 });
@@ -171,8 +158,6 @@ describe('commentSlice — addReply', () => {
     });
 });
 
-// ─── setReplies ───────────────────────────────────────────────────────────────
-
 describe('commentSlice — setReplies', () => {
     it('stores reply ids in repliesById', () => {
         const r1 = makeComment({ id: cuid('r-1') });
@@ -190,8 +175,6 @@ describe('commentSlice — setReplies', () => {
     });
 });
 
-// ─── updateComment ────────────────────────────────────────────────────────────
-
 describe('commentSlice — updateComment', () => {
     it('replaces the comment in byId', () => {
         const original = makeComment({ id: cuid('c-1'), content: 'Old' });
@@ -208,8 +191,6 @@ describe('commentSlice — updateComment', () => {
         expect(next.byId['c-99']).toBeUndefined();
     });
 });
-
-// ─── removeComment ────────────────────────────────────────────────────────────
 
 describe('commentSlice — removeComment', () => {
     it('removes the comment from byId', () => {
@@ -263,8 +244,6 @@ describe('commentSlice — removeComment', () => {
     });
 });
 
-// ─── toggleLikeOptimistic ─────────────────────────────────────────────────────
-
 describe('commentSlice — toggleLikeOptimistic', () => {
     it('toggles isLiked from false to true and increments likesCount', () => {
         const c1 = makeComment({ id: cuid('c-1'), isLiked: false, likesCount: 5 });
@@ -288,8 +267,6 @@ describe('commentSlice — toggleLikeOptimistic', () => {
         expect(next.byId['c-99']).toBeUndefined();
     });
 });
-
-// ─── setError ────────────────────────────────────────────────────────────────
 
 describe('commentSlice — setError', () => {
     it('stores an error message', () => {

@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { APP_EVENTS } from '@utils/events';
 
-// ─── APP_EVENTS ───────────────────────────────────────────────────────────────
-
 describe('APP_EVENTS', () => {
     it('has a SESSION_EXPIRED event string', () => {
         expect(APP_EVENTS.SESSION_EXPIRED).toBe('auth:session-expired');

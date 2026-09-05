@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { getVisibleTags, countTagFrequency, collectTags, Format } from '@utils/format';
 import type { Video } from '@models/video';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function makeVideo(overrides: Partial<Video> = {}): Video {
     return {
         id: 'test-id',
@@ -19,8 +17,6 @@ function makeVideo(overrides: Partial<Video> = {}): Video {
         ...overrides,
     };
 }
-
-// ─── getVisibleTags ───────────────────────────────────────────────────────────
 
 describe('getVisibleTags', () => {
     it('returns all tags when count is greater than tags length', () => {
@@ -52,8 +48,6 @@ describe('getVisibleTags', () => {
         expect(result.extra).toBe(0);
     });
 });
-
-// ─── countTagFrequency ────────────────────────────────────────────────────────
 
 describe('countTagFrequency', () => {
     it('returns empty map for no videos', () => {
@@ -87,8 +81,6 @@ describe('countTagFrequency', () => {
     });
 });
 
-// ─── collectTags ──────────────────────────────────────────────────────────────
-
 describe('collectTags', () => {
     it('returns empty array for no videos', () => {
         expect(collectTags([])).toEqual([]);
@@ -112,8 +104,6 @@ describe('collectTags', () => {
         expect(collectTags(videos)).toEqual(['go']);
     });
 });
-
-// ─── Format.views ─────────────────────────────────────────────────────────────
 
 describe('Format.views', () => {
     it('returns raw number for small values', () => {

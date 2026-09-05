@@ -4,7 +4,6 @@ import { VideoStatus, type Video } from '@models';
 import type { ChannelId } from '@models';
 import type { User } from '@models';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PAST = '2020-01-01T00:00:00Z';
 const FUTURE = '2099-01-01T00:00:00Z';
@@ -35,8 +34,6 @@ function makeUser(uuid = 'u-1'): User {
         createdAt: '2024-01-01T00:00:00Z',
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.video.isPublished', () => {
     it('returns true for PUBLISHED status', () => {

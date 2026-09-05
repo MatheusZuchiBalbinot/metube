@@ -34,8 +34,6 @@ const subscriptionSlice = createSlice({
 export const subscriptionActions = subscriptionSlice.actions;
 export default subscriptionSlice;
 
-// ─── Selectors ────────────────────────────────────────────────────────────────
-
 export const selectSubscribedSet = createSelector(
     (state: RootState) => state.subscription.subscribedChannelIds,
     (ids) => new Set(ids),

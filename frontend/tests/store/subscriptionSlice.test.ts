@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import subscriptionSlice, { subscriptionActions, selectSubscribedSet } from '@store/subscriptionSlice';
 import type { ChannelId } from '@models/channel';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = subscriptionSlice.reducer;
 
@@ -18,8 +17,6 @@ const ch3 = 'ch_3' as ChannelId;
 beforeEach(() => {
     localStorage.clear();
 });
-
-// ─── toggleSubscription ───────────────────────────────────────────────────────
 
 describe('subscriptionSlice — toggleSubscription', () => {
     it('adds channelId when not yet subscribed', () => {
@@ -43,8 +40,6 @@ describe('subscriptionSlice — toggleSubscription', () => {
     });
 });
 
-// ─── xTabSetSubscriptions ─────────────────────────────────────────────────────
-
 describe('subscriptionSlice — xTabSetSubscriptions', () => {
     it('replaces the entire subscribed channels list', () => {
         const state = makeState([ch1, ch2]);
@@ -58,8 +53,6 @@ describe('subscriptionSlice — xTabSetSubscriptions', () => {
         expect(next.subscribedChannelIds).toEqual([]);
     });
 });
-
-// ─── selectSubscribedSet ──────────────────────────────────────────────────────
 
 describe('selectSubscribedSet', () => {
     it('returns a Set wrapping the subscribed channel ids', () => {

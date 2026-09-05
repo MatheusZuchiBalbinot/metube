@@ -22,8 +22,6 @@ interface UploadProgressBarProps {
     onResumeUpload?: () => void
 }
 
-// Extracted so the pause/resume toggle's ternaries and the canTogglePause guard don't
-// count toward UploadSingleForm's own complexity.
 function UploadProgressBar({ progress, canTogglePause, isPaused, onPauseUpload, onResumeUpload }: UploadProgressBarProps) {
     const { t } = useTranslation();
 

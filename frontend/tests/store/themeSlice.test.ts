@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import themeSlice, { themeActions } from '@store/themeSlice';
 import type { ThemeMode, ThemeColor } from '@utils/themes';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = themeSlice.reducer;
 
@@ -18,8 +17,6 @@ function makeState(overrides: Partial<{ mode: ThemeMode; color: ThemeColor }> = 
 beforeEach(() => {
     localStorage.clear();
 });
-
-// ─── Initial state ────────────────────────────────────────────────────────────
 
 describe('themeSlice — initial state', () => {
     it('defaults mode to dark when localStorage is empty', () => {
@@ -57,8 +54,6 @@ describe('themeSlice — initial state', () => {
     });
 });
 
-// ─── setMode ──────────────────────────────────────────────────────────────────
-
 describe('themeSlice — setMode', () => {
     it('sets mode to light', () => {
         const state = makeState({ mode: 'dark' });
@@ -78,8 +73,6 @@ describe('themeSlice — setMode', () => {
         expect(next.color).toBe('green');
     });
 });
-
-// ─── setColor ─────────────────────────────────────────────────────────────────
 
 describe('themeSlice — setColor', () => {
     it('sets color to blue', () => {
@@ -118,8 +111,6 @@ describe('themeSlice — setColor', () => {
         expect(next.mode).toBe('light');
     });
 });
-
-// ─── combined transitions ─────────────────────────────────────────────────────
 
 describe('themeSlice — combined transitions', () => {
     it('applies mode and color changes independently', () => {

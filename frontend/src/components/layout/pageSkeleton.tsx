@@ -4,8 +4,6 @@ import VideoRowSkeleton from '@components/video/rowSkeleton';
 import { ROUTES } from '@utils';
 import './pageSkeleton.css';
 
-// ─── Shared building blocks ────────────────────────────────────────────────
-
 function FilterBarSkeleton() {
     return (
         <div className="ps-filter" aria-hidden="true">
@@ -102,8 +100,6 @@ function HistoryPageSkeleton() {
         </div>
     );
 }
-
-// ─── Liked / Watch Later ──────────────────────────────────────────────────
 
 function CollectionPageSkeleton() {
     return (
@@ -227,8 +223,6 @@ function VideoPageSkeleton() {
         </div>
     );
 }
-
-// ─── Router ───────────────────────────────────────────────────────────────
 
 interface PageSkeletonProps {
     pathname: string;

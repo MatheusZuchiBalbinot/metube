@@ -5,12 +5,10 @@ import type { Video, VideoId, VideoStatus } from '@models/video';
 import type { ChannelId } from '@models/channel';
 import type { Vuid } from '@api';
 
-// ─── Brand cast helpers ───────────────────────────────────────────────────────
 
 const vid = (s: string) => s as unknown as VideoId;
 const chId = (s: string) => s as unknown as ChannelId;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = videoSlice.reducer;
 
@@ -52,8 +50,6 @@ function list(state: { ids: VideoId[]; entities: Record<VideoId, Video> }): Vide
     return state.ids.map(id => state.entities[id]);
 }
 
-// ─── updateVideoStatus ────────────────────────────────────────────────────────
-
 describe('videoSlice — updateVideoStatus', () => {
     it('updates the status of a matching video', () => {
         const vuid = (s: string) => s as unknown as Vuid;
@@ -70,8 +66,6 @@ describe('videoSlice — updateVideoStatus', () => {
     });
 });
 
-// ─── updateVideo ─────────────────────────────────────────────────────────────
-
 describe('videoSlice — updateVideo', () => {
     it('replaces the matching video entirely', () => {
         const state = makeState({ videos: [makeVideo({ id: vid('v1'), title: 'Old' })] });
@@ -86,8 +80,6 @@ describe('videoSlice — updateVideo', () => {
     });
 });
 
-// ─── cross-tab sync reducers ──────────────────────────────────────────────────
-
 describe('videoSlice — xTab reducers', () => {
     it('xTabSetLikedVideos replaces likedVideos', () => {
         const state = makeState({ likedVideos: [vid('old')] });
@@ -101,8 +93,6 @@ describe('videoSlice — xTab reducers', () => {
         expect(next.dislikedVideos).toEqual([vid('vD')]);
     });
 });
-
-// ─── deleteVideo ──────────────────────────────────────────────────────────────
 
 describe('videoSlice — deleteVideo', () => {
     it('removes the video from the list', () => {
@@ -125,8 +115,6 @@ describe('videoSlice — deleteVideo', () => {
     });
 });
 
-// ─── likeVideo ────────────────────────────────────────────────────────────────
-
 describe('videoSlice — likeVideo', () => {
     it('adds video to likedVideos', () => {
         const state = makeState();
@@ -147,8 +135,6 @@ describe('videoSlice — likeVideo', () => {
     });
 });
 
-// ─── dislikeVideo ─────────────────────────────────────────────────────────────
-
 describe('videoSlice — dislikeVideo', () => {
     it('adds video to dislikedVideos', () => {
         const state = makeState();
@@ -168,8 +154,6 @@ describe('videoSlice — dislikeVideo', () => {
         expect(next.dislikedVideos).not.toContain(vid('v1'));
     });
 });
-
-// ─── watchVideo ───────────────────────────────────────────────────────────────
 
 describe('videoSlice — watchVideo', () => {
     it('adds video to the front of watchHistory', () => {
@@ -197,8 +181,6 @@ describe('videoSlice — watchVideo', () => {
     });
 });
 
-// ─── updateProgress ──────────────────────────────────────────────────────────
-
 describe('videoSlice — updateProgress', () => {
     it('stores the progress percentage', () => {
         const state = makeState();
@@ -212,8 +194,6 @@ describe('videoSlice — updateProgress', () => {
         expect(next.videoProgress['v1']).toBe(80);
     });
 });
-
-// ─── addVideo ─────────────────────────────────────────────────────────────────
 
 describe('videoSlice — addVideo', () => {
     it('prepends a new video to the list', () => {
@@ -229,8 +209,6 @@ describe('videoSlice — addVideo', () => {
         expect(list(next)[0].id).toBe(vid('v-new'));
     });
 });
-
-// ─── editVideo ────────────────────────────────────────────────────────────────
 
 describe('videoSlice — editVideo', () => {
     it('updates fields on the matching video', () => {
@@ -252,8 +230,6 @@ describe('videoSlice — editVideo', () => {
     });
 });
 
-// ─── removeFromHistory ────────────────────────────────────────────────────────
-
 describe('videoSlice — removeFromHistory', () => {
     it('removes the given id from watchHistory', () => {
         const state = makeState({ watchHistory: [vid('v1'), vid('v2')] });
@@ -268,8 +244,6 @@ describe('videoSlice — removeFromHistory', () => {
     });
 });
 
-// ─── clearHistory ─────────────────────────────────────────────────────────────
-
 describe('videoSlice — clearHistory', () => {
     it('empties watchHistory', () => {
         const state = makeState({ watchHistory: [vid('v1'), vid('v2')] });
@@ -277,8 +251,6 @@ describe('videoSlice — clearHistory', () => {
         expect(next.watchHistory).toEqual([]);
     });
 });
-
-// ─── incrementViews ───────────────────────────────────────────────────────────
 
 describe('videoSlice — incrementViews', () => {
     it('increments views by 1 for the matching video', () => {
@@ -295,8 +267,6 @@ describe('videoSlice — incrementViews', () => {
     });
 });
 
-// ─── restoreHistory ──────────────────────────────────────────────────────────
-
 describe('videoSlice — restoreHistory', () => {
     it('replaces watchHistory with provided array', () => {
         const state = makeState({ watchHistory: [vid('v1')] });
@@ -304,8 +274,6 @@ describe('videoSlice — restoreHistory', () => {
         expect(next.watchHistory).toEqual([vid('v2'), vid('v3')]);
     });
 });
-
-// ─── setVideoProgress ────────────────────────────────────────────────────────
 
 describe('videoSlice — setVideoProgress', () => {
     it('replaces entire videoProgress map', () => {
@@ -315,8 +283,6 @@ describe('videoSlice — setVideoProgress', () => {
         expect(next.videoProgress[vid('v1')]).toBeUndefined();
     });
 });
-
-// ─── videoFinished ───────────────────────────────────────────────────────────
 
 describe('videoSlice — videoFinished', () => {
     it('sets progress to 100 for the video', () => {
@@ -337,8 +303,6 @@ describe('videoSlice — videoFinished', () => {
         expect(next.watchHistory.filter(id => id === vid('v1'))).toHaveLength(1);
     });
 });
-
-// ─── serverRecommendations ───────────────────────────────────────────────────
 
 describe('videoSlice — setServerRecommendations', () => {
     it('sets server recommendations', () => {

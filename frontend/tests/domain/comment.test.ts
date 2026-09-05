@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { domain } from '@domain';
 import type { Comment, Cuid, User } from '@models';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const cuid = (s: string) => s as unknown as Cuid;
 
@@ -29,8 +28,6 @@ function makeUser(uuid = 'u-1'): User {
         createdAt: '2024-01-01T00:00:00Z',
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.comment.isReply', () => {
     it('returns true when parentCuid is defined', () => {

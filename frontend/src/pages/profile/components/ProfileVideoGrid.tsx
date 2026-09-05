@@ -88,7 +88,6 @@ interface NonLiveActionsProps {
     onRetry: () => void
 }
 
-// Extracted so the retry-button guard doesn't count toward NonLiveRow's own complexity.
 function NonLiveActions({ video, isFailed, onEdit, onRetry }: NonLiveActionsProps) {
     const { t } = useTranslation();
 
@@ -171,7 +170,6 @@ interface NonLiveSectionProps {
     onRetry: () => void
 }
 
-// Extracted so the show guard doesn't count toward ProfileVideoGrid's own complexity.
 function NonLiveSection({ isOwnProfile, isLoadingVideos, nonLiveVideos, nonLiveRef, onEdit, onRetry }: NonLiveSectionProps) {
     const { t } = useTranslation();
     const show = isOwnProfile && nonLiveVideos.length > 0 && !isLoadingVideos;
@@ -198,7 +196,6 @@ function NonLiveSection({ isOwnProfile, isLoadingVideos, nonLiveVideos, nonLiveR
     );
 }
 
-// Extracted so the show guard doesn't count toward ProfileVideoGrid's own complexity.
 function LoadingGrid({ show }: { show: boolean }) {
     if (!show) {
         return null;
@@ -219,7 +216,6 @@ interface CuratedAllVideosHeaderProps {
     allVideosRef: React.RefObject<HTMLDivElement | null>
 }
 
-// Extracted so the show guard doesn't count toward ProfileVideoGrid's own complexity.
 function CuratedAllVideosHeader({ hasCuratedSections, isLoadingVideos, allVideosRef }: CuratedAllVideosHeaderProps) {
     const { t } = useTranslation();
     const show = hasCuratedSections && !isLoadingVideos;
@@ -247,8 +243,6 @@ interface PublishedAllVideosHeaderProps {
     totalViews: number | null
 }
 
-// Extracted so the show guard and totalViews check don't count toward ProfileVideoGrid's
-// own complexity.
 function PublishedAllVideosHeader({
     hasCuratedSections, isLoadingVideos, showTopicView, hasVideos, filteredVideosCount, totalViews,
 }: PublishedAllVideosHeaderProps) {
@@ -284,8 +278,6 @@ interface PinnedVideoSectionProps {
     onDelete: (id: VideoId) => void
 }
 
-// Extracted so the show guard and deck-ghost checks don't count toward ProfileVideoGrid's
-// own complexity.
 function PinnedVideoSection({
     hasCuratedSections, isLoadingVideos, showTopicView, pinnedVideo, deckGhostVideos, onEdit, onDelete,
 }: PinnedVideoSectionProps) {
@@ -337,8 +329,6 @@ interface TopicViewSectionProps {
     onSelectTopic: (tag: Tag) => void
 }
 
-// Extracted so the show guard and the has-topics ternary don't count toward
-// ProfileVideoGrid's own complexity.
 function TopicViewSection({ isLoadingVideos, showTopicView, topicSections, onSelectTopic }: TopicViewSectionProps) {
     const { t } = useTranslation();
     const show = !isLoadingVideos && showTopicView;
@@ -372,8 +362,6 @@ interface VideoGridSectionProps {
     onDelete: (id: VideoId) => void
 }
 
-// Extracted so the show guard and the per-card pinned-badge check don't count toward
-// ProfileVideoGrid's own complexity.
 function VideoGridSection({
     isLoadingVideos, showTopicView, hasVideos, filteredVideos, pinnedVideoId, isOwnProfile, onEdit, onDelete,
 }: VideoGridSectionProps) {
@@ -416,7 +404,6 @@ interface EmptyVideosSectionProps {
     hasVideos: boolean
 }
 
-// Extracted so the show guard doesn't count toward ProfileVideoGrid's own complexity.
 function EmptyVideosSection({ isLoadingVideos, showTopicView, hasVideos }: EmptyVideosSectionProps) {
     const { t } = useTranslation();
     const show = !isLoadingVideos && !showTopicView && !hasVideos;

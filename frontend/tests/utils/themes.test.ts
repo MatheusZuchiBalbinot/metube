@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { THEME_MODES, THEME_COLORS } from '@utils/themes';
 import type { ThemeMode, ThemeColor } from '@utils/themes';
 
-// ─── THEME_MODES ──────────────────────────────────────────────────────────────
-
 describe('THEME_MODES', () => {
     it('contains "dark"', () => {
         expect(THEME_MODES).toContain('dark');
@@ -29,8 +27,6 @@ describe('THEME_MODES', () => {
         expect(unique.size).toBe(THEME_MODES.length);
     });
 });
-
-// ─── THEME_COLORS ─────────────────────────────────────────────────────────────
 
 describe('THEME_COLORS', () => {
     it('contains "violet"', () => {
@@ -69,8 +65,6 @@ describe('THEME_COLORS', () => {
         expect(unique.size).toBe(THEME_COLORS.length);
     });
 });
-
-// ─── Type compatibility ───────────────────────────────────────────────────────
 
 describe('ThemeMode type', () => {
     it('accepts valid mode values', () => {

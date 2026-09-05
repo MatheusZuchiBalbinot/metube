@@ -11,9 +11,6 @@ export interface UseObjectUrlReturn {
  *
  * Revokes the previous URL whenever a new one is set, on `clear`, and on
  * unmount — so callers never have to track the revoke manually.
- *
- * @returns The current object URL, a `set` that creates one from a file (and
- *   returns it), and a `clear` that revokes and resets it.
  */
 export function useObjectUrl(): UseObjectUrlReturn {
     const urlRef = useRef<string | null>(null);

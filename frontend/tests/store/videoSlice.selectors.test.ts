@@ -9,11 +9,8 @@ import {
 import { videoAdapter } from '@store/videoSlice';
 import { VideoStatus, type Video, type VideoId } from '@models/video';
 
-// ─── Brand cast helpers ───────────────────────────────────────────────────────
 
 const vid = (s: string) => s as unknown as VideoId;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeVideo(overrides: Partial<Video> = {}): Video {
     return {
@@ -57,8 +54,6 @@ function makeState(overrides: object = {}) {
     };
 }
 
-// ─── selectHistoryTags ────────────────────────────────────────────────────────
-
 describe('selectHistoryTags', () => {
     it('returns tags from watched videos', () => {
         const state = makeState({
@@ -100,8 +95,6 @@ describe('selectHistoryTags', () => {
         expect(selectHistoryTags(state)).toEqual([]);
     });
 });
-
-// ─── selectPublishedVideos ────────────────────────────────────────────────────
 
 describe('selectPublishedVideos', () => {
     it('includes published videos', () => {
@@ -153,8 +146,6 @@ describe('selectPublishedVideos', () => {
     });
 });
 
-// ─── selectLikedSet / selectDislikedSet / selectSavedSet ──────────────────────
-
 describe('selectLikedSet', () => {
     it('returns a Set of liked video ids', () => {
         const state = makeState({ likedVideos: [vid('v1'), vid('v2')] });
@@ -177,5 +168,4 @@ describe('selectDislikedSet', () => {
     });
 });
 
-// ─── makeSelectRecommendations ────────────────────────────────────────────────
 

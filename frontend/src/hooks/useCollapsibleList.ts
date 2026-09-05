@@ -12,10 +12,6 @@ export interface UseCollapsibleListReturn<T> {
  *
  * Shared by sidebar sections (subscriptions, playlists) that show the first N
  * items behind a "show more" control.
- *
- * @param items - The full list.
- * @param limit - Maximum entries shown while collapsed.
- * @returns The visible slice, whether the list overflows, the expanded flag and a toggle.
  */
 export function useCollapsibleList<T>(items: T[], limit: number): UseCollapsibleListReturn<T> {
     const [expanded, setExpanded] = useState(false);

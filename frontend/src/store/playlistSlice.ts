@@ -97,8 +97,6 @@ const playlistSlice = createSlice({
 export const playlistActions = playlistSlice.actions;
 export default playlistSlice;
 
-// ─── Selectors ────────────────────────────────────────────────────────────────
-
 export const selectWatchLaterIds = createSelector(
     (state: RootState) => state.playlist.playlists,
     (playlists) => {

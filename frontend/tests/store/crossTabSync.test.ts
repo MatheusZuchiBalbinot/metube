@@ -29,8 +29,6 @@ describe('crossTabSync', () => {
         vi.clearAllMocks();
     });
 
-    // ─── Listener setup and teardown ──────────────────────────────────────────
-
     describe('listener lifecycle', () => {
         it('returns a cleanup function', () => {
             expect(typeof cleanup).toBe('function');
@@ -44,8 +42,6 @@ describe('crossTabSync', () => {
             expect(dispatch).not.toHaveBeenCalled();
         });
     });
-
-    // ─── Theme sync ───────────────────────────────────────────────────────────
 
     describe('theme mode', () => {
         it('dispatches themeActions.setMode when THEME_MODE storage event fires', () => {
@@ -74,8 +70,6 @@ describe('crossTabSync', () => {
             expect(document.documentElement.dataset.color).toBe('blue');
         });
     });
-
-    // ─── Video sync ───────────────────────────────────────────────────────────
 
     describe('watch history', () => {
         it('dispatches xTabSetWatchHistory with the parsed array', () => {
@@ -163,8 +157,6 @@ describe('crossTabSync', () => {
         });
     });
 
-    // ─── Playlist sync ────────────────────────────────────────────────────────
-
     describe('playlists', () => {
         it('dispatches xTabSetPlaylists with the parsed array', () => {
             const playlists = [{ id: 'pl-1', name: 'Faves', videoIds: [], createdAt: '' }];
@@ -186,8 +178,6 @@ describe('crossTabSync', () => {
         });
     });
 
-    // ─── Subscription sync ────────────────────────────────────────────────────
-
     describe('subscriptions', () => {
         it('dispatches xTabSetSubscriptions with the parsed array', () => {
             fireStorageEvent(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(['ch-1', 'ch-2']));
@@ -207,8 +197,6 @@ describe('crossTabSync', () => {
         });
     });
 
-    // ─── Unrelated keys are ignored ───────────────────────────────────────────
-
     describe('unrelated storage events', () => {
         it('does not dispatch anything for an unknown key', () => {
             fireStorageEvent('some-random-key', 'some-value');
@@ -222,8 +210,6 @@ describe('crossTabSync', () => {
             expect(dispatch).not.toHaveBeenCalled();
         });
     });
-
-    // ─── Null newValue is ignored ─────────────────────────────────────────────
 
     describe('null newValue', () => {
         it('does not dispatch when newValue is null (key was removed)', () => {
@@ -239,8 +225,6 @@ describe('crossTabSync', () => {
         });
     });
 
-    // ─── Null event key ───────────────────────────────────────────────────────
-
     describe('null event key', () => {
         it('does not dispatch when event key is null (localStorage.clear() case)', () => {
             window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: 'some-value' }));
@@ -249,7 +233,6 @@ describe('crossTabSync', () => {
         });
     });
 
-    // ─── Two real stores, not a mocked dispatch ──────────────────────────────
     //
     // Every test above asserts that dispatch() was CALLED WITH the right action —
     // it never runs a real reducer, so a bug in xTabSetPlaylists itself (e.g.

@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { VideoFilter, SortBy } from '@utils/applyFilters';
 import type { Video } from '@models/video';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function makeVideo(overrides: Partial<Video> = {}): Video {
     return {
         id: 'test-id',
@@ -22,8 +20,6 @@ function makeVideo(overrides: Partial<Video> = {}): Video {
 
 const empty = VideoFilter.emptyState();
 
-// ─── emptyState ───────────────────────────────────────────────────────────────
-
 describe('VideoFilter.emptyState', () => {
     it('has empty tags', () => {
         expect(empty.tags).toEqual([]);
@@ -39,8 +35,6 @@ describe('VideoFilter.emptyState', () => {
         expect(empty.sortBy).toBe(SortBy.RECENT);
     });
 });
-
-// ─── apply — no filter ────────────────────────────────────────────────────────
 
 describe('VideoFilter.apply — no filter', () => {
     it('returns all videos sorted by publishedAt descending by default', () => {
@@ -59,8 +53,6 @@ describe('VideoFilter.apply — no filter', () => {
         expect(videos[0].id).toBe('x');
     });
 });
-
-// ─── apply — tag filter ───────────────────────────────────────────────────────
 
 describe('VideoFilter.apply — tags', () => {
     it('keeps only videos that have ALL requested tags', () => {
@@ -86,8 +78,6 @@ describe('VideoFilter.apply — tags', () => {
     });
 });
 
-// ─── apply — year filter ──────────────────────────────────────────────────────
-
 describe('VideoFilter.apply — year', () => {
     it('keeps only videos published in the given year', () => {
         const videos = [
@@ -101,8 +91,6 @@ describe('VideoFilter.apply — year', () => {
         expect(result.map(v => v.id)).not.toContain('2023');
     });
 });
-
-// ─── apply — dateFrom / dateTo ────────────────────────────────────────────────
 
 describe('VideoFilter.apply — dateFrom / dateTo', () => {
     const videos = [
@@ -130,8 +118,6 @@ describe('VideoFilter.apply — dateFrom / dateTo', () => {
         expect(result.map(v => v.id)).toEqual(['mar']);
     });
 });
-
-// ─── apply — sortBy ───────────────────────────────────────────────────────────
 
 describe('VideoFilter.apply — sortBy', () => {
     const videos = [

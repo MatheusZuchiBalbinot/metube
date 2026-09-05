@@ -49,7 +49,6 @@ const initialState: VideoState = videoAdapter.getInitialState({
     recommendationsLoading: true,
 });
 
-/** Moves an id to the front of the entity order, preserving "newest first" semantics. */
 function prependVideoId(state: VideoState, id: VideoId) {
     state.ids = moveToFront(state.ids as VideoId[], id);
 }
@@ -169,7 +168,6 @@ const videoSlice = createSlice({
             state.watchHistory = moveToFront(state.watchHistory, videoId);
         },
 
-        // ─── Cross-tab sync reducers ───────────────────────────────────────────
         // Dispatched only by crossTabSync — must NOT trigger the persist listener
         // (names start with 'video/xTab' which the predicate explicitly excludes).
         xTabSetWatchHistory(state, action: PayloadAction<VideoId[]>) {

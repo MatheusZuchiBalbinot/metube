@@ -14,8 +14,6 @@ import type { ChannelId } from '@models/channel';
 import type { VideoId } from '@models/video';
 import type { PlaylistId } from '@models/playlist';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function makeStore() {
     return configureStore({
         reducer: rootReducer,
@@ -38,8 +36,6 @@ function allCallsFor(spy: ReturnType<typeof vi.spyOn>, key: string): [string, st
     return spy.mock.calls.filter((c: unknown[]): c is [string, string] => c[0] === key);
 }
 
-// ─── Suite ────────────────────────────────────────────────────────────────────
-
 describe('persistMiddleware', () => {
     let setItemSpy: ReturnType<typeof vi.spyOn>;
 
@@ -53,8 +49,6 @@ describe('persistMiddleware', () => {
         vi.useRealTimers();
         vi.restoreAllMocks();
     });
-
-    // ─── Video persistence ─────────────────────────────────────────────────────
 
     describe('video slice', () => {
         it('persists watchHistory after video/watchVideo', async () => {
@@ -103,8 +97,6 @@ describe('persistMiddleware', () => {
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.WATCH_HISTORY)).toHaveLength(0);
         });
     });
-
-    // ─── Playback persistence ──────────────────────────────────────────────────
 
     describe('playback slice', () => {
         it('persists autoplay after playback/setAutoplay', async () => {
@@ -176,8 +168,6 @@ describe('persistMiddleware', () => {
         });
     });
 
-    // ─── Theme persistence ─────────────────────────────────────────────────────
-
     describe('theme slice', () => {
         it('persists theme mode after theme/setMode', async () => {
             const store = makeStore();
@@ -201,8 +191,6 @@ describe('persistMiddleware', () => {
             expect(call![1]).toBe('blue');
         });
     });
-
-    // ─── Subscription persistence ──────────────────────────────────────────────
 
     describe('subscription slice', () => {
         it('persists subscribedChannelIds after subscription/toggleSubscription', async () => {
@@ -228,8 +216,6 @@ describe('persistMiddleware', () => {
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.SUBSCRIPTIONS)).toHaveLength(0);
         });
     });
-
-    // ─── Playlist persistence ──────────────────────────────────────────────────
 
     describe('playlist slice', () => {
         it('persists playlists after playlist/createPlaylist', async () => {
@@ -267,8 +253,6 @@ describe('persistMiddleware', () => {
         });
     });
 
-    // ─── Search persistence ────────────────────────────────────────────────────
-
     describe('search slice', () => {
         it('persists recentSearches after search/addRecentSearch', async () => {
             const store = makeStore();
@@ -282,8 +266,6 @@ describe('persistMiddleware', () => {
             expect(written).toContain('cats');
         });
     });
-
-    // ─── Isolation — unrelated slices don't pollute each other ────────────────
 
     describe('isolation', () => {
         it('does not write WATCH_HISTORY when only theme changes', async () => {
@@ -306,8 +288,6 @@ describe('persistMiddleware', () => {
             expect(allCallsFor(setItemSpy, STORAGE_KEYS.THEME_MODE)).toHaveLength(0);
         });
     });
-
-    // ─── localStorage error handling ───────────────────────────────────────────
 
     describe('localStorage error handling', () => {
         it('does not throw when localStorage.setItem throws', () => {

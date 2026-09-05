@@ -13,7 +13,6 @@ function makeStore() {
     return configureStore({ reducer: rootReducer });
 }
 
-// ─── rootReducer — full-state reset on logout ──────────────────────────────────
 //
 // authSlice's signOutThunk.fulfilled reducer only clears `auth.user` — every
 // other slice (watchHistory, likedVideos, dislikedVideos, videoProgress,

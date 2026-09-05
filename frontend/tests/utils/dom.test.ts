@@ -7,8 +7,6 @@ function makeKeyboardEvent(key: string): KeyboardEvent {
     return { key } as KeyboardEvent;
 }
 
-// ─── isTypingInInput ──────────────────────────────────────────────────────────
-
 describe('isTypingInInput', () => {
     it('returns false for null target', () => {
         expect(isTypingInInput(null)).toBe(false);
@@ -64,8 +62,6 @@ describe('isTypingInInput', () => {
         expect(isTypingInInput(span)).toBeFalsy();
     });
 });
-
-// ─── isActivationKey ──────────────────────────────────────────────────────────
 
 describe('isActivationKey', () => {
     it('returns true for Enter', () => {

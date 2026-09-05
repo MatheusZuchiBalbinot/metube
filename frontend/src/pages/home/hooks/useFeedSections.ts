@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useAppDispatch } from '@store';
+import { toastActions } from '@store/toastSlice';
+import { ToastType } from '@enums/toastType';
 import { feed, type FeedSection } from '@api';
 
-/**
- * Loads the server-composed home feed shelves once. The backend returns the
- * sections already ordered and personalised (or generic for guests).
- */
+// Backend returns sections already ordered/personalised (or generic for guests).
 export function useFeedSections() {
+    const dispatch = useAppDispatch();
     const [sections, setSections] = useState<FeedSection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -19,7 +20,11 @@ export function useFeedSections() {
                 return;
             }
 
-            setSections(result.ok ? result.data : []);
+            if (result.ok) {
+                setSections(result.data);
+            } else {
+                dispatch(toastActions.addToast({ message: result.error, type: ToastType.ERROR }));
+            }
             setIsLoading(false);
         }
 
@@ -28,7 +33,7 @@ export function useFeedSections() {
         return () => {
             isCancelled = true;
         };
-    }, []);
+    }, [dispatch]);
 
     return { sections, isLoading };
 }

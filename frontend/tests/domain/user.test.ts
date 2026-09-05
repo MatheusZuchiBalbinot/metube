@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { domain } from '@domain';
 import type { User } from '@models';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function makeUser(overrides: Partial<User> = {}): User {
     return {
         id: 1 as unknown as User['id'],
@@ -14,8 +12,6 @@ function makeUser(overrides: Partial<User> = {}): User {
         ...overrides,
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.user.isVerified', () => {
     it('returns true when emailVerifiedAt is defined', () => {

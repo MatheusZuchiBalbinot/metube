@@ -51,12 +51,10 @@ export function loadFromStorage<T>(
     }
 }
 
-/** Validates that a value is a non-null, non-array object. */
 export function isObject(v: unknown): boolean {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-/** Validates that a value is an array (items unchecked). */
 export function isArray(v: unknown): boolean {
     return Array.isArray(v);
 }

@@ -145,7 +145,6 @@ describe('useVideoFetch', () => {
         vi.useRealTimers();
     });
 
-    // ─── Stale WS-refetch guard ─────────────────────────────────────────────────
     //
     // A VideoStatusUpdated WS event for a video that's only in local state
     // triggers a refetch. If the user navigates to a different video before

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { domain } from '@domain';
 import { PLAYLIST_CONSTANTS, type Playlist, type VideoId } from '@models';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const vid = (s: string) => s as unknown as VideoId;
 
@@ -15,8 +14,6 @@ function makePlaylist(overrides: Partial<Playlist> = {}): Playlist {
         ...overrides,
     };
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('domain.playlist.isWatchLater', () => {
     it('returns true for the Watch Later playlist', () => {

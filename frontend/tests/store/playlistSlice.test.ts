@@ -4,7 +4,6 @@ import playlistSlice, { playlistActions } from '@store/playlistSlice';
 import { videoActions } from '@store/videoSlice';
 import type { Playlist } from '@store/playlistSlice';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const reducer = playlistSlice.reducer;
 
@@ -22,8 +21,6 @@ function makeState(playlists: Playlist[] = []) {
     return { playlists, loading: false, error: null };
 }
 
-// ─── createPlaylist ───────────────────────────────────────────────────────────
-
 describe('playlistSlice — createPlaylist', () => {
     it('adds a new playlist', () => {
         const state = makeState();
@@ -40,8 +37,6 @@ describe('playlistSlice — createPlaylist', () => {
     });
 });
 
-// ─── renamePlaylist ───────────────────────────────────────────────────────────
-
 describe('playlistSlice — renamePlaylist', () => {
     it('renames an existing playlist', () => {
         const state = makeState([makePlaylist({ id: 'pl-1', name: 'Old Name' })]);
@@ -56,8 +51,6 @@ describe('playlistSlice — renamePlaylist', () => {
         expect(next.playlists[0].name).toBe('Unchanged');
     });
 });
-
-// ─── deletePlaylist ───────────────────────────────────────────────────────────
 
 describe('playlistSlice — deletePlaylist', () => {
     it('removes the playlist', () => {
@@ -74,8 +67,6 @@ describe('playlistSlice — deletePlaylist', () => {
         expect(next.playlists).toHaveLength(1);
     });
 });
-
-// ─── addVideoToPlaylist ───────────────────────────────────────────────────────
 
 describe('playlistSlice — addVideoToPlaylist', () => {
     it('adds a video to the playlist', () => {
@@ -97,8 +88,6 @@ describe('playlistSlice — addVideoToPlaylist', () => {
     });
 });
 
-// ─── removeVideoFromPlaylist ──────────────────────────────────────────────────
-
 describe('playlistSlice — removeVideoFromPlaylist', () => {
     it('removes a video from the playlist', () => {
         const state = makeState([makePlaylist({ id: 'pl-1', videoIds: ['v1', 'v2'] })]);
@@ -119,8 +108,6 @@ describe('playlistSlice — removeVideoFromPlaylist', () => {
     });
 });
 
-// ─── reorderVideosInPlaylist ──────────────────────────────────────────────────
-
 describe('playlistSlice — reorderVideosInPlaylist', () => {
     it('replaces videoIds with the new order', () => {
         const state = makeState([makePlaylist({ id: 'pl-1', videoIds: ['v1', 'v2', 'v3'] })]);
@@ -134,8 +121,6 @@ describe('playlistSlice — reorderVideosInPlaylist', () => {
         expect(next.playlists[0].videoIds).toEqual(['v1']);
     });
 });
-
-// ─── extraReducers — videoActions.deleteVideo ─────────────────────────────────
 
 describe('playlistSlice — extraReducers (videoActions.deleteVideo)', () => {
     it('removes deleted video from all playlists', () => {

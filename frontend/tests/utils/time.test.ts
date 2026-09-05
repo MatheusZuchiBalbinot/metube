@@ -9,8 +9,6 @@ import {
     parseChapterTimestamp,
 } from '@utils/time';
 
-// ─── formatDuration ───────────────────────────────────────────────────────────
-
 describe('formatDuration', () => {
     it('formats seconds-only', () => {
         expect(formatDuration(45)).toBe('0:45');
@@ -45,8 +43,6 @@ describe('formatDuration', () => {
     });
 });
 
-// ─── formatDurationCompact ────────────────────────────────────────────────────
-
 describe('formatDurationCompact', () => {
     it('returns 0m for invalid input', () => {
         expect(formatDurationCompact(-1)).toBe('0m');
@@ -65,8 +61,6 @@ describe('formatDurationCompact', () => {
         expect(formatDurationCompact(45)).toBe('<1m');
     });
 });
-
-// ─── formatRelativeDate ───────────────────────────────────────────────────────
 
 describe('formatRelativeDate', () => {
     beforeEach(() => {
@@ -119,8 +113,6 @@ describe('formatRelativeDate', () => {
     });
 });
 
-// ─── formatEta ────────────────────────────────────────────────────────────────
-
 describe('formatEta', () => {
     it('returns empty string for non-positive seconds', () => {
         expect(formatEta(0)).toBe('');
@@ -146,8 +138,6 @@ describe('formatEta', () => {
     });
 });
 
-// ─── parseTimestamp ───────────────────────────────────────────────────────────
-
 describe('parseTimestamp', () => {
     it('parses mm:ss format', () => {
         expect(parseTimestamp('1:30')).toBe(90);
@@ -166,8 +156,6 @@ describe('parseTimestamp', () => {
     });
 });
 
-// ─── secondsToTimestamp ───────────────────────────────────────────────────────
-
 describe('secondsToTimestamp', () => {
     it('formats as mm:ss when no hours', () => {
         expect(secondsToTimestamp(90)).toBe('1:30');
@@ -185,8 +173,6 @@ describe('secondsToTimestamp', () => {
         expect(secondsToTimestamp(-5)).toBe('0:00');
     });
 });
-
-// ─── parseChapterTimestamp ────────────────────────────────────────────────────
 
 describe('parseChapterTimestamp', () => {
     it('parses mm:ss format', () => {
