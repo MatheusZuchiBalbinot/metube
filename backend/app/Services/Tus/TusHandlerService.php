@@ -39,8 +39,9 @@ final class TusHandlerService
      * The initial "upload.created" request has no key yet (the server mints one
      * during creation), so it is naturally exempt from the check.
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException 403 for a session owned
-     *                                                               by another user, or 413 over quota (see TusQuotaService)
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException 403 owned by
+     *                                                               another user; 413 over
+     *                                                               quota (TusQuotaService)
      */
     public function handle(int $userId): SymfonyResponse
     {

@@ -21,9 +21,11 @@ trait HasPublicId
         static::creating(function (Model $model): void {
             $field = $model->publicIdField();
 
-            if ($model->getAttribute($field) === null) {
-                $model->setAttribute($field, $model->generatePublicId());
+            if ($model->getAttribute($field) !== null) {
+                return;
             }
+
+            $model->setAttribute($field, $model->generatePublicId());
         });
     }
 

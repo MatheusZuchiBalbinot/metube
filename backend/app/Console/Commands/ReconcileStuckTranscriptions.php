@@ -16,7 +16,7 @@ class ReconcileStuckTranscriptions extends Command
     protected $signature = 'videos:reconcile-stuck-transcriptions {--minutes=60 : Age threshold in minutes}';
 
     /** @var string */
-    protected $description = 'Redispatch GenerateAiMetadata for videos whose transcription completed but never produced AI metadata';
+    protected $description = 'Redispatch GenerateAiMetadata for videos with completed transcription but no AI metadata';
 
     public function handle(AiMetadataService $service): int
     {

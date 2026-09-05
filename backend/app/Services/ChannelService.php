@@ -81,11 +81,15 @@ final class ChannelService
 
             if ($outcome === ToggleOutcome::Removed) {
                 event(new ChannelUnsubscribed($subscriber, $channel));
+
+                return;
             }
 
-            if ($outcome === ToggleOutcome::Applied) {
-                event(new ChannelSubscribed($subscriber, $channel));
+            if ($outcome !== ToggleOutcome::Applied) {
+                return;
             }
+
+            event(new ChannelSubscribed($subscriber, $channel));
         });
     }
 }
