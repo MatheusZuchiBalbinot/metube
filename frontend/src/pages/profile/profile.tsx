@@ -9,8 +9,6 @@ import { Avatar, Button } from '@ui';
 import './profile.css';
 import { useAuth, useVideo, useProfileVideos, useSubscription, useAllTags } from '@hooks';
 import { useAppDispatch } from '@store';
-import { toastActions } from '@store/toastSlice';
-import { ToastType } from '@enums/toastType';
 import { recentChannelsActions } from '@store/recentChannelsSlice';
 import { VideoFilter, videoUrl, ROUTES, TagColors, type FilterState } from '@utils';
 import type { VideoId, ChannelId, Tag, User, Video } from '@models';
@@ -372,7 +370,6 @@ function ProfileStatsSection({ displayIsOwnProfile, stats }: ProfileStatsSection
 }
 
 export default function ProfilePage() {
-    const { t } = useTranslation();
     const { id: idParam } = useParams<{ id?: string }>();
     const { user, updateProfile } = useAuth();
     const dispatch = useAppDispatch();
@@ -593,11 +590,10 @@ export default function ProfilePage() {
             return;
         }
 
+        // toggleSubscription (useSubscription) already shows the
+        // subscribed/unsubscribed toast itself once the server confirms it —
+        // showing a second one here duplicated it for every click.
         toggleSubscription(subscriptionChannelId);
-        dispatch(toastActions.addToast({
-            message: t(isChannelSubscribed ? 'toast.unsubscribed' : 'toast.subscribed'),
-            type: ToastType.SUCCESS,
-        }));
     }
 
     if (shouldRedirectToOwnProfile(idParam, isOwnProfile)) {
