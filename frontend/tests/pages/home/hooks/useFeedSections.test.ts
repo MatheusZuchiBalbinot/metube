@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { useFeedSections } from '@pages/home/hooks/useFeedSections';
+import toastSlice from '@store/toastSlice';
 import { makeVideo, vid } from '../../../helpers/factories';
 
 const listSpy = vi.hoisted(() => vi.fn());
@@ -13,6 +17,16 @@ vi.mock('@api', async (importOriginal) => {
     };
 });
 
+function makeStore() {
+    return configureStore({ reducer: { toast: toastSlice.reducer } });
+}
+
+function makeWrapper(store: ReturnType<typeof makeStore>) {
+    return function Wrapper({ children }: { children: React.ReactNode }) {
+        return React.createElement(Provider, { store }, children);
+    };
+}
+
 describe('useFeedSections', () => {
     beforeEach(() => {
         listSpy.mockReset();
@@ -20,7 +34,7 @@ describe('useFeedSections', () => {
 
     it('starts in a loading state with no sections', () => {
         listSpy.mockReturnValue(new Promise(() => {}));
-        const { result } = renderHook(() => useFeedSections());
+        const { result } = renderHook(() => useFeedSections(), { wrapper: makeWrapper(makeStore()) });
 
         expect(result.current.isLoading).toBe(true);
         expect(result.current.sections).toEqual([]);
@@ -30,19 +44,21 @@ describe('useFeedSections', () => {
         const section = { key: 'trending', label: 'Trending', videos: [makeVideo({ id: vid('v1') })] };
         listSpy.mockResolvedValue({ ok: true, data: [section] });
 
-        const { result } = renderHook(() => useFeedSections());
+        const { result } = renderHook(() => useFeedSections(), { wrapper: makeWrapper(makeStore()) });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.sections).toEqual([section]);
     });
 
-    it('falls back to an empty list when the request fails', async () => {
+    it('falls back to an empty list and shows a toast when the request fails', async () => {
         listSpy.mockResolvedValue({ ok: false, error: 'network error' });
 
-        const { result } = renderHook(() => useFeedSections());
+        const store = makeStore();
+        const { result } = renderHook(() => useFeedSections(), { wrapper: makeWrapper(store) });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.sections).toEqual([]);
+        expect(store.getState().toast.toasts).toHaveLength(1);
     });
 
     it('ignores a late response after unmount', async () => {
@@ -51,7 +67,7 @@ describe('useFeedSections', () => {
             resolveList = resolve;
         }));
 
-        const { result, unmount } = renderHook(() => useFeedSections());
+        const { result, unmount } = renderHook(() => useFeedSections(), { wrapper: makeWrapper(makeStore()) });
         unmount();
 
         resolveList({ ok: true, data: [{ key: 'x', label: null, videos: [] }] });

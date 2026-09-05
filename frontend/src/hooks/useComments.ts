@@ -1,12 +1,14 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@store';
 import { commentActions } from '@store/commentSlice';
+import { toastActions } from '@store/toastSlice';
 import {
     selectCommentById,
     selectCommentRepliesById,
     selectCommentLoadingReplies,
 } from '@store/commentSelectors';
 import { comments as commentsApi } from '@api';
+import { ToastType } from '@enums/toastType';
 import type { Comment } from '@models';
 import type { Cuid, Vuid } from '@api';
 
@@ -23,6 +25,10 @@ export function useComments(vuid: Vuid) {
         .map(id => byId[id])
         .filter((c): c is Comment => c !== undefined);
 
+    const showError = useCallback((message: string) => {
+        dispatch(toastActions.addToast({ message, type: ToastType.ERROR }));
+    }, [dispatch]);
+
     const load = useCallback(async (page = 1) => {
         dispatch(commentActions.setLoading({ vuid, loading: true }));
 
@@ -31,6 +37,7 @@ export function useComments(vuid: Vuid) {
         dispatch(commentActions.setLoading({ vuid, loading: false }));
 
         if (!result.ok) {
+            showError(result.error);
             return;
         }
 
@@ -55,7 +62,7 @@ export function useComments(vuid: Vuid) {
                 },
             }));
         }
-    }, [dispatch, vuid]);
+    }, [dispatch, vuid, showError]);
 
     const loadMore = useCallback(async () => {
         const nextPage = (pagination?.currentPage ?? 0) + 1;
@@ -66,6 +73,7 @@ export function useComments(vuid: Vuid) {
         const result = await commentsApi.create(vuid, { content, parentCuid });
 
         if (!result.ok) {
+            showError(result.error);
             return;
         }
 
@@ -76,35 +84,44 @@ export function useComments(vuid: Vuid) {
         } else {
             dispatch(commentActions.addComment({ vuid, comment: result.data }));
         }
-    }, [dispatch, vuid]);
+    }, [dispatch, vuid, showError]);
 
     const edit = useCallback(async (cuid: Cuid, content: string) => {
         const result = await commentsApi.update(cuid, content);
 
         if (!result.ok) {
+            showError(result.error);
             return;
         }
 
         dispatch(commentActions.updateComment(result.data));
-    }, [dispatch]);
+    }, [dispatch, showError]);
 
     const remove = useCallback(async (cuid: Cuid, parentCuid?: Cuid) => {
-        await commentsApi.delete(cuid);
+        const result = await commentsApi.delete(cuid);
+
+        if (!result.ok) {
+            showError(result.error);
+            return;
+        }
+
         const isTopLevel = parentCuid === undefined;
         dispatch(commentActions.removeComment({ cuid, vuid: isTopLevel ? vuid : undefined, parentCuid }));
-    }, [dispatch, vuid]);
+    }, [dispatch, vuid, showError]);
 
     const toggleLike = useCallback(async (cuid: Cuid) => {
         const before = byId[cuid];
         dispatch(commentActions.toggleLikeOptimistic(cuid));
 
         const result = await commentsApi.toggleLike(cuid);
-        const isFailure = !result.ok;
 
-        if (isFailure && before !== undefined) {
-            dispatch(commentActions.updateComment(before));
+        if (!result.ok) {
+            if (before !== undefined) {
+                dispatch(commentActions.updateComment(before));
+            }
+            showError(result.error);
         }
-    }, [dispatch, byId]);
+    }, [dispatch, byId, showError]);
 
     const loadReplies = useCallback(async (cuid: Cuid) => {
         dispatch(commentActions.setLoadingReplies({ cuid, loading: true }));
@@ -114,11 +131,12 @@ export function useComments(vuid: Vuid) {
         dispatch(commentActions.setLoadingReplies({ cuid, loading: false }));
 
         if (!result.ok) {
+            showError(result.error);
             return;
         }
 
         dispatch(commentActions.setReplies({ parentCuid: cuid, comments: result.data }));
-    }, [dispatch]);
+    }, [dispatch, showError]);
 
     const repliesById = useAppSelector(selectCommentRepliesById);
 

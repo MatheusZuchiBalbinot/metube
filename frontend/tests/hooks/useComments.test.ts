@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter } from 'react-router-dom';
 import { useComments } from '@hooks/useComments';
 import commentSlice from '@store/commentSlice';
+import toastSlice from '@store/toastSlice';
 import type { Cuid } from '@models/comment';
 import type { Vuid } from '@api';
 import { makeComment, cuid } from '../helpers/factories';
@@ -37,7 +38,7 @@ function makePaginatedResponse(data: ReturnType<typeof makeComment>[]) {
 }
 
 function makeStore() {
-    return configureStore({ reducer: { comment: commentSlice.reducer } });
+    return configureStore({ reducer: { comment: commentSlice.reducer, toast: toastSlice.reducer } });
 }
 
 function makeWrapper(store: ReturnType<typeof makeStore>) {
@@ -91,7 +92,7 @@ describe('useComments', () => {
             expect(result.current.comments).toHaveLength(2);
         });
 
-        it('does not update store when API fails', async () => {
+        it('does not update store and shows a toast when API fails', async () => {
             vi.mocked(commentsApi.list).mockResolvedValue(fail());
 
             const store = makeStore();
@@ -102,6 +103,7 @@ describe('useComments', () => {
             });
 
             expect(result.current.comments).toHaveLength(0);
+            expect(store.getState().toast.toasts).toHaveLength(1);
         });
 
         it('sets isLoading during fetch and clears it after', async () => {
@@ -143,7 +145,7 @@ describe('useComments', () => {
             expect(result.current.comments[0].content).toBe('Hello!');
         });
 
-        it('does not add comment when API fails', async () => {
+        it('does not add comment and shows a toast when API fails', async () => {
             vi.mocked(commentsApi.create).mockResolvedValue(fail());
 
             const store = makeStore();
@@ -154,6 +156,7 @@ describe('useComments', () => {
             });
 
             expect(result.current.comments).toHaveLength(0);
+            expect(store.getState().toast.toasts).toHaveLength(1);
         });
     });
 
@@ -176,6 +179,25 @@ describe('useComments', () => {
 
             expect(result.current.comments[0].content).toBe('New');
         });
+
+        it('does not update content and shows a toast when API fails', async () => {
+            const original = makeComment({ id: cuid('c-edit-fail'), content: 'Old' });
+            vi.mocked(commentsApi.list).mockResolvedValue(ok(makePaginatedResponse([original])));
+            vi.mocked(commentsApi.update).mockResolvedValue(fail());
+
+            const store = makeStore();
+            const { result } = renderHook(() => useComments(vuid), { wrapper: makeWrapper(store) });
+
+            await act(async () => {
+                await result.current.load(1);
+            });
+            await act(async () => {
+                await result.current.edit(cuid('c-edit-fail') as Cuid, 'New');
+            });
+
+            expect(result.current.comments[0].content).toBe('Old');
+            expect(store.getState().toast.toasts).toHaveLength(1);
+        });
     });
 
     describe('remove', () => {
@@ -195,6 +217,25 @@ describe('useComments', () => {
             });
 
             expect(result.current.comments).toHaveLength(0);
+        });
+
+        it('keeps the comment and shows a toast when API fails', async () => {
+            const comment = makeComment({ id: cuid('c-del-fail') });
+            vi.mocked(commentsApi.list).mockResolvedValue(ok(makePaginatedResponse([comment])));
+            vi.mocked(commentsApi.delete).mockResolvedValue(fail());
+
+            const store = makeStore();
+            const { result } = renderHook(() => useComments(vuid), { wrapper: makeWrapper(store) });
+
+            await act(async () => {
+                await result.current.load(1);
+            });
+            await act(async () => {
+                await result.current.remove(cuid('c-del-fail') as Cuid);
+            });
+
+            expect(result.current.comments).toHaveLength(1);
+            expect(store.getState().toast.toasts).toHaveLength(1);
         });
     });
 
@@ -233,6 +274,7 @@ describe('useComments', () => {
             });
 
             expect(result.current.comments[0].isLiked).toBe(false);
+            expect(store.getState().toast.toasts).toHaveLength(1);
         });
     });
 
@@ -269,7 +311,7 @@ describe('useComments', () => {
             expect(result.current.getReplies(cuid('c-parent2') as Cuid)).toHaveLength(1);
         });
 
-        it('does not store replies when API fails', async () => {
+        it('does not store replies and shows a toast when API fails', async () => {
             vi.mocked(commentsApi.replies).mockResolvedValue(fail());
 
             const store = makeStore();
@@ -280,6 +322,7 @@ describe('useComments', () => {
             });
 
             expect(result.current.getReplies(cuid('c-noop') as Cuid)).toHaveLength(0);
+            expect(store.getState().toast.toasts).toHaveLength(1);
         });
     });
 

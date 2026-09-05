@@ -57,8 +57,8 @@ class CommentsApi {
         );
     }
 
-    async delete(cuid: string): Promise<void> {
-        await apiClient.delete(`${this.commentsUrl}/${cuid}`);
+    async delete(cuid: string): Promise<ApiResult<void>> {
+        return apiClient.delete(`${this.commentsUrl}/${cuid}`);
     }
 
     async toggleLike(cuid: string): Promise<ApiResult<ToggleLikeResponse>> {
