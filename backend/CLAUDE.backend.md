@@ -246,7 +246,9 @@ Full-text search com fallback por driver:
 Tags usam OR: qualquer tag que corresponda inclui o vídeo.
 
 ### Carbon nos modelos
-Campos `published_at`, `scheduled_at` são cast para `Carbon`. Use `->isFuture()` diretamente — nunca `?->isFuture()` (retornaria `bool|null`, quebrando PHPStan).
+Campos `published_at`, `scheduled_at` são cast para `Carbon|null` (nullable — um vídeo em
+rascunho não tem `published_at`, um vídeo não agendado não tem `scheduled_at`). Use sempre
+`?->` ao acessar métodos do Carbon nesses dois campos (`$video->published_at?->isFuture()`).
 
 ### Comment — `is_liked` virtual
 Não é coluna. O service injeta `is_liked` como atributo virtual via `setRelation` ou `setAttribute`
