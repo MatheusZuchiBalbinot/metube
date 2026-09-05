@@ -20,8 +20,8 @@ class ChannelApi {
         return apiClient.getValidated(`${this.baseUrl}/${uuid}/videos`, parseVideoList);
     }
 
-    async toggleSubscription(uuid: Uuid): Promise<void> {
-        await apiClient.post(`${this.baseUrl}/${uuid}/subscription`);
+    async toggleSubscription(uuid: Uuid): Promise<boolean> {
+        return apiClient.postEmpty(`${this.baseUrl}/${uuid}/subscription`);
     }
 
     async subscriptions(): Promise<ApiResult<User[]>> {

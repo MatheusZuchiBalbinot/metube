@@ -132,7 +132,7 @@ export function SubscriptionsSection() {
             <div className="app-sidebar__section">
                 <span className="app-sidebar__section-label">{t('nav.subscriptions')}</span>
                 <p className="app-sidebar__empty">{t('nav.no_subscriptions')}</p>
-                <NavLink to={ROUTES.HOME} className="app-sidebar__empty-cta">
+                <NavLink to={ROUTES.RECOMMENDED} end className="app-sidebar__empty-cta">
                     {t('nav.explore_channels')}
                 </NavLink>
             </div>

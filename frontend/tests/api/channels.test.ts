@@ -8,6 +8,7 @@ vi.mock('@api/client', () => ({
     apiClient: {
         getValidated: vi.fn(),
         post: vi.fn(),
+        postEmpty: vi.fn(),
     },
 }));
 
@@ -41,10 +42,17 @@ describe('ChannelApi', () => {
     });
 
     describe('toggleSubscription', () => {
-        it('posts to /channels/:uuid/subscription', async () => {
-            vi.mocked(apiClient.post).mockResolvedValue(null);
-            await channel.toggleSubscription(uuid);
-            expect(apiClient.post).toHaveBeenCalledWith(`/channels/${uuid}/subscription`);
+        it('posts to /channels/:uuid/subscription and reports success', async () => {
+            vi.mocked(apiClient.postEmpty).mockResolvedValue(true);
+            const succeeded = await channel.toggleSubscription(uuid);
+            expect(apiClient.postEmpty).toHaveBeenCalledWith(`/channels/${uuid}/subscription`);
+            expect(succeeded).toBe(true);
+        });
+
+        it('reports failure when the request fails', async () => {
+            vi.mocked(apiClient.postEmpty).mockResolvedValue(false);
+            const succeeded = await channel.toggleSubscription(uuid);
+            expect(succeeded).toBe(false);
         });
     });
 

@@ -448,6 +448,7 @@
         "link_copied": "Link copiado!",
         "subscribed": "Inscrito",
         "unsubscribed": "Inscrição cancelada",
+        "subscription_error": "Não foi possível atualizar a inscrição, tente novamente",
         "playlist_created": "Playlist criada",
         "playlist_deleted": "Playlist excluída",
         "added_to_playlist": "Adicionado à \"{{name}}\"",
