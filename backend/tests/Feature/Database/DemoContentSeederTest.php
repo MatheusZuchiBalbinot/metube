@@ -19,12 +19,14 @@ describe('DemoContentSeeder', function () {
             ->and(Video::where('status', VideoStatus::PUBLISHED->value)->count())->toBeGreaterThanOrEqual(50);
     });
 
-    test('seeds playable external video links and thumbnails', function () {
+    test('seeds playable HLS packages and hosted thumbnails', function () {
         $this->seed(DemoContentSeeder::class);
 
-        $video = Video::where('status', VideoStatus::PUBLISHED->value)->firstOrFail();
+        $video = Video::where('status', VideoStatus::PUBLISHED->value)
+            ->whereNotNull('hls_url')
+            ->firstOrFail();
 
-        expect($video->video_url)->toStartWith('https://')
+        expect($video->hls_url)->toEndWith('master.m3u8')
             ->and($video->thumbnail_url)->toStartWith('https://');
     });
 
