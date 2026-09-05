@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * VideoProgressService — Tracks user watch progress for videos.
- *
- * Responsible for:
- * - Updating watch progress percentage
- * - Detecting video completion
- * - Dispatching relevant viewing events
  */
 final class VideoProgressService
 {

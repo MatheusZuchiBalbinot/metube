@@ -18,10 +18,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * ChannelService — Business logic for channels.
- *
- * Responsible for:
- * - Subscription management (coordination logic)
- * - Complex channel operations
  */
 final class ChannelService
 {

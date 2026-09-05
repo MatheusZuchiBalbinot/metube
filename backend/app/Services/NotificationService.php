@@ -11,11 +11,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * NotificationService — Manages in-app notifications for users.
- *
- * Responsible for:
- * - Listing and counting notifications
- * - Marking individual or all notifications as read
- * - Deleting notifications
  */
 final class NotificationService
 {

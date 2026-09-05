@@ -14,11 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * VideoPublishingService — Handles video publication and metadata updates.
- *
- * Responsible for:
- * - Publishing draft videos immediately
- * - Publishing scheduled videos when due
- * - Updating video metadata (title, description, tags)
  */
 final class VideoPublishingService
 {

@@ -17,8 +17,6 @@ class VideoProgressFactory extends Factory
     protected $model = VideoProgress::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -30,9 +28,6 @@ class VideoProgressFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the video is completed.
-     */
     public function completed(): self
     {
         return $this->state(fn (array $attributes) => [
@@ -40,9 +35,6 @@ class VideoProgressFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the video is partially watched.
-     */
     public function partial(): self
     {
         return $this->state(fn (array $attributes) => [

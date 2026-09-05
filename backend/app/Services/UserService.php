@@ -14,10 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * UserService — Business logic for authenticated user data.
- *
- * Responsible for:
- * - User library (likes, saves, subscriptions)
- * - Watch history management
  */
 final class UserService
 {

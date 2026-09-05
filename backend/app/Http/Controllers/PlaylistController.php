@@ -23,9 +23,6 @@ class PlaylistController extends Controller
 {
     public function __construct(private readonly PlaylistService $playlistService) {}
 
-    /**
-     * List all playlists for the authenticated user.
-     */
     public function index(): JsonResponse
     {
         $playlists = $this->playlistService->getUserPlaylists(auth()->user());
@@ -33,9 +30,6 @@ class PlaylistController extends Controller
         return $this->json(PlaylistResource::collection($playlists));
     }
 
-    /**
-     * Create a new playlist.
-     */
     public function store(StorePlaylistRequest $request): JsonResponse
     {
         $user = auth()->user();
@@ -44,21 +38,13 @@ class PlaylistController extends Controller
         return $this->json(new PlaylistResource($playlist->load('videos')), 201);
     }
 
-    /**
-     * Get a specific playlist with all its videos.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function show(Playlist $playlist): JsonResponse
     {
         return $this->json(new PlaylistResource($playlist));
     }
 
-    /**
-     * List all videos in a playlist, ordered by position.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function listVideos(Playlist $playlist): JsonResponse
     {
         $videos = $this->playlistService->getPlaylistVideos($playlist);
@@ -66,11 +52,7 @@ class PlaylistController extends Controller
         return $this->json(VideoResource::collection($videos));
     }
 
-    /**
-     * Update a playlist (rename).
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function update(UpdatePlaylistRequest $request, Playlist $playlist): JsonResponse
     {
         $updated = $this->playlistService->updatePlaylist($playlist, $request->getDTO());
@@ -78,11 +60,7 @@ class PlaylistController extends Controller
         return $this->json(new PlaylistResource($updated));
     }
 
-    /**
-     * Delete a playlist permanently.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function destroy(Playlist $playlist): Response
     {
         $this->playlistService->deletePlaylist($playlist);
@@ -90,11 +68,7 @@ class PlaylistController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Add a video to a playlist.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function addVideo(AddVideoRequest $request, Playlist $playlist): JsonResponse
     {
         $vuid = $request->validated()['vuid'];
@@ -103,11 +77,7 @@ class PlaylistController extends Controller
         return $this->json(new PlaylistResource($updated));
     }
 
-    /**
-     * Remove a video from a playlist.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function removeVideo(Playlist $playlist, string $vuid): Response
     {
         $this->playlistService->removeVideoFromPlaylist($playlist, $vuid);
@@ -115,11 +85,7 @@ class PlaylistController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Reorder videos in a playlist using drag-and-drop.
-     *
-     * @throws ModelNotFoundException
-     */
+    /** @throws ModelNotFoundException */
     public function reorderVideos(ReorderVideosRequest $request, Playlist $playlist): JsonResponse
     {
         $updated = $this->playlistService->reorderPlaylistVideos($playlist, $request->getDTO());

@@ -8,11 +8,6 @@ use App\Models\VideoProgress;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the VideoProgress model.
- *
- * Replaces the former query scopes with typed, chainable methods while keeping
- * full static analysis support under PHPStan level 8.
- *
  * @extends Builder<VideoProgress>
  */
 class VideoProgressBuilder extends Builder

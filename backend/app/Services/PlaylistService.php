@@ -17,11 +17,6 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * PlaylistService — Business logic for playlists.
- *
- * Responsible for:
- * - CRUD operations on playlists
- * - Managing playlist videos
- * - Reordering videos in playlists
  */
 final class PlaylistService
 {

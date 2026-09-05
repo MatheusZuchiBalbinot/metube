@@ -10,14 +10,12 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldRescue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Support\Carbon;
 
-/**
- * Broadcasts via the queue (not ShouldBroadcastNow) so a Reverb outage gets
- * Horizon's normal retry instead of throwing synchronously into the job.
- */
-class TranscriptionStatusUpdated implements ShouldBroadcast
+/** @see AiSuggestionReady for why this implements ShouldBroadcast+ShouldRescue. */
+class TranscriptionStatusUpdated implements ShouldBroadcast, ShouldRescue
 {
     use Dispatchable, InteractsWithSockets;
 
@@ -34,7 +32,7 @@ class TranscriptionStatusUpdated implements ShouldBroadcast
         public readonly ?Carbon $startedAt = null,
         public readonly ?float $estimatedSeconds = null,
     ) {
-        $this->emittedAtMs = Carbon::now()->valueOf();
+        $this->emittedAtMs = (int) Carbon::now()->valueOf();
     }
 
     /**

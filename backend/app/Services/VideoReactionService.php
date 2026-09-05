@@ -29,11 +29,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * VideoReactionService — Handles user reactions and view tracking for videos.
- *
- * Responsible for:
- * - Toggling like/dislike/save reactions
- * - Recording video views
- * - Dispatching reaction events for notifications and analytics
  */
 final class VideoReactionService
 {

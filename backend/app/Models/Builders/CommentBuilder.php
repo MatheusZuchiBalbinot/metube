@@ -8,12 +8,6 @@ use App\Models\Comment;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the Comment model.
- *
- * Replaces the former query scopes with typed, chainable methods so call sites
- * read as domain language (Comment::query()->topLevel()->newest()) while keeping
- * full static analysis support under PHPStan level 8.
- *
  * @extends Builder<Comment>
  */
 class CommentBuilder extends Builder

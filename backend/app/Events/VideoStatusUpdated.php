@@ -9,14 +9,12 @@ use App\Models\Video;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldRescue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Support\Carbon;
 
-/**
- * Broadcasts via the queue (not ShouldBroadcastNow) so a Reverb outage gets
- * Horizon's normal retry instead of throwing synchronously into the caller.
- */
-class VideoStatusUpdated implements ShouldBroadcast
+/** @see AiSuggestionReady for why this implements ShouldBroadcast+ShouldRescue. */
+class VideoStatusUpdated implements ShouldBroadcast, ShouldRescue
 {
     use Dispatchable, InteractsWithSockets;
 
@@ -31,7 +29,7 @@ class VideoStatusUpdated implements ShouldBroadcast
         public readonly VideoStatus $newStatus,
         public readonly ?VideoStatus $previousStatus = null,
     ) {
-        $this->emittedAtMs = Carbon::now()->valueOf();
+        $this->emittedAtMs = (int) Carbon::now()->valueOf();
     }
 
     /**

@@ -62,13 +62,12 @@ class VideoController extends Controller
 
     /**
      * Create a new video from a direct file upload or a completed tus session.
-     *
-     * @return JsonResponse 202 Accepted — still processing
      */
     public function store(StoreVideoRequest $request): JsonResponse
     {
         $video = $this->uploadService->handleUpload(auth()->user(), $request->validated());
 
+        // Retorna 202 Accepted — upload ainda em processamento
         return $this->json(new VideoResource($video), 202);
     }
 
@@ -91,9 +90,6 @@ class VideoController extends Controller
         return $this->json(new VideoResource($updated->load('channel')));
     }
 
-    /**
-     * Delete a video permanently.
-     */
     public function destroy(Video $video): Response
     {
         $this->uploadService->deleteVideo($video);
@@ -164,9 +160,6 @@ class VideoController extends Controller
         return $this->json(new TranscriptionResource($transcription));
     }
 
-    /**
-     * Retry a failed transcription.
-     */
     public function retryTranscription(Video $video): Response
     {
         $this->transcriptionService->resetForRetry($video);
@@ -219,9 +212,7 @@ class VideoController extends Controller
         return $this->json(VideoResource::collection($items));
     }
 
-    /**
-     * Get videos related to a specific video (for the watch-page sidebar).
-     */
+    // para a sidebar da watch-page
     public function related(Video $video): JsonResponse
     {
         $items = $this->recommendationService->relatedTo($video);

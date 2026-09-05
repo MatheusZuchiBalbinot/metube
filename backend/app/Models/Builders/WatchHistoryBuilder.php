@@ -9,11 +9,6 @@ use App\Models\WatchHistory;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the WatchHistory model.
- *
- * Replaces the former query scopes with typed, chainable methods while keeping
- * full static analysis support under PHPStan level 8.
- *
  * @extends Builder<WatchHistory>
  */
 class WatchHistoryBuilder extends Builder

@@ -30,11 +30,6 @@ use Throwable;
 /**
  * VideoUploadService — Orchestrates the video upload and deletion workflows.
  *
- * Responsible for:
- * - Creating new videos from single-POST uploads
- * - Finalizing tus resumable uploads
- * - Deleting videos and their associated files
- *
  * Infrastructure concerns are delegated to collaborators: file moves go through
  * {@see VideoFileManager}, tus cache access through {@see TusResolverContract},
  * file deletion through {@see StorageContract}, and payload construction

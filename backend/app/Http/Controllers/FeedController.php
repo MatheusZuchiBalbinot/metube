@@ -18,9 +18,6 @@ class FeedController extends Controller
 {
     public function __construct(private readonly FeedService $feedService) {}
 
-    /**
-     * Return the ordered home feed sections for the current viewer.
-     */
     public function index(Request $request): JsonResponse
     {
         $sections = $this->feedService->forUser($request->user());

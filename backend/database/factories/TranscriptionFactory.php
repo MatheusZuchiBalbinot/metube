@@ -17,8 +17,6 @@ class TranscriptionFactory extends Factory
     protected $model = Transcription::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array

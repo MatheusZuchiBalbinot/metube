@@ -47,9 +47,6 @@ class AuthController extends Controller
         return $this->json(new UserResource($this->authService->me()));
     }
 
-    /**
-     * Only the user themself may patch their record.
-     */
     public function updateProfile(string $uuid, UpdateProfileRequest $request): JsonResponse
     {
         $target = User::where('uuid', $uuid)->firstOrFail();

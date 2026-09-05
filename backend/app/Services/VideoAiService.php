@@ -12,10 +12,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * VideoAiService — Handles AI-generated content for videos.
- *
- * Responsible for:
- * - Retrieving AI summaries (with caching)
- * - Managing AI-generated suggestions (accept/dismiss)
  */
 final class VideoAiService
 {

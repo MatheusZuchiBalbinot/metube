@@ -10,12 +10,6 @@ use App\Models\Video;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the Video model.
- *
- * Replaces the former query scopes with typed, chainable methods so call sites
- * read as domain language (Video::query()->published()->newestPublished()) while
- * keeping full static analysis support under PHPStan level 8.
- *
  * @extends Builder<Video>
  */
 class VideoBuilder extends Builder

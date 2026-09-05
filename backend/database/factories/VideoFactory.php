@@ -17,8 +17,6 @@ class VideoFactory extends Factory
     protected $model = Video::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -38,9 +36,6 @@ class VideoFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the video is published.
-     */
     public function published(): self
     {
         return $this->state(fn (array $attributes) => [
@@ -49,9 +44,6 @@ class VideoFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the video is scheduled.
-     */
     public function scheduled(): self
     {
         return $this->state(fn (array $attributes) => [
@@ -61,9 +53,6 @@ class VideoFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the video is processing.
-     */
     public function processing(): self
     {
         return $this->state(fn (array $attributes) => [
@@ -72,9 +61,6 @@ class VideoFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the video is in draft (awaiting creator review before publish).
-     */
     public function draft(): self
     {
         return $this->state(fn (array $attributes) => [

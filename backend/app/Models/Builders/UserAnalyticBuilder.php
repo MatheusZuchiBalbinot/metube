@@ -9,12 +9,6 @@ use App\Models\UserAnalytic;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the UserAnalytic model.
- *
- * Replaces the former query scopes with typed, chainable methods so call sites
- * read as domain language while keeping full static analysis support under
- * PHPStan level 8.
- *
  * @extends Builder<UserAnalytic>
  */
 class UserAnalyticBuilder extends Builder

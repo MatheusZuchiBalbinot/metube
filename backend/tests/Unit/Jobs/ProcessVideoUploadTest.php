@@ -216,7 +216,6 @@ describe('ProcessVideoUpload', function () {
 
             app()->instance(VideoStorageService::class, $storage);
 
-            // should not throw
             (new ProcessVideoUpload($video, 'uploads/tmp/test.mp4'))
                 ->failed(new RuntimeException());
         });

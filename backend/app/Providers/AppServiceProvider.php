@@ -192,7 +192,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VideoPublished::class, SendVideoPublishedNotifications::class);
         Event::listen(VideoStatusUpdated::class, SendVideoProcessedNotification::class);
 
-        // Transcription events — split to handle STARTED and COMPLETED separately.
         Event::listen(VideoTranscriptionStarted::class, SendVideoTranscriptionStartedListener::class);
         Event::listen(VideoTranscriptionCompleted::class, SendVideoTranscriptionCompletedListener::class);
 

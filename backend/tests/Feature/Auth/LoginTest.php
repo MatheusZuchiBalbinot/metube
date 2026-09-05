@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Cache;
 
 beforeEach(fn () => Cache::flush());
 
-// ─── Login ────────────────────────────────────────────────────────────────────
-
 describe('login', function () {
     it('allows a user to login with valid credentials', function () {
         $user = User::factory()->create();
@@ -41,8 +39,6 @@ describe('login', function () {
     });
 });
 
-// ─── Validation ───────────────────────────────────────────────────────────────
-
 describe('validation', function () {
     it('requires an email', function () {
         $this->postJson('/api/sessions', ['password' => 'password'])
@@ -67,8 +63,6 @@ describe('validation', function () {
             ->assertJsonValidationErrors(['password']);
     });
 });
-
-// ─── Authenticated endpoints ──────────────────────────────────────────────────
 
 describe('authenticated endpoints', function () {
     it('lets an authenticated user get their own profile', function () {
@@ -96,8 +90,6 @@ describe('authenticated endpoints', function () {
     });
 });
 
-// ─── Session version invalidation ────────────────────────────────────────────
-
 describe('session version', function () {
     it('rejects requests after session_version is incremented', function () {
         $user = User::factory()->create();
@@ -121,8 +113,6 @@ describe('session version', function () {
             ->assertUnauthorized();
     });
 });
-
-// ─── Rate limiting ────────────────────────────────────────────────────────────
 
 describe('rate limiting', function () {
     it('returns 429 after too many login attempts', function () {

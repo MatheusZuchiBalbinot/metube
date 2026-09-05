@@ -8,12 +8,6 @@ use App\Models\UserSubscription;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query builder for the UserSubscription model.
- *
- * Replaces the former query scopes with typed, chainable methods so call sites
- * read as domain language while keeping full static analysis support under
- * PHPStan level 8.
- *
  * @extends Builder<UserSubscription>
  */
 class UserSubscriptionBuilder extends Builder

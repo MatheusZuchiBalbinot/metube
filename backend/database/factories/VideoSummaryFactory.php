@@ -16,8 +16,6 @@ class VideoSummaryFactory extends Factory
     protected $model = VideoSummary::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
