@@ -67,10 +67,10 @@ services:
     build:
       context: ./whisper
       args:
-        WHISPER_MODEL: medium
+        WHISPER_MODEL: small
     restart: unless-stopped
     environment:
-      - WHISPER_MODEL=medium
+      - WHISPER_MODEL=small
       - WHISPER_LANGUAGE=pt
       - STORAGE_ROOT=/storage/app/public
     volumes:
@@ -112,7 +112,10 @@ services:
     working_dir: /app
     networks:
       - app_net
-    mem_limit: 512m
+    # ffmpeg runs inside this container (TranscodeVideoToHls); at 512m the
+    # cgroup OOM-killed the worker mid-transcode, so it never reached the
+    # TranscribeVideo dispatch and Whisper was never called.
+    mem_limit: 4g
     # Overrides the FrankenPHP base image's inherited healthcheck (curl
     # localhost:2019/metrics), which never exists here since this container
     # runs `php artisan horizon`, not the Octane/FrankenPHP server.
