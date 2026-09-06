@@ -659,7 +659,7 @@ TUS_MAX_UPLOAD_BYTES=2147483648  # 2 GB (opcional — padrão é App\Config\Uplo
 # IA / Transcrição
 WHISPER_URL=http://whisper:9000  # serviço whisper-asr no docker-compose
 AI_API_KEY=...                   # chave da API do provider (Groq por padrão)
-AI_MODEL=llama-3.3-70b-versatile
+AI_MODEL=openai/gpt-oss-120b
 AI_URL=https://api.groq.com/openai/v1
 
 # Monitoramento (OpenTelemetry → New Relic)

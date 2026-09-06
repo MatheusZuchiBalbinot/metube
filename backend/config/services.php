@@ -43,7 +43,7 @@ return [
 
     'ai' => [
         'key' => env('AI_API_KEY'),
-        'model' => env('AI_MODEL', 'llama-3.3-70b-versatile'),
+        'model' => env('AI_MODEL', 'openai/gpt-oss-120b'),
         'url' => env('AI_URL', 'https://api.groq.com/openai/v1'),
     ],
 ];

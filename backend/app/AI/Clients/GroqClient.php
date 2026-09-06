@@ -35,7 +35,7 @@ final class GroqClient implements AiClient
         ?int $timeout = null,
     ) {
         $this->apiKey = $apiKey ?? (string) config('services.ai.key');
-        $this->model = $model ?? (string) config('services.ai.model', 'llama-3.3-70b-versatile');
+        $this->model = $model ?? (string) config('services.ai.model', 'openai/gpt-oss-120b');
         $this->baseUrl = $baseUrl ?? (string) config('services.ai.url', 'https://api.groq.com/openai/v1');
         $this->timeout = $timeout ?? ApiTimeout::CHAT_COMPLETION->value;
     }
