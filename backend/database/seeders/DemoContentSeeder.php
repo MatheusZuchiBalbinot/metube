@@ -21,6 +21,10 @@ use App\Models\VideoSummary;
 use App\Models\WatchHistory;
 use App\Services\HlsTranscodeService;
 use App\Services\VideoStorageService;
+use Database\Seeders\Support\DemoCategoryCatalog;
+use Database\Seeders\Support\DemoContentGenerator;
+use Database\Seeders\Support\DemoTagGenerator;
+use Database\Seeders\Support\DemoVideoContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -30,10 +34,11 @@ use Illuminate\Support\Str;
  * Seeds a rich, demo-ready dataset: themed channels, ~115 videos that actually
  * play through real HLS packages (run through the same HlsTranscodeService
  * TranscodeVideoToHls uses in production — not just a raw file URL), on-topic
- * thumbnails/descriptions/summaries/transcripts/captions (not Lorem Ipsum),
- * shorts, comment threads with likes, reactions (including dislikes), pending
- * AI suggestions and notifications. Idempotent — safe to re-run via
- * `php artisan db:seed`.
+ * thumbnails/descriptions/summaries/transcripts/captions/comments generated
+ * per video (not the same paragraph repeated for every video in a category —
+ * see DemoContentGenerator), shorts, comment threads with likes, reactions
+ * (including dislikes), pending AI suggestions and notifications that point at
+ * real seeded records. Idempotent — safe to re-run via `php artisan db:seed`.
  */
 class DemoContentSeeder extends Seeder
 {
@@ -45,6 +50,12 @@ class DemoContentSeeder extends Seeder
      * (commondatastorage.googleapis.com/gtv-videos-bucket) now 403s on every
      * file — Google revoked anonymous access to that legacy bucket — which was
      * the actual reason seeded videos didn't play.
+     *
+     * Known limitation: only 2 "long" sources exist, so every channel's ~8
+     * long-form videos cycle between the same two films (Big Buck Bunny,
+     * Elephants Dream) under different titles/thumbnails. Fixing this for real
+     * needs more public-domain video sources; not worth faking with
+     * lower-quality filler.
      *
      * @var array{long: list<string>, short: list<string>}
      */
@@ -66,239 +77,12 @@ class DemoContentSeeder extends Seeder
     ];
 
     /**
-     * On-topic content per channel category, keyed by the channel's primary tag.
-     * Everything text-visible in the UI (description, AI summary, transcript,
-     * thumbnail) is built from these instead of Faker's Lorem Ipsum, which reads
-     * as garbage no matter the configured locale (Faker's paragraph()/sentence()
-     * always emit pseudo-Latin — it doesn't follow app.faker_locale).
+     * Generic acknowledgment replies — unlike comments, a creator's reply to a
+     * comment doesn't need to be category-specific ("thanks for watching" reads
+     * fine under a cooking video or a finance one).
      *
-     * @var array<string, array{color: array{string, string}, description: list<string>, keyPoints: list<string>, chapters: list<string>}>
+     * @var list<string>
      */
-    private const CATEGORIES = [
-        'programming' => [
-            'color' => ['0f172a', '38bdf8'],
-            'description' => [
-                '"{title}" walks through the process step by step, with runnable code at every stage.',
-                'Along the way we cover the trade-offs behind each decision, not just the syntax.',
-                "By the end you'll have a working example you can adapt to your own project.",
-            ],
-            'keyPoints' => [
-                'A clear, beginner-friendly walkthrough of the topic.',
-                'Real code you can copy, run, and adapt immediately.',
-                'The trade-offs behind each design decision, explained plainly.',
-                'Common mistakes developers make here, and how to avoid them.',
-            ],
-            'chapters' => ['Introduction', 'Setting up the project', 'Core implementation', 'Handling edge cases', 'Testing it end to end', 'Wrap-up and next steps'],
-        ],
-        'gaming' => [
-            'color' => ['1e1b4b', 'a78bfa'],
-            'description' => [
-                '"{title}" breaks down what makes this one worth your time — or not.',
-                'Expect honest impressions and no spoilers in the first half.',
-                'Stick around for the final verdict at the end.',
-            ],
-            'keyPoints' => [
-                'An honest first-hand take, not a press-kit summary.',
-                'Real gameplay footage from actual runs.',
-                "What works, what doesn't, and who it's actually for.",
-                'A clear final verdict with no fence-sitting.',
-            ],
-            'chapters' => ['Intro', 'First impressions', 'Gameplay deep dive', 'What could be better', 'Final verdict'],
-        ],
-        'tech' => [
-            'color' => ['111827', '34d399'],
-            'description' => [
-                '"{title}" cuts through the marketing to tell you what actually changed.',
-                'We put the claims to the test with real numbers, not press-release specs.',
-                "If you're deciding whether this is worth it, this is the video for you.",
-            ],
-            'keyPoints' => [
-                "What's genuinely new here, beyond the marketing.",
-                'Real-world numbers, not press-release specs.',
-                'Who this actually makes sense for.',
-                'The catches nobody mentions in the keynote.',
-            ],
-            'chapters' => ['Intro', "What's new", 'Real-world testing', 'Comparison', 'Should you get it?'],
-        ],
-        'music' => [
-            'color' => ['451a03', 'fbbf24'],
-            'description' => [
-                'A continuous mix built for "{title}" — no vocals, no sudden drops, just a steady groove.',
-                'Perfect as background while you work, study, or wind down.',
-            ],
-            'keyPoints' => [
-                'A steady, non-distracting mix built for focus.',
-                'No vocals or sudden volume changes.',
-                'Mixed for long, uninterrupted listening sessions.',
-            ],
-            'chapters' => ['Warm-up', 'Deep focus', 'Golden hour', 'Wind-down'],
-        ],
-        'travel' => [
-            'color' => ['083344', '67e8f9'],
-            'description' => [
-                '"{title}" follows the whole trip — the good parts and the parts that went sideways.',
-                'Real footage, real costs, and a few tips for anyone planning the same route.',
-            ],
-            'keyPoints' => [
-                'The full route, day by day.',
-                'What it actually cost — no vague numbers.',
-                'The part that went wrong, and how it got fixed.',
-                'Practical tips if you\'re planning something similar.',
-            ],
-            'chapters' => ['Setting off', 'The journey', 'A rough patch', 'The payoff', 'Would I do it again?'],
-        ],
-        'cooking' => [
-            'color' => ['431407', 'fb923c'],
-            'description' => [
-                '"{title}" breaks the recipe into steps anyone can follow, no fancy equipment required.',
-                'We cover the mistake that usually ruins this dish, and how to avoid it.',
-            ],
-            'keyPoints' => [
-                'A foolproof, step-by-step method.',
-                'The mistake most people make, and how to avoid it.',
-                'Ingredient swaps if you\'re missing something.',
-                "How to tell when it's actually done.",
-            ],
-            'chapters' => ['Ingredients', 'Prep', 'Cooking it', 'Plating', 'Taste test'],
-        ],
-        'science' => [
-            'color' => ['1e3a8a', '93c5fd'],
-            'description' => [
-                '"{title}" explains the idea from first principles — no prior background needed.',
-                'We lean on plain analogies instead of jargon wherever we can.',
-            ],
-            'keyPoints' => [
-                'The core idea, explained from scratch.',
-                'Plain-language analogies instead of jargon.',
-                'Why this actually matters outside the lab.',
-                'The most common misconception, cleared up.',
-            ],
-            'chapters' => ['The question', 'Building intuition', 'The core idea', 'Why it matters', 'Recap'],
-        ],
-        'fitness' => [
-            'color' => ['052e16', '4ade80'],
-            'description' => [
-                '"{title}" is built around form first, so you get results without the injuries.',
-                'No equipment assumptions — options are given for home and gym.',
-            ],
-            'keyPoints' => [
-                'Form cues that actually prevent injury.',
-                'Options for both home and gym setups.',
-                'What to expect in the first few weeks.',
-                'How to progress once this gets easy.',
-            ],
-            'chapters' => ['Warm-up', 'Form breakdown', 'The workout', 'Cooldown', 'Progression tips'],
-        ],
-        'photography' => [
-            'color' => ['27272a', 'e4e4e7'],
-            'description' => [
-                '"{title}" covers the technique with real shots, straight out of camera and after editing.',
-                'No expensive gear required — the principle matters more than the equipment.',
-            ],
-            'keyPoints' => [
-                'The technique, shown on real shots.',
-                'Before-and-after comparisons, not just theory.',
-                "Gear that actually matters here — and what doesn't.",
-                'A common mistake that ruins the shot.',
-            ],
-            'chapters' => ["The shot we're after", 'Camera settings', 'Taking the shot', 'Editing pass', 'Before vs after'],
-        ],
-        'finance' => [
-            'color' => ['064e3b', '6ee7b7'],
-            'description' => [
-                '"{title}" breaks this down in plain language, with nothing to sell you.',
-                'We use real numbers and realistic timelines, not best-case scenarios.',
-            ],
-            'keyPoints' => [
-                'A jargon-free explanation of the topic.',
-                'Real numbers, not best-case projections.',
-                'The most common mistake people make here.',
-                'A realistic timeline for seeing results.',
-            ],
-            'chapters' => ['The problem', 'The concept', 'Doing the math', 'Common pitfalls', 'Putting it into practice'],
-        ],
-        'comedy' => [
-            'color' => ['581c87', 'e9d5ff'],
-            'description' => [
-                '"{title}" is exactly what it sounds like — and it gets worse from there, in a good way.',
-                'Full bloopers and behind-the-scenes chaos included at the end.',
-            ],
-            'keyPoints' => [
-                'The premise escalates fast — stick with it.',
-                'Real reactions, not scripted ones.',
-                'Bloopers included at the end.',
-            ],
-            'chapters' => ['Setup', 'It escalates', 'The turn', 'Payoff', 'Bloopers'],
-        ],
-        'diy' => [
-            'color' => ['422006', 'fde047'],
-            'description' => [
-                '"{title}" is broken into steps you can actually follow, weekend by weekend if needed.',
-                'A rough materials list and cost estimate are covered up front.',
-            ],
-            'keyPoints' => [
-                'A realistic materials list and cost estimate.',
-                'Step-by-step instructions, no assumed experience.',
-                'The mistake that costs the most time to fix.',
-                'How to adapt this if your space is different.',
-            ],
-            'chapters' => ['Planning', 'Materials', 'Building it', 'Fixing a mistake', 'The finished result'],
-        ],
-        'meta' => [
-            'color' => ['18181b', 'f4f4f5'],
-            'description' => [
-                '"{title}" — a quick update straight from the team building MeTube.',
-            ],
-            'keyPoints' => [
-                "What's changing and why.",
-                'What to expect next.',
-            ],
-            'chapters' => ['Intro', 'The update', "What's next"],
-        ],
-    ];
-
-    /**
-     * One glyph per category, used as a large watermark on generated thumbnails.
-     *
-     * @var array<string, string>
-     */
-    private const CATEGORY_ICONS = [
-        'programming' => '</>',
-        'gaming' => '▶',
-        'tech' => '◍',
-        'music' => '♪',
-        'travel' => '✈',
-        'cooking' => '◐',
-        'science' => '⚛',
-        'fitness' => '↯',
-        'photography' => '◎',
-        'finance' => '↑',
-        'comedy' => '☺',
-        'diy' => '⚒',
-        'meta' => '★',
-    ];
-
-    /** @var list<string> */
-    private const COMMENT_TEMPLATES = [
-        'Great video, this helped a lot!',
-        'Underrated channel, instant subscribe.',
-        'Loved the editing and pacing.',
-        'Came here from the recommendations and stayed.',
-        'Please make a part 2 of this.',
-        'Watched this three times already.',
-        'The pacing in the middle section was perfect.',
-        'This is exactly what I needed today, thank you.',
-        'Good content, but the audio could be a bit louder.',
-        'Been waiting for someone to cover this properly.',
-        'Saved this one for later, definitely rewatching.',
-        'Solid video overall, subscribed!',
-        "Didn't expect to watch the whole thing but here we are.",
-        'The quality of your content keeps getting better.',
-        'This deserves way more views.',
-        'Sharing this with everyone I know.',
-    ];
-
-    /** @var list<string> */
     private const REPLY_TEMPLATES = [
         'Thanks for watching — glad it helped!',
         'Appreciate the kind words, more coming soon.',
@@ -306,8 +90,18 @@ class DemoContentSeeder extends Seeder
         'Glad you stuck around till the end 🙌',
     ];
 
-    /** Running index used to cycle the video pool, spread publish dates, and pick deterministic variety. */
+    /** Running index used to cycle the video pool and spread publish dates. */
     private int $cursor = 0;
+
+    private readonly DemoContentGenerator $generator;
+
+    private readonly DemoTagGenerator $tagGenerator;
+
+    public function __construct()
+    {
+        $this->generator = new DemoContentGenerator();
+        $this->tagGenerator = new DemoTagGenerator();
+    }
 
     public function run(): void
     {
@@ -320,21 +114,27 @@ class DemoContentSeeder extends Seeder
 
         $channels = $this->seedChannels();
         $videos = $this->seedVideos($channels, $hlsPool);
-        $this->seedAdminVideos($admin, $hlsPool);
+        $adminVideos = $this->seedAdminVideos($admin, $hlsPool);
 
         $categoryByChannelId = $channels->mapWithKeys(
             fn (array $c): array => [$c['user']->id => $c['tags'][0]],
         );
         $categoryByChannelId->put($admin->id, 'meta');
 
+        // orderBy('id') matters beyond readability: seedComments() derives "every
+        // other video" from this collection's index order, and without an
+        // explicit order Postgres doesn't guarantee the same row order between
+        // runs — which video landed on which side of that split silently
+        // shifted from one re-seed to the next.
         $published = Video::whereIn('channel_id', [...$channels->pluck('user.id'), $admin->id])
             ->where('status', VideoStatus::PUBLISHED)
+            ->orderBy('id')
             ->get();
 
         $this->seedAiLayer($published, $categoryByChannelId);
-        $this->seedEngagement($admin, $channels, $published);
+        $this->seedEngagement($admin, $channels, $published, $categoryByChannelId);
         $this->seedAiSuggestions($admin);
-        $this->seedNotifications($admin, $channels->map(fn (array $c) => $c['user']));
+        $this->seedNotifications($admin, $channels->map(fn (array $c) => $c['user']), $adminVideos);
 
         unset($videos);
     }
@@ -428,7 +228,10 @@ class DemoContentSeeder extends Seeder
 
     /**
      * Create the published catalogue (regular videos + one short per channel),
-     * cycling real HLS packages from the provisioned pool.
+     * cycling real HLS packages from the provisioned pool. Each video's tags
+     * are derived from its own title via DemoTagGenerator — not copied
+     * verbatim from the channel — so a video about containers doesn't end up
+     * tagged `javascript` just because the channel mostly covers JavaScript.
      *
      * @param Collection<int, array{user: User, tags: list<string>, titles: list<string>}> $channels
      * @param array{long: list<array{hlsUrl: string, duration: float}>, short: list<array{hlsUrl: string, duration: float}>} $hlsPool
@@ -443,16 +246,21 @@ class DemoContentSeeder extends Seeder
             $category = $channel['tags'][0];
 
             foreach ($channel['titles'] as $title) {
+                $tags = $this->tagGenerator->forTitle($title, $channel['tags']);
                 $source = $hlsPool['long'][$this->cursor % count($hlsPool['long'])];
-                $videos->push($this->makeVideo($channel['user'], $title, $channel['tags'], $category, [
+                $videos->push($this->makeVideo($channel['user'], $title, $tags, $category, [
                     'hls_url' => $source['hlsUrl'],
                     'duration' => $source['duration'],
                 ]));
             }
 
+            // 'shorts' is a format tag, not a topical one — always appended
+            // regardless of what DemoTagGenerator matched in the (generic)
+            // short title, so the Shorts feed filter never loses a video.
             $shortTitle = ucfirst($category) . ' in 60 seconds';
+            $shortTags = [...$this->tagGenerator->forTitle($shortTitle, $channel['tags']), 'shorts'];
             $source = $hlsPool['short'][$this->cursor % count($hlsPool['short'])];
-            $videos->push($this->makeVideo($channel['user'], $shortTitle, [...$channel['tags'], 'shorts'], $category, [
+            $videos->push($this->makeVideo($channel['user'], $shortTitle, $shortTags, $category, [
                 'hls_url' => $source['hlsUrl'],
                 'duration' => $source['duration'],
             ]));
@@ -467,17 +275,22 @@ class DemoContentSeeder extends Seeder
      * profile during local testing.
      *
      * @param array{long: list<array{hlsUrl: string, duration: float}>, short: list<array{hlsUrl: string, duration: float}>} $hlsPool
+     *
+     * @return array{welcome: Video, devlog: Video} The two published admin videos,
+     *                                              needed to point demo notifications
+     *                                              at real records instead of a
+     *                                              placeholder vuid.
      */
-    private function seedAdminVideos(User $admin, array $hlsPool): void
+    private function seedAdminVideos(User $admin, array $hlsPool): array
     {
         $first = $hlsPool['long'][0];
         $second = $hlsPool['long'][1 % count($hlsPool['long'])];
 
-        $this->makeVideo($admin, 'Welcome to MeTube', ['meta', 'announcement'], 'meta', [
+        $welcome = $this->makeVideo($admin, 'Welcome to MeTube', ['meta', 'announcement'], 'meta', [
             'hls_url' => $first['hlsUrl'],
             'duration' => $first['duration'],
         ]);
-        $this->makeVideo($admin, 'Behind the scenes of the platform', ['meta', 'devlog'], 'meta', [
+        $devlog = $this->makeVideo($admin, 'Behind the scenes of the platform', ['meta', 'devlog'], 'meta', [
             'hls_url' => $second['hlsUrl'],
             'duration' => $second['duration'],
         ]);
@@ -508,6 +321,8 @@ class DemoContentSeeder extends Seeder
             'published_at' => null,
             'views' => 0,
         ]);
+
+        return ['welcome' => $welcome, 'devlog' => $devlog];
     }
 
     /**
@@ -523,18 +338,24 @@ class DemoContentSeeder extends Seeder
     private function makeVideo(User $channel, string $title, array $tags, string $category, array $overrides = []): Video
     {
         $index = $this->cursor++;
+        $context = new DemoVideoContext($category, $title, $index, $tags);
+        $bank = DemoCategoryCatalog::get($category);
 
         $video = Video::updateOrCreate(
             ['channel_id' => $channel->id, 'title' => $title],
             array_merge([
-                'description' => $this->buildDescription($category, $title),
+                'description' => $this->generator->description($context, $bank),
                 'tags' => $tags,
                 'status' => VideoStatus::PUBLISHED,
                 'duration' => fake()->numberBetween(240, 1800),
-                'views' => fake()->numberBetween(800, 250_000),
+                // Both derived from the context seed rather than fake() — a view
+                // count or publish date that reshuffled on every re-seed (fake()
+                // isn't seeded here) made the feed's sort order and displayed
+                // numbers drift for no reason each time you ran the seeder again.
+                'views' => 800 + ($context->seed() % 249_201),
                 'video_url' => null,
                 'hls_url' => null,
-                'published_at' => now()->subDays($index * 4 + fake()->numberBetween(0, 3)),
+                'published_at' => now()->subDays($index * 4 + ($context->seed() % 4)),
                 'scheduled_at' => null,
             ], $overrides),
         );
@@ -549,20 +370,6 @@ class DemoContentSeeder extends Seeder
         }
 
         return $video;
-    }
-
-    /**
-     * Two sentences of the category's description bank, with the title interpolated.
-     */
-    private function buildDescription(string $category, string $title): string
-    {
-        $sentences = self::CATEGORIES[$category]['description'];
-        $picked = array_slice($sentences, 0, 2);
-
-        return implode(' ', array_map(
-            fn (string $s): string => str_replace('{title}', $title, $s),
-            $picked,
-        ));
     }
 
     /**
@@ -592,8 +399,14 @@ class DemoContentSeeder extends Seeder
      */
     private function buildThumbnailSvg(string $category, string $title): string
     {
-        [$bg, $fg] = self::CATEGORIES[$category]['color'];
-        $icon = self::CATEGORY_ICONS[$category] ?? '●';
+        $bank = DemoCategoryCatalog::get($category);
+        [$bg, $fg] = $bank->color;
+        // The 'programming' icon is the literal string '</>' — embedded raw,
+        // those characters are parsed as actual markup (closing the <text> tag
+        // mid-attribute), corrupting the whole document into a blank/black
+        // image. Every other category's icon is a single safe Unicode glyph,
+        // which is exactly why only programming-category thumbnails broke.
+        $icon = htmlspecialchars($bank->icon, ENT_QUOTES | ENT_XML1);
         $label = strtoupper($category);
 
         $lines = $this->wrapTitle($title, 24);
@@ -700,19 +513,23 @@ class DemoContentSeeder extends Seeder
     {
         foreach ($published as $video) {
             $category = $categoryByChannelId->get($video->channel_id, 'meta');
-            $bank = self::CATEGORIES[$category];
+            $bank = DemoCategoryCatalog::get($category);
             $duration = $video->duration ?? 300.0;
+            // Index doesn't affect DemoVideoContext::seed() (it hashes category +
+            // title only), so 0 here still reproduces the exact variation picked
+            // for this same video back in makeVideo().
+            $context = new DemoVideoContext($category, $video->title, 0, []);
 
             VideoSummary::updateOrCreate(
                 ['video_id' => $video->id],
                 [
-                    'key_points' => $bank['keyPoints'],
-                    'chapters' => $this->buildChapters($bank['chapters'], $duration),
-                    'reading_mode' => $this->buildReadingMode($category, $video->title),
+                    'key_points' => $this->generator->keyPoints($context, $bank),
+                    'chapters' => $this->generator->chapters($context, $bank, $duration),
+                    'reading_mode' => $this->generator->readingMode($context, $bank),
                 ],
             );
 
-            $transcriptSentences = $this->buildTranscriptSentences($category, $video->title);
+            $transcriptSentences = $this->generator->transcriptSentences($context, $bank);
 
             Transcription::updateOrCreate(
                 ['video_id' => $video->id],
@@ -733,64 +550,6 @@ class DemoContentSeeder extends Seeder
                 ]],
             ]);
         }
-    }
-
-    /**
-     * Distributes chapter titles evenly across the video's actual duration instead
-     * of using the same fixed timestamps regardless of length.
-     *
-     * @param list<string> $titles
-     *
-     * @return list<array{timestamp: string, title: string}>
-     */
-    private function buildChapters(array $titles, float $duration): array
-    {
-        $count = count($titles);
-
-        return array_map(
-            fn (int $i, string $title): array => [
-                'timestamp' => $this->formatTimestamp((int) floor($duration * $i / $count)),
-                'title' => $title,
-            ],
-            array_keys($titles),
-            $titles,
-        );
-    }
-
-    private function formatTimestamp(int $seconds): string
-    {
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
-        $secs = $seconds % 60;
-
-        return $hours > 0
-            ? sprintf('%d:%02d:%02d', $hours, $minutes, $secs)
-            : sprintf('%d:%02d', $minutes, $secs);
-    }
-
-    private function buildReadingMode(string $category, string $title): string
-    {
-        $bank = self::CATEGORIES[$category];
-        $lastSentence = end($bank['description']);
-        $intro = str_replace('{title}', $title, $lastSentence);
-        $summary = implode(' ', $bank['keyPoints']);
-
-        return "{$intro} {$summary}";
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function buildTranscriptSentences(string $category, string $title): array
-    {
-        $bank = self::CATEGORIES[$category];
-        $opening = str_replace('{title}', $title, $bank['description'][0]);
-
-        return [
-            $opening,
-            ...$bank['keyPoints'],
-            'Thanks for watching — see you in the next one.',
-        ];
     }
 
     /**
@@ -827,8 +586,9 @@ class DemoContentSeeder extends Seeder
      *
      * @param Collection<int, array{user: User, tags: list<string>, titles: list<string>}> $channels
      * @param Collection<int, Video> $published
+     * @param Collection<int, string> $categoryByChannelId
      */
-    private function seedEngagement(User $admin, Collection $channels, Collection $published): void
+    private function seedEngagement(User $admin, Collection $channels, Collection $published, Collection $categoryByChannelId): void
     {
         $channelUsers = $channels->map(fn (array $c) => $c['user']);
 
@@ -836,7 +596,7 @@ class DemoContentSeeder extends Seeder
         $this->seedReactions($admin, $channelUsers, $published);
         $this->seedHistory($admin, $published);
         $this->seedPlaylists($admin, $published);
-        $this->seedComments($admin, $channelUsers, $published);
+        $this->seedComments($admin, $channelUsers, $published, $categoryByChannelId);
     }
 
     /**
@@ -848,8 +608,8 @@ class DemoContentSeeder extends Seeder
 
         foreach ($channelUsers as $user) {
             $others = $channelUsers->where('id', '!=', $user->id);
-            $picks = $others->count() > 0 ? $others->random(min(2, $others->count())) : collect();
-            $user->subscriptions()->syncWithoutDetaching(collect($picks)->pluck('id')->all());
+            $picks = $this->stablePick($others, 2, "subscriptions:{$user->id}", fn (User $u): int => $u->id);
+            $user->subscriptions()->syncWithoutDetaching($picks->pluck('id')->all());
         }
     }
 
@@ -859,7 +619,7 @@ class DemoContentSeeder extends Seeder
      */
     private function seedReactions(User $admin, Collection $channelUsers, Collection $published): void
     {
-        $likable = $published->random(min(10, $published->count()));
+        $likable = $this->stablePick($published, 10, 'admin-likes', fn (Video $v): int => $v->id);
 
         foreach ($likable as $video) {
             $admin->reactions()->syncWithoutDetaching([$video->id => ['type' => ReactionType::LIKE->value]]);
@@ -867,7 +627,8 @@ class DemoContentSeeder extends Seeder
 
         // A handful of videos get an honest dislike too — an all-likes demo dataset
         // doesn't reflect what a real reactions table looks like.
-        $dislikable = $published->whereNotIn('id', $likable->pluck('id'))->random(min(4, max($published->count() - $likable->count(), 0)));
+        $remaining = $published->whereNotIn('id', $likable->pluck('id'));
+        $dislikable = $this->stablePick($remaining, 4, 'admin-dislikes', fn (Video $v): int => $v->id);
 
         foreach ($dislikable as $video) {
             $admin->reactions()->syncWithoutDetaching([$video->id => ['type' => ReactionType::DISLIKE->value]]);
@@ -880,7 +641,9 @@ class DemoContentSeeder extends Seeder
                 continue;
             }
 
-            foreach ($likeable->random(min(5, $likeable->count())) as $video) {
+            $picks = $this->stablePick($likeable, 5, "user-likes:{$user->id}", fn (Video $v): int => $v->id);
+
+            foreach ($picks as $video) {
                 $user->reactions()->syncWithoutDetaching([$video->id => ['type' => ReactionType::LIKE->value]]);
             }
         }
@@ -892,8 +655,9 @@ class DemoContentSeeder extends Seeder
     private function seedHistory(User $admin, Collection $published): void
     {
         $hour = 0;
+        $watched = $this->stablePick($published, 12, 'watch-history', fn (Video $v): int => $v->id);
 
-        foreach ($published->random(min(12, $published->count())) as $video) {
+        foreach ($watched as $video) {
             WatchHistory::updateOrCreate(
                 ['user_id' => $admin->id, 'video_id' => $video->id],
                 ['watched_at' => now()->subHours(++$hour)],
@@ -912,10 +676,35 @@ class DemoContentSeeder extends Seeder
     private function seedPlaylists(User $admin, Collection $published): void
     {
         $watchLater = $admin->getWatchLaterPlaylist();
-        $this->fillPlaylist($watchLater, $published->random(min(5, $published->count())));
+        $this->fillPlaylist($watchLater, $this->stablePick($published, 5, 'watch-later', fn (Video $v): int => $v->id));
 
         $favorites = $admin->playlists()->firstOrCreate(['name' => 'Favorites']);
-        $this->fillPlaylist($favorites, $published->random(min(6, $published->count())));
+        $this->fillPlaylist($favorites, $this->stablePick($published, 6, 'favorites', fn (Video $v): int => $v->id));
+    }
+
+    /**
+     * A stable stand-in for `Collection::random($n)`, which draws a different
+     * subset on every call with no way to seed it — re-seeding the database
+     * kept adding more subscriptions/reactions/history/playlist rows forever
+     * instead of converging on a stable dataset, because each run's random
+     * pick barely overlapped with the last one. Sorting by a hash of a stable
+     * key (plus a call-site salt, so e.g. admin's likes and dislikes don't
+     * correlate) makes the pick — and therefore the seeded dataset — the same
+     * every time.
+     *
+     * @template T
+     *
+     * @param Collection<int, T> $items
+     * @param callable(T): int $keyOf
+     *
+     * @return Collection<int, T>
+     */
+    private function stablePick(Collection $items, int $count, string $salt, callable $keyOf): Collection
+    {
+        return $items
+            ->sortBy(fn (mixed $item): int => crc32($salt . ':' . $keyOf($item)))
+            ->take($count)
+            ->values();
     }
 
     /**
@@ -937,12 +726,15 @@ class DemoContentSeeder extends Seeder
      * Comments roughly half of the published catalogue (every other video, by
      * publish order — deterministic, so re-seeding doesn't churn the selection),
      * with 2-5 comments each, some replies, and a handful of comment likes so
-     * like counts aren't all zero.
+     * like counts aren't all zero. Comment text is drawn from the video's own
+     * category bank (via DemoContentGenerator), not a single global pool — a
+     * cooking video's comments read like cooking-video comments.
      *
      * @param Collection<int, User> $channelUsers
      * @param Collection<int, Video> $published
+     * @param Collection<int, string> $categoryByChannelId
      */
-    private function seedComments(User $admin, Collection $channelUsers, Collection $published): void
+    private function seedComments(User $admin, Collection $channelUsers, Collection $published, Collection $categoryByChannelId): void
     {
         $authors = $channelUsers->push($admin)->values();
 
@@ -959,11 +751,16 @@ class DemoContentSeeder extends Seeder
                 continue;
             }
 
+            $category = $categoryByChannelId->get($video->channel_id, 'meta');
+            $bank = DemoCategoryCatalog::get($category);
+            $context = new DemoVideoContext($category, $video->title, $index, []);
+
             $commentCount = 2 + ($index % 4);
             $picked = $commenters->count() >= $commentCount
                 ? $commenters->random($commentCount)
                 : $commenters;
 
+            $texts = $this->generator->comments($context, $bank, count($picked));
             $threadStarter = null;
 
             foreach (collect($picked)->values() as $i => $author) {
@@ -971,7 +768,7 @@ class DemoContentSeeder extends Seeder
                     'user_id' => $author->id,
                     'video_id' => $video->id,
                     'parent_id' => null,
-                    'content' => self::COMMENT_TEMPLATES[($index + $i) % count(self::COMMENT_TEMPLATES)],
+                    'content' => $texts[$i] ?? $texts[$i % max(count($texts), 1)],
                 ]);
                 $video->increment('comments_count');
                 $threadStarter ??= $comment;
@@ -1036,12 +833,16 @@ class DemoContentSeeder extends Seeder
             ->whereIn('status', [VideoStatus::DRAFT, VideoStatus::PROCESSING])
             ->get();
 
+        $bank = DemoCategoryCatalog::get('meta');
+
         foreach ($candidates as $video) {
+            $context = new DemoVideoContext('meta', $video->title, 0, []);
+
             VideoAiSuggestion::updateOrCreate(
                 ['video_id' => $video->id],
                 [
                     'suggested_title' => $video->title . ' — Full Walkthrough',
-                    'suggested_description' => $this->buildDescription('meta', $video->title),
+                    'suggested_description' => $this->generator->description($context, $bank),
                     'suggested_tags' => ['meta', 'metube', 'platform-update'],
                     'status' => AiSuggestionStatus::PENDING,
                 ],
@@ -1053,10 +854,14 @@ class DemoContentSeeder extends Seeder
      * A handful of database notifications for the admin (mix of read/unread) so
      * the notification bell isn't empty on first login. Inserted directly rather
      * than via ->notify() so seeding never depends on a live broadcast connection.
+     * Every notification points at a real seeded video/comment — clicking one
+     * used to 404 because the payload hardcoded vuid/cuid as the literal string
+     * 'demo', which never matched any actual record.
      *
      * @param Collection<int, User> $channelUsers
+     * @param array{welcome: Video, devlog: Video} $adminVideos
      */
-    private function seedNotifications(User $admin, Collection $channelUsers): void
+    private function seedNotifications(User $admin, Collection $channelUsers, array $adminVideos): void
     {
         if ($admin->notifications()->exists()) {
             return;
@@ -1064,6 +869,12 @@ class DemoContentSeeder extends Seeder
 
         $firstChannel = $channelUsers->first() ?? $admin;
         $secondChannel = $channelUsers->get(1) ?? $firstChannel;
+
+        // Prefer a reply so "X replied to your comment" reads coherently; fall
+        // back to any comment that exists so the link still resolves even in
+        // the (statistically unlikely) case no reply landed on an admin video.
+        $replyComment = Comment::query()->whereNotNull('parent_id')->inRandomOrder()->first()
+            ?? Comment::query()->inRandomOrder()->first();
 
         $entries = [
             [
@@ -1077,36 +888,39 @@ class DemoContentSeeder extends Seeder
                 'data' => [
                     'type' => NotificationType::VIDEO_LIKED->value,
                     'liker_name' => $secondChannel->name,
-                    'vuid' => 'demo',
-                    'video_title' => 'Welcome to MeTube',
-                    'thumbnail_url' => null,
+                    'vuid' => $adminVideos['welcome']->vuid,
+                    'video_title' => $adminVideos['welcome']->title,
+                    'thumbnail_url' => $adminVideos['welcome']->thumbnail_url,
                 ],
                 'age' => now()->subHours(5),
                 'read' => false,
             ],
             [
-                'type' => NotificationType::COMMENT_REPLIED,
-                'data' => [
-                    'type' => NotificationType::COMMENT_REPLIED->value,
-                    'replier_name' => $firstChannel->name,
-                    'cuid' => 'demo',
-                    'vuid' => 'demo',
-                ],
-                'age' => now()->subDay(),
-                'read' => true,
-            ],
-            [
                 'type' => NotificationType::VIDEO_AI_SUMMARY_READY,
                 'data' => [
                     'type' => NotificationType::VIDEO_AI_SUMMARY_READY->value,
-                    'vuid' => 'demo',
-                    'video_title' => 'Behind the scenes of the platform',
-                    'thumbnail_url' => null,
+                    'vuid' => $adminVideos['devlog']->vuid,
+                    'video_title' => $adminVideos['devlog']->title,
+                    'thumbnail_url' => $adminVideos['devlog']->thumbnail_url,
                 ],
                 'age' => now()->subDays(2),
                 'read' => true,
             ],
         ];
+
+        if ($replyComment !== null) {
+            $entries[] = [
+                'type' => NotificationType::COMMENT_REPLIED,
+                'data' => [
+                    'type' => NotificationType::COMMENT_REPLIED->value,
+                    'replier_name' => $firstChannel->name,
+                    'cuid' => $replyComment->cuid,
+                    'vuid' => $replyComment->video->vuid,
+                ],
+                'age' => now()->subDay(),
+                'read' => true,
+            ];
+        }
 
         foreach ($entries as $entry) {
             $admin->notifications()->create([
