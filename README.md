@@ -13,16 +13,14 @@ Plataforma de vídeo full-stack construída do zero, com **upload resumível, pr
 
 <table>
 <tr>
-<td width="25%"><img src="docs/screenshots/channel-dashboard.webp" width="100%" alt="Dashboard do canal"><br><sub>Dashboard do canal</sub></td>
-<td width="25%"><img src="docs/screenshots/upload-single.webp" width="100%" alt="Upload de vídeo único"><br><sub>Upload de vídeo</sub></td>
-<td width="25%"><img src="docs/screenshots/upload-batch.webp" width="100%" alt="Upload em lote"><br><sub>Upload em lote</sub></td>
-<td width="25%"><img src="docs/screenshots/settings-theme.webp" width="100%" alt="Temas e cores de acento"><br><sub>Temas e cores de acento</sub></td>
-</tr>
-<tr>
-<td width="25%"><img src="docs/screenshots/ai-summary-chapters.webp" width="100%" alt="Resumo e capítulos gerados por IA"><br><sub>Resumo e capítulos por IA</sub></td>
-<td width="25%"><img src="docs/screenshots/transcription.webp" width="100%" alt="Transcrição automática"><br><sub>Transcrição automática</sub></td>
-<td width="25%"><img src="docs/screenshots/ai-chat.webp" width="100%" alt="Chat com IA sobre o vídeo"><br><sub>Chat com IA sobre o vídeo</sub></td>
-<td width="25%"><img src="docs/screenshots/realtime-activity.webp" width="100%" alt="Notificações em tempo real"><br><sub>Notificações em tempo real</sub></td>
+<td width="12.5%"><img src="docs/screenshots/channel-dashboard.webp" width="100%" alt="Dashboard do canal" title="Dashboard do canal"></td>
+<td width="12.5%"><img src="docs/screenshots/upload-single.webp" width="100%" alt="Upload de vídeo único" title="Upload de vídeo único"></td>
+<td width="12.5%"><img src="docs/screenshots/upload-batch.webp" width="100%" alt="Upload em lote" title="Upload em lote"></td>
+<td width="12.5%"><img src="docs/screenshots/settings-theme.webp" width="100%" alt="Temas e cores de acento" title="Temas e cores de acento"></td>
+<td width="12.5%"><img src="docs/screenshots/ai-summary-chapters.webp" width="100%" alt="Resumo e capítulos gerados por IA" title="Resumo e capítulos gerados por IA"></td>
+<td width="12.5%"><img src="docs/screenshots/transcription.webp" width="100%" alt="Transcrição automática" title="Transcrição automática"></td>
+<td width="12.5%"><img src="docs/screenshots/ai-chat.webp" width="100%" alt="Chat com IA sobre o vídeo" title="Chat com IA sobre o vídeo"></td>
+<td width="12.5%"><img src="docs/screenshots/realtime-activity.webp" width="100%" alt="Notificações em tempo real" title="Notificações em tempo real"></td>
 </tr>
 </table>
 
