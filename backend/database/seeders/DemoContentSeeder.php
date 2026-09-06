@@ -257,6 +257,27 @@ class DemoContentSeeder extends Seeder
         ],
     ];
 
+    /**
+     * One glyph per category, used as a large watermark on generated thumbnails.
+     *
+     * @var array<string, string>
+     */
+    private const CATEGORY_ICONS = [
+        'programming' => '</>',
+        'gaming' => '▶',
+        'tech' => '◍',
+        'music' => '♪',
+        'travel' => '✈',
+        'cooking' => '◐',
+        'science' => '⚛',
+        'fitness' => '↯',
+        'photography' => '◎',
+        'finance' => '↑',
+        'comedy' => '☺',
+        'diy' => '⚒',
+        'meta' => '★',
+    ];
+
     /** @var list<string> */
     private const COMMENT_TEMPLATES = [
         'Great video, this helped a lot!',
@@ -382,8 +403,14 @@ class DemoContentSeeder extends Seeder
      */
     private function seedChannels(): Collection
     {
-        return collect($this->channelDefinitions())->map(function (array $def): array {
-            $user = User::firstOrCreate(
+        // Built as a plain array first rather than collect()->map(): passing the
+        // shaped definition through collect() widens it to
+        // array<string, list<string>|string>, which PHPStan then can't reconcile
+        // with this method's declared return shape.
+        $channels = [];
+
+        foreach ($this->channelDefinitions() as $def) {
+            $user = User::query()->firstOrCreate(
                 ['email' => $def['email']],
                 [
                     'name' => $def['name'],
@@ -393,8 +420,10 @@ class DemoContentSeeder extends Seeder
                 ],
             );
 
-            return ['user' => $user, 'tags' => $def['tags'], 'titles' => $def['titles']];
-        });
+            $channels[] = ['user' => $user, 'tags' => $def['tags'], 'titles' => $def['titles']];
+        }
+
+        return collect($channels);
     }
 
     /**
@@ -494,9 +523,8 @@ class DemoContentSeeder extends Seeder
     private function makeVideo(User $channel, string $title, array $tags, string $category, array $overrides = []): Video
     {
         $index = $this->cursor++;
-        [$bg, $fg] = self::CATEGORIES[$category]['color'];
 
-        return Video::updateOrCreate(
+        $video = Video::updateOrCreate(
             ['channel_id' => $channel->id, 'title' => $title],
             array_merge([
                 'description' => $this->buildDescription($category, $title),
@@ -506,16 +534,21 @@ class DemoContentSeeder extends Seeder
                 'views' => fake()->numberBetween(800, 250_000),
                 'video_url' => null,
                 'hls_url' => null,
-                'thumbnail_url' => sprintf(
-                    'https://placehold.co/640x360/%s/%s?font=roboto&text=%s',
-                    $bg,
-                    $fg,
-                    rawurlencode($title),
-                ),
                 'published_at' => now()->subDays($index * 4 + fake()->numberBetween(0, 3)),
                 'scheduled_at' => null,
             ], $overrides),
         );
+
+        // thumbnail_url needs the video's real vuid (assigned by HasPublicId on
+        // create, not mass-assignable), so it's rendered and attached in a
+        // second pass rather than inside the array above.
+        $hasExplicitThumbnail = array_key_exists('thumbnail_url', $overrides);
+
+        if (!$hasExplicitThumbnail) {
+            $video->update(['thumbnail_url' => $this->buildThumbnail($category, $title, $video->vuid)]);
+        }
+
+        return $video;
     }
 
     /**
@@ -530,6 +563,128 @@ class DemoContentSeeder extends Seeder
             fn (string $s): string => str_replace('{title}', $title, $s),
             $picked,
         ));
+    }
+
+    /**
+     * Renders a category-tinted SVG cover and writes it to the public disk,
+     * returning the disk-relative path (matching the real pipeline's
+     * `thumbnails/{vuid}.ext` convention). Generated locally instead of
+     * pulled from a third-party placeholder service (placehold.co's flat
+     * color-and-text boxes) so the demo catalogue has an actual visual
+     * identity per category and doesn't depend on that service being up.
+     */
+    private function buildThumbnail(string $category, string $title, string $vuid): string
+    {
+        $svg = $this->buildThumbnailSvg($category, $title);
+        $path = "thumbnails/{$vuid}.svg";
+
+        Storage::disk('public')->put($path, $svg);
+
+        return $path;
+    }
+
+    /**
+     * 640x360 cover: a diagonal gradient in the category's two-tone palette, a
+     * large low-opacity glyph as a watermark, and the title set over a bottom
+     * scrim for contrast — the same layered composition real thumbnail
+     * generators use, so every category reads as a distinct, intentional brand
+     * instead of a generic colored rectangle.
+     */
+    private function buildThumbnailSvg(string $category, string $title): string
+    {
+        [$bg, $fg] = self::CATEGORIES[$category]['color'];
+        $icon = self::CATEGORY_ICONS[$category] ?? '●';
+        $label = strtoupper($category);
+
+        $lines = $this->wrapTitle($title, 24);
+        $lineHeight = 42;
+        $lastLineY = 318;
+        $firstLineY = $lastLineY - ($lineHeight * (count($lines) - 1));
+
+        $tspans = '';
+
+        foreach ($lines as $i => $line) {
+            $y = $firstLineY + $i * $lineHeight;
+            $tspans .= sprintf(
+                '<tspan x="36" y="%d">%s</tspan>',
+                $y,
+                htmlspecialchars($line, ENT_QUOTES | ENT_XML1),
+            );
+        }
+
+        $labelWidth = 20 + (strlen($label) * 11);
+
+        return <<<SVG
+        <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+            <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#{$bg}"/>
+                    <stop offset="1" stop-color="#000000"/>
+                </linearGradient>
+                <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                    <stop offset="1" stop-color="#000000" stop-opacity="0.82"/>
+                </linearGradient>
+            </defs>
+            <rect width="640" height="360" fill="url(#bg)"/>
+            <circle cx="540" cy="90" r="190" fill="#{$fg}" opacity="0.16"/>
+            <text x="480" y="230" font-family="Arial, sans-serif" font-size="220" font-weight="700"
+                fill="#{$fg}" opacity="0.22" text-anchor="middle">{$icon}</text>
+            <rect x="0" y="190" width="640" height="170" fill="url(#scrim)"/>
+            <rect x="36" y="26" width="{$labelWidth}" height="30" rx="15" fill="#{$fg}"/>
+            <text x="{$this->svgHalf($labelWidth, 36)}" y="47" font-family="Arial, sans-serif" font-size="14"
+                font-weight="700" letter-spacing="1" fill="#{$bg}" text-anchor="middle">{$label}</text>
+            <text font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#ffffff">{$tspans}</text>
+        </svg>
+        SVG;
+    }
+
+    private function svgHalf(int $width, int $offsetX): int
+    {
+        return $offsetX + intdiv($width, 2);
+    }
+
+    /**
+     * Greedy word-wrap for SVG <text>, which never wraps on its own. Capped at
+     * 2 lines (longer titles are truncated with an ellipsis) so the wrapped
+     * block always fits above the bottom scrim regardless of title length.
+     *
+     * @return list<string>
+     */
+    private function wrapTitle(string $title, int $maxChars): array
+    {
+        $words = explode(' ', $title);
+        $lines = [];
+        $current = '';
+
+        foreach ($words as $word) {
+            $candidate = $current === '' ? $word : "{$current} {$word}";
+
+            if (strlen($candidate) > $maxChars && $current !== '') {
+                $lines[] = $current;
+                $current = $word;
+            } else {
+                $current = $candidate;
+            }
+
+            if (count($lines) === 2) {
+                break;
+            }
+        }
+
+        $hasRemainder = $current !== '' && count($lines) < 2;
+
+        if ($hasRemainder) {
+            $lines[] = $current;
+        }
+
+        $isTruncated = count($lines) === 2 && strlen(implode(' ', $words)) > array_sum(array_map('strlen', $lines)) + 1;
+
+        if ($isTruncated) {
+            $lines[1] = rtrim(substr($lines[1], 0, $maxChars - 1)) . '…';
+        }
+
+        return $lines;
     }
 
     /**
