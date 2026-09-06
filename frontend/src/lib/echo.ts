@@ -19,6 +19,13 @@ export async function getEcho(): Promise<Echo<'reverb'> | null> {
     const isConfigured = Boolean(appKey);
 
     if (!isConfigured) {
+        if (import.meta.env.DEV) {
+            console.warn(
+                '[echo] VITE_REVERB_APP_KEY is not set — realtime notifications are disabled. '
+                + 'Copy frontend/.env.example to frontend/.env and set it to REVERB_APP_KEY from backend/.env.',
+            );
+        }
+
         return null;
     }
 
