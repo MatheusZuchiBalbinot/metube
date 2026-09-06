@@ -13,16 +13,20 @@ Plataforma de vídeo full-stack construída do zero, com **upload resumível, pr
 
 <table>
 <tr>
-<td width="12.5%"><img src="docs/screenshots/channel-dashboard.webp" width="100%" alt="Dashboard do canal" title="Dashboard do canal"></td>
-<td width="12.5%"><img src="docs/screenshots/upload-single.webp" width="100%" alt="Upload de vídeo único" title="Upload de vídeo único"></td>
-<td width="12.5%"><img src="docs/screenshots/upload-batch.webp" width="100%" alt="Upload em lote" title="Upload em lote"></td>
-<td width="12.5%"><img src="docs/screenshots/settings-theme.webp" width="100%" alt="Temas e cores de acento" title="Temas e cores de acento"></td>
-<td width="12.5%"><img src="docs/screenshots/ai-summary-chapters.webp" width="100%" alt="Resumo e capítulos gerados por IA" title="Resumo e capítulos gerados por IA"></td>
-<td width="12.5%"><img src="docs/screenshots/transcription.webp" width="100%" alt="Transcrição automática" title="Transcrição automática"></td>
-<td width="12.5%"><img src="docs/screenshots/ai-chat.webp" width="100%" alt="Chat com IA sobre o vídeo" title="Chat com IA sobre o vídeo"></td>
-<td width="12.5%"><img src="docs/screenshots/realtime-activity.webp" width="100%" alt="Notificações em tempo real" title="Notificações em tempo real"></td>
+<td width="10%"><img src="docs/screenshots/channel-dashboard.webp" width="100%" alt="Dashboard do canal" title="Dashboard do canal"></td>
+<td width="10%"><img src="docs/screenshots/upload-single.webp" width="100%" alt="Upload de vídeo único" title="Upload de vídeo único"></td>
+<td width="10%"><img src="docs/screenshots/upload-batch.webp" width="100%" alt="Upload em lote" title="Upload em lote"></td>
+<td width="10%"><img src="docs/screenshots/settings-theme.webp" width="100%" alt="Temas e cores de acento" title="Temas e cores de acento"></td>
+<td width="10%"><img src="docs/screenshots/ai-summary-chapters.webp" width="100%" alt="Resumo e capítulos gerados por IA" title="Resumo e capítulos gerados por IA"></td>
+<td width="10%"><img src="docs/screenshots/transcription.webp" width="100%" alt="Transcrição automática" title="Transcrição automática"></td>
+<td width="10%"><img src="docs/screenshots/ai-chat.webp" width="100%" alt="Chat com IA sobre o vídeo" title="Chat com IA sobre o vídeo"></td>
+<td width="10%"><img src="docs/screenshots/realtime-activity.webp" width="100%" alt="Notificações em tempo real" title="Notificações em tempo real"></td>
+<td width="10%"><img src="docs/screenshots/playlists.webp" width="100%" alt="Playlists" title="Playlists"></td>
+<td width="10%"><img src="docs/screenshots/home-feed.webp" width="100%" alt="Feed inicial" title="Feed inicial"></td>
 </tr>
 </table>
+
+🎥 [Assista a um walkthrough em vídeo](docs/walkthrough.mp4) da aplicação rodando.
 
 ---
 
