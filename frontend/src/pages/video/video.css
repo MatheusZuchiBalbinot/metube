@@ -1441,16 +1441,18 @@
 .video-page__reading-overlay {
     position: absolute;
     inset: 0;
-    overflow-y: auto;
+    /* .video-page__reading-mode below is the single scroll owner (its own
+       overflow-y/max-height apply unmodified here) — the overlay just clips
+       it to the player's box so long, real AI content can't spill past it. */
+    overflow: hidden;
     border-radius: var(--radius-sm);
     background: var(--bg);
     z-index: 1;
 }
 
 .video-page__reading-overlay .video-page__reading-mode {
-    overflow-y: visible;
-    max-height: none;
     height: 100%;
+    max-height: 100%;
 }
 
 .video-page__player-wrap::before {
@@ -1489,6 +1491,8 @@
     position: relative;
     overflow-y: auto;
     max-height: calc(100vh - 200px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
 }
 
 .video-page__reading-progress {
