@@ -26,7 +26,7 @@ Plataforma de vídeo full-stack construída do zero, com **upload resumível, pr
 </tr>
 </table>
 
-🎥 [Assista a um walkthrough em vídeo](docs/walkthrough.mp4) da aplicação rodando.
+🎥 [Assista a um walkthrough em vídeo](https://youtu.be/fO4vvs1ZJTo) da aplicação rodando.
 
 ---
 
